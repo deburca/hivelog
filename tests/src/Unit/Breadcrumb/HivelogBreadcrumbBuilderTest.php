@@ -8,13 +8,14 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\hivelog\Breadcrumb\HivelogBreadcrumbBuilder;
 use Drupal\Tests\UnitTestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Unit tests for HivelogBreadcrumbBuilder.
- *
- * @coversDefaultClass \Drupal\hivelog\Breadcrumb\HivelogBreadcrumbBuilder
- * @group hivelog
  */
+#[CoversClass(HivelogBreadcrumbBuilder::class)]
+#[Group('hivelog')]
 class HivelogBreadcrumbBuilderTest extends UnitTestCase {
 
   /**

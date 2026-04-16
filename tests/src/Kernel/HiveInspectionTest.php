@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\hivelog\Kernel;
 
 use Drupal\hivelog\Entity\Apiary;
@@ -7,12 +9,14 @@ use Drupal\hivelog\Entity\Hive;
 use Drupal\hivelog\Entity\HiveInspection;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\user\Entity\User;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the Hive Inspection entity.
- *
- * @group hivelog
  */
+#[Group('hivelog')]
+#[RunTestsInSeparateProcesses]
 class HiveInspectionTest extends KernelTestBase {
 
   /**

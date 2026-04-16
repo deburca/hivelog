@@ -1,51 +1,58 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\hivelog\Entity;
 
+use Drupal\Core\Entity\Attribute\ContentEntityType;
 use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityChangedInterface;
 use Drupal\Core\Entity\EntityChangedTrait;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\hivelog\ApiaryAccessControlHandler;
+use Drupal\hivelog\ApiaryListBuilder;
+use Drupal\hivelog\Form\ApiaryDeleteForm;
+use Drupal\hivelog\Form\ApiaryForm;
 use Drupal\user\EntityOwnerInterface;
 use Drupal\user\EntityOwnerTrait;
 
 /**
  * Defines the Apiary entity.
- *
- * @ContentEntityType(
- *   id = "apiary",
- *   label = @Translation("Apiary"),
- *   label_collection = @Translation("Apiaries"),
- *   label_singular = @Translation("apiary"),
- *   label_plural = @Translation("apiaries"),
- *   handlers = {
- *     "list_builder" = "Drupal\hivelog\ApiaryListBuilder",
- *     "form" = {
- *       "default" = "Drupal\hivelog\Form\ApiaryForm",
- *       "add" = "Drupal\hivelog\Form\ApiaryForm",
- *       "edit" = "Drupal\hivelog\Form\ApiaryForm",
- *       "delete" = "Drupal\hivelog\Form\ApiaryDeleteForm",
- *     },
- *     "access" = "Drupal\hivelog\ApiaryAccessControlHandler",
- *   },
- *   base_table = "hivelog_apiary",
- *   admin_permission = "administer hivelog",
- *   entity_keys = {
- *     "id" = "id",
- *     "label" = "name",
- *     "uuid" = "uuid",
- *     "owner" = "uid",
- *   },
- *   links = {
- *     "canonical" = "/admin/hivelog/apiary/{apiary}",
- *     "add-form" = "/admin/hivelog/apiary/add",
- *     "edit-form" = "/admin/hivelog/apiary/{apiary}/edit",
- *     "delete-form" = "/admin/hivelog/apiary/{apiary}/delete",
- *     "collection" = "/admin/hivelog",
- *   },
- * )
  */
+#[ContentEntityType(
+  id: 'apiary',
+  label: new TranslatableMarkup('Apiary'),
+  label_collection: new TranslatableMarkup('Apiaries'),
+  label_singular: new TranslatableMarkup('apiary'),
+  label_plural: new TranslatableMarkup('apiaries'),
+  handlers: [
+    'list_builder' => ApiaryListBuilder::class,
+    'form' => [
+      'default' => ApiaryForm::class,
+      'add' => ApiaryForm::class,
+      'edit' => ApiaryForm::class,
+      'delete' => ApiaryDeleteForm::class,
+    ],
+    'access' => ApiaryAccessControlHandler::class,
+  ],
+  base_table: 'hivelog_apiary',
+  admin_permission: 'administer hivelog',
+  entity_keys: [
+    'id' => 'id',
+    'label' => 'name',
+    'uuid' => 'uuid',
+    'owner' => 'uid',
+  ],
+  links: [
+    'canonical' => '/admin/hivelog/apiary/{apiary}',
+    'add-form' => '/admin/hivelog/apiary/add',
+    'edit-form' => '/admin/hivelog/apiary/{apiary}/edit',
+    'delete-form' => '/admin/hivelog/apiary/{apiary}/delete',
+    'collection' => '/admin/hivelog',
+  ],
+)]
 class Apiary extends ContentEntityBase implements EntityChangedInterface, EntityOwnerInterface {
 
   use EntityChangedTrait;
