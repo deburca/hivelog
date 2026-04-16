@@ -1,0 +1,143 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the HiveLog module.
+ */
+
+/**
+ * Replace latitude/longitude fields with geolocation field on apiaries.
+ */
+function hivelog_update_10001(&$sandbox) {
+  $database = \Drupal::database();
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  $schema = $database->schema();
+
+  // Step 1: Read existing latitude/longitude data before removing columns.
+  $coordinate_data = [];
+  if ($schema->fieldExists('hivelog_apiary', 'latitude')) {
+    $results = $database->select('hivelog_apiary', 'a')
+      ->fields('a', ['id', 'latitude', 'longitude'])
+      ->execute()
+      ->fetchAll();
+
+    foreach ($results as $row) {
+      if ($row->latitude !== NULL && $row->longitude !== NULL) {
+        $coordinate_data[$row->id] = [
+          'lat' => (float) $row->latitude,
+          'lng' => (float) $row->longitude,
+        ];
+      }
+    }
+  }
+
+  // Step 2: Remove old field storage definitions (if they still exist).
+  $latitude_definition = $entity_definition_update_manager->getFieldStorageDefinition('latitude', 'apiary');
+  if ($latitude_definition) {
+    $entity_definition_update_manager->uninstallFieldStorageDefinition($latitude_definition);
+  }
+
+  $longitude_definition = $entity_definition_update_manager->getFieldStorageDefinition('longitude', 'apiary');
+  if ($longitude_definition) {
+    $entity_definition_update_manager->uninstallFieldStorageDefinition($longitude_definition);
+  }
+
+  // Step 3: Install the new geolocation field (if not already present).
+  $geolocation_definition = $entity_definition_update_manager->getFieldStorageDefinition('geolocation', 'apiary');
+  if (!$geolocation_definition) {
+    $field_definitions = \Drupal\hivelog\Entity\Apiary::baseFieldDefinitions(
+      $entity_type_manager->getDefinition('apiary')
+    );
+    if (isset($field_definitions['geolocation'])) {
+      $entity_definition_update_manager->installFieldStorageDefinition(
+        'geolocation',
+        'apiary',
+        'hivelog',
+        $field_definitions['geolocation']
+      );
+    }
+  }
+
+  // Step 4: Migrate data to the new geolocation field.
+  if (!empty($coordinate_data)) {
+    foreach ($coordinate_data as $id => $coords) {
+      $database->update('hivelog_apiary')
+        ->fields([
+          'geolocation__lat' => $coords['lat'],
+          'geolocation__lng' => $coords['lng'],
+          'geolocation__lat_sin' => sin(deg2rad($coords['lat'])),
+          'geolocation__lat_cos' => cos(deg2rad($coords['lat'])),
+          'geolocation__lng_rad' => deg2rad($coords['lng']),
+        ])
+        ->condition('id', $id)
+        ->execute();
+    }
+  }
+
+  return t('Replaced latitude/longitude fields with geolocation field on apiaries.');
+}
+
+/**
+ * Migrate apiary geolocation field from geolocation module to geofield module.
+ */
+function hivelog_update_10002(&$sandbox) {
+  $database = \Drupal::database();
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  $schema = $database->schema();
+
+  // Step 1: Read existing coordinates from the geolocation module's columns.
+  $coordinate_data = [];
+  if ($schema->fieldExists('hivelog_apiary', 'geolocation__lat')) {
+    $results = $database->select('hivelog_apiary', 'a')
+      ->fields('a', ['id', 'geolocation__lat', 'geolocation__lng'])
+      ->execute()
+      ->fetchAll();
+
+    foreach ($results as $row) {
+      if ($row->{'geolocation__lat'} !== NULL && $row->{'geolocation__lng'} !== NULL) {
+        $coordinate_data[$row->id] = [
+          'lat' => (float) $row->{'geolocation__lat'},
+          'lng' => (float) $row->{'geolocation__lng'},
+        ];
+      }
+    }
+  }
+
+  // Step 2: Uninstall the old geolocation field storage.
+  $geolocation_definition = $entity_definition_update_manager->getFieldStorageDefinition('geolocation', 'apiary');
+  if ($geolocation_definition) {
+    $entity_definition_update_manager->uninstallFieldStorageDefinition($geolocation_definition);
+  }
+
+  // Step 3: Install the new geofield field storage.
+  $field_definitions = \Drupal\hivelog\Entity\Apiary::baseFieldDefinitions(
+    $entity_type_manager->getDefinition('apiary')
+  );
+  if (isset($field_definitions['geolocation'])) {
+    $entity_definition_update_manager->installFieldStorageDefinition(
+      'geolocation',
+      'apiary',
+      'hivelog',
+      $field_definitions['geolocation']
+    );
+  }
+
+  // Step 4: Re-save entities through the entity API so geofield computes all
+  // derived columns (lat, lon, geohash, etc.) from the WKT value.
+  if (!empty($coordinate_data)) {
+    $storage = $entity_type_manager->getStorage('apiary');
+    foreach ($coordinate_data as $id => $coords) {
+      /** @var \Drupal\hivelog\Entity\Apiary $apiary */
+      $apiary = $storage->load($id);
+      if ($apiary) {
+        // WKT POINT format: longitude first, then latitude.
+        $apiary->set('geolocation', sprintf('POINT (%F %F)', $coords['lng'], $coords['lat']));
+        $apiary->save();
+      }
+    }
+  }
+
+  return t('Migrated apiary geolocation field from geolocation module to geofield module.');
+}

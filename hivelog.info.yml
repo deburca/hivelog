@@ -1,0 +1,9 @@
+name: HiveLog
+type: module
+description: 'Beekeeping activity logger for managing apiaries, hives, and inspections.'
+core_version_requirement: ^11
+package: Custom
+dependencies:
+  - geofield:geofield
+  - geocoder:geocoder
+  - leaflet:leaflet
