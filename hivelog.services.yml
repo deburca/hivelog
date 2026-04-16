@@ -1,0 +1,6 @@
+services:
+  hivelog.breadcrumb:
+    class: Drupal\hivelog\Breadcrumb\HivelogBreadcrumbBuilder
+    arguments: ['@entity_type.manager']
+    tags:
+      - { name: breadcrumb_builder, priority: 100 }
