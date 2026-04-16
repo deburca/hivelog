@@ -1,0 +1,39 @@
+administer hivelog:
+  title: 'Administer HiveLog'
+  description: 'Full administrative access to the HiveLog module.'
+
+view apiary:
+  title: 'View apiaries'
+
+add apiary:
+  title: 'Add apiaries'
+
+edit apiary:
+  title: 'Edit apiaries'
+
+delete apiary:
+  title: 'Delete apiaries'
+
+view hive:
+  title: 'View hives'
+
+add hive:
+  title: 'Add hives'
+
+edit hive:
+  title: 'Edit hives'
+
+delete hive:
+  title: 'Delete hives'
+
+view hive inspection:
+  title: 'View hive inspections'
+
+add hive inspection:
+  title: 'Add hive inspections'
+
+edit hive inspection:
+  title: 'Edit hive inspections'
+
+delete hive inspection:
+  title: 'Delete hive inspections'

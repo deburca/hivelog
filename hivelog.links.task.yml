@@ -1,0 +1,50 @@
+# Apiary tabs.
+hivelog.apiary.view_tab:
+  route_name: entity.apiary.canonical
+  title: 'View'
+  base_route: entity.apiary.canonical
+
+hivelog.apiary.edit_tab:
+  route_name: entity.apiary.edit_form
+  title: 'Edit'
+  base_route: entity.apiary.canonical
+
+hivelog.apiary.delete_tab:
+  route_name: entity.apiary.delete_form
+  title: 'Delete'
+  base_route: entity.apiary.canonical
+  weight: 10
+
+# Hive tabs.
+hivelog.hive.view_tab:
+  route_name: entity.hive.canonical
+  title: 'View'
+  base_route: entity.hive.canonical
+
+hivelog.hive.edit_tab:
+  route_name: entity.hive.edit_form
+  title: 'Edit'
+  base_route: entity.hive.canonical
+
+hivelog.hive.delete_tab:
+  route_name: entity.hive.delete_form
+  title: 'Delete'
+  base_route: entity.hive.canonical
+  weight: 10
+
+# Inspection tabs.
+hivelog.inspection.view_tab:
+  route_name: entity.hive_inspection.canonical
+  title: 'View'
+  base_route: entity.hive_inspection.canonical
+
+hivelog.inspection.edit_tab:
+  route_name: entity.hive_inspection.edit_form
+  title: 'Edit'
+  base_route: entity.hive_inspection.canonical
+
+hivelog.inspection.delete_tab:
+  route_name: entity.hive_inspection.delete_form
+  title: 'Delete'
+  base_route: entity.hive_inspection.canonical
+  weight: 10

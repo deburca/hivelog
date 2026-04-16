@@ -1,0 +1,6 @@
+hivelog.admin:
+  title: 'HiveLog'
+  description: 'Manage apiaries, hives, and inspections.'
+  route_name: entity.apiary.collection
+  parent: system.admin_structure
+  weight: 10

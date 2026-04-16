@@ -1,0 +1,150 @@
+# Apiary routes.
+entity.apiary.collection:
+  path: '/admin/hivelog'
+  defaults:
+    _entity_list: 'apiary'
+    _title: 'HiveLog - Apiaries'
+  requirements:
+    _permission: 'view apiary+administer hivelog'
+
+entity.apiary.add_form:
+  path: '/admin/hivelog/apiary/add'
+  defaults:
+    _entity_form: 'apiary.add'
+    _title: 'Add Apiary'
+  requirements:
+    _permission: 'add apiary+administer hivelog'
+
+entity.apiary.canonical:
+  path: '/admin/hivelog/apiary/{apiary}'
+  defaults:
+    _controller: '\Drupal\hivelog\Controller\ApiaryController::view'
+    _title_callback: '\Drupal\hivelog\Controller\ApiaryController::title'
+  requirements:
+    _permission: 'view apiary+administer hivelog'
+  options:
+    parameters:
+      apiary:
+        type: entity:apiary
+
+entity.apiary.edit_form:
+  path: '/admin/hivelog/apiary/{apiary}/edit'
+  defaults:
+    _entity_form: 'apiary.edit'
+    _title: 'Edit Apiary'
+  requirements:
+    _permission: 'edit apiary+administer hivelog'
+  options:
+    parameters:
+      apiary:
+        type: entity:apiary
+
+entity.apiary.delete_form:
+  path: '/admin/hivelog/apiary/{apiary}/delete'
+  defaults:
+    _entity_form: 'apiary.delete'
+    _title: 'Delete Apiary'
+  requirements:
+    _permission: 'delete apiary+administer hivelog'
+  options:
+    parameters:
+      apiary:
+        type: entity:apiary
+
+# Hive routes.
+hivelog.hive.add:
+  path: '/admin/hivelog/apiary/{apiary}/hive/add'
+  defaults:
+    _controller: '\Drupal\hivelog\Controller\HiveController::addForm'
+    _title: 'Add Hive'
+  requirements:
+    _permission: 'add hive+administer hivelog'
+  options:
+    parameters:
+      apiary:
+        type: entity:apiary
+
+entity.hive.canonical:
+  path: '/admin/hivelog/hive/{hive}'
+  defaults:
+    _controller: '\Drupal\hivelog\Controller\HiveController::view'
+    _title_callback: '\Drupal\hivelog\Controller\HiveController::title'
+  requirements:
+    _permission: 'view hive+administer hivelog'
+  options:
+    parameters:
+      hive:
+        type: entity:hive
+
+entity.hive.edit_form:
+  path: '/admin/hivelog/hive/{hive}/edit'
+  defaults:
+    _entity_form: 'hive.edit'
+    _title: 'Edit Hive'
+  requirements:
+    _permission: 'edit hive+administer hivelog'
+  options:
+    parameters:
+      hive:
+        type: entity:hive
+
+entity.hive.delete_form:
+  path: '/admin/hivelog/hive/{hive}/delete'
+  defaults:
+    _entity_form: 'hive.delete'
+    _title: 'Delete Hive'
+  requirements:
+    _permission: 'delete hive+administer hivelog'
+  options:
+    parameters:
+      hive:
+        type: entity:hive
+
+# Inspection routes.
+hivelog.inspection.add:
+  path: '/admin/hivelog/hive/{hive}/inspection/add'
+  defaults:
+    _controller: '\Drupal\hivelog\Controller\HiveInspectionController::addForm'
+    _title: 'Add Inspection'
+  requirements:
+    _permission: 'add hive inspection+administer hivelog'
+  options:
+    parameters:
+      hive:
+        type: entity:hive
+
+entity.hive_inspection.canonical:
+  path: '/admin/hivelog/inspection/{hive_inspection}'
+  defaults:
+    _controller: '\Drupal\hivelog\Controller\HiveInspectionController::view'
+    _title_callback: '\Drupal\hivelog\Controller\HiveInspectionController::title'
+  requirements:
+    _permission: 'view hive inspection+administer hivelog'
+  options:
+    parameters:
+      hive_inspection:
+        type: entity:hive_inspection
+
+entity.hive_inspection.edit_form:
+  path: '/admin/hivelog/inspection/{hive_inspection}/edit'
+  defaults:
+    _entity_form: 'hive_inspection.edit'
+    _title: 'Edit Inspection'
+  requirements:
+    _permission: 'edit hive inspection+administer hivelog'
+  options:
+    parameters:
+      hive_inspection:
+        type: entity:hive_inspection
+
+entity.hive_inspection.delete_form:
+  path: '/admin/hivelog/inspection/{hive_inspection}/delete'
+  defaults:
+    _entity_form: 'hive_inspection.delete'
+    _title: 'Delete Inspection'
+  requirements:
+    _permission: 'delete hive inspection+administer hivelog'
+  options:
+    parameters:
+      hive_inspection:
+        type: entity:hive_inspection

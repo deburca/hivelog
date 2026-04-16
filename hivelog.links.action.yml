@@ -1,0 +1,5 @@
+hivelog.apiary.add:
+  route_name: entity.apiary.add_form
+  title: 'Add Apiary'
+  appears_on:
+    - entity.apiary.collection
