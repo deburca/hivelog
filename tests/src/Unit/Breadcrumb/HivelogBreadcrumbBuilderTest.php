@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\hivelog\Unit\Breadcrumb;
 
+use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
@@ -28,6 +29,19 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
    */
   protected function setUp(): void {
     parent::setUp();
+
+    // Cache::mergeContexts() calls \Drupal::service('cache_contexts_manager')
+    // inside an assert() statement. Provide a minimal stub so unit tests do
+    // not require a fully-bootstrapped Drupal container.
+    $cache_contexts_manager = new class {
+      public function assertValidTokens(array $tokens): bool {
+        return TRUE;
+      }
+    };
+    $container = new ContainerBuilder();
+    $container->set('cache_contexts_manager', $cache_contexts_manager);
+    \Drupal::setContainer($container);
+
     $entity_type_manager = $this->createMock(EntityTypeManagerInterface::class);
     $this->builder = new HivelogBreadcrumbBuilder($entity_type_manager);
     $this->builder->setStringTranslation($this->getStringTranslationStub());

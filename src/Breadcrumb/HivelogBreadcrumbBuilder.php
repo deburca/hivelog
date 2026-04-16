@@ -4,6 +4,7 @@ namespace Drupal\hivelog\Breadcrumb;
 
 use Drupal\Core\Breadcrumb\Breadcrumb;
 use Drupal\Core\Breadcrumb\BreadcrumbBuilderInterface;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Routing\RouteMatchInterface;
@@ -36,7 +37,8 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
   /**
    * {@inheritdoc}
    */
-  public function applies(RouteMatchInterface $route_match): bool {
+  // phpcs:ignore Drupal.Commenting.FunctionComment.ParamNameNoMatch
+  public function applies(RouteMatchInterface $route_match, ?CacheableMetadata $cacheable_metadata = NULL): bool {
     $route_name = $route_match->getRouteName();
     return str_starts_with($route_name, 'entity.apiary.')
       || str_starts_with($route_name, 'entity.hive.')
