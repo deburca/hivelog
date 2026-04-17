@@ -59,6 +59,7 @@ class HiveInspectionTest extends KernelTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
+    $this->installConfig(['system']);
     $this->installEntitySchema('user');
     $this->installEntitySchema('apiary');
     $this->installEntitySchema('hive');
@@ -289,6 +290,36 @@ class HiveInspectionTest extends KernelTestBase {
 
     $inspection->delete();
     $this->assertNull(HiveInspection::load($id));
+  }
+
+  /**
+   * Tests that the inspection form is grouped into structured sections.
+   */
+  public function testInspectionFormIsGroupedIntoSections(): void {
+    $inspection = HiveInspection::create([
+      'hive' => $this->hive->id(),
+      'inspection_date' => '2024-06-15',
+    ]);
+
+    $form = \Drupal::service('entity.form_builder')->getForm($inspection, 'add');
+
+    $this->assertEquals('vertical_tabs', $form['inspection_sections']['#type']);
+    $this->assertArrayHasKey('overview', $form);
+    $this->assertArrayHasKey('external_check_section', $form);
+    $this->assertArrayHasKey('queen_status', $form);
+    $this->assertArrayHasKey('brood_and_stores', $form);
+    $this->assertArrayHasKey('colony_condition', $form);
+    $this->assertArrayHasKey('health', $form);
+    $this->assertArrayHasKey('management', $form);
+    $this->assertArrayHasKey('notes_section', $form);
+
+    $this->assertEquals('overview', $form['hive']['#group']);
+    $this->assertEquals('overview', $form['inspection_date']['#group']);
+    $this->assertEquals('queen_status', $form['queen_seen']['#group']);
+    $this->assertEquals('brood_and_stores', $form['honey_stores']['#group']);
+    $this->assertEquals('health', $form['disease_signs']['#group']);
+    $this->assertEquals('management', $form['action_taken']['#group']);
+    $this->assertEquals('notes_section', $form['notes']['#group']);
   }
 
   /**
