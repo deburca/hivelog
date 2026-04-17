@@ -74,11 +74,6 @@ class Apiary extends ContentEntityBase implements EntityChangedInterface, Entity
         'type' => 'string_textfield',
         'weight' => 0,
       ])
-      ->setDisplayOptions('view', [
-        'label' => 'hidden',
-        'type' => 'string',
-        'weight' => 0,
-      ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
@@ -91,11 +86,6 @@ class Apiary extends ContentEntityBase implements EntityChangedInterface, Entity
         'settings' => [
           'rows' => 3,
         ],
-      ])
-      ->setDisplayOptions('view', [
-        'label' => 'above',
-        'type' => 'basic_string',
-        'weight' => 1,
       ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
@@ -120,7 +110,7 @@ class Apiary extends ContentEntityBase implements EntityChangedInterface, Entity
         ],
       ])
       ->setDisplayOptions('view', [
-        'label' => 'above',
+        'label' => 'hidden',
         'type' => 'leaflet_formatter_default',
         'weight' => 2,
         'settings' => [
@@ -152,11 +142,6 @@ class Apiary extends ContentEntityBase implements EntityChangedInterface, Entity
           'rows' => 4,
         ],
       ])
-      ->setDisplayOptions('view', [
-        'label' => 'above',
-        'type' => 'basic_string',
-        'weight' => 4,
-      ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
@@ -170,11 +155,6 @@ class Apiary extends ContentEntityBase implements EntityChangedInterface, Entity
           'match_operator' => 'CONTAINS',
           'size' => 60,
         ],
-      ])
-      ->setDisplayOptions('view', [
-        'label' => 'above',
-        'type' => 'entity_reference_label',
-        'weight' => 5,
       ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
