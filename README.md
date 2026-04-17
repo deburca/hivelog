@@ -186,6 +186,41 @@ The suite includes 53 tests covering entity CRUD, relationships, queen colour
 auto-calculation, field option validation, inspection logging, and breadcrumb
 building.
 
+## Deployment
+
+After pulling new code to a target environment, run the following steps:
+
+```
+composer install --no-dev
+drush updb -y
+drush cr
+```
+
+**Step summary:**
+
+1. `composer install` — Ensures all PHP dependencies (including geofield,
+   geocoder, leaflet) are present.
+2. `drush updb` — Runs any pending database update hooks. Current hooks:
+   - `10001` — Migrate apiary lat/lng fields to geolocation field.
+   - `10002` — Migrate geolocation field from geolocation module to geofield.
+   - `10003` — Add `external_check` field to hive inspections.
+3. `drush cr` — Rebuilds caches so Drupal picks up any changes to entity
+   definitions, routing, or services.
+
+For DDEV-based environments, prefix commands with `ddev`:
+
+```
+ddev composer install
+ddev drush updb -y
+ddev drush cr
+```
+
+**Post-deployment verification:**
+
+- Confirm all modules are enabled: `drush pm:list --status=enabled --filter=hivelog`
+- Confirm no pending updates remain: `drush updb --no`
+- Run the test suite (see Testing section below).
+
 ## Extending the Module
 
 - **Add new hive types or breeds** — Edit the `allowed_values` arrays in the
