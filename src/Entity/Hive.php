@@ -102,11 +102,6 @@ class Hive extends ContentEntityBase implements EntityChangedInterface, EntityOw
         'type' => 'string_textfield',
         'weight' => 0,
       ])
-      ->setDisplayOptions('view', [
-        'label' => 'hidden',
-        'type' => 'string',
-        'weight' => 0,
-      ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
@@ -117,11 +112,6 @@ class Hive extends ContentEntityBase implements EntityChangedInterface, EntityOw
       ->setSetting('target_type', 'apiary')
       ->setDisplayOptions('form', [
         'type' => 'entity_reference_autocomplete',
-        'weight' => 1,
-      ])
-      ->setDisplayOptions('view', [
-        'label' => 'above',
-        'type' => 'entity_reference_label',
         'weight' => 1,
       ])
       ->setDisplayConfigurable('form', TRUE)
@@ -141,11 +131,6 @@ class Hive extends ContentEntityBase implements EntityChangedInterface, EntityOw
         'type' => 'options_select',
         'weight' => 2,
       ])
-      ->setDisplayOptions('view', [
-        'label' => 'inline',
-        'type' => 'list_default',
-        'weight' => 2,
-      ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
@@ -160,11 +145,6 @@ class Hive extends ContentEntityBase implements EntityChangedInterface, EntityOw
         'type' => 'options_select',
         'weight' => 3,
       ])
-      ->setDisplayOptions('view', [
-        'label' => 'inline',
-        'type' => 'list_default',
-        'weight' => 3,
-      ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
@@ -174,11 +154,6 @@ class Hive extends ContentEntityBase implements EntityChangedInterface, EntityOw
       ->setSetting('min', 2000)
       ->setDisplayOptions('form', [
         'type' => 'number',
-        'weight' => 2,
-      ])
-      ->setDisplayOptions('view', [
-        'label' => 'inline',
-        'type' => 'number_integer',
         'weight' => 2,
       ])
       ->setDisplayConfigurable('form', TRUE)
@@ -196,11 +171,6 @@ class Hive extends ContentEntityBase implements EntityChangedInterface, EntityOw
       ])
       ->setDisplayOptions('form', [
         'type' => 'options_select',
-        'weight' => 3,
-      ])
-      ->setDisplayOptions('view', [
-        'label' => 'inline',
-        'type' => 'list_default',
         'weight' => 3,
       ])
       ->setDisplayConfigurable('form', TRUE)
@@ -222,11 +192,6 @@ class Hive extends ContentEntityBase implements EntityChangedInterface, EntityOw
         'type' => 'options_select',
         'weight' => 3,
       ])
-      ->setDisplayOptions('view', [
-        'label' => 'inline',
-        'type' => 'list_default',
-        'weight' => 3,
-      ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
@@ -240,11 +205,6 @@ class Hive extends ContentEntityBase implements EntityChangedInterface, EntityOw
       ])
       ->setDisplayOptions('form', [
         'type' => 'options_select',
-        'weight' => 4,
-      ])
-      ->setDisplayOptions('view', [
-        'label' => 'inline',
-        'type' => 'list_default',
         'weight' => 4,
       ])
       ->setDisplayConfigurable('form', TRUE)
@@ -266,11 +226,6 @@ class Hive extends ContentEntityBase implements EntityChangedInterface, EntityOw
         'type' => 'options_select',
         'weight' => 5,
       ])
-      ->setDisplayOptions('view', [
-        'label' => 'inline',
-        'type' => 'list_default',
-        'weight' => 5,
-      ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
@@ -284,11 +239,6 @@ class Hive extends ContentEntityBase implements EntityChangedInterface, EntityOw
           'rows' => 4,
         ],
       ])
-      ->setDisplayOptions('view', [
-        'label' => 'above',
-        'type' => 'basic_string',
-        'weight' => 6,
-      ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
@@ -297,11 +247,6 @@ class Hive extends ContentEntityBase implements EntityChangedInterface, EntityOw
       ->setDescription(t('The user who owns this hive.'))
       ->setDisplayOptions('form', [
         'type' => 'entity_reference_autocomplete',
-        'weight' => 7,
-      ])
-      ->setDisplayOptions('view', [
-        'label' => 'above',
-        'type' => 'entity_reference_label',
         'weight' => 7,
       ])
       ->setDisplayConfigurable('form', TRUE)
