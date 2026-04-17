@@ -211,11 +211,11 @@ class Hive extends ContentEntityBase implements EntityChangedInterface, EntityOw
       ->setDescription(t('The breed of bees in this hive.'))
       ->setSetting('allowed_values', [
         'buckfast' => 'Buckfast',
-        'carniolan' => 'Carniolan',
-        'italian' => 'Italian',
-        'caucasian' => 'Caucasian',
-        'russian' => 'Russian',
-        'amm' => 'AMM (Dark European)',
+        'carniolan' => 'Apis mellifera carnica (Carniolan)',
+        'italian' => 'Apis mellifera ligustica (Italian)',
+        'caucasian' => 'Apis mellifera caucasica (Caucasian)',
+        // 'russian' => 'Russian',
+        'amm' => 'Apis mellifera mellifera (Dark European)',
         'other' => 'Other',
       ])
       ->setDisplayOptions('form', [

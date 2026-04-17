@@ -102,10 +102,22 @@ class Apiary extends ContentEntityBase implements EntityChangedInterface, Entity
 
     $fields['geolocation'] = BaseFieldDefinition::create('geofield')
       ->setLabel(t('Geolocation'))
-      ->setDescription(t('GPS coordinates of the apiary.'))
+      ->setDescription(t('GPS coordinates of the apiary. Click or drag the marker on the map to set the location.'))
       ->setDisplayOptions('form', [
-        'type' => 'geofield_latlon',
+        'type' => 'leaflet_widget_default',
         'weight' => 2,
+        'settings' => [
+          'map' => [
+            'leaflet_map' => 'OSM Mapnik',
+            'height' => 300,
+            'center' => ['lat' => 55.0, 'lon' => 10.0],
+            'auto_center' => TRUE,
+            'zoom' => 6,
+          ],
+          'input' => [
+            'show' => FALSE,
+          ],
+        ],
       ])
       ->setDisplayOptions('view', [
         'label' => 'above',
