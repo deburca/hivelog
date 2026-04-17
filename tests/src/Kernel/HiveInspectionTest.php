@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\hivelog\Kernel;
 
+use Drupal\hivelog\Controller\HiveInspectionController;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\Hive;
 use Drupal\hivelog\Entity\HiveInspection;
@@ -288,6 +289,63 @@ class HiveInspectionTest extends KernelTestBase {
 
     $inspection->delete();
     $this->assertNull(HiveInspection::load($id));
+  }
+
+  /**
+   * Tests the grouped inspection view layout.
+   */
+  public function testInspectionViewIsGroupedIntoSections(): void {
+    $inspection = HiveInspection::create([
+      'hive' => $this->hive->id(),
+      'inspection_date' => '2024-06-15',
+      'external_check' => 'Strong flight activity with pollen coming in.',
+      'queen_seen' => TRUE,
+      'queen_cells' => FALSE,
+      'eggs_seen' => TRUE,
+      'brood_pattern' => 'good',
+      'queen_brood' => FALSE,
+      'honey_stores' => 'adequate',
+      'pollen_stores' => 'abundant',
+      'temperament' => 'calm',
+      'population' => 'strong',
+      'varroa_check' => TRUE,
+      'varroa_count' => 2,
+      'disease_signs' => 'none',
+      'fed' => FALSE,
+      'feed_type' => '',
+      'supers' => 1,
+      'action_taken' => 'Added a super.',
+      'notes' => 'Colony developing well.',
+      'uid' => $this->user->id(),
+    ]);
+    $inspection->save();
+
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(HiveInspectionController::class);
+    $build = $controller->view($inspection);
+
+    $this->assertArrayHasKey('overview', $build);
+    $this->assertArrayHasKey('external_check', $build);
+    $this->assertArrayHasKey('queen_status', $build);
+    $this->assertArrayHasKey('brood_and_stores', $build);
+    $this->assertArrayHasKey('colony_condition', $build);
+    $this->assertArrayHasKey('health', $build);
+    $this->assertArrayHasKey('management', $build);
+    $this->assertArrayHasKey('notes', $build);
+
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+    $this->assertStringContainsString('Overview', $html);
+    $this->assertStringContainsString('External check', $html);
+    $this->assertStringContainsString('Queen status', $html);
+    $this->assertStringContainsString('Brood, honey and pollen', $html);
+    $this->assertStringContainsString('Colony condition', $html);
+    $this->assertStringContainsString('Varroa and disease', $html);
+    $this->assertStringContainsString('Management', $html);
+    $this->assertStringContainsString('Field', $html);
+    $this->assertStringContainsString('Value', $html);
+    $this->assertStringContainsString('Strong flight activity with pollen coming in.', $html);
+    $this->assertStringContainsString('Added a super.', $html);
+    $this->assertStringContainsString('Colony developing well.', $html);
   }
 
 }
