@@ -109,19 +109,38 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
+    // External check (before opening).
+    $fields['external_check'] = BaseFieldDefinition::create('string_long')
+      ->setLabel(t('External check (before opening)'))
+      ->setDescription(t('Observe flight activity at the entrance — steady traffic with pollen coming in is a good sign. Look for dead bees, signs of robbing, or wasps. Note the hive\'s weight by lifting the back slightly (hefting).'))
+      ->setDisplayOptions('form', [
+        'type' => 'string_textarea',
+        'weight' => 2,
+        'settings' => [
+          'rows' => 4,
+        ],
+      ])
+      ->setDisplayOptions('view', [
+        'label' => 'above',
+        'type' => 'basic_string',
+        'weight' => 2,
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
+
     // Queen status fields.
     $fields['queen_seen'] = BaseFieldDefinition::create('boolean')
       ->setLabel(t('Queen Seen'))
-      ->setDescription(t('Was the queen spotted during this inspection?'))
+      ->setDescription(t('Was the queen spotted during this inspection? You don\'t need to spot her every visit — evidence of her is enough. Look for eggs (single, upright in cell bottoms — confirms a laying queen within the last 3 days), young larvae, and a good brood pattern (solid, not patchy).'))
       ->setDefaultValue(FALSE)
       ->setDisplayOptions('form', [
         'type' => 'boolean_checkbox',
-        'weight' => 2,
+        'weight' => 3,
       ])
       ->setDisplayOptions('view', [
         'label' => 'inline',
         'type' => 'boolean',
-        'weight' => 2,
+        'weight' => 3,
         'settings' => [
           'format' => 'yes-no',
         ],
@@ -131,16 +150,16 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
 
     $fields['queen_cells'] = BaseFieldDefinition::create('boolean')
       ->setLabel(t('Queen Cells'))
-      ->setDescription(t('Were queen cells present?'))
+      ->setDescription(t('Were queen cells present? Look along bottom bars and frame faces. Swarm cells (bottom of frames, multiple) mean imminent swarming — act now. Supersedure cells (middle of frames, 1–3) mean they\'re replacing the queen. Play cups are normal and empty.'))
       ->setDefaultValue(FALSE)
       ->setDisplayOptions('form', [
         'type' => 'boolean_checkbox',
-        'weight' => 3,
+        'weight' => 4,
       ])
       ->setDisplayOptions('view', [
         'label' => 'inline',
         'type' => 'boolean',
-        'weight' => 3,
+        'weight' => 4,
         'settings' => [
           'format' => 'yes-no',
         ],
@@ -150,16 +169,16 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
 
     $fields['eggs_seen'] = BaseFieldDefinition::create('boolean')
       ->setLabel(t('Eggs Seen'))
-      ->setDescription(t('Were eggs visible (indicates queen is laying)?'))
+      ->setDescription(t('Were eggs visible (indicates queen is laying)? Check for healthy brood at all stages (eggs, larvae, capped). Cappings should be slightly domed and uniform. Watch for signs of disease: sunken/perforated cappings, discoloured larvae, foul smell (AFB/EFB), chalkbrood mummies, or deformed wings (varroa/DWV).'))
       ->setDefaultValue(FALSE)
       ->setDisplayOptions('form', [
         'type' => 'boolean_checkbox',
-        'weight' => 4,
+        'weight' => 5,
       ])
       ->setDisplayOptions('view', [
         'label' => 'inline',
         'type' => 'boolean',
-        'weight' => 4,
+        'weight' => 5,
         'settings' => [
           'format' => 'yes-no',
         ],
@@ -170,7 +189,8 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
     // Brood fields.
     $fields['brood_pattern'] = BaseFieldDefinition::create('list_string')
       ->setLabel(t('Brood Pattern'))
-      ->setDescription(t('Quality of the brood pattern.'))
+      ->setDescription(t('Quality of the brood pattern. Check for healthy brood at all stages (eggs, larvae, capped). Cappings should be slightly domed and uniform. Watch for signs of disease: sunken/perforated cappings, discoloured larvae, foul smell (AFB/EFB), chalkbrood mummies, or deformed wings (varroa/DWV).
+. Patchy brood or multiple eggs per cell suggests problems.'))
       ->setSetting('allowed_values', [
         'good' => 'Good',
         'fair' => 'Fair',
@@ -179,12 +199,12 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
       ])
       ->setDisplayOptions('form', [
         'type' => 'options_select',
-        'weight' => 5,
+        'weight' => 6,
       ])
       ->setDisplayOptions('view', [
         'label' => 'inline',
         'type' => 'list_default',
-        'weight' => 5,
+        'weight' => 6,
       ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
@@ -195,12 +215,12 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
       ->setDefaultValue(FALSE)
       ->setDisplayOptions('form', [
         'type' => 'boolean_checkbox',
-        'weight' => 6,
+        'weight' => 7,
       ])
       ->setDisplayOptions('view', [
         'label' => 'inline',
         'type' => 'boolean',
-        'weight' => 6,
+        'weight' => 7,
         'settings' => [
           'format' => 'yes-no',
         ],
@@ -211,7 +231,7 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
     // Stores fields.
     $fields['honey_stores'] = BaseFieldDefinition::create('list_string')
       ->setLabel(t('Honey Stores'))
-      ->setDescription(t('Level of honey stores.'))
+      ->setDescription(t('Look for capped honey arced across the top of brood frames and filling outer frames — aim for at least 2–3 full frames\' worth, more heading into poor weather. Level of honey stores.'))
       ->setSetting('allowed_values', [
         'abundant' => 'Abundant',
         'adequate' => 'Adequate',
@@ -220,19 +240,19 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
       ])
       ->setDisplayOptions('form', [
         'type' => 'options_select',
-        'weight' => 7,
+        'weight' => 8,
       ])
       ->setDisplayOptions('view', [
         'label' => 'inline',
         'type' => 'list_default',
-        'weight' => 7,
+        'weight' => 8,
       ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
     $fields['pollen_stores'] = BaseFieldDefinition::create('list_string')
       ->setLabel(t('Pollen Stores'))
-      ->setDescription(t('Level of pollen stores.'))
+      ->setDescription(t('Look for a rainbow band of packed, multi-coloured pollen cells arcing just below the honey and above the brood — a good sign the colony is fed and the queen is laying well. Level of pollen stores.'))
       ->setSetting('allowed_values', [
         'abundant' => 'Abundant',
         'adequate' => 'Adequate',
@@ -241,12 +261,12 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
       ])
       ->setDisplayOptions('form', [
         'type' => 'options_select',
-        'weight' => 8,
+        'weight' => 9,
       ])
       ->setDisplayOptions('view', [
         'label' => 'inline',
         'type' => 'list_default',
-        'weight' => 8,
+        'weight' => 9,
       ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
@@ -254,7 +274,7 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
     // Colony condition fields.
     $fields['temperament'] = BaseFieldDefinition::create('list_string')
       ->setLabel(t('Temperament'))
-      ->setDescription(t('Temperament observed during this inspection.'))
+      ->setDescription(t('Gauge how calmly the bees stay on the comb when you open up — roaring, running, head-butting, or following you off suggests a bad-tempered colony worth requeening; quiet bees that keep working are the goal. Temperament observed during this inspection.'))
       ->setSetting('allowed_values', [
         'calm' => 'Calm',
         'moderate' => 'Moderate',
@@ -262,19 +282,19 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
       ])
       ->setDisplayOptions('form', [
         'type' => 'options_select',
-        'weight' => 9,
+        'weight' => 10,
       ])
       ->setDisplayOptions('view', [
         'label' => 'inline',
         'type' => 'list_default',
-        'weight' => 9,
+        'weight' => 10,
       ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
     $fields['population'] = BaseFieldDefinition::create('list_string')
       ->setLabel(t('Population'))
-      ->setDescription(t('Strength of the colony population.'))
+      ->setDescription(t('Judge by how thickly the bees cover the frames — a strong colony has bees blanketing both sides of most brood frames with no bare comb showing, scaled to the season (building in spring, peak in summer, contracting by autumn). Strength of the colony population.'))
       ->setSetting('allowed_values', [
         'strong' => 'Strong',
         'moderate' => 'Moderate',
@@ -282,12 +302,12 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
       ])
       ->setDisplayOptions('form', [
         'type' => 'options_select',
-        'weight' => 10,
+        'weight' => 11,
       ])
       ->setDisplayOptions('view', [
         'label' => 'inline',
         'type' => 'list_default',
-        'weight' => 10,
+        'weight' => 11,
       ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
@@ -295,16 +315,16 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
     // Health fields.
     $fields['varroa_check'] = BaseFieldDefinition::create('boolean')
       ->setLabel(t('Varroa Check'))
-      ->setDescription(t('Was a varroa mite check performed?'))
+      ->setDescription(t('Inspect drone brood by uncapping a few cells with a fork and look for reddish-brown mites on the pupae, watch for bees with deformed wings. Was a varroa mite check performed?'))
       ->setDefaultValue(FALSE)
       ->setDisplayOptions('form', [
         'type' => 'boolean_checkbox',
-        'weight' => 11,
+        'weight' => 12,
       ])
       ->setDisplayOptions('view', [
         'label' => 'inline',
         'type' => 'boolean',
-        'weight' => 11,
+        'weight' => 12,
         'settings' => [
           'format' => 'yes-no',
         ],
@@ -318,19 +338,19 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
       ->setSetting('min', 0)
       ->setDisplayOptions('form', [
         'type' => 'number',
-        'weight' => 12,
+        'weight' => 13,
       ])
       ->setDisplayOptions('view', [
         'label' => 'inline',
         'type' => 'number_integer',
-        'weight' => 12,
+        'weight' => 13,
       ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
     $fields['disease_signs'] = BaseFieldDefinition::create('list_string')
       ->setLabel(t('Disease Signs'))
-      ->setDescription(t('Any signs of disease observed.'))
+      ->setDescription(t('Scan the brood for irregularities — sunken, greasy, or perforated cappings, discoloured or twisted larvae, a foul smell, chalky white mummies, or bees with deformed wings — anything that breaks the pattern of pearly-white larvae and uniformly domed cappings warrants closer investigation. Any signs of disease observed.'))
       ->setSetting('allowed_values', [
         'none' => 'None',
         'nosema' => 'Nosema',
@@ -342,12 +362,12 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
       ])
       ->setDisplayOptions('form', [
         'type' => 'options_select',
-        'weight' => 13,
+        'weight' => 14,
       ])
       ->setDisplayOptions('view', [
         'label' => 'inline',
         'type' => 'list_default',
-        'weight' => 13,
+        'weight' => 14,
       ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
@@ -359,12 +379,12 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
       ->setDefaultValue(FALSE)
       ->setDisplayOptions('form', [
         'type' => 'boolean_checkbox',
-        'weight' => 14,
+        'weight' => 15,
       ])
       ->setDisplayOptions('view', [
         'label' => 'inline',
         'type' => 'boolean',
-        'weight' => 14,
+        'weight' => 15,
         'settings' => [
           'format' => 'yes-no',
         ],
@@ -378,12 +398,12 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
       ->setSetting('max_length', 255)
       ->setDisplayOptions('form', [
         'type' => 'string_textfield',
-        'weight' => 15,
+        'weight' => 16,
       ])
       ->setDisplayOptions('view', [
         'label' => 'inline',
         'type' => 'string',
-        'weight' => 15,
+        'weight' => 16,
       ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
@@ -394,12 +414,12 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
       ->setSetting('min', 0)
       ->setDisplayOptions('form', [
         'type' => 'number',
-        'weight' => 16,
+        'weight' => 17,
       ])
       ->setDisplayOptions('view', [
         'label' => 'inline',
         'type' => 'number_integer',
-        'weight' => 16,
+        'weight' => 17,
       ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
@@ -409,7 +429,7 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
       ->setDescription(t('Actions performed during the inspection.'))
       ->setDisplayOptions('form', [
         'type' => 'string_textarea',
-        'weight' => 17,
+        'weight' => 18,
         'settings' => [
           'rows' => 4,
         ],
@@ -417,7 +437,7 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
       ->setDisplayOptions('view', [
         'label' => 'above',
         'type' => 'basic_string',
-        'weight' => 17,
+        'weight' => 18,
       ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
@@ -427,7 +447,7 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
       ->setDescription(t('General observations and notes.'))
       ->setDisplayOptions('form', [
         'type' => 'string_textarea',
-        'weight' => 18,
+        'weight' => 19,
         'settings' => [
           'rows' => 4,
         ],
@@ -435,7 +455,7 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
       ->setDisplayOptions('view', [
         'label' => 'above',
         'type' => 'basic_string',
-        'weight' => 18,
+        'weight' => 19,
       ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
@@ -445,12 +465,12 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
       ->setDescription(t('The user who performed this inspection.'))
       ->setDisplayOptions('form', [
         'type' => 'entity_reference_autocomplete',
-        'weight' => 19,
+        'weight' => 20,
       ])
       ->setDisplayOptions('view', [
         'label' => 'above',
         'type' => 'entity_reference_label',
-        'weight' => 19,
+        'weight' => 20,
       ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
