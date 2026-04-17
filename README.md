@@ -22,7 +22,9 @@ Apiary → Hive → Hive Inspection
 ## Requirements
 
 - Drupal 11
-- [Geolocation Field](https://www.drupal.org/project/geolocation) module (^4.0@beta) — provides the geolocation field type with Leaflet/OpenStreetMap map integration
+- [Geofield](https://www.drupal.org/project/geofield) module — provides the geofield field type for storing geospatial data
+- [Geocoder](https://www.drupal.org/project/geocoder) module — provides geocoding services
+- [Leaflet](https://www.drupal.org/project/leaflet) module — provides Leaflet/OpenStreetMap map display and interactive map widget
 
 ## Installation
 
@@ -42,20 +44,22 @@ After installation, navigate to **Administration → Structure → HiveLog**
 ### Workflow
 
 1. **Create an apiary** — Add a location where your hives are kept. Optionally
-   include a text description, geolocation coordinates (latitude/longitude via
-   the Geolocation field module), and notes.
+   include a text description, geolocation coordinates (via an interactive
+   Leaflet map picker), and notes.
 
 2. **Add hives to an apiary** — From the apiary view page, click "Add Hive".
    Each hive records:
    - Hive type (10x12, Norwegian, Langstroth, Trugstad, Normal)
    - Hive material (Wood, Styrofoam)
    - Queen year and auto-calculated queen marking colour
-   - Bee breed (Buckfast, Carniolan, Italian, Caucasian, Russian, AMM, Other)
+   - Bee breed (Buckfast, Carniolan, Italian, Caucasian, Dark European/AMM, Other)
    - Temperament (Calm, Moderate, Aggressive)
    - Status (Active, Inactive, Dead, Sold, Merged)
 
 3. **Log inspections** — From the hive view page, click "Add Inspection". Each
    inspection captures:
+   - **External check (before opening)** — Flight activity, dead bees, signs of
+     robbing, wasps, hive weight (hefting)
    - **Queen status** — Queen seen, queen cells present, eggs seen
    - **Brood** — Brood pattern quality, capped queen brood
    - **Stores** — Honey stores level, pollen stores level
@@ -121,9 +125,11 @@ Users with "Administer HiveLog" bypass all individual permission checks.
 ```
 hivelog/
 ├── hivelog.info.yml              # Module definition
+├── hivelog.install               # Install, update and uninstall hooks
 ├── hivelog.module                # Hook implementations
 ├── hivelog.permissions.yml       # Permission definitions
 ├── hivelog.routing.yml           # Route definitions
+├── hivelog.services.yml          # Service definitions
 ├── hivelog.links.menu.yml        # Admin menu link
 ├── hivelog.links.action.yml      # Action links (Add buttons)
 ├── hivelog.links.task.yml        # Local task tabs (View/Edit/Delete)
@@ -144,6 +150,8 @@ hivelog/
 │   │   ├── ApiaryController.php      # Apiary view (with hives table)
 │   │   ├── HiveController.php        # Hive view (with inspections table)
 │   │   └── HiveInspectionController.php  # Inspection view
+│   ├── Breadcrumb/
+│   │   └── HivelogBreadcrumbBuilder.php  # Breadcrumb builder service
 │   ├── ApiaryListBuilder.php
 │   ├── HiveListBuilder.php
 │   ├── HiveInspectionListBuilder.php
@@ -152,10 +160,13 @@ hivelog/
 │   └── HiveInspectionAccessControlHandler.php
 └── tests/
     └── src/
-        └── Kernel/
-            ├── ApiaryTest.php        # Apiary entity tests
-            ├── HiveTest.php          # Hive entity + queen colour tests
-            └── HiveInspectionTest.php    # Inspection entity tests
+        ├── Kernel/
+        │   ├── ApiaryTest.php            # Apiary entity tests
+        │   ├── HiveTest.php              # Hive entity + queen colour tests
+        │   └── HiveInspectionTest.php    # Inspection entity tests
+        └── Unit/
+            └── Breadcrumb/
+                └── HivelogBreadcrumbBuilderTest.php  # Breadcrumb unit tests
 ```
 
 ## Testing
@@ -171,8 +182,9 @@ ddev exec "SIMPLETEST_DB=mysql://db:db@db:3306/db \
   --group hivelog"
 ```
 
-The suite includes 25 tests covering entity CRUD, relationships, queen colour
-auto-calculation, field option validation, and inspection logging.
+The suite includes 53 tests covering entity CRUD, relationships, queen colour
+auto-calculation, field option validation, inspection logging, and breadcrumb
+building.
 
 ## Extending the Module
 
