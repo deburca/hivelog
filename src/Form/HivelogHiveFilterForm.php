@@ -101,6 +101,8 @@ class HivelogHiveFilterForm extends FormBase {
     $form['actions']['submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Filter'),
+      '#button_type' => 'primary',
+      '#attributes' => ['class' => ['hivelog-filter-form__submit']],
     ];
     if ($apiary) {
       $form['actions']['reset'] = [
