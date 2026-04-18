@@ -14,6 +14,12 @@ class HiveInspectionForm extends ContentEntityForm {
    * {@inheritdoc}
    */
   public function form(array $form, FormStateInterface $form_state) {
+    // Apply sensible defaults for new inspections before building widgets so
+    // the defaults flow through the standard entity field widgets.
+    if ($this->entity->isNew()) {
+      $this->applyNewEntityDefaults();
+    }
+
     $form = parent::form($form, $form_state);
 
     $form['inspection_sections'] = [
@@ -101,15 +107,64 @@ class HiveInspectionForm extends ContentEntityForm {
       $form['queen_brood']['#access'] = FALSE;
     }
 
+    // Hide dependent fields when their controlling boolean is unchecked so
+    // users are not asked for information that is not applicable. With JS
+    // disabled these fields stay visible (non-JS safe) and the server
+    // normalises irrelevant values on submit.
+    if (isset($form['feed_type'])) {
+      $form['feed_type']['#states'] = [
+        'visible' => [
+          ':input[name="fed[value]"]' => ['checked' => TRUE],
+        ],
+      ];
+    }
+    if (isset($form['varroa_count'])) {
+      $form['varroa_count']['#states'] = [
+        'visible' => [
+          ':input[name="varroa_check[value]"]' => ['checked' => TRUE],
+        ],
+      ];
+    }
+
     return $form;
+  }
+
+  /**
+   * Applies sensible defaults on a fresh inspection entity.
+   */
+  protected function applyNewEntityDefaults(): void {
+    $entity = $this->entity;
+    if ($entity->get('inspection_date')->isEmpty()) {
+      $entity->set('inspection_date', date('Y-m-d'));
+    }
+    if ($entity->get('disease_signs')->isEmpty()) {
+      $entity->set('disease_signs', 'none');
+    }
   }
 
   /**
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
+    // Normalise values of hidden dependent fields before the rest of the
+    // validation runs, so a user who typed a value and then unchecked the
+    // controlling field isn't punished for something the UI hides anyway.
+    $this->normaliseDependentFields($form_state);
+
     parent::validateForm($form, $form_state);
     $this->validateDependentFields($form_state);
+  }
+
+  /**
+   * Clears dependent field values when their controlling field is unchecked.
+   */
+  protected function normaliseDependentFields(FormStateInterface $form_state): void {
+    if (!$this->getBooleanFieldValue($form_state, 'fed')) {
+      $this->clearScalarFieldValue($form_state, 'feed_type', '');
+    }
+    if (!$this->getBooleanFieldValue($form_state, 'varroa_check')) {
+      $this->clearScalarFieldValue($form_state, 'varroa_count', NULL);
+    }
   }
 
   /**
@@ -124,12 +179,6 @@ class HiveInspectionForm extends ContentEntityForm {
         $this->t('Feed type is required when the colony was fed.')
       );
     }
-    if (!$fed && $feed_type !== '') {
-      $form_state->setErrorByName(
-        'feed_type',
-        $this->t('Feed type must be empty unless the colony was fed.')
-      );
-    }
 
     $varroa_check = $this->getBooleanFieldValue($form_state, 'varroa_check');
     $varroa_count = $this->getNullableFieldValue($form_state, 'varroa_count');
@@ -137,12 +186,6 @@ class HiveInspectionForm extends ContentEntityForm {
       $form_state->setErrorByName(
         'varroa_count',
         $this->t('Varroa count is required when a varroa check was performed.')
-      );
-    }
-    if (!$varroa_check && $varroa_count !== NULL) {
-      $form_state->setErrorByName(
-        'varroa_count',
-        $this->t('Varroa count must be empty unless a varroa check was performed.')
       );
     }
   }
@@ -181,6 +224,28 @@ class HiveInspectionForm extends ContentEntityForm {
       return NULL;
     }
     return $value;
+  }
+
+  /**
+   * Replaces a scalar field value, preserving the original shape.
+   */
+  protected function clearScalarFieldValue(FormStateInterface $form_state, string $field_name, mixed $cleared): void {
+    $current = $form_state->getValue($field_name);
+    if (is_array($current)) {
+      if (isset($current[0]) && is_array($current[0]) && array_key_exists('value', $current[0])) {
+        $current[0]['value'] = $cleared;
+      }
+      elseif (array_key_exists('value', $current)) {
+        $current['value'] = $cleared;
+      }
+      else {
+        $current = [['value' => $cleared]];
+      }
+      $form_state->setValue($field_name, $current);
+    }
+    else {
+      $form_state->setValue($field_name, $cleared);
+    }
   }
 
   /**
