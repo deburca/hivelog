@@ -28,13 +28,6 @@ class HiveController extends ControllerBase {
   public function view(Hive $hive) {
     $build = [];
 
-    // Letterbox hero image (first attached picture), rendered above the
-    // hive entity details when present.
-    $hero = $this->buildHero($hive);
-    if (!empty($hero)) {
-      $build['hero'] = $hero;
-    }
-
     // Render the hive entity fields.
     $view_builder = $this->entityTypeManager()->getViewBuilder('hive');
     $build['hive'] = $view_builder->view($hive);
@@ -128,6 +121,12 @@ class HiveController extends ControllerBase {
       '#weight' => 12,
     ];
 
+    // Attached pictures, rendered in a grid below the inspection list.
+    $images = $this->buildImagesGrid($hive);
+    if (!empty($images)) {
+      $build['images'] = $images + ['#weight' => 20];
+    }
+
     return $build;
   }
 
@@ -139,39 +138,52 @@ class HiveController extends ControllerBase {
   }
 
   /**
-   * Builds a letterboxed hero render array from the hive's first image.
+   * Builds a grid of hive pictures with links to the full-size image.
    */
-  protected function buildHero(Hive $hive): array {
+  protected function buildImagesGrid(Hive $hive): array {
     if ($hive->get('images')->isEmpty()) {
       return [];
     }
 
-    $file = $hive->get('images')->entity;
-    if (!$file) {
-      return [];
+    $file_url_generator = \Drupal::service('file_url_generator');
+    $items = [];
+    foreach ($hive->get('images') as $delta => $item) {
+      /** @var \Drupal\file\FileInterface|null $file */
+      $file = $item->entity;
+      if (!$file) {
+        continue;
+      }
+      $full_url = $file_url_generator->generateAbsoluteString($file->getFileUri());
+      $alt = (string) ($item->alt ?? '');
+      $items[] = [
+        'full_url' => $full_url,
+        'thumb_url' => $full_url,
+        'alt' => $alt,
+      ];
     }
 
-    $url = \Drupal::service('file_url_generator')->generateAbsoluteString($file->getFileUri());
-    $alt = (string) ($hive->get('images')->alt ?? $hive->label());
+    if (empty($items)) {
+      return [];
+    }
 
     return [
       '#type' => 'container',
       '#attributes' => [
-        'class' => [
-          'hivelog-hive-hero',
-          'hivelog-hive-hero--letterboxed',
-        ],
+        'class' => ['hivelog-hive-photos'],
       ],
-      '#weight' => -10,
       '#attached' => [
         'library' => ['hivelog/images'],
       ],
-      'frame' => [
+      'heading' => [
+        '#type' => 'html_tag',
+        '#tag' => 'h3',
+        '#value' => $this->t('Pictures'),
+      ],
+      'grid' => [
         '#type' => 'inline_template',
-        '#template' => '<div class="hivelog-hive-hero__frame" style="background-image: url({{ url }});" role="img" aria-label="{{ alt }}"></div>',
+        '#template' => '<div class="hivelog-photos-grid">{% for item in items %}<a class="hivelog-photos-grid__item" href="{{ item.full_url }}" target="_blank" rel="noopener"><img src="{{ item.thumb_url }}" alt="{{ item.alt }}" loading="lazy" /></a>{% endfor %}</div>',
         '#context' => [
-          'url' => $url,
-          'alt' => $alt,
+          'items' => $items,
         ],
       ],
     ];

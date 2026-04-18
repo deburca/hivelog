@@ -123,7 +123,7 @@ class HiveInspectionController extends ControllerBase {
       ],
       'grid' => [
         '#type' => 'inline_template',
-        '#template' => '<div class="hivelog-inspection-photos__grid">{% for item in items %}<a class="hivelog-inspection-photos__item" href="{{ item.full_url }}" target="_blank" rel="noopener"><img src="{{ item.thumb_url }}" alt="{{ item.alt }}" loading="lazy" /></a>{% endfor %}</div>',
+        '#template' => '<div class="hivelog-photos-grid">{% for item in items %}<a class="hivelog-photos-grid__item" href="{{ item.full_url }}" target="_blank" rel="noopener"><img src="{{ item.thumb_url }}" alt="{{ item.alt }}" loading="lazy" /></a>{% endfor %}</div>',
         '#context' => [
           'items' => $items,
         ],

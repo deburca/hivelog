@@ -474,8 +474,8 @@ class HiveInspectionTest extends KernelTestBase {
 
     $this->assertArrayHasKey('photos', $build);
     $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
-    $this->assertStringContainsString('hivelog-inspection-photos__grid', $html);
-    $this->assertStringContainsString('hivelog-inspection-photos__item', $html);
+    $this->assertStringContainsString('hivelog-photos-grid', $html);
+    $this->assertStringContainsString('hivelog-photos-grid__item', $html);
     $this->assertStringContainsString('photo-1.png', $html);
     $this->assertStringContainsString('photo-2.png', $html);
     $this->assertStringContainsString('alt="Photo one"', $html);
