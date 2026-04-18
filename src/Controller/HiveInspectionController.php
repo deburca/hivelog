@@ -3,9 +3,15 @@
 namespace Drupal\hivelog\Controller;
 
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Datetime\DateFormatterInterface;
+use Drupal\Core\Entity\EntityFormBuilderInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\File\FileUrlGeneratorInterface;
 use Drupal\hivelog\Entity\Hive;
 use Drupal\hivelog\Entity\HiveInspection;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Controller for Hive Inspection pages.
@@ -13,13 +19,50 @@ use Drupal\hivelog\Entity\HiveInspection;
 class HiveInspectionController extends ControllerBase {
 
   /**
+   * The file URL generator.
+   */
+  protected FileUrlGeneratorInterface $fileUrlGenerator;
+
+  /**
+   * The date formatter.
+   */
+  protected DateFormatterInterface $dateFormatter;
+
+  public function __construct(
+    EntityTypeManagerInterface $entity_type_manager,
+    EntityFormBuilderInterface $entity_form_builder,
+    FileUrlGeneratorInterface $file_url_generator,
+    DateFormatterInterface $date_formatter,
+  ) {
+    // $entityTypeManager and $entityFormBuilder are untyped properties
+    // inherited from ControllerBase; assign them rather than redeclaring
+    // them with types.
+    $this->entityTypeManager = $entity_type_manager;
+    $this->entityFormBuilder = $entity_form_builder;
+    $this->fileUrlGenerator = $file_url_generator;
+    $this->dateFormatter = $date_formatter;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container): static {
+    return new static(
+      $container->get('entity_type.manager'),
+      $container->get('entity.form_builder'),
+      $container->get('file_url_generator'),
+      $container->get('date.formatter'),
+    );
+  }
+
+  /**
    * Provides the add form for an inspection within a hive context.
    */
   public function addForm(Hive $hive) {
-    $inspection = $this->entityTypeManager()->getStorage('hive_inspection')->create([
+    $inspection = $this->entityTypeManager->getStorage('hive_inspection')->create([
       'hive' => $hive->id(),
     ]);
-    return $this->entityFormBuilder()->getForm($inspection, 'add');
+    return $this->entityFormBuilder->getForm($inspection, 'add');
   }
 
   /**
@@ -76,6 +119,15 @@ class HiveInspectionController extends ControllerBase {
       $build['photos'] = $photos;
     }
 
+    // Explicit cache metadata.
+    // - user.permissions: the action buttons depend on the current user's
+    //   update/delete access on the inspection.
+    // - Inspection's own cache tags: invalidate on any update/delete.
+    $cache = CacheableMetadata::createFromRenderArray($build)
+      ->addCacheContexts(['user.permissions'])
+      ->addCacheableDependency($hive_inspection);
+    $cache->applyTo($build);
+
     return $build;
   }
 
@@ -87,8 +139,7 @@ class HiveInspectionController extends ControllerBase {
       return [];
     }
 
-    $file_url_generator = \Drupal::service('file_url_generator');
-    $image_style = \Drupal::entityTypeManager()
+    $image_style = $this->entityTypeManager
       ->getStorage('image_style')
       ->load('thumbnail');
 
@@ -100,7 +151,7 @@ class HiveInspectionController extends ControllerBase {
         continue;
       }
 
-      $full_url = $file_url_generator->generateAbsoluteString($file->getFileUri());
+      $full_url = $this->fileUrlGenerator->generateAbsoluteString($file->getFileUri());
       $thumb_url = $image_style ? $image_style->buildUrl($file->getFileUri()) : $full_url;
       $alt = (string) ($item->alt ?? '');
 
@@ -252,7 +303,9 @@ class HiveInspectionController extends ControllerBase {
       case 'inspection_date':
         $timestamp = strtotime($field->value . ' 00:00:00 UTC');
         return [
-          '#plain_text' => $timestamp !== FALSE ? \Drupal::service('date.formatter')->format($timestamp, 'custom', 'Y-m-d') : (string) $field->value,
+          '#plain_text' => $timestamp !== FALSE
+            ? $this->dateFormatter->format($timestamp, 'custom', 'Y-m-d')
+            : (string) $field->value,
         ];
 
       case 'weight':

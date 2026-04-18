@@ -2,8 +2,12 @@
 
 namespace Drupal\hivelog\Controller;
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\Query\QueryInterface;
+use Drupal\Core\Form\FormBuilderInterface;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Form\HivelogHiveFilterForm;
@@ -30,7 +34,17 @@ class ApiaryController extends ControllerBase {
    */
   protected RequestStack $requestStack;
 
-  public function __construct(RequestStack $request_stack) {
+  public function __construct(
+    EntityTypeManagerInterface $entity_type_manager,
+    FormBuilderInterface $form_builder,
+    AccountInterface $current_user,
+    RequestStack $request_stack,
+  ) {
+    // $entityTypeManager / $formBuilder / $currentUser are untyped properties
+    // inherited from ControllerBase; assign rather than redeclare them.
+    $this->entityTypeManager = $entity_type_manager;
+    $this->formBuilder = $form_builder;
+    $this->currentUser = $current_user;
     $this->requestStack = $request_stack;
   }
 
@@ -38,7 +52,12 @@ class ApiaryController extends ControllerBase {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container): static {
-    return new static($container->get('request_stack'));
+    return new static(
+      $container->get('entity_type.manager'),
+      $container->get('form_builder'),
+      $container->get('current_user'),
+      $container->get('request_stack'),
+    );
   }
 
   /**
@@ -48,7 +67,7 @@ class ApiaryController extends ControllerBase {
     $build = [];
 
     // Render the apiary entity fields.
-    $view_builder = $this->entityTypeManager()->getViewBuilder('apiary');
+    $view_builder = $this->entityTypeManager->getViewBuilder('apiary');
     $build['apiary'] = $view_builder->view($apiary);
 
     // Add hive heading and action link.
@@ -68,12 +87,12 @@ class ApiaryController extends ControllerBase {
     ];
 
     // Filter form.
-    $build['hives_filter'] = $this->formBuilder()->getForm(HivelogHiveFilterForm::class, $apiary);
+    $build['hives_filter'] = $this->formBuilder->getForm(HivelogHiveFilterForm::class, $apiary);
     $build['hives_filter']['#weight'] = 11.5;
 
     // Build the query with filters and pagination applied.
     $filters = $this->extractHiveFilters();
-    $query = $this->entityTypeManager()
+    $query = $this->entityTypeManager
       ->getStorage('hive')
       ->getQuery()
       ->accessCheck(TRUE)
@@ -84,12 +103,11 @@ class ApiaryController extends ControllerBase {
     $hive_ids = $query->execute();
 
     $hives = $hive_ids
-      ? $this->entityTypeManager()->getStorage('hive')->loadMultiple($hive_ids)
+      ? $this->entityTypeManager->getStorage('hive')->loadMultiple($hive_ids)
       : [];
-    $account = $this->currentUser();
     $hives = array_filter(
       $hives,
-      static fn($hive) => $hive->access('view', $account)
+      fn($hive) => $hive->access('view', $this->currentUser)
     );
 
     $header = [
@@ -141,9 +159,21 @@ class ApiaryController extends ControllerBase {
       '#weight' => 13,
     ];
 
-    // Cache this render array per URL query string so pager + filter state
-    // produce distinct cache entries.
-    $build['#cache']['contexts'][] = 'url.query_args';
+    // Explicit cache metadata.
+    // - url.query_args: pager + filter state travels in the query string.
+    // - user.permissions: hive rows are post-filtered by per-entity access,
+    //   so two users with different permissions must not share a cache entry.
+    // - Apiary entity tags: invalidate on apiary update/delete.
+    // - Hive list cache tag + each rendered hive's own tags: invalidate on
+    //   any hive change so the embedded table is never stale.
+    $cache = CacheableMetadata::createFromRenderArray($build)
+      ->addCacheContexts(['url.query_args', 'user.permissions'])
+      ->addCacheableDependency($apiary)
+      ->addCacheTags($this->entityTypeManager->getDefinition('hive')->getListCacheTags());
+    foreach ($hives as $hive) {
+      $cache->addCacheableDependency($hive);
+    }
+    $cache->applyTo($build);
 
     return $build;
   }
