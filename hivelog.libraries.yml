@@ -9,3 +9,9 @@ images:
   css:
     component:
       css/hivelog.images.css: {}
+
+filter_form:
+  version: 1.x
+  css:
+    component:
+      css/hivelog.filter-form.css: {}
