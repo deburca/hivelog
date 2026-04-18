@@ -78,17 +78,21 @@ class ApiaryController extends ControllerBase {
       '#weight' => 10,
     ];
 
-    $build['add_hive'] = [
-      '#type' => 'link',
-      '#title' => $this->t('Add Hive'),
-      '#url' => Url::fromRoute('hivelog.hive.add', ['apiary' => $apiary->id()]),
-      '#attributes' => ['class' => ['button', 'button--primary']],
+    // Toolbar: filter form on the left, Add Hive action on the right.
+    $build['hives_toolbar'] = [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['hivelog-toolbar']],
       '#weight' => 11,
+      'filter' => $this->formBuilder->getForm(HivelogHiveFilterForm::class, $apiary),
+      'add' => [
+        '#type' => 'link',
+        '#title' => $this->t('Add Hive'),
+        '#url' => Url::fromRoute('hivelog.hive.add', ['apiary' => $apiary->id()]),
+        '#attributes' => [
+          'class' => ['button', 'button--primary', 'hivelog-toolbar__action'],
+        ],
+      ],
     ];
-
-    // Filter form.
-    $build['hives_filter'] = $this->formBuilder->getForm(HivelogHiveFilterForm::class, $apiary);
-    $build['hives_filter']['#weight'] = 11.5;
 
     // Build the query with filters and pagination applied.
     $filters = $this->extractHiveFilters();

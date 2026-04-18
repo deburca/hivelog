@@ -111,17 +111,21 @@ class HiveController extends ControllerBase {
       '#weight' => 10,
     ];
 
-    $build['add_inspection'] = [
-      '#type' => 'link',
-      '#title' => $this->t('Add Inspection'),
-      '#url' => Url::fromRoute('hivelog.inspection.add', ['hive' => $hive->id()]),
-      '#attributes' => ['class' => ['button', 'button--primary']],
+    // Toolbar: filter form on the left, Add Inspection action on the right.
+    $build['inspections_toolbar'] = [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['hivelog-toolbar']],
       '#weight' => 11,
+      'filter' => $this->formBuilder->getForm(HivelogInspectionFilterForm::class, $hive),
+      'add' => [
+        '#type' => 'link',
+        '#title' => $this->t('Add Inspection'),
+        '#url' => Url::fromRoute('hivelog.inspection.add', ['hive' => $hive->id()]),
+        '#attributes' => [
+          'class' => ['button', 'button--primary', 'hivelog-toolbar__action'],
+        ],
+      ],
     ];
-
-    // Filter form.
-    $build['inspections_filter'] = $this->formBuilder->getForm(HivelogInspectionFilterForm::class, $hive);
-    $build['inspections_filter']['#weight'] = 11.5;
 
     // Build the paginated + filtered inspection query.
     $filters = $this->extractInspectionFilters();
