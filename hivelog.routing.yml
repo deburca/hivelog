@@ -52,6 +52,14 @@ entity.apiary.delete_form:
         type: entity:apiary
 
 # Hive routes.
+entity.hive.collection:
+  path: '/admin/hivelog/hives'
+  defaults:
+    _entity_list: 'hive'
+    _title: 'HiveLog - Hives'
+  requirements:
+    _permission: 'view hive+administer hivelog'
+
 hivelog.hive.add:
   path: '/admin/hivelog/apiary/{apiary}/hive/add'
   defaults:
@@ -101,6 +109,14 @@ entity.hive.delete_form:
         type: entity:hive
 
 # Inspection routes.
+entity.hive_inspection.collection:
+  path: '/admin/hivelog/inspections'
+  defaults:
+    _entity_list: 'hive_inspection'
+    _title: 'HiveLog - Inspections'
+  requirements:
+    _permission: 'view hive inspection+administer hivelog'
+
 hivelog.inspection.add:
   path: '/admin/hivelog/hive/{hive}/inspection/add'
   defaults:

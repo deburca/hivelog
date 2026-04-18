@@ -219,4 +219,25 @@ class ApiaryTest extends KernelTestBase {
     );
   }
 
+  /**
+   * Tests global hive and inspection collection routes are registered.
+   */
+  public function testGlobalCollectionRoutesAndMenuLinksExist(): void {
+    $route_provider = \Drupal::service('router.route_provider');
+    $hive_route = $route_provider->getRouteByName('entity.hive.collection');
+    $inspection_route = $route_provider->getRouteByName('entity.hive_inspection.collection');
+
+    $this->assertEquals('/admin/hivelog/hives', $hive_route->getPath());
+    $this->assertEquals('/admin/hivelog/inspections', $inspection_route->getPath());
+    $this->assertEquals('view hive+administer hivelog', $hive_route->getRequirement('_permission'));
+    $this->assertEquals('view hive inspection+administer hivelog', $inspection_route->getRequirement('_permission'));
+
+    $menu_links = \Drupal::service('plugin.manager.menu.link')->getDefinitions();
+    $this->assertArrayHasKey('hivelog.hives', $menu_links);
+    $this->assertArrayHasKey('hivelog.inspections', $menu_links);
+    $this->assertEquals('entity.hive.collection', $menu_links['hivelog.hives']['route_name']);
+    $this->assertEquals('entity.hive_inspection.collection', $menu_links['hivelog.inspections']['route_name']);
+    $this->assertEquals('hivelog.admin', $menu_links['hivelog.hives']['parent']);
+    $this->assertEquals('hivelog.admin', $menu_links['hivelog.inspections']['parent']);
+  }
 }
