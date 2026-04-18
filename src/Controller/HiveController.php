@@ -63,6 +63,17 @@ class HiveController extends ControllerBase {
     $build['hive'] = $view_builder->view($hive);
     $build['hive']['#weight'] = 5;
 
+    // Render a letterboxed weight histogram for the year of the most recent
+    // inspection, based on the full (unpaginated, unfiltered) inspection set
+    // so the summary chart is not affected by active filters or paging.
+    // Placed above the Inspections heading/Add Inspection action so it
+    // reads as a summary of the whole inspection history.
+    $histogram_points = $this->collectHistogramPoints($hive);
+    $histogram = $this->buildWeightHistogram($histogram_points);
+    if (!empty($histogram)) {
+      $build['weight_histogram'] = $histogram + ['#weight' => 7];
+    }
+
     // Add inspections heading and action link.
     $build['inspections_heading'] = [
       '#type' => 'html_tag',
@@ -78,15 +89,6 @@ class HiveController extends ControllerBase {
       '#attributes' => ['class' => ['button', 'button--primary']],
       '#weight' => 11,
     ];
-
-    // Render a letterboxed weight histogram for the year of the most recent
-    // inspection, based on the full (unpaginated, unfiltered) inspection set
-    // so the summary chart is not affected by active filters or paging.
-    $histogram_points = $this->collectHistogramPoints($hive);
-    $histogram = $this->buildWeightHistogram($histogram_points);
-    if (!empty($histogram)) {
-      $build['weight_histogram'] = $histogram + ['#weight' => 11.2];
-    }
 
     // Filter form.
     $build['inspections_filter'] = $this->formBuilder()->getForm(HivelogInspectionFilterForm::class, $hive);
