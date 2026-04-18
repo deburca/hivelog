@@ -37,10 +37,22 @@ class ApiaryController extends ControllerBase {
       '#weight' => 11,
     ];
 
-    // Load hives for this apiary.
+    // Load hives for this apiary and enforce per-entity access checks.
+    $hive_ids = $this->entityTypeManager()
+      ->getStorage('hive')
+      ->getQuery()
+      ->accessCheck(TRUE)
+      ->condition('apiary', $apiary->id())
+      ->sort('name', 'ASC')
+      ->execute();
     $hives = $this->entityTypeManager()
       ->getStorage('hive')
-      ->loadByProperties(['apiary' => $apiary->id()]);
+      ->loadMultiple($hive_ids);
+    $account = $this->currentUser();
+    $hives = array_filter(
+      $hives,
+      static fn($hive) => $hive->access('view', $account)
+    );
 
     $header = [
       $this->t('Name'),
