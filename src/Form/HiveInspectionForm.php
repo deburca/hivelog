@@ -45,7 +45,7 @@ class HiveInspectionForm extends ContentEntityForm {
         'title' => $this->t('Brood, honey and pollen'),
         'weight' => 3,
         'open' => FALSE,
-        'fields' => ['brood_pattern', 'queen_brood', 'honey_stores', 'pollen_stores'],
+        'fields' => ['brood_pattern', 'honey_stores', 'pollen_stores'],
       ],
       'colony_condition' => [
         'title' => $this->t('Colony condition'),
@@ -87,6 +87,12 @@ class HiveInspectionForm extends ContentEntityForm {
           $form[$field_name]['#group'] = $section_key;
         }
       }
+    }
+
+    // Keep the field storage for backward compatibility, but do not expose the
+    // duplicate queen_brood input on the form.
+    if (isset($form['queen_brood'])) {
+      $form['queen_brood']['#access'] = FALSE;
     }
 
     return $form;

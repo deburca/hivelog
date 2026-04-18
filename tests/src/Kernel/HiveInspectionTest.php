@@ -315,6 +315,8 @@ class HiveInspectionTest extends KernelTestBase {
 
     $this->assertEquals('overview', $form['hive']['#group']);
     $this->assertEquals('overview', $form['inspection_date']['#group']);
+    $this->assertArrayHasKey('queen_brood', $form);
+    $this->assertFalse($form['queen_brood']['#access']);
     $this->assertEquals('queen_status', $form['queen_seen']['#group']);
     $this->assertEquals('brood_and_stores', $form['honey_stores']['#group']);
     $this->assertEquals('health', $form['disease_signs']['#group']);
@@ -374,6 +376,7 @@ class HiveInspectionTest extends KernelTestBase {
     $this->assertStringContainsString('Management', $html);
     $this->assertStringContainsString('Field', $html);
     $this->assertStringContainsString('Value', $html);
+    $this->assertStringNotContainsString('Queen Brood', $html);
     $this->assertStringContainsString('Strong flight activity with pollen coming in.', $html);
     $this->assertStringContainsString('Added a super.', $html);
     $this->assertStringContainsString('Colony developing well.', $html);
