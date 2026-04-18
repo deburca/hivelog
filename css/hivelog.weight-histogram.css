@@ -1,0 +1,43 @@
+/**
+ * @file
+ * Styles for the inspection weight histogram on the hive view page.
+ */
+
+.hivelog-weight-histogram {
+  margin: 1.5rem 0;
+}
+
+.hivelog-weight-histogram__title {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+}
+
+/* Letterbox: wide aspect ratio with centered content and subtle frame. */
+.hivelog-weight-histogram--letterboxed .hivelog-weight-histogram__frame {
+  width: 100%;
+  aspect-ratio: 8 / 3;
+  background: #111;
+  border-radius: 4px;
+  padding: 1rem;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hivelog-weight-histogram__frame svg {
+  width: 100%;
+  height: 100%;
+  background: #fdf6e3;
+  border-radius: 2px;
+}
+
+.hivelog-weight-histogram__bar {
+  transition: fill 0.15s ease-in-out;
+}
+
+.hivelog-weight-histogram__bar:hover {
+  fill: #d98e1a;
+}

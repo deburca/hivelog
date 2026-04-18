@@ -278,6 +278,119 @@ class HiveTest extends KernelTestBase {
   }
 
   /**
+   * Tests that the weight histogram renders above the inspection list.
+   */
+  public function testHiveViewWeightHistogram(): void {
+    $this->installConfig(['system']);
+
+    $user = User::create([
+      'name' => 'histogram-tester',
+      'mail' => 'histogram-tester@example.com',
+    ]);
+    $user->save();
+    \Drupal::currentUser()->setAccount($user);
+
+    $hive = Hive::create([
+      'name' => 'Histogram Hive',
+      'apiary' => $this->apiary->id(),
+      'status' => 'active',
+    ]);
+    $hive->save();
+
+    // Most recent year: 2025 — two inspections with weights.
+    HiveInspection::create([
+      'hive' => $hive->id(),
+      'inspection_date' => '2025-05-03',
+      'weight' => 28.5,
+    ])->save();
+    HiveInspection::create([
+      'hive' => $hive->id(),
+      'inspection_date' => '2025-07-12',
+      'weight' => 35.25,
+    ])->save();
+    // Earlier year inspection — should be excluded from the histogram.
+    HiveInspection::create([
+      'hive' => $hive->id(),
+      'inspection_date' => '2024-06-01',
+      'weight' => 22.0,
+    ])->save();
+    // Inspection in the most recent year without a weight — should be ignored.
+    HiveInspection::create([
+      'hive' => $hive->id(),
+      'inspection_date' => '2025-06-06',
+    ])->save();
+
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(HiveController::class);
+    $build = $controller->view($hive);
+
+    $this->assertArrayHasKey('weight_histogram', $build);
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+
+    // Letterboxed container is present.
+    $this->assertStringContainsString('hivelog-weight-histogram--letterboxed', $html);
+    $this->assertStringContainsString('<svg', $html);
+    // Heading references the most recent year.
+    $this->assertStringContainsString('Inspection weights for 2025', $html);
+    // Bars for the two 2025 inspections with weights.
+    $this->assertStringContainsString('28.5 kg', $html);
+    $this->assertStringContainsString('35.25 kg', $html);
+    // mm/dd labels.
+    $this->assertStringContainsString('05/03', $html);
+    $this->assertStringContainsString('07/12', $html);
+
+    // Isolate the SVG markup so we can assert the 2024 inspection weight
+    // (22 kg) is not drawn as a bar in the histogram. It is still expected
+    // to appear later in the inspections table row for that entry.
+    $svg_start = strpos($html, '<svg');
+    $svg_end = strpos($html, '</svg>');
+    $this->assertNotFalse($svg_start);
+    $this->assertNotFalse($svg_end);
+    $svg = substr($html, $svg_start, $svg_end - $svg_start);
+    $this->assertStringNotContainsString('22 kg', $svg);
+    $this->assertStringNotContainsString('06/01', $svg);
+
+    // Histogram must appear before the inspections table.
+    $histogram_pos = strpos($html, 'hivelog-weight-histogram');
+    $table_pos = strpos($html, '<table');
+    $this->assertNotFalse($histogram_pos);
+    $this->assertNotFalse($table_pos);
+    $this->assertLessThan($table_pos, $histogram_pos, 'Histogram should appear before the inspections table.');
+  }
+
+  /**
+   * Tests that no histogram is rendered when no inspections have weights.
+   */
+  public function testHiveViewWeightHistogramAbsentWhenNoData(): void {
+    $this->installConfig(['system']);
+
+    $user = User::create([
+      'name' => 'no-histogram-tester',
+      'mail' => 'no-histogram-tester@example.com',
+    ]);
+    $user->save();
+    \Drupal::currentUser()->setAccount($user);
+
+    $hive = Hive::create([
+      'name' => 'No Weight Hive',
+      'apiary' => $this->apiary->id(),
+      'status' => 'active',
+    ]);
+    $hive->save();
+
+    HiveInspection::create([
+      'hive' => $hive->id(),
+      'inspection_date' => '2025-05-03',
+    ])->save();
+
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(HiveController::class);
+    $build = $controller->view($hive);
+
+    $this->assertArrayNotHasKey('weight_histogram', $build);
+  }
+
+  /**
    * Tests that the hive view inspection table includes weight before queen.
    */
   public function testHiveViewInspectionTableWeightColumn(): void {
