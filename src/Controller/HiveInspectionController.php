@@ -26,7 +26,11 @@ class HiveInspectionController extends ControllerBase {
    * Displays a hive inspection.
    */
   public function view(HiveInspection $hive_inspection) {
-    return [
+    $build = [
+      'actions' => $this->buildActions($hive_inspection),
+    ];
+
+    $build += [
       'overview' => $this->buildSection($this->t('Overview'), $hive_inspection, [
         'hive',
         'inspection_date',
@@ -65,6 +69,43 @@ class HiveInspectionController extends ControllerBase {
         'notes',
       ]),
     ];
+
+    return $build;
+  }
+
+  /**
+   * Builds Edit and Delete action links for the inspection view.
+   */
+  protected function buildActions(HiveInspection $hive_inspection): array {
+    $links = [];
+
+    if ($hive_inspection->access('update')) {
+      $links['edit'] = [
+        '#type' => 'link',
+        '#title' => $this->t('Edit'),
+        '#url' => $hive_inspection->toUrl('edit-form'),
+        '#attributes' => ['class' => ['button', 'button--primary']],
+      ];
+    }
+
+    if ($hive_inspection->access('delete')) {
+      $links['delete'] = [
+        '#type' => 'link',
+        '#title' => $this->t('Delete'),
+        '#url' => $hive_inspection->toUrl('delete-form'),
+        '#attributes' => ['class' => ['button', 'button--danger']],
+      ];
+    }
+
+    if (empty($links)) {
+      return [];
+    }
+
+    return [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['hivelog-inspection-actions']],
+      '#weight' => -10,
+    ] + $links;
   }
 
   /**
