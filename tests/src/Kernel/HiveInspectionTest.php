@@ -84,6 +84,35 @@ class HiveInspectionTest extends KernelTestBase {
   }
 
   /**
+   * Runs the full normalise-then-validate sequence the form uses on submit.
+   */
+  protected function normaliseThenValidateDependentInspectionFields(array $values): FormState {
+    $defaults = [
+      'fed' => [['value' => 0]],
+      'feed_type' => [['value' => '']],
+      'varroa_check' => [['value' => 0]],
+      'varroa_count' => [['value' => '']],
+    ];
+
+    $form_state = new FormState();
+    $form_state->setValues(array_replace($defaults, $values));
+
+    /** @var \Drupal\hivelog\Form\HiveInspectionForm $form_object */
+    $form_object = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(HiveInspectionForm::class);
+
+    $normalise = new \ReflectionMethod(HiveInspectionForm::class, 'normaliseDependentFields');
+    $normalise->setAccessible(TRUE);
+    $normalise->invoke($form_object, $form_state);
+
+    $validate = new \ReflectionMethod(HiveInspectionForm::class, 'validateDependentFields');
+    $validate->setAccessible(TRUE);
+    $validate->invoke($form_object, $form_state);
+
+    return $form_state;
+  }
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp(): void {
@@ -567,16 +596,17 @@ class HiveInspectionTest extends KernelTestBase {
   }
 
   /**
-   * Tests feed type must be empty when fed is not checked.
+   * Tests feed type is silently cleared when fed is not checked.
    */
-  public function testValidationRejectsFeedTypeWhenNotFed(): void {
-    $form_state = $this->validateDependentInspectionFields([
+  public function testValidationClearsFeedTypeWhenNotFed(): void {
+    $form_state = $this->normaliseThenValidateDependentInspectionFields([
       'fed' => [['value' => 0]],
       'feed_type' => [['value' => 'Fondant']],
     ]);
 
-    $this->assertTrue($form_state->hasAnyErrors());
-    $this->assertArrayHasKey('feed_type', $form_state->getErrors());
+    $this->assertFalse($form_state->hasAnyErrors());
+    $feed_type = $form_state->getValue('feed_type');
+    $this->assertSame('', $feed_type[0]['value'] ?? NULL);
   }
 
   /**
@@ -593,16 +623,17 @@ class HiveInspectionTest extends KernelTestBase {
   }
 
   /**
-   * Tests varroa count must be empty when no varroa check is performed.
+   * Tests varroa count is silently cleared when varroa check is not performed.
    */
-  public function testValidationRejectsVarroaCountWhenNotChecked(): void {
-    $form_state = $this->validateDependentInspectionFields([
+  public function testValidationClearsVarroaCountWhenNotChecked(): void {
+    $form_state = $this->normaliseThenValidateDependentInspectionFields([
       'varroa_check' => [['value' => 0]],
       'varroa_count' => [['value' => 3]],
     ]);
 
-    $this->assertTrue($form_state->hasAnyErrors());
-    $this->assertArrayHasKey('varroa_count', $form_state->getErrors());
+    $this->assertFalse($form_state->hasAnyErrors());
+    $varroa_count = $form_state->getValue('varroa_count');
+    $this->assertNull($varroa_count[0]['value'] ?? NULL);
   }
 
   /**
@@ -617,6 +648,85 @@ class HiveInspectionTest extends KernelTestBase {
     ]);
 
     $this->assertFalse($form_state->hasAnyErrors());
+  }
+
+  /**
+   * Tests that dependent fields declare #states visibility tied to their
+   * controlling boolean.
+   */
+  public function testInspectionFormHasConditionalStatesOnDependentFields(): void {
+    $inspection = HiveInspection::create([
+      'hive' => $this->hive->id(),
+    ]);
+
+    $form = \Drupal::service('entity.form_builder')->getForm($inspection, 'add');
+
+    $this->assertArrayHasKey('feed_type', $form);
+    $this->assertArrayHasKey('#states', $form['feed_type']);
+    $this->assertEquals(
+      [['checked' => TRUE]],
+      array_values($form['feed_type']['#states']['visible'] ?? [])
+    );
+    $this->assertArrayHasKey(':input[name="fed[value]"]', $form['feed_type']['#states']['visible']);
+
+    $this->assertArrayHasKey('varroa_count', $form);
+    $this->assertArrayHasKey('#states', $form['varroa_count']);
+    $this->assertArrayHasKey(
+      ':input[name="varroa_check[value]"]',
+      $form['varroa_count']['#states']['visible']
+    );
+    $this->assertEquals(
+      ['checked' => TRUE],
+      $form['varroa_count']['#states']['visible'][':input[name="varroa_check[value]"]']
+    );
+  }
+
+  /**
+   * Tests that a new inspection form defaults inspection_date to today.
+   */
+  public function testInspectionFormDefaultsInspectionDateToToday(): void {
+    $inspection = HiveInspection::create([
+      'hive' => $this->hive->id(),
+    ]);
+
+    $form = \Drupal::service('entity.form_builder')->getForm($inspection, 'add');
+
+    $today = date('Y-m-d');
+    $default = $form['inspection_date']['widget'][0]['value']['#default_value'] ?? NULL;
+    $this->assertNotNull($default, 'inspection_date should have a default date set on a new form.');
+    $this->assertEquals($today, $default->format('Y-m-d'));
+  }
+
+  /**
+   * Tests that a new inspection form defaults disease_signs to "none".
+   */
+  public function testInspectionFormDefaultsDiseaseSignsToNone(): void {
+    $inspection = HiveInspection::create([
+      'hive' => $this->hive->id(),
+    ]);
+
+    $form = \Drupal::service('entity.form_builder')->getForm($inspection, 'add');
+
+    $this->assertEquals('none', $form['disease_signs']['widget']['#default_value'][0] ?? NULL);
+  }
+
+  /**
+   * Tests that editing an existing inspection does NOT override saved values.
+   */
+  public function testInspectionFormDoesNotOverrideExistingDefaults(): void {
+    $inspection = HiveInspection::create([
+      'hive' => $this->hive->id(),
+      'inspection_date' => '2023-05-15',
+      'disease_signs' => 'chalkbrood',
+    ]);
+    $inspection->save();
+
+    $form = \Drupal::service('entity.form_builder')->getForm($inspection, 'edit');
+
+    $default_date = $form['inspection_date']['widget'][0]['value']['#default_value'] ?? NULL;
+    $this->assertNotNull($default_date);
+    $this->assertEquals('2023-05-15', $default_date->format('Y-m-d'));
+    $this->assertEquals('chalkbrood', $form['disease_signs']['widget']['#default_value'][0] ?? NULL);
   }
 
 }
