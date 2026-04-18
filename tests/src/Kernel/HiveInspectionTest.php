@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\hivelog\Kernel;
 
+use Drupal\Core\Form\FormState;
 use Drupal\hivelog\Controller\HiveInspectionController;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\Hive;
 use Drupal\hivelog\Entity\HiveInspection;
+use Drupal\hivelog\Form\HiveInspectionForm;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
@@ -56,6 +58,30 @@ class HiveInspectionTest extends KernelTestBase {
    * @var \Drupal\user\Entity\User
    */
   protected User $user;
+
+  /**
+   * Validates dependent inspection fields using form-level rule logic.
+   */
+  protected function validateDependentInspectionFields(array $values): FormState {
+    $defaults = [
+      'fed' => [['value' => 0]],
+      'feed_type' => [['value' => '']],
+      'varroa_check' => [['value' => 0]],
+      'varroa_count' => [['value' => '']],
+    ];
+
+    $form_state = new FormState();
+    $form_state->setValues(array_replace($defaults, $values));
+
+    /** @var \Drupal\hivelog\Form\HiveInspectionForm $form_object */
+    $form_object = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(HiveInspectionForm::class);
+    $method = new \ReflectionMethod(HiveInspectionForm::class, 'validateDependentFields');
+    $method->setAccessible(TRUE);
+    $method->invoke($form_object, $form_state);
+
+    return $form_state;
+  }
 
   /**
    * {@inheritdoc}
@@ -525,6 +551,72 @@ class HiveInspectionTest extends KernelTestBase {
 
     $loaded2 = HiveInspection::load($inspection2->id());
     $this->assertTrue($loaded2->get('weight')->isEmpty());
+  }
+
+  /**
+   * Tests feed type is required when fed is checked.
+   */
+  public function testValidationRequiresFeedTypeWhenFed(): void {
+    $form_state = $this->validateDependentInspectionFields([
+      'fed' => [['value' => 1]],
+      'feed_type' => [['value' => '']],
+    ]);
+
+    $this->assertTrue($form_state->hasAnyErrors());
+    $this->assertArrayHasKey('feed_type', $form_state->getErrors());
+  }
+
+  /**
+   * Tests feed type must be empty when fed is not checked.
+   */
+  public function testValidationRejectsFeedTypeWhenNotFed(): void {
+    $form_state = $this->validateDependentInspectionFields([
+      'fed' => [['value' => 0]],
+      'feed_type' => [['value' => 'Fondant']],
+    ]);
+
+    $this->assertTrue($form_state->hasAnyErrors());
+    $this->assertArrayHasKey('feed_type', $form_state->getErrors());
+  }
+
+  /**
+   * Tests varroa count is required when varroa check is performed.
+   */
+  public function testValidationRequiresVarroaCountWhenChecked(): void {
+    $form_state = $this->validateDependentInspectionFields([
+      'varroa_check' => [['value' => 1]],
+      'varroa_count' => [['value' => '']],
+    ]);
+
+    $this->assertTrue($form_state->hasAnyErrors());
+    $this->assertArrayHasKey('varroa_count', $form_state->getErrors());
+  }
+
+  /**
+   * Tests varroa count must be empty when no varroa check is performed.
+   */
+  public function testValidationRejectsVarroaCountWhenNotChecked(): void {
+    $form_state = $this->validateDependentInspectionFields([
+      'varroa_check' => [['value' => 0]],
+      'varroa_count' => [['value' => 3]],
+    ]);
+
+    $this->assertTrue($form_state->hasAnyErrors());
+    $this->assertArrayHasKey('varroa_count', $form_state->getErrors());
+  }
+
+  /**
+   * Tests consistent dependent field combinations pass validation.
+   */
+  public function testValidationAcceptsConsistentDependentFields(): void {
+    $form_state = $this->validateDependentInspectionFields([
+      'fed' => [['value' => 1]],
+      'feed_type' => [['value' => 'Sugar syrup 1:1']],
+      'varroa_check' => [['value' => 1]],
+      'varroa_count' => [['value' => 2]],
+    ]);
+
+    $this->assertFalse($form_state->hasAnyErrors());
   }
 
 }
