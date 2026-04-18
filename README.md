@@ -68,6 +68,15 @@ After installation, navigate to **Administration → Structure → HiveLog**
    - **Management** — Colony fed, feed type, number of supers, actions taken
    - **Notes** — Free-text observations
 
+### Inspection Validation Rules
+
+To preserve data integrity, the inspection form enforces dependent-field rules:
+
+- If **Fed** is checked, **Feed Type** is required.
+- If **Fed** is not checked, **Feed Type** must be left empty.
+- If **Varroa Check** is checked, **Varroa Count** is required.
+- If **Varroa Check** is not checked, **Varroa Count** must be left empty.
+
 ### Queen Marking Colour
 
 When a queen year is entered on a hive, the international queen marking colour

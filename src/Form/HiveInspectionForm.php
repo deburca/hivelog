@@ -107,6 +107,85 @@ class HiveInspectionForm extends ContentEntityForm {
   /**
    * {@inheritdoc}
    */
+  public function validateForm(array &$form, FormStateInterface $form_state) {
+    parent::validateForm($form, $form_state);
+    $this->validateDependentFields($form_state);
+  }
+
+  /**
+   * Validates dependent inspection fields for consistent combinations.
+   */
+  protected function validateDependentFields(FormStateInterface $form_state): void {
+    $fed = $this->getBooleanFieldValue($form_state, 'fed');
+    $feed_type = trim($this->getStringFieldValue($form_state, 'feed_type'));
+    if ($fed && $feed_type === '') {
+      $form_state->setErrorByName(
+        'feed_type',
+        $this->t('Feed type is required when the colony was fed.')
+      );
+    }
+    if (!$fed && $feed_type !== '') {
+      $form_state->setErrorByName(
+        'feed_type',
+        $this->t('Feed type must be empty unless the colony was fed.')
+      );
+    }
+
+    $varroa_check = $this->getBooleanFieldValue($form_state, 'varroa_check');
+    $varroa_count = $this->getNullableFieldValue($form_state, 'varroa_count');
+    if ($varroa_check && $varroa_count === NULL) {
+      $form_state->setErrorByName(
+        'varroa_count',
+        $this->t('Varroa count is required when a varroa check was performed.')
+      );
+    }
+    if (!$varroa_check && $varroa_count !== NULL) {
+      $form_state->setErrorByName(
+        'varroa_count',
+        $this->t('Varroa count must be empty unless a varroa check was performed.')
+      );
+    }
+  }
+
+  /**
+   * Extracts a boolean value from an entity form field.
+   */
+  protected function getBooleanFieldValue(FormStateInterface $form_state, string $field_name): bool {
+    $value = $form_state->getValue($field_name);
+    if (is_array($value)) {
+      $value = $value[0]['value'] ?? $value['value'] ?? NULL;
+    }
+    return (bool) $value;
+  }
+
+  /**
+   * Extracts a string value from an entity form field.
+   */
+  protected function getStringFieldValue(FormStateInterface $form_state, string $field_name): string {
+    $value = $form_state->getValue($field_name);
+    if (is_array($value)) {
+      $value = $value[0]['value'] ?? $value['value'] ?? '';
+    }
+    return (string) ($value ?? '');
+  }
+
+  /**
+   * Extracts an optional scalar field value.
+   */
+  protected function getNullableFieldValue(FormStateInterface $form_state, string $field_name): mixed {
+    $value = $form_state->getValue($field_name);
+    if (is_array($value)) {
+      $value = $value[0]['value'] ?? $value['value'] ?? NULL;
+    }
+    if ($value === '' || $value === NULL) {
+      return NULL;
+    }
+    return $value;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function save(array $form, FormStateInterface $form_state) {
     $entity = $this->entity;
     $status = $entity->save();
