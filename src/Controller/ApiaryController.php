@@ -70,29 +70,35 @@ class ApiaryController extends ControllerBase {
     $view_builder = $this->entityTypeManager->getViewBuilder('apiary');
     $build['apiary'] = $view_builder->view($apiary);
 
-    // Add hive heading and action link.
+    // Heading row: the "Hives" title on the left, the Add Hive action on
+    // the right. Placing the action here (rather than inline with the
+    // filter form below) keeps it at the top-right of the list section
+    // where it logically belongs.
     $build['hives_heading'] = [
-      '#type' => 'html_tag',
-      '#tag' => 'h3',
-      '#value' => $this->t('Hives'),
-      '#weight' => 10,
-    ];
-
-    // Toolbar: filter form on the left, Add Hive action on the right.
-    $build['hives_toolbar'] = [
       '#type' => 'container',
-      '#attributes' => ['class' => ['hivelog-toolbar']],
-      '#weight' => 11,
-      'filter' => $this->formBuilder->getForm(HivelogHiveFilterForm::class, $apiary),
+      '#attributes' => ['class' => ['hivelog-list-heading']],
+      '#weight' => 10,
+      'title' => [
+        '#type' => 'html_tag',
+        '#tag' => 'h3',
+        '#value' => $this->t('Hives'),
+        '#attributes' => ['class' => ['hivelog-list-heading__title']],
+      ],
       'add' => [
         '#type' => 'link',
         '#title' => $this->t('Add Hive'),
         '#url' => Url::fromRoute('hivelog.hive.add', ['apiary' => $apiary->id()]),
         '#attributes' => [
-          'class' => ['button', 'button--primary', 'hivelog-toolbar__action'],
+          'class' => ['button', 'button--primary', 'hivelog-list-heading__action'],
         ],
       ],
     ];
+
+    // Filter form sits on its own row below the heading. The form's own
+    // CSS pushes the Filter / Reset buttons to the right-hand side of the
+    // filter row.
+    $build['hives_filter'] = $this->formBuilder->getForm(HivelogHiveFilterForm::class, $apiary);
+    $build['hives_filter']['#weight'] = 11;
 
     // Build the query with filters and pagination applied.
     $filters = $this->extractHiveFilters();

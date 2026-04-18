@@ -103,29 +103,35 @@ class HiveController extends ControllerBase {
       $build['weight_histogram'] = $histogram + ['#weight' => 7];
     }
 
-    // Add inspections heading and action link.
+    // Heading row: the "Inspections" title on the left, the Add Inspection
+    // action on the right. Placing the action here (rather than inline
+    // with the filter form below) keeps it at the top-right of the list
+    // section where it logically belongs.
     $build['inspections_heading'] = [
-      '#type' => 'html_tag',
-      '#tag' => 'h3',
-      '#value' => $this->t('Inspections'),
-      '#weight' => 10,
-    ];
-
-    // Toolbar: filter form on the left, Add Inspection action on the right.
-    $build['inspections_toolbar'] = [
       '#type' => 'container',
-      '#attributes' => ['class' => ['hivelog-toolbar']],
-      '#weight' => 11,
-      'filter' => $this->formBuilder->getForm(HivelogInspectionFilterForm::class, $hive),
+      '#attributes' => ['class' => ['hivelog-list-heading']],
+      '#weight' => 10,
+      'title' => [
+        '#type' => 'html_tag',
+        '#tag' => 'h3',
+        '#value' => $this->t('Inspections'),
+        '#attributes' => ['class' => ['hivelog-list-heading__title']],
+      ],
       'add' => [
         '#type' => 'link',
         '#title' => $this->t('Add Inspection'),
         '#url' => Url::fromRoute('hivelog.inspection.add', ['hive' => $hive->id()]),
         '#attributes' => [
-          'class' => ['button', 'button--primary', 'hivelog-toolbar__action'],
+          'class' => ['button', 'button--primary', 'hivelog-list-heading__action'],
         ],
       ],
     ];
+
+    // Filter form sits on its own row below the heading. The form's own
+    // CSS pushes the Filter / Reset buttons to the right-hand side of the
+    // filter row.
+    $build['inspections_filter'] = $this->formBuilder->getForm(HivelogInspectionFilterForm::class, $hive);
+    $build['inspections_filter']['#weight'] = 11;
 
     // Build the paginated + filtered inspection query.
     $filters = $this->extractInspectionFilters();

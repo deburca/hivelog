@@ -94,18 +94,25 @@ class HivelogHiveFilterForm extends FormBase {
       '#default_value' => $query ? (string) $query->get('name', '') : '',
     ];
 
-    $form['actions'] = [
-      '#type' => 'actions',
+    // Deliberately named 'filter_actions' (not 'actions') and typed as a
+    // plain container so admin themes such as Gin do not treat these as
+    // form-level actions and relocate them into their sticky top bar
+    // (top-bar__actions). Gin's form alter keys off $form['actions'] to
+    // decide whether to hoist buttons; using a different key keeps the
+    // Filter and Reset controls inline with the filter fields.
+    // @see \Drupal\gin\GinContentFormHelper::formAlter()
+    $form['filter_actions'] = [
+      '#type' => 'container',
       '#attributes' => ['class' => ['hivelog-filter-form__actions']],
     ];
-    $form['actions']['submit'] = [
+    $form['filter_actions']['submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Filter'),
       '#button_type' => 'primary',
       '#attributes' => ['class' => ['hivelog-filter-form__submit']],
     ];
     if ($apiary) {
-      $form['actions']['reset'] = [
+      $form['filter_actions']['reset'] = [
         '#type' => 'link',
         '#title' => $this->t('Reset'),
         '#url' => Url::fromRoute('entity.apiary.canonical', ['apiary' => $apiary->id()]),

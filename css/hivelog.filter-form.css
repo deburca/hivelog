@@ -1,27 +1,24 @@
 /**
  * @file
- * Styling for the embedded child table filter forms and the toolbar that
- * places them inline with the list-level action button.
+ * Styling for the embedded child-list heading row (title + Add action)
+ * and the filter form that sits on its own row below it.
  */
 
-/* Toolbar row that holds the filter form (left) and the action button
-   (right). Used on the apiary and hive view pages. */
-.hivelog-toolbar {
+/* Heading row: list title on the left, Add action button on the right. */
+.hivelog-list-heading {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
-  align-items: flex-end;
-  gap: 0.75rem 1rem;
-  margin: 0.5rem 0 1rem;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  margin: 1rem 0 0.5rem;
 }
 
-.hivelog-toolbar > .hivelog-filter-form {
-  flex: 1 1 auto;
+.hivelog-list-heading__title {
   margin: 0;
 }
 
-.hivelog-toolbar__action {
-  align-self: flex-end;
+.hivelog-list-heading__action {
   margin: 0;
   white-space: nowrap;
 }
@@ -54,11 +51,13 @@
   margin-bottom: 0.15rem;
 }
 
+/* Push the Filter / Reset actions to the right end of the filter row so
+   they sit on the right-hand side of the filter inputs. */
 .hivelog-filter-form__actions {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin: 0;
+  margin: 0 0 0 auto;
   padding: 0;
 }
 
