@@ -2,8 +2,13 @@
 
 namespace Drupal\hivelog\Controller;
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Entity\EntityFormBuilderInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\Query\QueryInterface;
+use Drupal\Core\File\FileUrlGeneratorInterface;
+use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Url;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\Hive;
@@ -31,7 +36,25 @@ class HiveController extends ControllerBase {
    */
   protected RequestStack $requestStack;
 
-  public function __construct(RequestStack $request_stack) {
+  /**
+   * The file URL generator.
+   */
+  protected FileUrlGeneratorInterface $fileUrlGenerator;
+
+  public function __construct(
+    EntityTypeManagerInterface $entity_type_manager,
+    EntityFormBuilderInterface $entity_form_builder,
+    FormBuilderInterface $form_builder,
+    FileUrlGeneratorInterface $file_url_generator,
+    RequestStack $request_stack,
+  ) {
+    // $entityTypeManager / $entityFormBuilder / $formBuilder are untyped
+    // properties inherited from ControllerBase; assign them rather than
+    // redeclaring with types.
+    $this->entityTypeManager = $entity_type_manager;
+    $this->entityFormBuilder = $entity_form_builder;
+    $this->formBuilder = $form_builder;
+    $this->fileUrlGenerator = $file_url_generator;
     $this->requestStack = $request_stack;
   }
 
@@ -39,17 +62,23 @@ class HiveController extends ControllerBase {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container): static {
-    return new static($container->get('request_stack'));
+    return new static(
+      $container->get('entity_type.manager'),
+      $container->get('entity.form_builder'),
+      $container->get('form_builder'),
+      $container->get('file_url_generator'),
+      $container->get('request_stack'),
+    );
   }
 
   /**
    * Provides the add form for a hive within an apiary context.
    */
   public function addForm(Apiary $apiary) {
-    $hive = $this->entityTypeManager()->getStorage('hive')->create([
+    $hive = $this->entityTypeManager->getStorage('hive')->create([
       'apiary' => $apiary->id(),
     ]);
-    return $this->entityFormBuilder()->getForm($hive, 'add');
+    return $this->entityFormBuilder->getForm($hive, 'add');
   }
 
   /**
@@ -59,7 +88,7 @@ class HiveController extends ControllerBase {
     $build = [];
 
     // Render the hive entity fields.
-    $view_builder = $this->entityTypeManager()->getViewBuilder('hive');
+    $view_builder = $this->entityTypeManager->getViewBuilder('hive');
     $build['hive'] = $view_builder->view($hive);
     $build['hive']['#weight'] = 5;
 
@@ -68,7 +97,7 @@ class HiveController extends ControllerBase {
     // so the summary chart is not affected by active filters or paging.
     // Placed above the Inspections heading/Add Inspection action so it
     // reads as a summary of the whole inspection history.
-    $histogram_points = $this->collectHistogramPoints($hive);
+    [$histogram_points, $histogram_inspections] = $this->collectHistogramPoints($hive);
     $histogram = $this->buildWeightHistogram($histogram_points);
     if (!empty($histogram)) {
       $build['weight_histogram'] = $histogram + ['#weight' => 7];
@@ -91,12 +120,12 @@ class HiveController extends ControllerBase {
     ];
 
     // Filter form.
-    $build['inspections_filter'] = $this->formBuilder()->getForm(HivelogInspectionFilterForm::class, $hive);
+    $build['inspections_filter'] = $this->formBuilder->getForm(HivelogInspectionFilterForm::class, $hive);
     $build['inspections_filter']['#weight'] = 11.5;
 
     // Build the paginated + filtered inspection query.
     $filters = $this->extractInspectionFilters();
-    $query = $this->entityTypeManager()
+    $query = $this->entityTypeManager
       ->getStorage('hive_inspection')
       ->getQuery()
       ->accessCheck(TRUE)
@@ -107,7 +136,7 @@ class HiveController extends ControllerBase {
     $inspection_ids = $query->execute();
 
     $inspections = $inspection_ids
-      ? $this->entityTypeManager()->getStorage('hive_inspection')->loadMultiple($inspection_ids)
+      ? $this->entityTypeManager->getStorage('hive_inspection')->loadMultiple($inspection_ids)
       : [];
 
     $header = [
@@ -176,9 +205,26 @@ class HiveController extends ControllerBase {
       $build['images'] = $images + ['#weight' => 20];
     }
 
-    // Cache per URL query string so pager + filter state produce distinct
-    // cache entries.
-    $build['#cache']['contexts'][] = 'url.query_args';
+    // Explicit cache metadata.
+    // - url.query_args: filter + pager state is encoded in the query string.
+    // - user.permissions: the inspection list respects per-entity access
+    //   checks, so cache entries must vary by effective permissions.
+    // - Hive entity tags: invalidate on hive update/delete.
+    // - Inspection list cache tag + every rendered inspection's tags:
+    //   invalidate on any inspection change.
+    $cache = CacheableMetadata::createFromRenderArray($build)
+      ->addCacheContexts(['url.query_args', 'user.permissions'])
+      ->addCacheableDependency($hive)
+      ->addCacheTags($this->entityTypeManager->getDefinition('hive_inspection')->getListCacheTags());
+    foreach ($inspections as $inspection) {
+      $cache->addCacheableDependency($inspection);
+    }
+    // The histogram is derived from a separate unfiltered query, so include
+    // those inspections' cache tags too.
+    foreach ($histogram_inspections as $inspection) {
+      $cache->addCacheableDependency($inspection);
+    }
+    $cache->applyTo($build);
 
     return $build;
   }
@@ -236,10 +282,11 @@ class HiveController extends ControllerBase {
    * The histogram summarises the year of the most recent inspection and is
    * deliberately not restricted by filters or pagination.
    *
-   * @return array<int, array{date:string, mmdd:string, weight:float}>
+   * @return array{0: array<int, array{date:string, mmdd:string, weight:float, year:string}>, 1: \Drupal\hivelog\Entity\HiveInspection[]}
+   *   Tuple of [histogram data points, inspections loaded for the histogram].
    */
   protected function collectHistogramPoints(Hive $hive): array {
-    $inspection_ids = $this->entityTypeManager()
+    $inspection_ids = $this->entityTypeManager
       ->getStorage('hive_inspection')
       ->getQuery()
       ->accessCheck(TRUE)
@@ -248,9 +295,9 @@ class HiveController extends ControllerBase {
       ->execute();
 
     if (!$inspection_ids) {
-      return [];
+      return [[], []];
     }
-    $inspections = $this->entityTypeManager()
+    $inspections = $this->entityTypeManager
       ->getStorage('hive_inspection')
       ->loadMultiple($inspection_ids);
 
@@ -263,7 +310,7 @@ class HiveController extends ControllerBase {
       }
     }
     if (!$most_recent) {
-      return [];
+      return [[], $inspections];
     }
     $year = substr($most_recent, 0, 4);
 
@@ -287,7 +334,7 @@ class HiveController extends ControllerBase {
 
     usort($points, fn($a, $b) => strcmp($a['date'], $b['date']));
 
-    return $points;
+    return [$points, $inspections];
   }
 
   /**
@@ -298,8 +345,7 @@ class HiveController extends ControllerBase {
       return [];
     }
 
-    $file_url_generator = \Drupal::service('file_url_generator');
-    $image_style = \Drupal::entityTypeManager()
+    $image_style = $this->entityTypeManager
       ->getStorage('image_style')
       ->load('thumbnail');
 
@@ -311,7 +357,7 @@ class HiveController extends ControllerBase {
         continue;
       }
 
-      $full_url = $file_url_generator->generateAbsoluteString($file->getFileUri());
+      $full_url = $this->fileUrlGenerator->generateAbsoluteString($file->getFileUri());
       $thumb_url = $image_style ? $image_style->buildUrl($file->getFileUri()) : $full_url;
       $alt = (string) ($item->alt ?? '');
 
