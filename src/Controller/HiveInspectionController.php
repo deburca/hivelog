@@ -88,6 +88,10 @@ class HiveInspectionController extends ControllerBase {
     }
 
     $file_url_generator = \Drupal::service('file_url_generator');
+    $image_style = \Drupal::entityTypeManager()
+      ->getStorage('image_style')
+      ->load('thumbnail');
+
     $items = [];
     foreach ($hive_inspection->get('images') as $delta => $item) {
       /** @var \Drupal\file\FileInterface|null $file */
@@ -95,11 +99,14 @@ class HiveInspectionController extends ControllerBase {
       if (!$file) {
         continue;
       }
+
       $full_url = $file_url_generator->generateAbsoluteString($file->getFileUri());
+      $thumb_url = $image_style ? $image_style->buildUrl($file->getFileUri()) : $full_url;
       $alt = (string) ($item->alt ?? '');
+
       $items[] = [
         'full_url' => $full_url,
-        'thumb_url' => $full_url,
+        'thumb_url' => $thumb_url,
         'alt' => $alt,
       ];
     }
