@@ -382,25 +382,29 @@ class HiveTest extends KernelTestBase {
   }
 
   /**
-   * Tests that the hive view renders a letterbox hero image when present.
+   * Tests that attached hive pictures render in a grid below the inspections.
    */
-  public function testHiveViewLetterboxHero(): void {
+  public function testHiveViewImagesGridBelowInspections(): void {
     $this->installConfig(['system']);
 
     $user = User::create([
-      'name' => 'hero-tester',
-      'mail' => 'hero-tester@example.com',
+      'name' => 'images-tester',
+      'mail' => 'images-tester@example.com',
     ]);
     $user->save();
     \Drupal::currentUser()->setAccount($user);
 
-    $file = $this->createTestImageFile('hive-hero.png');
+    $file_a = $this->createTestImageFile('hive-photo-a.png');
+    $file_b = $this->createTestImageFile('hive-photo-b.png');
 
     $hive = Hive::create([
-      'name' => 'Hero Hive',
+      'name' => 'Pictured Hive',
       'apiary' => $this->apiary->id(),
       'status' => 'active',
-      'images' => [['target_id' => $file->id(), 'alt' => 'Hero alt']],
+      'images' => [
+        ['target_id' => $file_a->id(), 'alt' => 'Photo A'],
+        ['target_id' => $file_b->id(), 'alt' => 'Photo B'],
+      ],
     ]);
     $hive->save();
 
@@ -408,29 +412,53 @@ class HiveTest extends KernelTestBase {
       ->getInstanceFromDefinition(HiveController::class);
     $build = $controller->view($hive);
 
-    $this->assertArrayHasKey('hero', $build);
+    // No hero anymore.
+    $this->assertArrayNotHasKey('hero', $build);
+    $this->assertArrayHasKey('images', $build);
+    // Images block weight must be greater than inspections table weight so it
+    // sorts below the list of inspections.
+    $this->assertGreaterThan(
+      $build['inspections_table']['#weight'],
+      $build['images']['#weight'],
+      'Images grid should sort after the inspections table.'
+    );
+
     $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
-    $this->assertStringContainsString('hivelog-hive-hero--letterboxed', $html);
-    $this->assertStringContainsString('hivelog-hive-hero__frame', $html);
-    $this->assertStringContainsString('background-image: url(', $html);
-    $this->assertStringContainsString('hive-hero.png', $html);
+    $this->assertStringNotContainsString('hivelog-hive-hero', $html);
+    $this->assertStringContainsString('hivelog-photos-grid', $html);
+    $this->assertStringContainsString('hivelog-photos-grid__item', $html);
+    $this->assertStringContainsString('hive-photo-a.png', $html);
+    $this->assertStringContainsString('hive-photo-b.png', $html);
+    $this->assertStringContainsString('alt="Photo A"', $html);
+    $this->assertStringContainsString('alt="Photo B"', $html);
+
+    // Grid must appear after the inspections table in the final HTML.
+    $inspections_pos = strpos($html, '<table');
+    $grid_pos = strpos($html, 'hivelog-photos-grid');
+    $this->assertNotFalse($inspections_pos);
+    $this->assertNotFalse($grid_pos);
+    $this->assertGreaterThan(
+      $inspections_pos,
+      $grid_pos,
+      'Pictures grid should render below the inspections table in the final HTML.'
+    );
   }
 
   /**
-   * Tests that no hero is rendered when the hive has no images.
+   * Tests that no images grid is rendered when the hive has no images.
    */
-  public function testHiveViewLetterboxHeroAbsentWhenNoImage(): void {
+  public function testHiveViewImagesGridAbsentWhenNoImage(): void {
     $this->installConfig(['system']);
 
     $user = User::create([
-      'name' => 'no-hero-tester',
-      'mail' => 'no-hero-tester@example.com',
+      'name' => 'no-images-tester',
+      'mail' => 'no-images-tester@example.com',
     ]);
     $user->save();
     \Drupal::currentUser()->setAccount($user);
 
     $hive = Hive::create([
-      'name' => 'No Hero Hive',
+      'name' => 'No Pictures Hive',
       'apiary' => $this->apiary->id(),
       'status' => 'active',
     ]);
@@ -441,6 +469,7 @@ class HiveTest extends KernelTestBase {
     $build = $controller->view($hive);
 
     $this->assertArrayNotHasKey('hero', $build);
+    $this->assertArrayNotHasKey('images', $build);
   }
 
   /**
