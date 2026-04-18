@@ -1,0 +1,48 @@
+/**
+ * @file
+ * Styles for the hive hero image and inspection photo grid.
+ */
+
+/* Hive hero: a letterboxed frame showing a section of the first picture. */
+.hivelog-hive-hero {
+  margin: 0 0 1.5rem;
+}
+
+.hivelog-hive-hero--letterboxed .hivelog-hive-hero__frame {
+  width: 100%;
+  aspect-ratio: 21 / 9;
+  background-color: #111;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  border-radius: 4px;
+}
+
+/* Inspection photos: responsive grid of thumbnails linking to the original. */
+.hivelog-inspection-photos__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0.75rem;
+  margin: 0.5rem 0 1.25rem;
+}
+
+.hivelog-inspection-photos__item {
+  display: block;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: 4px;
+  background: #f3f3f3;
+}
+
+.hivelog-inspection-photos__item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.15s ease-in-out;
+}
+
+.hivelog-inspection-photos__item:hover img,
+.hivelog-inspection-photos__item:focus img {
+  transform: scale(1.03);
+}

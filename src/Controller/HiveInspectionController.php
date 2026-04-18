@@ -70,7 +70,65 @@ class HiveInspectionController extends ControllerBase {
       ]),
     ];
 
+    // Photos grid (displayed after the notes section when images are present).
+    $photos = $this->buildPhotosGrid($hive_inspection);
+    if (!empty($photos)) {
+      $build['photos'] = $photos;
+    }
+
     return $build;
+  }
+
+  /**
+   * Builds a grid of inspection photos with links to the full-size image.
+   */
+  protected function buildPhotosGrid(HiveInspection $hive_inspection): array {
+    if ($hive_inspection->get('images')->isEmpty()) {
+      return [];
+    }
+
+    $file_url_generator = \Drupal::service('file_url_generator');
+    $items = [];
+    foreach ($hive_inspection->get('images') as $delta => $item) {
+      /** @var \Drupal\file\FileInterface|null $file */
+      $file = $item->entity;
+      if (!$file) {
+        continue;
+      }
+      $full_url = $file_url_generator->generateAbsoluteString($file->getFileUri());
+      $alt = (string) ($item->alt ?? '');
+      $items[] = [
+        'full_url' => $full_url,
+        'thumb_url' => $full_url,
+        'alt' => $alt,
+      ];
+    }
+
+    if (empty($items)) {
+      return [];
+    }
+
+    return [
+      '#type' => 'container',
+      '#attributes' => [
+        'class' => ['hivelog-inspection-section', 'hivelog-inspection-photos'],
+      ],
+      '#attached' => [
+        'library' => ['hivelog/images'],
+      ],
+      'heading' => [
+        '#type' => 'html_tag',
+        '#tag' => 'h3',
+        '#value' => $this->t('Photos'),
+      ],
+      'grid' => [
+        '#type' => 'inline_template',
+        '#template' => '<div class="hivelog-inspection-photos__grid">{% for item in items %}<a class="hivelog-inspection-photos__item" href="{{ item.full_url }}" target="_blank" rel="noopener"><img src="{{ item.thumb_url }}" alt="{{ item.alt }}" loading="lazy" /></a>{% endfor %}</div>',
+        '#context' => [
+          'items' => $items,
+        ],
+      ],
+    ];
   }
 
   /**

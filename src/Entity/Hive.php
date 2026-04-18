@@ -10,6 +10,7 @@ use Drupal\Core\Entity\EntityChangedInterface;
 use Drupal\Core\Entity\EntityChangedTrait;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\hivelog\Form\HiveDeleteForm;
 use Drupal\hivelog\Form\HiveForm;
@@ -228,6 +229,24 @@ class Hive extends ContentEntityBase implements EntityChangedInterface, EntityOw
       ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
+
+    $fields['images'] = BaseFieldDefinition::create('image')
+      ->setLabel(t('Pictures'))
+      ->setDescription(t('One or more pictures of the hive. The first picture is shown as a letterbox hero on the hive view page.'))
+      ->setCardinality(FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED)
+      ->setSetting('file_directory', 'hivelog/hive')
+      ->setSetting('file_extensions', 'png gif jpg jpeg webp')
+      ->setSetting('alt_field', TRUE)
+      ->setSetting('alt_field_required', FALSE)
+      ->setDisplayOptions('form', [
+        'type' => 'image_image',
+        'weight' => 5,
+        'settings' => [
+          'progress_indicator' => 'throbber',
+          'preview_image_style' => 'thumbnail',
+        ],
+      ])
+      ->setDisplayConfigurable('form', TRUE);
 
     $fields['notes'] = BaseFieldDefinition::create('string_long')
       ->setLabel(t('Notes'))

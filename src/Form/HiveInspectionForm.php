@@ -71,6 +71,12 @@ class HiveInspectionForm extends ContentEntityForm {
         'open' => FALSE,
         'fields' => ['notes'],
       ],
+      'photos_section' => [
+        'title' => $this->t('Photos'),
+        'weight' => 8,
+        'open' => FALSE,
+        'fields' => ['images'],
+      ],
     ];
 
     foreach ($sections as $section_key => $section) {

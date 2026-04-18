@@ -29,6 +29,8 @@ class HiveTest extends KernelTestBase {
     'field',
     'datetime',
     'options',
+    'file',
+    'image',
     'geofield',
     'hivelog',
   ];
@@ -46,12 +48,33 @@ class HiveTest extends KernelTestBase {
   protected function setUp(): void {
     parent::setUp();
     $this->installEntitySchema('user');
+    $this->installEntitySchema('file');
     $this->installEntitySchema('apiary');
     $this->installEntitySchema('hive');
     $this->installEntitySchema('hive_inspection');
+    $this->installSchema('file', ['file_usage']);
 
     $this->apiary = Apiary::create(['name' => 'Test Apiary']);
     $this->apiary->save();
+  }
+
+  /**
+   * Creates and saves a managed image file for tests.
+   */
+  protected function createTestImageFile(string $filename): \Drupal\file\FileInterface {
+    $directory = 'public://hivelog-test';
+    \Drupal::service('file_system')->prepareDirectory($directory, \Drupal\Core\File\FileSystemInterface::CREATE_DIRECTORY);
+    $uri = $directory . '/' . $filename;
+    // A tiny valid 1x1 PNG.
+    $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGNgYGD4DwABBAEAfbLI3wAAAABJRU5ErkJggg==');
+    file_put_contents($uri, $png);
+    $file = \Drupal\file\Entity\File::create([
+      'uri' => $uri,
+      'filename' => $filename,
+      'status' => 1,
+    ]);
+    $file->save();
+    return $file;
   }
 
   /**
@@ -356,6 +379,68 @@ class HiveTest extends KernelTestBase {
     $this->assertNotFalse($histogram_pos);
     $this->assertNotFalse($table_pos);
     $this->assertLessThan($table_pos, $histogram_pos, 'Histogram should appear before the inspections table.');
+  }
+
+  /**
+   * Tests that the hive view renders a letterbox hero image when present.
+   */
+  public function testHiveViewLetterboxHero(): void {
+    $this->installConfig(['system']);
+
+    $user = User::create([
+      'name' => 'hero-tester',
+      'mail' => 'hero-tester@example.com',
+    ]);
+    $user->save();
+    \Drupal::currentUser()->setAccount($user);
+
+    $file = $this->createTestImageFile('hive-hero.png');
+
+    $hive = Hive::create([
+      'name' => 'Hero Hive',
+      'apiary' => $this->apiary->id(),
+      'status' => 'active',
+      'images' => [['target_id' => $file->id(), 'alt' => 'Hero alt']],
+    ]);
+    $hive->save();
+
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(HiveController::class);
+    $build = $controller->view($hive);
+
+    $this->assertArrayHasKey('hero', $build);
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+    $this->assertStringContainsString('hivelog-hive-hero--letterboxed', $html);
+    $this->assertStringContainsString('hivelog-hive-hero__frame', $html);
+    $this->assertStringContainsString('background-image: url(', $html);
+    $this->assertStringContainsString('hive-hero.png', $html);
+  }
+
+  /**
+   * Tests that no hero is rendered when the hive has no images.
+   */
+  public function testHiveViewLetterboxHeroAbsentWhenNoImage(): void {
+    $this->installConfig(['system']);
+
+    $user = User::create([
+      'name' => 'no-hero-tester',
+      'mail' => 'no-hero-tester@example.com',
+    ]);
+    $user->save();
+    \Drupal::currentUser()->setAccount($user);
+
+    $hive = Hive::create([
+      'name' => 'No Hero Hive',
+      'apiary' => $this->apiary->id(),
+      'status' => 'active',
+    ]);
+    $hive->save();
+
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(HiveController::class);
+    $build = $controller->view($hive);
+
+    $this->assertArrayNotHasKey('hero', $build);
   }
 
   /**

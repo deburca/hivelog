@@ -10,6 +10,7 @@ use Drupal\Core\Entity\EntityChangedInterface;
 use Drupal\Core\Entity\EntityChangedTrait;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\hivelog\Form\HiveInspectionDeleteForm;
 use Drupal\hivelog\Form\HiveInspectionForm;
@@ -460,6 +461,34 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
         'label' => 'above',
         'type' => 'basic_string',
         'weight' => 18,
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
+
+    $fields['images'] = BaseFieldDefinition::create('image')
+      ->setLabel(t('Pictures'))
+      ->setDescription(t('Photos taken during this inspection.'))
+      ->setCardinality(FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED)
+      ->setSetting('file_directory', 'hivelog/inspection')
+      ->setSetting('file_extensions', 'png gif jpg jpeg webp')
+      ->setSetting('alt_field', TRUE)
+      ->setSetting('alt_field_required', FALSE)
+      ->setDisplayOptions('form', [
+        'type' => 'image_image',
+        'weight' => 19,
+        'settings' => [
+          'progress_indicator' => 'throbber',
+          'preview_image_style' => 'thumbnail',
+        ],
+      ])
+      ->setDisplayOptions('view', [
+        'label' => 'hidden',
+        'type' => 'image',
+        'weight' => 19,
+        'settings' => [
+          'image_style' => 'medium',
+          'image_link' => 'file',
+        ],
       ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
