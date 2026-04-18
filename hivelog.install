@@ -164,3 +164,26 @@ function hivelog_update_10003(&$sandbox) {
 
   return t('Added external check field to hive inspections.');
 }
+
+/**
+ * Add weight field to hive inspections.
+ */
+function hivelog_update_10004(&$sandbox) {
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+
+  $field_definitions = \Drupal\hivelog\Entity\HiveInspection::baseFieldDefinitions(
+    $entity_type_manager->getDefinition('hive_inspection')
+  );
+
+  if (isset($field_definitions['weight'])) {
+    $entity_definition_update_manager->installFieldStorageDefinition(
+      'weight',
+      'hive_inspection',
+      'hivelog',
+      $field_definitions['weight']
+    );
+  }
+
+  return t('Added weight field to hive inspections.');
+}

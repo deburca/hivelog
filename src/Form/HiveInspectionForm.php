@@ -63,7 +63,7 @@ class HiveInspectionForm extends ContentEntityForm {
         'title' => $this->t('Management'),
         'weight' => 6,
         'open' => FALSE,
-        'fields' => ['fed', 'feed_type', 'supers', 'action_taken'],
+        'fields' => ['weight', 'fed', 'feed_type', 'supers', 'action_taken'],
       ],
       'notes_section' => [
         'title' => $this->t('Notes'),

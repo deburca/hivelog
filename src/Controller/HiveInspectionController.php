@@ -55,6 +55,7 @@ class HiveInspectionController extends ControllerBase {
         'disease_signs',
       ]),
       'management' => $this->buildSection($this->t('Management'), $hive_inspection, [
+        'weight',
         'fed',
         'feed_type',
         'supers',
@@ -146,6 +147,11 @@ class HiveInspectionController extends ControllerBase {
         $timestamp = strtotime($field->value . ' 00:00:00 UTC');
         return [
           '#plain_text' => $timestamp !== FALSE ? \Drupal::service('date.formatter')->format($timestamp, 'custom', 'Y-m-d') : (string) $field->value,
+        ];
+
+      case 'weight':
+        return [
+          '#plain_text' => $field->value . ' kg',
         ];
 
       case 'queen_seen':

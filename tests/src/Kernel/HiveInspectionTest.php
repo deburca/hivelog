@@ -101,6 +101,7 @@ class HiveInspectionTest extends KernelTestBase {
       'varroa_check' => TRUE,
       'varroa_count' => 3,
       'disease_signs' => 'none',
+      'weight' => 32.5,
       'fed' => FALSE,
       'feed_type' => '',
       'supers' => 2,
@@ -127,6 +128,7 @@ class HiveInspectionTest extends KernelTestBase {
     $this->assertEquals(TRUE, (bool) $loaded->get('varroa_check')->value);
     $this->assertEquals(3, $loaded->get('varroa_count')->value);
     $this->assertEquals('none', $loaded->get('disease_signs')->value);
+    $this->assertEquals(32.5, (float) $loaded->get('weight')->value);
     $this->assertEquals(FALSE, (bool) $loaded->get('fed')->value);
     $this->assertEquals(2, $loaded->get('supers')->value);
     $this->assertEquals('Added super, checked for swarm cells.', $loaded->get('action_taken')->value);
@@ -320,6 +322,7 @@ class HiveInspectionTest extends KernelTestBase {
     $this->assertEquals('queen_status', $form['queen_seen']['#group']);
     $this->assertEquals('brood_and_stores', $form['honey_stores']['#group']);
     $this->assertEquals('health', $form['disease_signs']['#group']);
+    $this->assertEquals('management', $form['weight']['#group']);
     $this->assertEquals('management', $form['action_taken']['#group']);
     $this->assertEquals('notes_section', $form['notes']['#group']);
   }
@@ -344,6 +347,7 @@ class HiveInspectionTest extends KernelTestBase {
       'varroa_check' => TRUE,
       'varroa_count' => 2,
       'disease_signs' => 'none',
+      'weight' => 28.75,
       'fed' => FALSE,
       'feed_type' => '',
       'supers' => 1,
@@ -378,8 +382,35 @@ class HiveInspectionTest extends KernelTestBase {
     $this->assertStringContainsString('Value', $html);
     $this->assertStringNotContainsString('Queen Brood', $html);
     $this->assertStringContainsString('Strong flight activity with pollen coming in.', $html);
+    $this->assertStringContainsString('28.75 kg', $html);
     $this->assertStringContainsString('Added a super.', $html);
     $this->assertStringContainsString('Colony developing well.', $html);
+  }
+
+  /**
+   * Tests the weight field stores and retrieves floating-point values.
+   */
+  public function testWeightField(): void {
+    // Test with a decimal value.
+    $inspection = HiveInspection::create([
+      'hive' => $this->hive->id(),
+      'inspection_date' => '2024-07-15',
+      'weight' => 45.3,
+    ]);
+    $inspection->save();
+
+    $loaded = HiveInspection::load($inspection->id());
+    $this->assertEquals(45.3, (float) $loaded->get('weight')->value);
+
+    // Test that weight is optional (nullable).
+    $inspection2 = HiveInspection::create([
+      'hive' => $this->hive->id(),
+      'inspection_date' => '2024-07-16',
+    ]);
+    $inspection2->save();
+
+    $loaded2 = HiveInspection::load($inspection2->id());
+    $this->assertTrue($loaded2->get('weight')->isEmpty());
   }
 
 }
