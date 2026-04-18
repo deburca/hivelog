@@ -394,10 +394,22 @@ class EmbeddedTableFilterPaginationTest extends KernelTestBase {
       ->getInstanceFromDefinition(ApiaryController::class);
     $build = $controller->view($apiary);
 
-    $filter = $build['hives_filter'];
+    $filter = $build['hives_toolbar']['filter'];
     $this->assertEquals('get', $filter['#method']);
     $this->assertEquals('active', $filter['filters']['status']['#default_value']);
     $this->assertEquals('Hive', $filter['filters']['name']['#default_value']);
+
+    // Toolbar wraps the filter form and the Add Hive action link in one
+    // container so they can be rendered on the same row.
+    $this->assertArrayHasKey('add', $build['hives_toolbar']);
+    $this->assertContains(
+      'hivelog-toolbar__action',
+      $build['hives_toolbar']['add']['#attributes']['class']
+    );
+    $this->assertContains(
+      'hivelog-toolbar',
+      $build['hives_toolbar']['#attributes']['class']
+    );
   }
 
 }
