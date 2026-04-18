@@ -9,6 +9,7 @@ use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\Hive;
 use Drupal\hivelog\Entity\HiveInspection;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
@@ -385,6 +386,48 @@ class HiveInspectionTest extends KernelTestBase {
     $this->assertStringContainsString('28.75 kg', $html);
     $this->assertStringContainsString('Added a super.', $html);
     $this->assertStringContainsString('Colony developing well.', $html);
+  }
+
+  /**
+   * Tests that the inspection view page renders Edit and Delete action links.
+   */
+  public function testInspectionViewHasEditAndDeleteActions(): void {
+    $inspection = HiveInspection::create([
+      'hive' => $this->hive->id(),
+      'inspection_date' => '2024-06-15',
+      'uid' => $this->user->id(),
+    ]);
+    $inspection->save();
+
+    // Grant the current user edit and delete permissions on inspections.
+    $role = Role::create([
+      'id' => 'inspection_editor',
+      'label' => 'Inspection editor',
+    ]);
+    $role->grantPermission('view hive inspection');
+    $role->grantPermission('edit hive inspection');
+    $role->grantPermission('delete hive inspection');
+    $role->save();
+    $this->user->addRole('inspection_editor');
+    $this->user->save();
+    \Drupal::currentUser()->setAccount($this->user);
+
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(HiveInspectionController::class);
+    $build = $controller->view($inspection);
+
+    $this->assertArrayHasKey('actions', $build);
+    $this->assertArrayHasKey('edit', $build['actions']);
+    $this->assertArrayHasKey('delete', $build['actions']);
+    $this->assertEquals(
+      $inspection->toUrl('edit-form')->toString(),
+      $build['actions']['edit']['#url']->toString()
+    );
+
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+    $this->assertStringContainsString('Edit', $html);
+    $this->assertStringContainsString('Delete', $html);
+    $this->assertStringContainsString('hivelog-inspection-actions', $html);
   }
 
   /**
