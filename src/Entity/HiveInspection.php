@@ -373,6 +373,28 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
       ->setDisplayConfigurable('view', TRUE);
 
     // Management fields.
+    $fields['weight'] = BaseFieldDefinition::create('float')
+      ->setLabel(t('Weight'))
+      ->setDescription(t('Weight of the hive in kilograms.'))
+      ->setSetting('min', 0)
+      ->setDisplayOptions('form', [
+        'type' => 'number',
+        'weight' => 14,
+        'settings' => [
+          'placeholder' => 'kg',
+        ],
+      ])
+      ->setDisplayOptions('view', [
+        'label' => 'inline',
+        'type' => 'number_decimal',
+        'weight' => 14,
+        'settings' => [
+          'suffix' => ' kg',
+        ],
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
+
     $fields['fed'] = BaseFieldDefinition::create('boolean')
       ->setLabel(t('Fed'))
       ->setDescription(t('Was the colony fed during this inspection?'))
