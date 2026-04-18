@@ -9,6 +9,7 @@ use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\hivelog\Breadcrumb\HivelogBreadcrumbBuilder;
 use Drupal\Tests\UnitTestCase;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 
 /**
@@ -53,9 +54,9 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   // -------------------------------------------------------------------------
 
   /**
-   * @covers ::applies
-   * @dataProvider apiaryRouteProvider
+   * Tests that applies() returns TRUE for apiary entity routes.
    */
+  #[DataProvider('apiaryRouteProvider')]
   public function testAppliesReturnsTrueForApiaryRoutes(string $route_name): void {
     $this->assertTrue($this->builder->applies($this->createRouteMatch($route_name)));
   }
@@ -74,9 +75,9 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::applies
-   * @dataProvider hiveRouteProvider
+   * Tests that applies() returns TRUE for hive entity routes.
    */
+  #[DataProvider('hiveRouteProvider')]
   public function testAppliesReturnsTrueForHiveRoutes(string $route_name): void {
     $this->assertTrue($this->builder->applies($this->createRouteMatch($route_name)));
   }
@@ -93,9 +94,9 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::applies
-   * @dataProvider hiveInspectionRouteProvider
+   * Tests that applies() returns TRUE for hive_inspection entity routes.
    */
+  #[DataProvider('hiveInspectionRouteProvider')]
   public function testAppliesReturnsTrueForHiveInspectionRoutes(string $route_name): void {
     $this->assertTrue($this->builder->applies($this->createRouteMatch($route_name)));
   }
@@ -112,9 +113,9 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::applies
-   * @dataProvider hivelogCustomRouteProvider
+   * Tests that applies() returns TRUE for hivelog.* custom routes.
    */
+  #[DataProvider('hivelogCustomRouteProvider')]
   public function testAppliesReturnsTrueForHivelogCustomRoutes(string $route_name): void {
     $this->assertTrue($this->builder->applies($this->createRouteMatch($route_name)));
   }
@@ -131,9 +132,9 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::applies
-   * @dataProvider unrelatedRouteProvider
+   * Tests that applies() returns FALSE for unrelated routes.
    */
+  #[DataProvider('unrelatedRouteProvider')]
   public function testAppliesReturnsFalseForUnrelatedRoutes(string $route_name): void {
     $this->assertFalse($this->builder->applies($this->createRouteMatch($route_name)));
   }
@@ -156,8 +157,6 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   // -------------------------------------------------------------------------
 
   /**
-   * @covers ::build
-   *
    * Apiary collection: no entity parameters → 3 base links only.
    */
   public function testBuildApiaryCollection(): void {
@@ -178,8 +177,6 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::build
-   *
    * Apiary canonical: apiary is the current page so it is NOT appended to the
    * trail, but its cache tags are still added.
    */
@@ -200,8 +197,6 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::build
-   *
    * Apiary edit: apiary is an ancestor, so its link IS added (4 links total).
    */
   public function testBuildApiaryEditForm(): void {
@@ -224,8 +219,6 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::build
-   *
    * Hive canonical: hive is the current page; apiary ancestor link is added,
    * hive link is NOT.
    */
@@ -250,8 +243,6 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::build
-   *
    * Hive edit: apiary and hive ancestor links are both added (5 links total).
    */
   public function testBuildHiveEditForm(): void {
@@ -275,8 +266,6 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::build
-   *
    * Inspection canonical: inspection is the current page; apiary and hive
    * ancestor links are added, inspection link is NOT.
    */
@@ -303,8 +292,6 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::build
-   *
    * Inspection edit: apiary, hive, and inspection ancestor links all added
    * (6 links total).
    */
@@ -331,8 +318,6 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::build
-   *
    * hivelog.hive.add carries an {apiary} route parameter; the apiary link
    * should be added as an ancestor (4 links total).
    */
@@ -354,8 +339,6 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::build
-   *
    * hivelog.inspection.add carries a {hive} route parameter; apiary and hive
    * ancestor links should both be added (5 links total).
    */
