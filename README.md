@@ -193,9 +193,11 @@ ddev exec "SIMPLETEST_DB=mysql://db:db@db:3306/db \
   --group hivelog"
 ```
 
-The suite includes 53 tests covering entity CRUD, relationships, queen colour
-auto-calculation, field option validation, inspection logging, and breadcrumb
-building.
+The suite includes kernel, unit, and functional tests covering entity CRUD,
+relationships, queen colour auto-calculation, field option validation,
+inspection logging, breadcrumb building, controller cache metadata,
+permission-matrix route access, tab visibility, and full add/edit/delete
+browser journeys for every entity type.
 
 ## Deployment
 
