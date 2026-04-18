@@ -153,7 +153,6 @@ class HiveInspectionTest extends KernelTestBase {
       'queen_cells' => FALSE,
       'eggs_seen' => TRUE,
       'brood_pattern' => 'good',
-      'queen_brood' => TRUE,
       'honey_stores' => 'abundant',
       'pollen_stores' => 'adequate',
       'temperament' => 'calm',
@@ -180,7 +179,6 @@ class HiveInspectionTest extends KernelTestBase {
     $this->assertEquals(FALSE, (bool) $loaded->get('queen_cells')->value);
     $this->assertEquals(TRUE, (bool) $loaded->get('eggs_seen')->value);
     $this->assertEquals('good', $loaded->get('brood_pattern')->value);
-    $this->assertEquals(TRUE, (bool) $loaded->get('queen_brood')->value);
     $this->assertEquals('abundant', $loaded->get('honey_stores')->value);
     $this->assertEquals('adequate', $loaded->get('pollen_stores')->value);
     $this->assertEquals('calm', $loaded->get('temperament')->value);
@@ -378,8 +376,8 @@ class HiveInspectionTest extends KernelTestBase {
 
     $this->assertEquals('overview', $form['hive']['#group']);
     $this->assertEquals('overview', $form['inspection_date']['#group']);
-    $this->assertArrayHasKey('queen_brood', $form);
-    $this->assertFalse($form['queen_brood']['#access']);
+    // queen_brood has been retired; ensure no residual form element remains.
+    $this->assertArrayNotHasKey('queen_brood', $form);
     $this->assertEquals('queen_status', $form['queen_seen']['#group']);
     $this->assertEquals('brood_and_stores', $form['honey_stores']['#group']);
     $this->assertEquals('health', $form['disease_signs']['#group']);
@@ -401,7 +399,6 @@ class HiveInspectionTest extends KernelTestBase {
       'queen_cells' => FALSE,
       'eggs_seen' => TRUE,
       'brood_pattern' => 'good',
-      'queen_brood' => FALSE,
       'honey_stores' => 'adequate',
       'pollen_stores' => 'abundant',
       'temperament' => 'calm',
@@ -708,6 +705,27 @@ class HiveInspectionTest extends KernelTestBase {
     $form = \Drupal::service('entity.form_builder')->getForm($inspection, 'add');
 
     $this->assertEquals('none', $form['disease_signs']['widget']['#default_value'][0] ?? NULL);
+  }
+
+  /**
+   * Tests that the dormant queen_brood field has been fully retired.
+   */
+  public function testQueenBroodFieldIsRetired(): void {
+    $base_fields = \Drupal::service('entity_field.manager')
+      ->getBaseFieldDefinitions('hive_inspection');
+    $this->assertArrayNotHasKey('queen_brood', $base_fields);
+
+    $table_mapping = \Drupal::entityTypeManager()
+      ->getStorage('hive_inspection')
+      ->getTableMapping();
+    $this->assertNotContains(
+      'queen_brood',
+      $table_mapping->getFieldNames('hivelog_hive_inspection')
+    );
+
+    $schema = \Drupal::database()->schema();
+    $this->assertFalse($schema->fieldExists('hivelog_hive_inspection', 'queen_brood'));
+    $this->assertFalse($schema->fieldExists('hivelog_hive_inspection', 'queen_brood__value'));
   }
 
   /**

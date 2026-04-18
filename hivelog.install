@@ -233,3 +233,23 @@ function hivelog_update_10006(&$sandbox) {
 
   return t('Added images field to hive inspections.');
 }
+
+/**
+ * Retire the dormant queen_brood field on hive inspections.
+ *
+ * The queen_brood boolean was never exposed on the inspection form or the
+ * canonical view and the existing `queen_cells` field already captures the
+ * swarming / supersedure signal, so the data model is simplified by removing
+ * it. Any previously stored value is dropped along with the column.
+ */
+function hivelog_update_10007(&$sandbox) {
+  $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+
+  $queen_brood_definition = $entity_definition_update_manager
+    ->getFieldStorageDefinition('queen_brood', 'hive_inspection');
+  if ($queen_brood_definition) {
+    $entity_definition_update_manager->uninstallFieldStorageDefinition($queen_brood_definition);
+  }
+
+  return t('Retired dormant queen_brood field on hive inspections.');
+}
