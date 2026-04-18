@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\hivelog\Kernel;
 
+use Drupal\hivelog\Controller\ApiaryController;
 use Drupal\hivelog\Entity\Apiary;
+use Drupal\hivelog\Entity\Hive;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
@@ -162,6 +165,58 @@ class ApiaryTest extends KernelTestBase {
     $apiary->delete();
 
     $this->assertNull(Apiary::load($id));
+  }
+
+  /**
+   * Tests apiary page child listing only includes accessible hives.
+   */
+  public function testApiaryViewFiltersInaccessibleHives(): void {
+    $apiary = Apiary::create([
+      'name' => 'Restricted View Apiary',
+    ]);
+    $apiary->save();
+
+    $hive = Hive::create([
+      'name' => 'Hidden Hive',
+      'apiary' => $apiary->id(),
+      'status' => 'active',
+    ]);
+    $hive->save();
+
+    $viewer = User::create([
+      'name' => 'apiary-viewer',
+      'mail' => 'apiary-viewer@example.com',
+    ]);
+    $viewer->save();
+
+    $role = Role::create([
+      'id' => 'apiary_view_only',
+      'label' => 'Apiary view only',
+    ]);
+    $role->grantPermission('view apiary');
+    $role->save();
+    $authenticated = Role::load('authenticated');
+    if ($authenticated) {
+      $authenticated->revokePermission('view hive');
+      $authenticated->revokePermission('edit hive');
+      $authenticated->revokePermission('delete hive');
+      $authenticated->save();
+    }
+    $viewer->addRole('apiary_view_only');
+    $viewer->save();
+
+    \Drupal::currentUser()->setAccount($viewer);
+
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(ApiaryController::class);
+    $build = $controller->view($apiary);
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+
+    $this->assertStringNotContainsString('Hidden Hive', $html);
+    $this->assertStringContainsString(
+      'No hives have been added to this apiary yet.',
+      $html
+    );
   }
 
 }
