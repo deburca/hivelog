@@ -187,3 +187,49 @@ function hivelog_update_10004(&$sandbox) {
 
   return t('Added weight field to hive inspections.');
 }
+
+/**
+ * Add images field to hives.
+ */
+function hivelog_update_10005(&$sandbox) {
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+
+  $field_definitions = \Drupal\hivelog\Entity\Hive::baseFieldDefinitions(
+    $entity_type_manager->getDefinition('hive')
+  );
+
+  if (isset($field_definitions['images'])) {
+    $entity_definition_update_manager->installFieldStorageDefinition(
+      'images',
+      'hive',
+      'hivelog',
+      $field_definitions['images']
+    );
+  }
+
+  return t('Added images field to hives.');
+}
+
+/**
+ * Add images field to hive inspections.
+ */
+function hivelog_update_10006(&$sandbox) {
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+
+  $field_definitions = \Drupal\hivelog\Entity\HiveInspection::baseFieldDefinitions(
+    $entity_type_manager->getDefinition('hive_inspection')
+  );
+
+  if (isset($field_definitions['images'])) {
+    $entity_definition_update_manager->installFieldStorageDefinition(
+      'images',
+      'hive_inspection',
+      'hivelog',
+      $field_definitions['images']
+    );
+  }
+
+  return t('Added images field to hive inspections.');
+}

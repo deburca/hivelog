@@ -26,6 +26,8 @@ class ApiaryTest extends KernelTestBase {
     'field',
     'datetime',
     'options',
+    'file',
+    'image',
     'geofield',
     'hivelog',
   ];
@@ -43,9 +45,11 @@ class ApiaryTest extends KernelTestBase {
   protected function setUp(): void {
     parent::setUp();
     $this->installEntitySchema('user');
+    $this->installEntitySchema('file');
     $this->installEntitySchema('apiary');
     $this->installEntitySchema('hive');
     $this->installEntitySchema('hive_inspection');
+    $this->installSchema('file', ['file_usage']);
 
     $this->user = User::create([
       'name' => 'testuser',

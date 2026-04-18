@@ -3,3 +3,9 @@ weight_histogram:
   css:
     component:
       css/hivelog.weight-histogram.css: {}
+
+images:
+  version: 1.x
+  css:
+    component:
+      css/hivelog.images.css: {}

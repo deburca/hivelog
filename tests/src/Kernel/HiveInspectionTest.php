@@ -30,6 +30,8 @@ class HiveInspectionTest extends KernelTestBase {
     'field',
     'datetime',
     'options',
+    'file',
+    'image',
     'geofield',
     'hivelog',
   ];
@@ -62,9 +64,11 @@ class HiveInspectionTest extends KernelTestBase {
     parent::setUp();
     $this->installConfig(['system']);
     $this->installEntitySchema('user');
+    $this->installEntitySchema('file');
     $this->installEntitySchema('apiary');
     $this->installEntitySchema('hive');
     $this->installEntitySchema('hive_inspection');
+    $this->installSchema('file', ['file_usage']);
 
     $this->user = User::create([
       'name' => 'inspector',
@@ -315,6 +319,7 @@ class HiveInspectionTest extends KernelTestBase {
     $this->assertArrayHasKey('health', $form);
     $this->assertArrayHasKey('management', $form);
     $this->assertArrayHasKey('notes_section', $form);
+    $this->assertArrayHasKey('photos_section', $form);
 
     $this->assertEquals('overview', $form['hive']['#group']);
     $this->assertEquals('overview', $form['inspection_date']['#group']);
@@ -326,6 +331,7 @@ class HiveInspectionTest extends KernelTestBase {
     $this->assertEquals('management', $form['weight']['#group']);
     $this->assertEquals('management', $form['action_taken']['#group']);
     $this->assertEquals('notes_section', $form['notes']['#group']);
+    $this->assertEquals('photos_section', $form['images']['#group']);
   }
 
   /**
@@ -428,6 +434,71 @@ class HiveInspectionTest extends KernelTestBase {
     $this->assertStringContainsString('Edit', $html);
     $this->assertStringContainsString('Delete', $html);
     $this->assertStringContainsString('hivelog-inspection-actions', $html);
+  }
+
+  /**
+   * Tests that inspection photos are rendered as a grid linking to the file.
+   */
+  public function testInspectionViewRendersPhotosGrid(): void {
+    $directory = 'public://hivelog-test-inspection';
+    \Drupal::service('file_system')->prepareDirectory($directory, \Drupal\Core\File\FileSystemInterface::CREATE_DIRECTORY);
+    $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGNgYGD4DwABBAEAfbLI3wAAAABJRU5ErkJggg==');
+
+    $files = [];
+    foreach (['photo-1.png', 'photo-2.png'] as $filename) {
+      $uri = $directory . '/' . $filename;
+      file_put_contents($uri, $png);
+      $file = \Drupal\file\Entity\File::create([
+        'uri' => $uri,
+        'filename' => $filename,
+        'status' => 1,
+      ]);
+      $file->save();
+      $files[] = $file;
+    }
+
+    $inspection = HiveInspection::create([
+      'hive' => $this->hive->id(),
+      'inspection_date' => '2024-06-15',
+      'uid' => $this->user->id(),
+      'images' => [
+        ['target_id' => $files[0]->id(), 'alt' => 'Photo one'],
+        ['target_id' => $files[1]->id(), 'alt' => 'Photo two'],
+      ],
+    ]);
+    $inspection->save();
+
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(HiveInspectionController::class);
+    $build = $controller->view($inspection);
+
+    $this->assertArrayHasKey('photos', $build);
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+    $this->assertStringContainsString('hivelog-inspection-photos__grid', $html);
+    $this->assertStringContainsString('hivelog-inspection-photos__item', $html);
+    $this->assertStringContainsString('photo-1.png', $html);
+    $this->assertStringContainsString('photo-2.png', $html);
+    $this->assertStringContainsString('alt="Photo one"', $html);
+    $this->assertStringContainsString('alt="Photo two"', $html);
+    // Photos section heading should appear.
+    $this->assertStringContainsString('>Photos<', $html);
+  }
+
+  /**
+   * Tests that the Photos section is absent when no images are attached.
+   */
+  public function testInspectionViewOmitsPhotosSectionWhenEmpty(): void {
+    $inspection = HiveInspection::create([
+      'hive' => $this->hive->id(),
+      'inspection_date' => '2024-06-15',
+    ]);
+    $inspection->save();
+
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(HiveInspectionController::class);
+    $build = $controller->view($inspection);
+
+    $this->assertArrayNotHasKey('photos', $build);
   }
 
   /**

@@ -28,9 +28,17 @@ class HiveController extends ControllerBase {
   public function view(Hive $hive) {
     $build = [];
 
+    // Letterbox hero image (first attached picture), rendered above the
+    // hive entity details when present.
+    $hero = $this->buildHero($hive);
+    if (!empty($hero)) {
+      $build['hero'] = $hero;
+    }
+
     // Render the hive entity fields.
     $view_builder = $this->entityTypeManager()->getViewBuilder('hive');
     $build['hive'] = $view_builder->view($hive);
+    $build['hive']['#weight'] = 5;
 
     // Add inspections heading and action link.
     $build['inspections_heading'] = [
@@ -128,6 +136,45 @@ class HiveController extends ControllerBase {
    */
   public function title(Hive $hive) {
     return $hive->label();
+  }
+
+  /**
+   * Builds a letterboxed hero render array from the hive's first image.
+   */
+  protected function buildHero(Hive $hive): array {
+    if ($hive->get('images')->isEmpty()) {
+      return [];
+    }
+
+    $file = $hive->get('images')->entity;
+    if (!$file) {
+      return [];
+    }
+
+    $url = \Drupal::service('file_url_generator')->generateAbsoluteString($file->getFileUri());
+    $alt = (string) ($hive->get('images')->alt ?? $hive->label());
+
+    return [
+      '#type' => 'container',
+      '#attributes' => [
+        'class' => [
+          'hivelog-hive-hero',
+          'hivelog-hive-hero--letterboxed',
+        ],
+      ],
+      '#weight' => -10,
+      '#attached' => [
+        'library' => ['hivelog/images'],
+      ],
+      'frame' => [
+        '#type' => 'inline_template',
+        '#template' => '<div class="hivelog-hive-hero__frame" style="background-image: url({{ url }});" role="img" aria-label="{{ alt }}"></div>',
+        '#context' => [
+          'url' => $url,
+          'alt' => $alt,
+        ],
+      ],
+    ];
   }
 
   /**

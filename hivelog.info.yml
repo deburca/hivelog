@@ -4,6 +4,7 @@ description: 'Beekeeping activity logger for managing apiaries, hives, and inspe
 core_version_requirement: ^11
 package: Custom
 dependencies:
+  - drupal:image
   - geofield:geofield
   - geocoder:geocoder
   - leaflet:leaflet
