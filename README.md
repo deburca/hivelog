@@ -23,7 +23,6 @@ Apiary → Hive → Hive Inspection
 
 - Drupal 11
 - [Geofield](https://www.drupal.org/project/geofield) module — provides the geofield field type for storing geospatial data
-- [Geocoder](https://www.drupal.org/project/geocoder) module — provides geocoding services
 - [Leaflet](https://www.drupal.org/project/leaflet) module — provides Leaflet/OpenStreetMap map display and interactive map widget
 
 ## Installation
@@ -211,8 +210,8 @@ drush cr
 
 **Step summary:**
 
-1. `composer install` — Ensures all PHP dependencies (including geofield,
-   geocoder, leaflet) are present.
+1. `composer install` — Ensures all PHP dependencies (including geofield and
+   leaflet) are present.
 2. `drush updb` — Runs any pending database update hooks. Current hooks:
    - `10001` — Migrate apiary lat/lng fields to geolocation field.
    - `10002` — Migrate geolocation field from geolocation module to geofield.

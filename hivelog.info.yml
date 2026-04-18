@@ -10,5 +10,4 @@ dependencies:
   - drupal:options
   - drupal:user
   - geofield:geofield
-  - geocoder:geocoder
   - leaflet:leaflet

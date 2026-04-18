@@ -12,8 +12,11 @@ three custom content entities with a strict parent–child hierarchy:
 Apiary → Hive → Hive Inspection
 ```
 
-Required contrib dependencies: `geofield`, `geocoder`, `leaflet` (see
-`hivelog.info.yml`).
+Required contrib dependencies: `geofield`, `leaflet` (see
+`hivelog.info.yml`). The geocoder module is intentionally NOT a dependency:
+the apiary map widget is `leaflet_widget_default`, not a geocoder-backed
+widget, and nothing else in the module talks to geocoder services. Do not
+reintroduce the dependency without adding and documenting a concrete use.
 
 ## Common Commands
 
