@@ -116,6 +116,8 @@ Users with "Administer HiveLog" bypass all individual permission checks.
 | Path                                          | Description            |
 |-----------------------------------------------|------------------------|
 | `/admin/hivelog`                              | Apiary list            |
+| `/admin/hivelog/hives`                        | Hive list              |
+| `/admin/hivelog/inspections`                  | Inspection list        |
 | `/admin/hivelog/apiary/add`                   | Add apiary             |
 | `/admin/hivelog/apiary/{id}`                  | View apiary            |
 | `/admin/hivelog/apiary/{id}/edit`             | Edit apiary            |

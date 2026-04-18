@@ -4,3 +4,17 @@ hivelog.admin:
   route_name: entity.apiary.collection
   parent: system.admin_structure
   weight: 10
+
+hivelog.hives:
+  title: 'Hives'
+  description: 'View all hives.'
+  route_name: entity.hive.collection
+  parent: hivelog.admin
+  weight: 1
+
+hivelog.inspections:
+  title: 'Inspections'
+  description: 'View all inspections.'
+  route_name: entity.hive_inspection.collection
+  parent: hivelog.admin
+  weight: 2
