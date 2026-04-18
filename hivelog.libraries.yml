@@ -1,0 +1,5 @@
+weight_histogram:
+  version: 1.x
+  css:
+    component:
+      css/hivelog.weight-histogram.css: {}
