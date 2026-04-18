@@ -42,7 +42,6 @@ class HiveInspectionController extends ControllerBase {
       ]),
       'brood_and_stores' => $this->buildSection($this->t('Brood, honey and pollen'), $hive_inspection, [
         'brood_pattern',
-        'queen_brood',
         'honey_stores',
         'pollen_stores',
       ]),
@@ -152,7 +151,6 @@ class HiveInspectionController extends ControllerBase {
       case 'queen_seen':
       case 'queen_cells':
       case 'eggs_seen':
-      case 'queen_brood':
       case 'varroa_check':
       case 'fed':
         return [
