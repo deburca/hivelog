@@ -3,14 +3,44 @@
 namespace Drupal\hivelog\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Entity\Query\QueryInterface;
 use Drupal\Core\Url;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\Hive;
+use Drupal\hivelog\Form\HivelogInspectionFilterForm;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Controller for Hive pages.
  */
 class HiveController extends ControllerBase {
+
+  /**
+   * Default number of inspections shown per page in the embedded list.
+   */
+  public const INSPECTIONS_PER_PAGE = 20;
+
+  /**
+   * Pager element id for the embedded inspection table.
+   */
+  protected const INSPECTIONS_PAGER_ELEMENT = 0;
+
+  /**
+   * The request stack.
+   */
+  protected RequestStack $requestStack;
+
+  public function __construct(RequestStack $request_stack) {
+    $this->requestStack = $request_stack;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container): static {
+    return new static($container->get('request_stack'));
+  }
 
   /**
    * Provides the add form for a hive within an apiary context.
@@ -49,25 +79,34 @@ class HiveController extends ControllerBase {
       '#weight' => 11,
     ];
 
-    // Load inspections for this hive, ordered by date descending.
-    $inspection_ids = $this->entityTypeManager()
+    // Render a letterboxed weight histogram for the year of the most recent
+    // inspection, based on the full (unpaginated, unfiltered) inspection set
+    // so the summary chart is not affected by active filters or paging.
+    $histogram_points = $this->collectHistogramPoints($hive);
+    $histogram = $this->buildWeightHistogram($histogram_points);
+    if (!empty($histogram)) {
+      $build['weight_histogram'] = $histogram + ['#weight' => 11.2];
+    }
+
+    // Filter form.
+    $build['inspections_filter'] = $this->formBuilder()->getForm(HivelogInspectionFilterForm::class, $hive);
+    $build['inspections_filter']['#weight'] = 11.5;
+
+    // Build the paginated + filtered inspection query.
+    $filters = $this->extractInspectionFilters();
+    $query = $this->entityTypeManager()
       ->getStorage('hive_inspection')
       ->getQuery()
       ->accessCheck(TRUE)
       ->condition('hive', $hive->id())
       ->sort('inspection_date', 'DESC')
-      ->execute();
+      ->pager(static::INSPECTIONS_PER_PAGE, static::INSPECTIONS_PAGER_ELEMENT);
+    $this->applyInspectionFilters($query, $filters);
+    $inspection_ids = $query->execute();
 
-    $inspections = $this->entityTypeManager()
-      ->getStorage('hive_inspection')
-      ->loadMultiple($inspection_ids);
-
-    // Render a letterboxed weight histogram for the year of the most recent
-    // inspection (placed above the inspection list).
-    $histogram = $this->buildWeightHistogram($inspections);
-    if (!empty($histogram)) {
-      $build['weight_histogram'] = $histogram + ['#weight' => 11.5];
-    }
+    $inspections = $inspection_ids
+      ? $this->entityTypeManager()->getStorage('hive_inspection')->loadMultiple($inspection_ids)
+      : [];
 
     $header = [
       $this->t('Date'),
@@ -117,8 +156,16 @@ class HiveController extends ControllerBase {
       '#type' => 'table',
       '#header' => $header,
       '#rows' => $rows,
-      '#empty' => $this->t('No inspections have been recorded for this hive yet.'),
+      '#empty' => !empty($filters)
+        ? $this->t('No inspections match the current filters.')
+        : $this->t('No inspections have been recorded for this hive yet.'),
       '#weight' => 12,
+    ];
+
+    $build['inspections_pager'] = [
+      '#type' => 'pager',
+      '#element' => static::INSPECTIONS_PAGER_ELEMENT,
+      '#weight' => 13,
     ];
 
     // Attached pictures, rendered in a grid below the inspection list.
@@ -126,6 +173,10 @@ class HiveController extends ControllerBase {
     if (!empty($images)) {
       $build['images'] = $images + ['#weight' => 20];
     }
+
+    // Cache per URL query string so pager + filter state produce distinct
+    // cache entries.
+    $build['#cache']['contexts'][] = 'url.query_args';
 
     return $build;
   }
@@ -135,6 +186,106 @@ class HiveController extends ControllerBase {
    */
   public function title(Hive $hive) {
     return $hive->label();
+  }
+
+  /**
+   * Extracts inspection filter values from the current request.
+   *
+   * @return array<string, string>
+   *   Associative array keyed by filter name. Only non-empty values are
+   *   included.
+   */
+  protected function extractInspectionFilters(): array {
+    $request = $this->requestStack->getCurrentRequest();
+    if (!$request) {
+      return [];
+    }
+    $filters = [];
+    foreach (['date_from', 'date_to', 'queen_seen', 'brood_pattern'] as $key) {
+      $value = trim((string) $request->query->get($key, ''));
+      if ($value !== '') {
+        $filters[$key] = $value;
+      }
+    }
+    return $filters;
+  }
+
+  /**
+   * Applies inspection filters to an entity query.
+   */
+  protected function applyInspectionFilters(QueryInterface $query, array $filters): void {
+    if (isset($filters['date_from'])) {
+      $query->condition('inspection_date', $filters['date_from'], '>=');
+    }
+    if (isset($filters['date_to'])) {
+      $query->condition('inspection_date', $filters['date_to'], '<=');
+    }
+    if (isset($filters['queen_seen']) && in_array($filters['queen_seen'], ['0', '1'], TRUE)) {
+      $query->condition('queen_seen', (int) $filters['queen_seen']);
+    }
+    if (isset($filters['brood_pattern'])) {
+      $query->condition('brood_pattern', $filters['brood_pattern']);
+    }
+  }
+
+  /**
+   * Collects histogram data points from the full inspection set for a hive.
+   *
+   * The histogram summarises the year of the most recent inspection and is
+   * deliberately not restricted by filters or pagination.
+   *
+   * @return array<int, array{date:string, mmdd:string, weight:float}>
+   */
+  protected function collectHistogramPoints(Hive $hive): array {
+    $inspection_ids = $this->entityTypeManager()
+      ->getStorage('hive_inspection')
+      ->getQuery()
+      ->accessCheck(TRUE)
+      ->condition('hive', $hive->id())
+      ->sort('inspection_date', 'DESC')
+      ->execute();
+
+    if (!$inspection_ids) {
+      return [];
+    }
+    $inspections = $this->entityTypeManager()
+      ->getStorage('hive_inspection')
+      ->loadMultiple($inspection_ids);
+
+    // Identify the most recent inspection date to determine the target year.
+    $most_recent = NULL;
+    foreach ($inspections as $inspection) {
+      $date = $inspection->get('inspection_date')->value;
+      if ($date && (!$most_recent || $date > $most_recent)) {
+        $most_recent = $date;
+      }
+    }
+    if (!$most_recent) {
+      return [];
+    }
+    $year = substr($most_recent, 0, 4);
+
+    $points = [];
+    foreach ($inspections as $inspection) {
+      $date = $inspection->get('inspection_date')->value;
+      $weight = $inspection->get('weight')->value;
+      if (!$date || $weight === NULL || $weight === '') {
+        continue;
+      }
+      if (substr($date, 0, 4) !== $year) {
+        continue;
+      }
+      $points[] = [
+        'date' => $date,
+        'mmdd' => substr($date, 5, 2) . '/' . substr($date, 8, 2),
+        'weight' => (float) $weight,
+        'year' => $year,
+      ];
+    }
+
+    usort($points, fn($a, $b) => strcmp($a['date'], $b['date']));
+
+    return $points;
   }
 
   /**
@@ -199,52 +350,19 @@ class HiveController extends ControllerBase {
   /**
    * Builds a letterboxed vertical histogram of inspection weights.
    *
-   * Restricted to the year of the most recent inspection that has data.
-   *
-   * @param \Drupal\hivelog\Entity\HiveInspection[] $inspections
-   *   Inspections belonging to the current hive.
+   * @param array<int, array{date:string, mmdd:string, weight:float, year?:string}> $points
+   *   Pre-collected data points for the target year.
    *
    * @return array
    *   A render array for the histogram, or an empty array if there is nothing
    *   to display.
    */
-  protected function buildWeightHistogram(array $inspections): array {
-    // Identify the most recent inspection date to determine the target year.
-    $most_recent = NULL;
-    foreach ($inspections as $inspection) {
-      $date = $inspection->get('inspection_date')->value;
-      if ($date && (!$most_recent || $date > $most_recent)) {
-        $most_recent = $date;
-      }
-    }
-    if (!$most_recent) {
-      return [];
-    }
-    $year = substr($most_recent, 0, 4);
-
-    // Collect data points for that year.
-    $points = [];
-    foreach ($inspections as $inspection) {
-      $date = $inspection->get('inspection_date')->value;
-      $weight = $inspection->get('weight')->value;
-      if (!$date || $weight === NULL || $weight === '') {
-        continue;
-      }
-      if (substr($date, 0, 4) !== $year) {
-        continue;
-      }
-      $points[] = [
-        'date' => $date,
-        'mmdd' => substr($date, 5, 2) . '/' . substr($date, 8, 2),
-        'weight' => (float) $weight,
-      ];
-    }
+  protected function buildWeightHistogram(array $points): array {
     if (empty($points)) {
       return [];
     }
 
-    // Sort chronologically so bars read left to right.
-    usort($points, fn($a, $b) => strcmp($a['date'], $b['date']));
+    $year = $points[0]['year'] ?? substr($points[0]['date'], 0, 4);
 
     // SVG layout constants.
     $svg_width = 800;
