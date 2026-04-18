@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\hivelog\Kernel;
 
+use Drupal\hivelog\Controller\HiveController;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\Hive;
+use Drupal\hivelog\Entity\HiveInspection;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\user\Entity\User;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
@@ -272,6 +275,52 @@ class HiveTest extends KernelTestBase {
 
     $hive->delete();
     $this->assertNull(Hive::load($id));
+  }
+
+  /**
+   * Tests that the hive view inspection table includes weight before queen.
+   */
+  public function testHiveViewInspectionTableWeightColumn(): void {
+    $this->installConfig(['system']);
+
+    $user = User::create([
+      'name' => 'tester',
+      'mail' => 'tester@example.com',
+    ]);
+    $user->save();
+    \Drupal::currentUser()->setAccount($user);
+
+    $hive = Hive::create([
+      'name' => 'Weight Column Hive',
+      'apiary' => $this->apiary->id(),
+      'status' => 'active',
+    ]);
+    $hive->save();
+
+    $inspection = HiveInspection::create([
+      'hive' => $hive->id(),
+      'inspection_date' => '2024-06-15',
+      'weight' => 32.5,
+      'queen_seen' => TRUE,
+    ]);
+    $inspection->save();
+
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(HiveController::class);
+    $build = $controller->view($hive);
+
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+
+    // Verify the Weight header and value are present.
+    $this->assertStringContainsString('Weight', $html);
+    $this->assertStringContainsString('32.5 kg', $html);
+
+    // Verify Weight column appears before Queen column in the header.
+    $weight_pos = strpos($html, '>Weight<');
+    $queen_pos = strpos($html, '>Queen<');
+    $this->assertNotFalse($weight_pos);
+    $this->assertNotFalse($queen_pos);
+    $this->assertLessThan($queen_pos, $weight_pos, 'Weight column should appear before Queen column.');
   }
 
 }

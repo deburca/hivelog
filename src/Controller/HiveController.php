@@ -63,6 +63,7 @@ class HiveController extends ControllerBase {
 
     $header = [
       $this->t('Date'),
+      $this->t('Weight'),
       $this->t('Queen'),
       $this->t('Brood'),
       $this->t('Honey'),
@@ -73,8 +74,10 @@ class HiveController extends ControllerBase {
 
     $rows = [];
     foreach ($inspections as $inspection) {
+      $weight = $inspection->get('weight')->value;
       $rows[] = [
         $inspection->get('inspection_date')->value ?: $this->t('N/A'),
+        $weight !== NULL ? $weight . ' kg' : '',
         $inspection->get('queen_seen')->value ? $this->t('Yes') : $this->t('No'),
         $inspection->get('brood_pattern')->value ? $inspection->get('brood_pattern')->getSetting('allowed_values')[$inspection->get('brood_pattern')->value] ?? '' : '',
         $inspection->get('honey_stores')->value ? $inspection->get('honey_stores')->getSetting('allowed_values')[$inspection->get('honey_stores')->value] ?? '' : '',

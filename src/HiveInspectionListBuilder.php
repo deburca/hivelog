@@ -16,6 +16,7 @@ class HiveInspectionListBuilder extends EntityListBuilder {
   public function buildHeader() {
     $header['date'] = $this->t('Date');
     $header['hive'] = $this->t('Hive');
+    $header['weight'] = $this->t('Weight');
     $header['queen'] = $this->t('Queen Seen');
     $header['honey'] = $this->t('Honey');
     $header['inspector'] = $this->t('Inspector');
@@ -29,6 +30,8 @@ class HiveInspectionListBuilder extends EntityListBuilder {
     $row['date'] = $entity->get('inspection_date')->value ?: $this->t('N/A');
     $hive = $entity->get('hive')->entity;
     $row['hive'] = $hive ? $hive->toLink() : '';
+    $weight = $entity->get('weight')->value;
+    $row['weight'] = $weight !== NULL ? $weight . ' kg' : '';
     $row['queen'] = $entity->get('queen_seen')->value ? $this->t('Yes') : $this->t('No');
     $honey = $entity->get('honey_stores')->value;
     $row['honey'] = $honey ? ($entity->get('honey_stores')->getSetting('allowed_values')[$honey] ?? $honey) : '';
