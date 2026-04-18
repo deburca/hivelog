@@ -210,25 +210,6 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
-    $fields['queen_brood'] = BaseFieldDefinition::create('boolean')
-      ->setLabel(t('Queen Brood'))
-      ->setDescription(t('Is capped queen brood present?'))
-      ->setDefaultValue(FALSE)
-      ->setDisplayOptions('form', [
-        'type' => 'boolean_checkbox',
-        'weight' => 7,
-      ])
-      ->setDisplayOptions('view', [
-        'label' => 'inline',
-        'type' => 'boolean',
-        'weight' => 7,
-        'settings' => [
-          'format' => 'yes-no',
-        ],
-      ])
-      ->setDisplayConfigurable('form', TRUE)
-      ->setDisplayConfigurable('view', TRUE);
-
     // Stores fields.
     $fields['honey_stores'] = BaseFieldDefinition::create('list_string')
       ->setLabel(t('Honey Stores'))

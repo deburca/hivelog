@@ -61,8 +61,8 @@ After installation, navigate to **Administration → Structure → HiveLog**
    - **External check (before opening)** — Flight activity, dead bees, signs of
      robbing, wasps, hive weight (hefting)
    - **Queen status** — Queen seen, queen cells present, eggs seen
-   - **Brood** — Brood pattern quality, capped queen brood
-   - **Stores** — Honey stores level, pollen stores level
+   - **Brood, honey and pollen** — Brood pattern quality, honey stores,
+     pollen stores
    - **Colony condition** — Temperament, population strength
    - **Health** — Varroa check performed, mite count, disease signs
    - **Management** — Colony fed, feed type, number of supers, actions taken
@@ -215,6 +215,12 @@ drush cr
    - `10001` — Migrate apiary lat/lng fields to geolocation field.
    - `10002` — Migrate geolocation field from geolocation module to geofield.
    - `10003` — Add `external_check` field to hive inspections.
+   - `10004` — Add `weight` field to hive inspections.
+   - `10005` — Add `images` field to hives.
+   - `10006` — Add `images` field to hive inspections.
+   - `10007` — Retire the dormant `queen_brood` field on hive inspections
+     (data in the removed column is dropped; the swarming / supersedure
+     signal is already captured by `queen_cells`).
 3. `drush cr` — Rebuilds caches so Drupal picks up any changes to entity
    definitions, routing, or services.
 

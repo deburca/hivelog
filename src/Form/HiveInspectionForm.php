@@ -101,12 +101,6 @@ class HiveInspectionForm extends ContentEntityForm {
       }
     }
 
-    // Keep the field storage for backward compatibility, but do not expose the
-    // duplicate queen_brood input on the form.
-    if (isset($form['queen_brood'])) {
-      $form['queen_brood']['#access'] = FALSE;
-    }
-
     // Hide dependent fields when their controlling boolean is unchecked so
     // users are not asked for information that is not applicable. With JS
     // disabled these fields stay visible (non-JS safe) and the server
