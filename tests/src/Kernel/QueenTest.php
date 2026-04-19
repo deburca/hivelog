@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\hivelog\Kernel;
 
+use Drupal\hivelog\Controller\QueenController;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\Hive;
 use Drupal\hivelog\Entity\Queen;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\user\Entity\Role;
+use Drupal\user\Entity\User;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
@@ -268,6 +271,129 @@ class QueenTest extends KernelTestBase {
 
     $queen->delete();
     $this->assertNull(Queen::load($id));
+  }
+
+  /**
+   * Renders the queen canonical view and asserts the sectioned layout,
+   * formatted values, and Edit / Delete action buttons are present.
+   */
+  public function testQueenViewRendersSectionedLayout(): void {
+    $this->installConfig(['system']);
+
+    $user = User::create([
+      'name' => 'queen-view-tester',
+      'mail' => 'queen-view-tester@example.com',
+    ]);
+    $user->save();
+
+    // Grant edit + delete on queens so the action buttons render.
+    $role = Role::create([
+      'id' => 'queen_editor',
+      'label' => 'Queen editor',
+    ]);
+    $role->grantPermission('view queen');
+    $role->grantPermission('edit queen');
+    $role->grantPermission('delete queen');
+    $role->save();
+    $user->addRole('queen_editor');
+    $user->save();
+    \Drupal::currentUser()->setAccount($user);
+
+    $queen = Queen::create([
+      'name' => 'Q-2024-007',
+      'origin' => 'Highlands Apiaries',
+      'queen_year' => 2024,
+      'breed' => 'buckfast',
+      'temperament' => 'calm',
+      'purchase_cost' => '42.50',
+      'purchase_date' => '2024-04-01',
+      'hive' => $this->hive->id(),
+      'introduction_date' => '2024-05-10',
+      'status' => 'active',
+      'notes' => "Line 1.\nLine 2.",
+      'uid' => $user->id(),
+    ]);
+    $queen->save();
+
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(QueenController::class);
+    $build = $controller->view($queen);
+
+    // Section render arrays are keyed in the expected order.
+    $this->assertArrayHasKey('actions', $build);
+    $this->assertArrayHasKey('overview', $build);
+    $this->assertArrayHasKey('identity', $build);
+    $this->assertArrayHasKey('acquisition', $build);
+    $this->assertArrayHasKey('notes', $build);
+    $this->assertArrayHasKey('edit', $build['actions']);
+    $this->assertArrayHasKey('delete', $build['actions']);
+
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+
+    // Section headings.
+    $this->assertStringContainsString('Overview', $html);
+    $this->assertStringContainsString('Identity', $html);
+    $this->assertStringContainsString('Acquisition', $html);
+    $this->assertStringContainsString('Notes', $html);
+    // Field / Value column headers from the shared section tables.
+    $this->assertStringContainsString('>Field<', $html);
+    $this->assertStringContainsString('>Value<', $html);
+
+    // Formatted values.
+    $this->assertStringContainsString('Q-2024-007', $html);
+    $this->assertStringContainsString('Highlands Apiaries', $html);
+    // Status and breed are shown using their human-readable labels, not
+    // the raw machine names.
+    $this->assertStringContainsString('Active', $html);
+    $this->assertStringContainsString('Buckfast', $html);
+    // Queen colour derived from the 2024 year → green.
+    $this->assertStringContainsString('Green', $html);
+    // Purchase cost renders with two decimals via number_format.
+    $this->assertStringContainsString('42.50', $html);
+    $this->assertStringContainsString('2024-04-01', $html);
+    $this->assertStringContainsString('2024-05-10', $html);
+    // Notes preserve line breaks as <br />.
+    $this->assertStringContainsString('Line 1.<br', $html);
+
+    // Action buttons.
+    $this->assertStringContainsString('button--primary', $html);
+    $this->assertStringContainsString('button--danger', $html);
+    // Edit button appears before the Delete button.
+    $edit_pos = strpos($html, '>Edit<');
+    $delete_pos = strpos($html, '>Delete<');
+    $this->assertNotFalse($edit_pos);
+    $this->assertNotFalse($delete_pos);
+    $this->assertLessThan($delete_pos, $edit_pos);
+  }
+
+  /**
+   * Empty fields render as an em-dash rather than being hidden or echoing
+   * raw empty values.
+   */
+  public function testQueenViewShowsEmDashForEmptyFields(): void {
+    $this->installConfig(['system']);
+
+    $user = User::create([
+      'name' => 'sparse-queen-tester',
+      'mail' => 'sparse-queen-tester@example.com',
+    ]);
+    $user->save();
+    \Drupal::currentUser()->setAccount($user);
+
+    $queen = Queen::create([
+      'name' => 'Q-minimal',
+      'status' => 'active',
+    ]);
+    $queen->save();
+
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(QueenController::class);
+    $build = $controller->view($queen);
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+
+    // At least one em-dash should appear for the empty origin / breed /
+    // purchase_date / etc. rows.
+    $this->assertStringContainsString('—', $html);
   }
 
 }
