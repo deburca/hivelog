@@ -103,6 +103,13 @@ class HiveController extends ControllerBase {
       $build['weight_histogram'] = $histogram + ['#weight' => 7];
     }
 
+    // Queen section — rendered after the histogram so the histogram stays
+    // visually on top of the page, but still above the inspection list so
+    // the current queen is the last thing the reader sees before the
+    // inspection history.
+    $active_queen = $hive->getActiveQueen();
+    $build['queen'] = $this->buildQueenSection($hive, $active_queen) + ['#weight' => 8];
+
     // Heading row: the "Inspections" title on the left, the Add Inspection
     // action on the right. Placing the action here (rather than inline
     // with the filter form below) keeps it at the top-right of the list
@@ -225,7 +232,11 @@ class HiveController extends ControllerBase {
     $cache = CacheableMetadata::createFromRenderArray($build)
       ->addCacheContexts(['url.query_args', 'user.permissions'])
       ->addCacheableDependency($hive)
-      ->addCacheTags($this->entityTypeManager->getDefinition('hive_inspection')->getListCacheTags());
+      ->addCacheTags($this->entityTypeManager->getDefinition('hive_inspection')->getListCacheTags())
+      ->addCacheTags($this->entityTypeManager->getDefinition('queen')->getListCacheTags());
+    if ($active_queen) {
+      $cache->addCacheableDependency($active_queen);
+    }
     foreach ($inspections as $inspection) {
       $cache->addCacheableDependency($inspection);
     }
@@ -244,6 +255,72 @@ class HiveController extends ControllerBase {
    */
   public function title(Hive $hive) {
     return $hive->label();
+  }
+
+  /**
+   * Builds the queen section shown on the hive view page.
+   *
+   * When an active queen is present, summarise its key attributes and
+   * expose View / Edit links. Otherwise, invite the user to add a queen
+   * via the hive-scoped add route.
+   *
+   * @param \Drupal\hivelog\Entity\Hive $hive
+   *   The hive being rendered.
+   * @param \Drupal\hivelog\Entity\Queen|null $queen
+   *   The hive's currently active queen, if any.
+   */
+  protected function buildQueenSection(Hive $hive, $queen): array {
+    $section = [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['hivelog-list-heading']],
+      'title' => [
+        '#type' => 'html_tag',
+        '#tag' => 'h3',
+        '#value' => $this->t('Queen'),
+        '#attributes' => ['class' => ['hivelog-list-heading__title']],
+      ],
+    ];
+
+    if ($queen) {
+      $colour = $queen->get('queen_colour')->value;
+      $colour_label = $colour
+        ? ($queen->get('queen_colour')->getSetting('allowed_values')[$colour] ?? $colour)
+        : $this->t('Not set');
+
+      $section['details'] = [
+        '#type' => 'table',
+        '#header' => [$this->t('Field'), $this->t('Value')],
+        '#rows' => [
+          [$this->t('Queen ID'), $queen->toLink()->toString()],
+          [$this->t('Colour'), $colour_label],
+          [$this->t('Year'), $queen->get('queen_year')->value ?: $this->t('Not set')],
+          [$this->t('Introduced'), $queen->get('introduction_date')->value ?: $this->t('Not set')],
+        ],
+      ];
+      $section['edit'] = [
+        '#type' => 'link',
+        '#title' => $this->t('Edit Queen'),
+        '#url' => $queen->toUrl('edit-form'),
+        '#attributes' => [
+          'class' => ['button', 'hivelog-list-heading__action'],
+        ],
+      ];
+    }
+    else {
+      $section['empty'] = [
+        '#markup' => '<p>' . $this->t('No active queen is recorded for this hive.') . '</p>',
+      ];
+      $section['add'] = [
+        '#type' => 'link',
+        '#title' => $this->t('Add Queen'),
+        '#url' => Url::fromRoute('hivelog.queen.add', ['hive' => $hive->id()]),
+        '#attributes' => [
+          'class' => ['button', 'button--primary', 'hivelog-list-heading__action'],
+        ],
+      ];
+    }
+
+    return $section;
   }
 
   /**

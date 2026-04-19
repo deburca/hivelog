@@ -46,6 +46,7 @@ class ModuleDependencyAuditTest extends KernelTestBase {
     $this->installEntitySchema('apiary');
     $this->installEntitySchema('hive');
     $this->installEntitySchema('hive_inspection');
+    $this->installEntitySchema('queen');
     $this->installSchema('file', ['file_usage']);
   }
 
@@ -81,6 +82,7 @@ class ModuleDependencyAuditTest extends KernelTestBase {
     $this->assertNotNull($entity_type_manager->getDefinition('apiary'));
     $this->assertNotNull($entity_type_manager->getDefinition('hive'));
     $this->assertNotNull($entity_type_manager->getDefinition('hive_inspection'));
+    $this->assertNotNull($entity_type_manager->getDefinition('queen'));
   }
 
 }

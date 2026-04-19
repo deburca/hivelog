@@ -8,6 +8,7 @@ use Drupal\hivelog\Controller\HiveController;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\Hive;
 use Drupal\hivelog\Entity\HiveInspection;
+use Drupal\hivelog\Entity\Queen;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\user\Entity\User;
 use PHPUnit\Framework\Attributes\Group;
@@ -36,6 +37,13 @@ class HiveTest extends KernelTestBase {
   ];
 
   /**
+   * {@inheritdoc}
+   */
+  protected function installQueenEntitySchema(): void {
+    $this->installEntitySchema('queen');
+  }
+
+  /**
    * A test apiary.
    *
    * @var \Drupal\hivelog\Entity\Apiary
@@ -52,6 +60,7 @@ class HiveTest extends KernelTestBase {
     $this->installEntitySchema('apiary');
     $this->installEntitySchema('hive');
     $this->installEntitySchema('hive_inspection');
+    $this->installQueenEntitySchema();
     $this->installSchema('file', ['file_usage']);
 
     $this->apiary = Apiary::create(['name' => 'Test Apiary']);
@@ -86,7 +95,6 @@ class HiveTest extends KernelTestBase {
       'apiary' => $this->apiary->id(),
       'hive_type' => 'langstroth',
       'hive_material' => 'wood',
-      'queen_year' => 2024,
       'bee_breed' => 'buckfast',
       'temperament' => 'calm',
       'status' => 'active',
@@ -98,7 +106,6 @@ class HiveTest extends KernelTestBase {
     $this->assertEquals('Hive 1', $loaded->label());
     $this->assertEquals('langstroth', $loaded->get('hive_type')->value);
     $this->assertEquals('wood', $loaded->get('hive_material')->value);
-    $this->assertEquals(2024, $loaded->get('queen_year')->value);
     $this->assertEquals('buckfast', $loaded->get('bee_breed')->value);
     $this->assertEquals('calm', $loaded->get('temperament')->value);
     $this->assertEquals('active', $loaded->get('status')->value);
@@ -126,83 +133,21 @@ class HiveTest extends KernelTestBase {
   }
 
   /**
-   * Tests queen colour auto-calculation for all year endings.
+   * Tests that queen info is no longer stored on the hive itself.
    *
-   * International queen marking colours:
-   *   White: years ending 1, 6
-   *   Yellow: years ending 2, 7
-   *   Red: years ending 3, 8
-   *   Green: years ending 4, 9
-   *   Blue: years ending 0, 5
+   * Queen tracking now lives on the separate Queen entity (issue #51); the
+   * hive should not expose queen_year or queen_colour base fields anymore.
    */
-  public function testQueenColourAutoCalculation(): void {
-    $expected = [
-      2020 => 'blue',
-      2021 => 'white',
-      2022 => 'yellow',
-      2023 => 'red',
-      2024 => 'green',
-      2025 => 'blue',
-      2026 => 'white',
-      2027 => 'yellow',
-      2028 => 'red',
-      2029 => 'green',
-    ];
-
-    foreach ($expected as $year => $colour) {
-      $hive = Hive::create([
-        'name' => "Hive $year",
-        'apiary' => $this->apiary->id(),
-        'queen_year' => $year,
-        'status' => 'active',
-      ]);
-      $hive->save();
-
-      $loaded = Hive::load($hive->id());
-      $this->assertEquals(
-        $colour,
-        $loaded->get('queen_colour')->value,
-        "Year $year should produce colour '$colour'."
-      );
-    }
-  }
-
-  /**
-   * Tests that queen colour is empty when no queen year is set.
-   */
-  public function testQueenColourWithoutYear(): void {
+  public function testHiveNoLongerStoresQueenInfoDirectly(): void {
     $hive = Hive::create([
-      'name' => 'No Queen Year',
+      'name' => 'No Inline Queen',
       'apiary' => $this->apiary->id(),
       'status' => 'active',
     ]);
     $hive->save();
 
-    $loaded = Hive::load($hive->id());
-    $this->assertEmpty($loaded->get('queen_colour')->value);
-  }
-
-  /**
-   * Tests that queen colour updates when queen year changes.
-   */
-  public function testQueenColourUpdatesOnYearChange(): void {
-    $hive = Hive::create([
-      'name' => 'Requeened Hive',
-      'apiary' => $this->apiary->id(),
-      'queen_year' => 2023,
-      'status' => 'active',
-    ]);
-    $hive->save();
-
-    $loaded = Hive::load($hive->id());
-    $this->assertEquals('red', $loaded->get('queen_colour')->value);
-
-    // Simulate requeening in a new year.
-    $loaded->set('queen_year', 2025);
-    $loaded->save();
-
-    $reloaded = Hive::load($hive->id());
-    $this->assertEquals('blue', $reloaded->get('queen_colour')->value);
+    $this->assertFalse($hive->hasField('queen_year'));
+    $this->assertFalse($hive->hasField('queen_colour'));
   }
 
   /**
@@ -505,6 +450,102 @@ class HiveTest extends KernelTestBase {
   }
 
   /**
+   * Tests that the hive view renders an empty queen section with an add
+   * action when no active queen exists.
+   */
+  public function testHiveViewShowsAddQueenWhenNoActiveQueen(): void {
+    $this->installConfig(['system']);
+
+    $user = User::create([
+      'name' => 'no-queen-tester',
+      'mail' => 'no-queen-tester@example.com',
+    ]);
+    $user->save();
+    \Drupal::currentUser()->setAccount($user);
+
+    $hive = Hive::create([
+      'name' => 'Queenless Hive',
+      'apiary' => $this->apiary->id(),
+      'status' => 'active',
+    ]);
+    $hive->save();
+
+    $this->assertNull($hive->getActiveQueen());
+
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(HiveController::class);
+    $build = $controller->view($hive);
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+
+    $this->assertArrayHasKey('queen', $build);
+    $this->assertStringContainsString('No active queen is recorded for this hive.', $html);
+    $this->assertStringContainsString('Add Queen', $html);
+  }
+
+  /**
+   * Tests that the hive view renders the active queen summary, positioned
+   * between the weight histogram and the inspection table.
+   */
+  public function testHiveViewShowsActiveQueenDetails(): void {
+    $this->installConfig(['system']);
+
+    $user = User::create([
+      'name' => 'queen-tester',
+      'mail' => 'queen-tester@example.com',
+    ]);
+    $user->save();
+    \Drupal::currentUser()->setAccount($user);
+
+    $hive = Hive::create([
+      'name' => 'Queenright Hive',
+      'apiary' => $this->apiary->id(),
+      'status' => 'active',
+    ]);
+    $hive->save();
+
+    $queen = Queen::create([
+      'name' => 'Q-2024-001',
+      'hive' => $hive->id(),
+      'queen_year' => 2024,
+      'introduction_date' => '2024-05-01',
+      'status' => 'active',
+    ]);
+    $queen->save();
+
+    // Add one inspection with a weight so the histogram renders.
+    HiveInspection::create([
+      'hive' => $hive->id(),
+      'inspection_date' => '2024-06-15',
+      'weight' => 30.0,
+    ])->save();
+
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(HiveController::class);
+    $build = $controller->view($hive);
+
+    // Queen weight must be after the histogram weight so the histogram
+    // stays on top.
+    $this->assertGreaterThan(
+      $build['weight_histogram']['#weight'],
+      $build['queen']['#weight'],
+      'Queen section should sort after the weight histogram.'
+    );
+    // And before the inspections heading so it still precedes the list.
+    $this->assertLessThan(
+      $build['inspections_heading']['#weight'],
+      $build['queen']['#weight'],
+      'Queen section should sort before the inspections heading.'
+    );
+
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+    $this->assertStringContainsString('Q-2024-001', $html);
+    // The queen's marking colour is derived from the hatch year.
+    $this->assertStringContainsString('Green', $html);
+    $this->assertStringContainsString('2024-05-01', $html);
+    $this->assertStringContainsString('Edit Queen', $html);
+  }
+
+  /**
    * Tests that the hive view inspection table includes weight before queen.
    */
   public function testHiveViewInspectionTableWeightColumn(): void {
@@ -542,9 +583,15 @@ class HiveTest extends KernelTestBase {
     $this->assertStringContainsString('Weight', $html);
     $this->assertStringContainsString('32.5 kg', $html);
 
-    // Verify Weight column appears before Queen column in the header.
-    $weight_pos = strpos($html, '>Weight<');
-    $queen_pos = strpos($html, '>Queen<');
+    // Verify Weight column appears before Queen column in the inspections
+    // table. Scope the search to the first <table> onward so the Queen
+    // section heading (rendered earlier on the page) doesn't confuse the
+    // ordering check.
+    $table_start = strpos($html, '<table');
+    $this->assertNotFalse($table_start);
+    $table_html = substr($html, $table_start);
+    $weight_pos = strpos($table_html, '>Weight<');
+    $queen_pos = strpos($table_html, '>Queen<');
     $this->assertNotFalse($weight_pos);
     $this->assertNotFalse($queen_pos);
     $this->assertLessThan($queen_pos, $weight_pos, 'Weight column should appear before Queen column.');

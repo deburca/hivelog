@@ -253,3 +253,34 @@ function hivelog_update_10007(&$sandbox) {
 
   return t('Retired dormant queen_brood field on hive inspections.');
 }
+
+/**
+ * Split queen tracking into its own Queen entity.
+ *
+ * Issue #51: queen information lives on a long-lived Queen entity linked to
+ * a hive rather than inline columns on the hive itself. The module is not
+ * in production yet, so existing queen_year / queen_colour values on hives
+ * are dropped along with the column — there is no data migration.
+ */
+function hivelog_update_10008(&$sandbox) {
+  $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  $entity_type_manager = \Drupal::entityTypeManager();
+
+  // Install the new Queen entity type (schema + base fields) from its
+  // #[ContentEntityType] attribute definition.
+  if (!$entity_definition_update_manager->getEntityType('queen')) {
+    $queen_type = $entity_type_manager->getDefinition('queen');
+    $entity_definition_update_manager->installEntityType($queen_type);
+  }
+
+  // Drop the queen_year and queen_colour columns from the hive entity.
+  foreach (['queen_year', 'queen_colour'] as $field_name) {
+    $definition = $entity_definition_update_manager
+      ->getFieldStorageDefinition($field_name, 'hive');
+    if ($definition) {
+      $entity_definition_update_manager->uninstallFieldStorageDefinition($definition);
+    }
+  }
+
+  return t('Installed the Queen entity type and removed queen_year/queen_colour from hives.');
+}

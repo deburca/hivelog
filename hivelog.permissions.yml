@@ -37,3 +37,15 @@ edit hive inspection:
 
 delete hive inspection:
   title: 'Delete hive inspections'
+
+view queen:
+  title: 'View queens'
+
+add queen:
+  title: 'Add queens'
+
+edit queen:
+  title: 'Edit queens'
+
+delete queen:
+  title: 'Delete queens'

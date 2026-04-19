@@ -18,3 +18,10 @@ hivelog.inspections:
   route_name: entity.hive_inspection.collection
   parent: hivelog.admin
   weight: 2
+
+hivelog.queens:
+  title: 'Queens'
+  description: 'Manage queens across all hives.'
+  route_name: entity.queen.collection
+  parent: hivelog.admin
+  weight: 3
