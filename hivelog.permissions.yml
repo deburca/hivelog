@@ -49,3 +49,15 @@ edit queen:
 
 delete queen:
   title: 'Delete queens'
+
+view queen observation:
+  title: 'View queen observations'
+
+add queen observation:
+  title: 'Add queen observations'
+
+edit queen observation:
+  title: 'Edit queen observations'
+
+delete queen observation:
+  title: 'Delete queen observations'

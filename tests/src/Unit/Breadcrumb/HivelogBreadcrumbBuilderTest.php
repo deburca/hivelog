@@ -134,6 +134,26 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
+   * Tests that applies() returns TRUE for queen observation entity routes.
+   */
+  #[DataProvider('queenObservationRouteProvider')]
+  public function testAppliesReturnsTrueForQueenObservationRoutes(string $route_name): void {
+    $this->assertTrue($this->builder->applies($this->createRouteMatch($route_name)));
+  }
+
+  /**
+   * Data provider for queen observation entity routes.
+   */
+  public static function queenObservationRouteProvider(): array {
+    return [
+      'collection' => ['entity.queen_observation.collection'],
+      'canonical'  => ['entity.queen_observation.canonical'],
+      'edit_form'  => ['entity.queen_observation.edit_form'],
+      'delete_form' => ['entity.queen_observation.delete_form'],
+    ];
+  }
+
+  /**
    * Tests that applies() returns TRUE for hivelog.* custom routes.
    */
   #[DataProvider('hivelogCustomRouteProvider')]
@@ -149,6 +169,7 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
       'hive add'        => ['hivelog.hive.add'],
       'inspection add'  => ['hivelog.inspection.add'],
       'queen add'       => ['hivelog.queen.add'],
+      'observation add' => ['hivelog.queen_observation.add'],
       'admin'           => ['hivelog.admin'],
     ];
   }
@@ -438,6 +459,94 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
+   * Queen observation canonical: observation is the current page; apiary,
+   * hive, and queen ancestor links are added when the queen has a hive;
+   * the observation link itself is NOT.
+   */
+  public function testBuildQueenObservationCanonical(): void {
+    $apiary = $this->createApiaryMock(1, 'Home Apiary');
+    $hive = $this->createHiveMock(5, 'Hive Alpha', $apiary);
+    $queen = $this->createQueenMock(20, 'Q-2024-001', $hive);
+    $observation = $this->createObservationMock(30, 'Observation A', $queen);
+    $route_match = $this->createRouteMatch('entity.queen_observation.canonical');
+    $route_match->method('getParameter')->willReturnMap([
+      ['apiary', NULL],
+      ['hive', NULL],
+      ['hive_inspection', NULL],
+      ['queen', NULL],
+      ['queen_observation', $observation],
+    ]);
+
+    $breadcrumb = $this->builder->build($route_match);
+    $links = $breadcrumb->getLinks();
+
+    $this->assertCount(6, $links);
+    $this->assertEquals('Home Apiary', (string) $links[3]->getText());
+    $this->assertEquals('Hive Alpha', (string) $links[4]->getText());
+    $this->assertEquals('Q-2024-001', (string) $links[5]->getText());
+    $this->assertContains('queen_observation:30', $breadcrumb->getCacheTags());
+    $this->assertContains('queen:20', $breadcrumb->getCacheTags());
+    $this->assertContains('hive:5', $breadcrumb->getCacheTags());
+    $this->assertContains('apiary:1', $breadcrumb->getCacheTags());
+  }
+
+  /**
+   * Queen observation edit: apiary, hive, queen, and observation ancestor
+   * links are added (7 links total).
+   */
+  public function testBuildQueenObservationEditForm(): void {
+    $apiary = $this->createApiaryMock(1, 'Home Apiary');
+    $hive = $this->createHiveMock(5, 'Hive Alpha', $apiary);
+    $queen = $this->createQueenMock(20, 'Q-2024-001', $hive);
+    $observation = $this->createObservationMock(30, 'Observation A', $queen);
+    $route_match = $this->createRouteMatch('entity.queen_observation.edit_form');
+    $route_match->method('getParameter')->willReturnMap([
+      ['apiary', NULL],
+      ['hive', NULL],
+      ['hive_inspection', NULL],
+      ['queen', NULL],
+      ['queen_observation', $observation],
+    ]);
+
+    $breadcrumb = $this->builder->build($route_match);
+    $links = $breadcrumb->getLinks();
+
+    $this->assertCount(7, $links);
+    $this->assertEquals('Home Apiary', (string) $links[3]->getText());
+    $this->assertEquals('Hive Alpha', (string) $links[4]->getText());
+    $this->assertEquals('Q-2024-001', (string) $links[5]->getText());
+    $this->assertEquals('Observation A', (string) $links[6]->getText());
+    $this->assertEquals('entity.queen_observation.canonical', $links[6]->getUrl()->getRouteName());
+  }
+
+  /**
+   * hivelog.queen_observation.add carries a {queen} route parameter;
+   * apiary, hive and queen ancestor links should be added (6 links total).
+   */
+  public function testBuildQueenObservationAddRoute(): void {
+    $apiary = $this->createApiaryMock(1, 'Home Apiary');
+    $hive = $this->createHiveMock(5, 'Hive Alpha', $apiary);
+    $queen = $this->createQueenMock(20, 'Q-2024-001', $hive);
+    $route_match = $this->createRouteMatch('hivelog.queen_observation.add');
+    $route_match->method('getParameter')->willReturnMap([
+      ['apiary', NULL],
+      ['hive', NULL],
+      ['hive_inspection', NULL],
+      ['queen', $queen],
+      ['queen_observation', NULL],
+    ]);
+
+    $breadcrumb = $this->builder->build($route_match);
+    $links = $breadcrumb->getLinks();
+
+    $this->assertCount(6, $links);
+    $this->assertEquals('Home Apiary', (string) $links[3]->getText());
+    $this->assertEquals('Hive Alpha', (string) $links[4]->getText());
+    $this->assertEquals('Q-2024-001', (string) $links[5]->getText());
+    $this->assertEquals('entity.queen.canonical', $links[5]->getUrl()->getRouteName());
+  }
+
+  /**
    * hivelog.queen.add carries a {hive} route parameter; apiary and hive
    * ancestor links should both be added (5 links total).
    */
@@ -539,6 +648,24 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $queen->method('get')->with('hive')->willReturn($hive_ref);
 
     return $queen;
+  }
+
+  /**
+   * Creates a mock QueenObservation entity referencing the given queen.
+   */
+  private function createObservationMock(int $id, string $label, ContentEntityInterface $queen): ContentEntityInterface {
+    $observation = $this->createMock(ContentEntityInterface::class);
+    $observation->method('id')->willReturn($id);
+    $observation->method('label')->willReturn($label);
+    $observation->method('getCacheTags')->willReturn(["queen_observation:$id"]);
+    $observation->method('getCacheContexts')->willReturn([]);
+    $observation->method('getCacheMaxAge')->willReturn(-1);
+
+    $queen_ref = new \stdClass();
+    $queen_ref->entity = $queen;
+    $observation->method('get')->with('queen')->willReturn($queen_ref);
+
+    return $observation;
   }
 
 }

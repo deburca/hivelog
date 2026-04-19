@@ -305,6 +305,14 @@ class HiveController extends ControllerBase {
           'class' => ['button', 'hivelog-list-heading__action'],
         ],
       ];
+      $section['add_observation'] = [
+        '#type' => 'link',
+        '#title' => $this->t('Add Observation'),
+        '#url' => Url::fromRoute('hivelog.queen_observation.add', ['queen' => $queen->id()]),
+        '#attributes' => [
+          'class' => ['button', 'hivelog-list-heading__action'],
+        ],
+      ];
     }
     else {
       $section['empty'] = [
