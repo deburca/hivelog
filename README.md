@@ -8,15 +8,22 @@ inspection activities.
 HiveLog provides a structured system for beekeepers to:
 
 - Track **apiary locations** (with optional GPS coordinates)
-- Manage individual **hives** and their characteristics (type, material, breed,
-  queen details)
+- Manage individual **hives** and their characteristics (type, material,
+  breed, temperament)
+- Track **queens** as first-class entities linked to a hive, with their own
+  identifier, provenance, and active/inactive lifecycle (hives outlive
+  queens, so queen info is not stored on the hive itself)
 - Record detailed **inspection logs** covering queen status, brood, stores,
   health, feeding, and management actions
 
-The module uses three custom content entities with parent–child relationships:
+The module uses four custom content entities. Apiaries, hives and
+inspections form a strict parent–child hierarchy; queens are tracked
+separately and linked to a hive:
 
 ```
 Apiary → Hive → Hive Inspection
+              ↑
+            Queen (active ↔ inactive)
 ```
 
 ## Requirements
@@ -50,12 +57,25 @@ After installation, navigate to **Administration → Structure → HiveLog**
    Each hive records:
    - Hive type (10x12, Norwegian, Langstroth, Trugstad, Normal)
    - Hive material (Wood, Styrofoam)
-   - Queen year and auto-calculated queen marking colour
    - Bee breed (Buckfast, Carniolan, Italian, Caucasian, Dark European/AMM, Other)
    - Temperament (Calm, Moderate, Aggressive)
    - Status (Active, Inactive, Dead, Sold, Merged)
 
-3. **Log inspections** — From the hive view page, click "Add Inspection". Each
+3. **Track queens** — Queens are separate from hives because a hive typically
+   outlives any single queen. From the hive view page, click "Add Queen" to
+   record a new queen and attach it to the hive. Each queen records:
+   - A human-readable ID (e.g. `Q-2026-001`)
+   - Origin (breeder, swarm, supplier, …)
+   - Queen year (international marking colour auto-calculated)
+   - Breed and temperament
+   - Purchase cost and purchase date
+   - Hive reference and introduction date
+   - Status: **Active** or **Inactive**
+   Only one queen may be active per hive at a time. Saving a new active
+   queen on a hive that already has one automatically marks the previous
+   queen inactive and detaches it from the hive.
+
+4. **Log inspections** — From the hive view page, click "Add Inspection". Each
    inspection captures:
    - **External check (before opening)** — Flight activity, dead bees, signs of
      robbing, wasps, hive weight (hefting)
@@ -78,8 +98,8 @@ To preserve data integrity, the inspection form enforces dependent-field rules:
 
 ### Queen Marking Colour
 
-When a queen year is entered on a hive, the international queen marking colour
-is calculated automatically on save:
+When a queen year is entered on the queen record, the international queen
+marking colour is calculated automatically on save:
 
 | Last digit of year | Colour |
 |--------------------|--------|
@@ -107,6 +127,7 @@ View, Edit, and Delete tabs are available on each entity page.
 | View/Add/Edit/Delete apiaries    | Per-operation access to apiaries |
 | View/Add/Edit/Delete hives       | Per-operation access to hives    |
 | View/Add/Edit/Delete hive inspections | Per-operation access to inspections |
+| View/Add/Edit/Delete queens      | Per-operation access to queens   |
 
 Users with "Administer HiveLog" bypass all individual permission checks.
 
@@ -129,6 +150,12 @@ Users with "Administer HiveLog" bypass all individual permission checks.
 | `/admin/hivelog/inspection/{id}`              | View inspection        |
 | `/admin/hivelog/inspection/{id}/edit`         | Edit inspection        |
 | `/admin/hivelog/inspection/{id}/delete`       | Delete inspection      |
+| `/admin/hivelog/queens`                       | Queen list             |
+| `/admin/hivelog/queen/add`                    | Add queen              |
+| `/admin/hivelog/hive/{id}/queen/add`          | Add queen to hive      |
+| `/admin/hivelog/queen/{id}`                   | View queen             |
+| `/admin/hivelog/queen/{id}/edit`              | Edit queen             |
+| `/admin/hivelog/queen/{id}/delete`            | Delete queen           |
 
 ## Module Structure
 
@@ -148,32 +175,39 @@ hivelog/
 │   ├── Entity/
 │   │   ├── Apiary.php            # Apiary content entity
 │   │   ├── Hive.php              # Hive content entity
-│   │   └── HiveInspection.php    # Inspection content entity
+│   │   ├── HiveInspection.php    # Inspection content entity
+│   │   └── Queen.php             # Queen content entity
 │   ├── Form/
 │   │   ├── ApiaryForm.php        # Apiary add/edit form
 │   │   ├── ApiaryDeleteForm.php
 │   │   ├── HiveForm.php          # Hive add/edit form
 │   │   ├── HiveDeleteForm.php
 │   │   ├── HiveInspectionForm.php    # Inspection add/edit form
-│   │   └── HiveInspectionDeleteForm.php
+│   │   ├── HiveInspectionDeleteForm.php
+│   │   ├── QueenForm.php         # Queen add/edit form
+│   │   └── QueenDeleteForm.php
 │   ├── Controller/
 │   │   ├── ApiaryController.php      # Apiary view (with hives table)
-│   │   ├── HiveController.php        # Hive view (with inspections table)
-│   │   └── HiveInspectionController.php  # Inspection view
+│   │   ├── HiveController.php        # Hive view (queen + histogram + inspections)
+│   │   ├── HiveInspectionController.php  # Inspection view
+│   │   └── QueenController.php       # Queen view + hive-scoped add
 │   ├── Breadcrumb/
 │   │   └── HivelogBreadcrumbBuilder.php  # Breadcrumb builder service
 │   ├── ApiaryListBuilder.php
 │   ├── HiveListBuilder.php
 │   ├── HiveInspectionListBuilder.php
+│   ├── QueenListBuilder.php
 │   ├── ApiaryAccessControlHandler.php
 │   ├── HiveAccessControlHandler.php
-│   └── HiveInspectionAccessControlHandler.php
+│   ├── HiveInspectionAccessControlHandler.php
+│   └── QueenAccessControlHandler.php
 └── tests/
     └── src/
         ├── Kernel/
         │   ├── ApiaryTest.php            # Apiary entity tests
-        │   ├── HiveTest.php              # Hive entity + queen colour tests
-        │   └── HiveInspectionTest.php    # Inspection entity tests
+        │   ├── HiveTest.php              # Hive entity + queen section tests
+        │   ├── HiveInspectionTest.php    # Inspection entity tests
+        │   └── QueenTest.php             # Queen CRUD + colour + invariant tests
         └── Unit/
             └── Breadcrumb/
                 └── HivelogBreadcrumbBuilderTest.php  # Breadcrumb unit tests
@@ -222,6 +256,8 @@ drush cr
    - `10007` — Retire the dormant `queen_brood` field on hive inspections
      (data in the removed column is dropped; the swarming / supersedure
      signal is already captured by `queen_cells`).
+   - `10008` — Install the `queen` entity type and drop the `queen_year` /
+     `queen_colour` columns from `hive`. No data migration.
 3. `drush cr` — Rebuilds caches so Drupal picks up any changes to entity
    definitions, routing, or services.
 

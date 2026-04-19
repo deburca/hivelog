@@ -164,3 +164,68 @@ entity.hive_inspection.delete_form:
     parameters:
       hive_inspection:
         type: entity:hive_inspection
+
+# Queen routes.
+entity.queen.collection:
+  path: '/admin/hivelog/queens'
+  defaults:
+    _entity_list: 'queen'
+    _title: 'HiveLog - Queens'
+  requirements:
+    _permission: 'view queen+administer hivelog'
+
+entity.queen.add_form:
+  path: '/admin/hivelog/queen/add'
+  defaults:
+    _entity_form: 'queen.add'
+    _title: 'Add Queen'
+  requirements:
+    _permission: 'add queen+administer hivelog'
+
+hivelog.queen.add:
+  path: '/admin/hivelog/hive/{hive}/queen/add'
+  defaults:
+    _controller: '\Drupal\hivelog\Controller\QueenController::addForm'
+    _title: 'Add Queen'
+  requirements:
+    _permission: 'add queen+administer hivelog'
+  options:
+    parameters:
+      hive:
+        type: entity:hive
+
+entity.queen.canonical:
+  path: '/admin/hivelog/queen/{queen}'
+  defaults:
+    _controller: '\Drupal\hivelog\Controller\QueenController::view'
+    _title_callback: '\Drupal\hivelog\Controller\QueenController::title'
+  requirements:
+    _permission: 'view queen+administer hivelog'
+  options:
+    parameters:
+      queen:
+        type: entity:queen
+
+entity.queen.edit_form:
+  path: '/admin/hivelog/queen/{queen}/edit'
+  defaults:
+    _entity_form: 'queen.edit'
+    _title: 'Edit Queen'
+  requirements:
+    _permission: 'edit queen+administer hivelog'
+  options:
+    parameters:
+      queen:
+        type: entity:queen
+
+entity.queen.delete_form:
+  path: '/admin/hivelog/queen/{queen}/delete'
+  defaults:
+    _entity_form: 'queen.delete'
+    _title: 'Delete Queen'
+  requirements:
+    _permission: 'delete queen+administer hivelog'
+  options:
+    parameters:
+      queen:
+        type: entity:queen

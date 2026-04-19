@@ -51,6 +51,7 @@ class ControllerCacheMetadataTest extends KernelTestBase {
     $this->installEntitySchema('apiary');
     $this->installEntitySchema('hive');
     $this->installEntitySchema('hive_inspection');
+    $this->installEntitySchema('queen');
     $this->installSchema('file', ['file_usage']);
 
     $user = User::create([
@@ -134,6 +135,15 @@ class ControllerCacheMetadataTest extends KernelTestBase {
       ->getDefinition('hive_inspection')
       ->getListCacheTags();
     foreach ($inspection_list_tags as $tag) {
+      $this->assertContains($tag, $build['#cache']['tags']);
+    }
+
+    // The hive view now surfaces the active queen, so its list cache tag
+    // must be declared so the page invalidates whenever a queen changes.
+    $queen_list_tags = \Drupal::entityTypeManager()
+      ->getDefinition('queen')
+      ->getListCacheTags();
+    foreach ($queen_list_tags as $tag) {
       $this->assertContains($tag, $build['#cache']['tags']);
     }
 

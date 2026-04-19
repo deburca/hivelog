@@ -12,6 +12,7 @@ use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\hivelog\Entity\Queen;
 use Drupal\hivelog\Form\HiveDeleteForm;
 use Drupal\hivelog\Form\HiveForm;
 use Drupal\hivelog\HiveAccessControlHandler;
@@ -58,33 +59,32 @@ class Hive extends ContentEntityBase implements EntityChangedInterface, EntityOw
   use EntityOwnerTrait;
 
   /**
-   * Maps the last digit of a year to the international queen marking colour.
+   * Returns the currently active queen for this hive, if any.
+   *
+   * Queens are tracked on the `queen` entity; only one may be active per
+   * hive at a time (enforced in Queen::preSave). This helper wraps the
+   * query used by the hive view page and by tests.
+   *
+   * @return \Drupal\hivelog\Entity\Queen|null
+   *   The active queen entity, or NULL if the hive has no active queen.
    */
-  const QUEEN_COLOUR_MAP = [
-    0 => 'blue',
-    1 => 'white',
-    2 => 'yellow',
-    3 => 'red',
-    4 => 'green',
-    5 => 'blue',
-    6 => 'white',
-    7 => 'yellow',
-    8 => 'red',
-    9 => 'green',
-  ];
-
-  /**
-   * {@inheritdoc}
-   */
-  public function preSave(\Drupal\Core\Entity\EntityStorageInterface $storage) {
-    parent::preSave($storage);
-
-    // Auto-calculate queen colour from queen year.
-    $queen_year = $this->get('queen_year')->value;
-    if ($queen_year) {
-      $last_digit = (int) $queen_year % 10;
-      $this->set('queen_colour', self::QUEEN_COLOUR_MAP[$last_digit]);
+  public function getActiveQueen(): ?Queen {
+    if ($this->isNew()) {
+      return NULL;
     }
+    $storage = $this->entityTypeManager()->getStorage('queen');
+    $ids = $storage->getQuery()
+      ->accessCheck(FALSE)
+      ->condition('hive', $this->id())
+      ->condition('status', 'active')
+      ->range(0, 1)
+      ->execute();
+    if (!$ids) {
+      return NULL;
+    }
+    /** @var \Drupal\hivelog\Entity\Queen $queen */
+    $queen = $storage->load(reset($ids));
+    return $queen ?: NULL;
   }
 
   /**
@@ -141,34 +141,6 @@ class Hive extends ContentEntityBase implements EntityChangedInterface, EntityOw
       ->setSetting('allowed_values', [
         'wood' => 'Wood',
         'styrofoam' => 'Styrofoam',
-      ])
-      ->setDisplayOptions('form', [
-        'type' => 'options_select',
-        'weight' => 3,
-      ])
-      ->setDisplayConfigurable('form', TRUE)
-      ->setDisplayConfigurable('view', TRUE);
-
-    $fields['queen_year'] = BaseFieldDefinition::create('integer')
-      ->setLabel(t('Queen Year'))
-      ->setDescription(t('The year the queen was introduced. The queen colour is set automatically based on this value.'))
-      ->setSetting('min', 2000)
-      ->setDisplayOptions('form', [
-        'type' => 'number',
-        'weight' => 2,
-      ])
-      ->setDisplayConfigurable('form', TRUE)
-      ->setDisplayConfigurable('view', TRUE);
-
-    $fields['queen_colour'] = BaseFieldDefinition::create('list_string')
-      ->setLabel(t('Queen Colour'))
-      ->setDescription(t('International queen marking colour. Auto-calculated from Queen Year: White (1,6), Yellow (2,7), Red (3,8), Green (4,9), Blue (0,5).'))
-      ->setSetting('allowed_values', [
-        'white' => 'White (years ending 1, 6)',
-        'yellow' => 'Yellow (years ending 2, 7)',
-        'red' => 'Red (years ending 3, 8)',
-        'green' => 'Green (years ending 4, 9)',
-        'blue' => 'Blue (years ending 0, 5)',
       ])
       ->setDisplayOptions('form', [
         'type' => 'options_select',

@@ -113,6 +113,27 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
+   * Tests that applies() returns TRUE for queen entity routes.
+   */
+  #[DataProvider('queenRouteProvider')]
+  public function testAppliesReturnsTrueForQueenRoutes(string $route_name): void {
+    $this->assertTrue($this->builder->applies($this->createRouteMatch($route_name)));
+  }
+
+  /**
+   * Data provider for queen entity routes.
+   */
+  public static function queenRouteProvider(): array {
+    return [
+      'collection' => ['entity.queen.collection'],
+      'canonical'  => ['entity.queen.canonical'],
+      'add_form'   => ['entity.queen.add_form'],
+      'edit_form'  => ['entity.queen.edit_form'],
+      'delete_form' => ['entity.queen.delete_form'],
+    ];
+  }
+
+  /**
    * Tests that applies() returns TRUE for hivelog.* custom routes.
    */
   #[DataProvider('hivelogCustomRouteProvider')]
@@ -127,6 +148,7 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     return [
       'hive add'        => ['hivelog.hive.add'],
       'inspection add'  => ['hivelog.inspection.add'],
+      'queen add'       => ['hivelog.queen.add'],
       'admin'           => ['hivelog.admin'],
     ];
   }
@@ -361,6 +383,84 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $this->assertEquals('entity.hive.canonical', $links[4]->getUrl()->getRouteName());
   }
 
+  /**
+   * Queen canonical: queen is the current page; apiary and hive ancestor
+   * links are added when the queen has a hive, queen link itself is NOT.
+   */
+  public function testBuildQueenCanonical(): void {
+    $apiary = $this->createApiaryMock(1, 'Home Apiary');
+    $hive = $this->createHiveMock(5, 'Hive Alpha', $apiary);
+    $queen = $this->createQueenMock(20, 'Q-2024-001', $hive);
+    $route_match = $this->createRouteMatch('entity.queen.canonical');
+    $route_match->method('getParameter')->willReturnMap([
+      ['apiary', NULL],
+      ['hive', NULL],
+      ['hive_inspection', NULL],
+      ['queen', $queen],
+    ]);
+
+    $breadcrumb = $this->builder->build($route_match);
+    $links = $breadcrumb->getLinks();
+
+    $this->assertCount(5, $links);
+    $this->assertEquals('Home Apiary', (string) $links[3]->getText());
+    $this->assertEquals('Hive Alpha', (string) $links[4]->getText());
+    $this->assertContains('queen:20', $breadcrumb->getCacheTags());
+    $this->assertContains('hive:5', $breadcrumb->getCacheTags());
+    $this->assertContains('apiary:1', $breadcrumb->getCacheTags());
+  }
+
+  /**
+   * Queen edit: apiary, hive, and queen ancestor links are all added
+   * (6 links total).
+   */
+  public function testBuildQueenEditForm(): void {
+    $apiary = $this->createApiaryMock(1, 'Home Apiary');
+    $hive = $this->createHiveMock(5, 'Hive Alpha', $apiary);
+    $queen = $this->createQueenMock(20, 'Q-2024-001', $hive);
+    $route_match = $this->createRouteMatch('entity.queen.edit_form');
+    $route_match->method('getParameter')->willReturnMap([
+      ['apiary', NULL],
+      ['hive', NULL],
+      ['hive_inspection', NULL],
+      ['queen', $queen],
+    ]);
+
+    $breadcrumb = $this->builder->build($route_match);
+    $links = $breadcrumb->getLinks();
+
+    $this->assertCount(6, $links);
+    $this->assertEquals('Home Apiary', (string) $links[3]->getText());
+    $this->assertEquals('Hive Alpha', (string) $links[4]->getText());
+    $this->assertEquals('Q-2024-001', (string) $links[5]->getText());
+    $this->assertEquals('entity.queen.canonical', $links[5]->getUrl()->getRouteName());
+    $this->assertEquals(['queen' => 20], $links[5]->getUrl()->getRouteParameters());
+  }
+
+  /**
+   * hivelog.queen.add carries a {hive} route parameter; apiary and hive
+   * ancestor links should both be added (5 links total).
+   */
+  public function testBuildQueenAddRoute(): void {
+    $apiary = $this->createApiaryMock(1, 'Home Apiary');
+    $hive = $this->createHiveMock(9, 'Hive Gamma', $apiary);
+    $route_match = $this->createRouteMatch('hivelog.queen.add');
+    $route_match->method('getParameter')->willReturnMap([
+      ['apiary', NULL],
+      ['hive', $hive],
+      ['hive_inspection', NULL],
+      ['queen', NULL],
+    ]);
+
+    $breadcrumb = $this->builder->build($route_match);
+    $links = $breadcrumb->getLinks();
+
+    $this->assertCount(5, $links);
+    $this->assertEquals('Home Apiary', (string) $links[3]->getText());
+    $this->assertEquals('Hive Gamma', (string) $links[4]->getText());
+    $this->assertEquals('entity.hive.canonical', $links[4]->getUrl()->getRouteName());
+  }
+
   // -------------------------------------------------------------------------
   // Helper methods
   // -------------------------------------------------------------------------
@@ -421,6 +521,24 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $inspection->method('get')->with('hive')->willReturn($hive_ref);
 
     return $inspection;
+  }
+
+  /**
+   * Creates a mock Queen entity referencing the given hive.
+   */
+  private function createQueenMock(int $id, string $label, ContentEntityInterface $hive): ContentEntityInterface {
+    $queen = $this->createMock(ContentEntityInterface::class);
+    $queen->method('id')->willReturn($id);
+    $queen->method('label')->willReturn($label);
+    $queen->method('getCacheTags')->willReturn(["queen:$id"]);
+    $queen->method('getCacheContexts')->willReturn([]);
+    $queen->method('getCacheMaxAge')->willReturn(-1);
+
+    $hive_ref = new \stdClass();
+    $hive_ref->entity = $hive;
+    $queen->method('get')->with('hive')->willReturn($hive_ref);
+
+    return $queen;
   }
 
 }

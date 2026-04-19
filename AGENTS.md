@@ -6,10 +6,14 @@ This file provides guidance to WARP (warp.dev) when working with code in this re
 
 HiveLog is a custom Drupal 11 module (located at `web/modules/hivelog` inside a
 larger CMS checkout) that provides a beekeeping activity logger. It defines
-three custom content entities with a strict parent–child hierarchy:
+four custom content entities. Apiaries, hives and inspections form a strict
+parent–child hierarchy; queens are tracked separately and linked to the
+hive they are currently installed in (hives outlive queens):
 
 ```
 Apiary → Hive → Hive Inspection
+              ↑
+            Queen (active ↔ inactive)
 ```
 
 Required contrib dependencies: `geofield`, `leaflet` (see
@@ -76,16 +80,25 @@ requires a corresponding update hook (see `hivelog.install`).
   (WKT POINT). Earlier schemas used separate lat/lng columns and the
   `geolocation` module; `hivelog_update_10001` and `_10002` migrate through
   those states.
-- `Hive` — references an `Apiary` via `apiary` entity_reference. On
-  `preSave()` it auto-derives `queen_colour` from `queen_year` using the
-  `QUEEN_COLOUR_MAP` constant (international queen marking convention).
+- `Hive` — references an `Apiary` via `apiary` entity_reference. Queen info
+  is NOT stored on the hive (see `Queen` below); `Hive::getActiveQueen()`
+  resolves the active queen via a reverse lookup on `queen.hive`.
 - `HiveInspection` — references a `Hive` and carries the full inspection
   payload (external check, queen, brood, stores, health, management, notes).
+- `Queen` — references a `Hive` via `hive` entity_reference (optional).
+  Stores identity/provenance (`name`, `origin`, `queen_year`, `queen_colour`,
+  `breed`, `temperament`, `purchase_cost`, `purchase_date`,
+  `introduction_date`, `status` [`active` | `inactive`]). `preSave()`
+  auto-derives `queen_colour` from `queen_year` via the `QUEEN_COLOUR_MAP`
+  constant (international queen marking convention) AND enforces the
+  "one active queen per hive" invariant by demoting any previously active
+  queen on the same hive to `inactive` and clearing its `hive` reference.
 
 Allowed-value lists for hive `type`, `material`, `breed`, `temperament`,
-`status`, and the various inspection enums are hard-coded in the respective
-`baseFieldDefinitions()`. Extending them requires editing the entity class
-**and** writing an update hook if existing data must be preserved.
+`status`, queen `breed` / `temperament` / `status`, and the various
+inspection enums are hard-coded in the respective `baseFieldDefinitions()`.
+Extending them requires editing the entity class **and** writing an update
+hook if existing data must be preserved.
 
 ### Routing, controllers and forms
 
@@ -95,12 +108,13 @@ Routes in `hivelog.routing.yml` follow two patterns:
   `.edit_form`, `.delete_form`) that use Drupal's `_entity_form` / list
   builder machinery.
 - Custom "scoped add" routes (`hivelog.hive.add`,
-  `hivelog.inspection.add`) whose path includes the parent entity
-  (`/apiary/{apiary}/hive/add`, `/hive/{hive}/inspection/add`). These are
+  `hivelog.inspection.add`, `hivelog.queen.add`) whose path includes the
+  parent entity (`/apiary/{apiary}/hive/add`,
+  `/hive/{hive}/inspection/add`, `/hive/{hive}/queen/add`). These are
   handled by `addForm()` methods on the child's controller, which
-  pre-populates the parent reference on a new child entity before handing it
-  to the entity form. Always use these routes when adding children so the
-  parent reference is set correctly.
+  pre-populates the parent reference on a new child entity before handing
+  it to the entity form. Always use these routes when adding children so
+  the parent reference is set correctly.
 
 Canonical view pages are rendered by custom controllers
 (`ApiaryController`, `HiveController`, `HiveInspectionController`) rather

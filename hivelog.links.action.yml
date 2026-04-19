@@ -3,3 +3,9 @@ hivelog.apiary.add:
   title: 'Add Apiary'
   appears_on:
     - entity.apiary.collection
+
+hivelog.queen.add_action:
+  route_name: entity.queen.add_form
+  title: 'Add Queen'
+  appears_on:
+    - entity.queen.collection
