@@ -284,3 +284,22 @@ function hivelog_update_10008(&$sandbox) {
 
   return t('Installed the Queen entity type and removed queen_year/queen_colour from hives.');
 }
+
+/**
+ * Install the Queen Observation entity type.
+ *
+ * Issue #55: queen-specific observations (health, temperament, active laying,
+ * notes, photos) are recorded separately from hive-level inspections. The
+ * module is not yet in production, so no data migration is required.
+ */
+function hivelog_update_10009(&$sandbox) {
+  $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  $entity_type_manager = \Drupal::entityTypeManager();
+
+  if (!$entity_definition_update_manager->getEntityType('queen_observation')) {
+    $observation_type = $entity_type_manager->getDefinition('queen_observation');
+    $entity_definition_update_manager->installEntityType($observation_type);
+  }
+
+  return t('Installed the Queen Observation entity type.');
+}

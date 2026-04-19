@@ -41,6 +41,7 @@ class HiveTest extends KernelTestBase {
    */
   protected function installQueenEntitySchema(): void {
     $this->installEntitySchema('queen');
+    $this->installEntitySchema('queen_observation');
   }
 
   /**
@@ -543,6 +544,17 @@ class HiveTest extends KernelTestBase {
     $this->assertStringContainsString('Green', $html);
     $this->assertStringContainsString('2024-05-01', $html);
     $this->assertStringContainsString('Edit Queen', $html);
+    // Issue #55: Add Observation button renders beside Edit Queen.
+    $this->assertStringContainsString('Add Observation', $html);
+    $edit_pos = strpos($html, 'Edit Queen');
+    $add_pos = strpos($html, 'Add Observation');
+    $this->assertNotFalse($edit_pos);
+    $this->assertNotFalse($add_pos);
+    $this->assertLessThan(
+      $add_pos,
+      $edit_pos,
+      'Edit Queen button should render before Add Observation button.'
+    );
   }
 
   /**

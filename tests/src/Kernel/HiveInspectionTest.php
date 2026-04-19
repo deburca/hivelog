@@ -124,6 +124,7 @@ class HiveInspectionTest extends KernelTestBase {
     $this->installEntitySchema('hive');
     $this->installEntitySchema('hive_inspection');
     $this->installEntitySchema('queen');
+    $this->installEntitySchema('queen_observation');
     $this->installSchema('file', ['file_usage']);
 
     $this->user = User::create([

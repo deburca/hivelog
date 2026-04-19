@@ -229,3 +229,60 @@ entity.queen.delete_form:
     parameters:
       queen:
         type: entity:queen
+
+# Queen observation routes.
+entity.queen_observation.collection:
+  path: '/admin/hivelog/queen-observations'
+  defaults:
+    _entity_list: 'queen_observation'
+    _title: 'HiveLog - Queen Observations'
+  requirements:
+    _permission: 'view queen observation+administer hivelog'
+
+hivelog.queen_observation.add:
+  path: '/admin/hivelog/queen/{queen}/observation/add'
+  defaults:
+    _controller: '\Drupal\hivelog\Controller\QueenObservationController::addForm'
+    _title: 'Add Queen Observation'
+  requirements:
+    _permission: 'add queen observation+administer hivelog'
+  options:
+    parameters:
+      queen:
+        type: entity:queen
+
+entity.queen_observation.canonical:
+  path: '/admin/hivelog/queen-observation/{queen_observation}'
+  defaults:
+    _controller: '\Drupal\hivelog\Controller\QueenObservationController::view'
+    _title_callback: '\Drupal\hivelog\Controller\QueenObservationController::title'
+  requirements:
+    _permission: 'view queen observation+administer hivelog'
+  options:
+    parameters:
+      queen_observation:
+        type: entity:queen_observation
+
+entity.queen_observation.edit_form:
+  path: '/admin/hivelog/queen-observation/{queen_observation}/edit'
+  defaults:
+    _entity_form: 'queen_observation.edit'
+    _title: 'Edit Queen Observation'
+  requirements:
+    _permission: 'edit queen observation+administer hivelog'
+  options:
+    parameters:
+      queen_observation:
+        type: entity:queen_observation
+
+entity.queen_observation.delete_form:
+  path: '/admin/hivelog/queen-observation/{queen_observation}/delete'
+  defaults:
+    _entity_form: 'queen_observation.delete'
+    _title: 'Delete Queen Observation'
+  requirements:
+    _permission: 'delete queen observation+administer hivelog'
+  options:
+    parameters:
+      queen_observation:
+        type: entity:queen_observation

@@ -25,3 +25,10 @@ hivelog.queens:
   route_name: entity.queen.collection
   parent: hivelog.admin
   weight: 3
+
+hivelog.queen_observations:
+  title: 'Queen Observations'
+  description: 'View all queen observations.'
+  route_name: entity.queen_observation.collection
+  parent: hivelog.admin
+  weight: 4

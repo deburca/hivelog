@@ -57,6 +57,7 @@ class QueenTest extends KernelTestBase {
     $this->installEntitySchema('hive');
     $this->installEntitySchema('hive_inspection');
     $this->installEntitySchema('queen');
+    $this->installEntitySchema('queen_observation');
     $this->installSchema('file', ['file_usage']);
 
     $this->apiary = Apiary::create(['name' => 'Test Apiary']);
@@ -364,6 +365,99 @@ class QueenTest extends KernelTestBase {
     $this->assertNotFalse($edit_pos);
     $this->assertNotFalse($delete_pos);
     $this->assertLessThan($delete_pos, $edit_pos);
+  }
+
+  /**
+   * The queen page embeds an observations list with an Add Observation
+   * action and renders each recorded observation with health/temperament
+   * labels.
+   */
+  public function testQueenViewRendersObservationsList(): void {
+    $this->installConfig(['system']);
+
+    $user = User::create([
+      'name' => 'observation-list-tester',
+      'mail' => 'observation-list-tester@example.com',
+    ]);
+    $user->save();
+    \Drupal::currentUser()->setAccount($user);
+
+    $queen = Queen::create([
+      'name' => 'Q-observed',
+      'hive' => $this->hive->id(),
+      'queen_year' => 2024,
+      'status' => 'active',
+    ]);
+    $queen->save();
+
+    $storage = \Drupal::entityTypeManager()->getStorage('queen_observation');
+    $storage->create([
+      'queen' => $queen->id(),
+      'observation_date' => '2025-06-01',
+      'health' => 'good',
+      'temperament' => 'calm',
+      'active' => TRUE,
+      'notes' => 'Laying in a solid pattern.',
+    ])->save();
+    $storage->create([
+      'queen' => $queen->id(),
+      'observation_date' => '2025-07-15',
+      'health' => 'fair',
+      'temperament' => 'moderate',
+      'active' => FALSE,
+    ])->save();
+
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(QueenController::class);
+    $build = $controller->view($queen);
+
+    $this->assertArrayHasKey('observations_heading', $build);
+    $this->assertArrayHasKey('observations_table', $build);
+    $this->assertArrayHasKey('observations_pager', $build);
+    // Two observation rows rendered.
+    $this->assertCount(2, $build['observations_table']['#rows']);
+
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+    $this->assertStringContainsString('Observations', $html);
+    $this->assertStringContainsString('Add Observation', $html);
+    $this->assertStringContainsString('2025-06-01', $html);
+    $this->assertStringContainsString('2025-07-15', $html);
+    // Human-readable labels rendered for enum fields.
+    $this->assertStringContainsString('Good', $html);
+    $this->assertStringContainsString('Fair', $html);
+    $this->assertStringContainsString('Moderate', $html);
+  }
+
+  /**
+   * Empty observations list shows a sensible empty message.
+   */
+  public function testQueenViewObservationsListEmptyMessage(): void {
+    $this->installConfig(['system']);
+
+    $user = User::create([
+      'name' => 'empty-observation-tester',
+      'mail' => 'empty-observation-tester@example.com',
+    ]);
+    $user->save();
+    \Drupal::currentUser()->setAccount($user);
+
+    $queen = Queen::create([
+      'name' => 'Q-empty-observations',
+      'hive' => $this->hive->id(),
+      'queen_year' => 2024,
+      'status' => 'active',
+    ]);
+    $queen->save();
+
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(QueenController::class);
+    $build = $controller->view($queen);
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+
+    $this->assertStringContainsString(
+      'No observations have been recorded for this queen yet.',
+      $html
+    );
   }
 
   /**

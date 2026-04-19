@@ -65,3 +65,20 @@ hivelog.queen.delete_tab:
   title: 'Delete'
   base_route: entity.queen.canonical
   weight: 10
+
+# Queen observation tabs.
+hivelog.queen_observation.view_tab:
+  route_name: entity.queen_observation.canonical
+  title: 'View'
+  base_route: entity.queen_observation.canonical
+
+hivelog.queen_observation.edit_tab:
+  route_name: entity.queen_observation.edit_form
+  title: 'Edit'
+  base_route: entity.queen_observation.canonical
+
+hivelog.queen_observation.delete_tab:
+  route_name: entity.queen_observation.delete_form
+  title: 'Delete'
+  base_route: entity.queen_observation.canonical
+  weight: 10

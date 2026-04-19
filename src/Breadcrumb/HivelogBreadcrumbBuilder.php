@@ -44,6 +44,7 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
       || str_starts_with($route_name, 'entity.hive.')
       || str_starts_with($route_name, 'entity.hive_inspection.')
       || str_starts_with($route_name, 'entity.queen.')
+      || str_starts_with($route_name, 'entity.queen_observation.')
       || str_starts_with($route_name, 'hivelog.');
   }
 
@@ -121,6 +122,31 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
       }
       if ($route_name !== 'entity.queen.canonical') {
         $breadcrumb->addLink(Link::createFromRoute($queen->label(), 'entity.queen.canonical', ['queen' => $queen->id()]));
+      }
+    }
+
+    // Queen observation routes: thread Apiary → Hive → Queen ancestry for
+    // observations, skipping hive/apiary if the queen is unassigned.
+    $observation = $route_match->getParameter('queen_observation');
+    if ($observation && is_object($observation)) {
+      $breadcrumb->addCacheableDependency($observation);
+      $observation_queen = $observation->get('queen')->entity;
+      if ($observation_queen) {
+        $breadcrumb->addCacheableDependency($observation_queen);
+        $observation_hive = $observation_queen->get('hive')->entity;
+        if ($observation_hive) {
+          $breadcrumb->addCacheableDependency($observation_hive);
+          $observation_apiary = $observation_hive->get('apiary')->entity;
+          if ($observation_apiary) {
+            $breadcrumb->addCacheableDependency($observation_apiary);
+            $breadcrumb->addLink(Link::createFromRoute($observation_apiary->label(), 'entity.apiary.canonical', ['apiary' => $observation_apiary->id()]));
+          }
+          $breadcrumb->addLink(Link::createFromRoute($observation_hive->label(), 'entity.hive.canonical', ['hive' => $observation_hive->id()]));
+        }
+        $breadcrumb->addLink(Link::createFromRoute($observation_queen->label(), 'entity.queen.canonical', ['queen' => $observation_queen->id()]));
+      }
+      if ($route_name !== 'entity.queen_observation.canonical') {
+        $breadcrumb->addLink(Link::createFromRoute($observation->label(), 'entity.queen_observation.canonical', ['queen_observation' => $observation->id()]));
       }
     }
 

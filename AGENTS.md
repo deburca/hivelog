@@ -6,14 +6,17 @@ This file provides guidance to WARP (warp.dev) when working with code in this re
 
 HiveLog is a custom Drupal 11 module (located at `web/modules/hivelog` inside a
 larger CMS checkout) that provides a beekeeping activity logger. It defines
-four custom content entities. Apiaries, hives and inspections form a strict
+five custom content entities. Apiaries, hives and inspections form a strict
 parent–child hierarchy; queens are tracked separately and linked to the
-hive they are currently installed in (hives outlive queens):
+hive they are currently installed in (hives outlive queens); queen
+observations hang off a queen:
 
 ```
 Apiary → Hive → Hive Inspection
               ↑
             Queen (active ↔ inactive)
+              ↓
+            Queen Observation
 ```
 
 Required contrib dependencies: `geofield`, `leaflet` (see
@@ -93,6 +96,13 @@ requires a corresponding update hook (see `hivelog.install`).
   constant (international queen marking convention) AND enforces the
   "one active queen per hive" invariant by demoting any previously active
   queen on the same hive to `inactive` and clearing its `hive` reference.
+- `QueenObservation` — references a `Queen` via `queen` entity_reference
+  (required). Captures point-in-time queen-specific notes separate from
+  hive-level inspections: `observation_date`, `health` (excellent / good /
+  fair / poor), `temperament` (calm / moderate / aggressive), `active`
+  (boolean — observed actively laying / moving), `notes`, `images`.
+  Surfaced from the hive page via an **Add Observation** button next to
+  **Edit Queen**, and listed at the end of the queen canonical page.
 
 Allowed-value lists for hive `type`, `material`, `breed`, `temperament`,
 `status`, queen `breed` / `temperament` / `status`, and the various

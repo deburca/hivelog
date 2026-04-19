@@ -8,6 +8,7 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\EntityFormBuilderInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Url;
 use Drupal\hivelog\Entity\Hive;
 use Drupal\hivelog\Entity\Queen;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -16,6 +17,16 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * Controller for Queen pages.
  */
 class QueenController extends ControllerBase {
+
+  /**
+   * Default number of observations shown per page in the embedded list.
+   */
+  public const OBSERVATIONS_PER_PAGE = 20;
+
+  /**
+   * Pager element id for the embedded observation table.
+   */
+  protected const OBSERVATIONS_PAGER_ELEMENT = 0;
 
   /**
    * The date formatter.
@@ -96,13 +107,108 @@ class QueenController extends ControllerBase {
       ]),
     ];
 
+    // Observations list: rendered at the end of the page in the same style
+    // as the inspections table on the hive page.
+    $build['observations_heading'] = [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['hivelog-list-heading']],
+      '#weight' => 20,
+      'title' => [
+        '#type' => 'html_tag',
+        '#tag' => 'h3',
+        '#value' => $this->t('Observations'),
+        '#attributes' => ['class' => ['hivelog-list-heading__title']],
+      ],
+      'add' => [
+        '#type' => 'link',
+        '#title' => $this->t('Add Observation'),
+        '#url' => Url::fromRoute('hivelog.queen_observation.add', ['queen' => $queen->id()]),
+        '#attributes' => [
+          'class' => ['button', 'button--primary', 'hivelog-list-heading__action'],
+        ],
+      ],
+    ];
+
+    $query = $this->entityTypeManager
+      ->getStorage('queen_observation')
+      ->getQuery()
+      ->accessCheck(TRUE)
+      ->condition('queen', $queen->id())
+      ->sort('observation_date', 'DESC')
+      ->pager(static::OBSERVATIONS_PER_PAGE, static::OBSERVATIONS_PAGER_ELEMENT);
+    $observation_ids = $query->execute();
+
+    $observations = $observation_ids
+      ? $this->entityTypeManager->getStorage('queen_observation')->loadMultiple($observation_ids)
+      : [];
+
+    $header = [
+      $this->t('Date'),
+      $this->t('Health'),
+      $this->t('Temperament'),
+      $this->t('Active'),
+      $this->t('Operations'),
+    ];
+
+    $rows = [];
+    foreach ($observations as $observation) {
+      $health = $observation->get('health')->value;
+      $temperament = $observation->get('temperament')->value;
+      $rows[] = [
+        $observation->toLink($observation->get('observation_date')->value ?: $this->t('N/A'))->toString(),
+        $health ? ($observation->get('health')->getSetting('allowed_values')[$health] ?? $health) : '',
+        $temperament ? ($observation->get('temperament')->getSetting('allowed_values')[$temperament] ?? $temperament) : '',
+        $observation->get('active')->value ? $this->t('Yes') : $this->t('No'),
+        [
+          'data' => [
+            '#type' => 'operations',
+            '#links' => [
+              'view' => [
+                'title' => $this->t('View'),
+                'url' => $observation->toUrl('canonical'),
+              ],
+              'edit' => [
+                'title' => $this->t('Edit'),
+                'url' => $observation->toUrl('edit-form'),
+              ],
+              'delete' => [
+                'title' => $this->t('Delete'),
+                'url' => $observation->toUrl('delete-form'),
+              ],
+            ],
+          ],
+        ],
+      ];
+    }
+
+    $build['observations_table'] = [
+      '#type' => 'table',
+      '#header' => $header,
+      '#rows' => $rows,
+      '#empty' => $this->t('No observations have been recorded for this queen yet.'),
+      '#weight' => 21,
+    ];
+
+    $build['observations_pager'] = [
+      '#type' => 'pager',
+      '#element' => static::OBSERVATIONS_PAGER_ELEMENT,
+      '#weight' => 22,
+    ];
+
     // Explicit cache metadata.
+    // - url.query_args: pager state travels in the query string.
     // - user.permissions: action button visibility depends on the current
-    //   user's update/delete access on the queen.
+    //   user's update/delete access on the queen and observations.
     // - Queen's own cache tags: invalidate on any update/delete.
+    // - Observation list cache tag + each rendered observation's tags:
+    //   invalidate on any observation change.
     $cache = CacheableMetadata::createFromRenderArray($build)
-      ->addCacheContexts(['user.permissions'])
-      ->addCacheableDependency($queen);
+      ->addCacheContexts(['url.query_args', 'user.permissions'])
+      ->addCacheableDependency($queen)
+      ->addCacheTags($this->entityTypeManager->getDefinition('queen_observation')->getListCacheTags());
+    foreach ($observations as $observation) {
+      $cache->addCacheableDependency($observation);
+    }
     $cache->applyTo($build);
 
     return $build;

@@ -15,15 +15,19 @@ HiveLog provides a structured system for beekeepers to:
   queens, so queen info is not stored on the hive itself)
 - Record detailed **inspection logs** covering queen status, brood, stores,
   health, feeding, and management actions
+- Log **queen observations** separately from hive inspections for
+  queen-specific notes (health, temperament, active laying, photos)
 
-The module uses four custom content entities. Apiaries, hives and
+The module uses five custom content entities. Apiaries, hives and
 inspections form a strict parent–child hierarchy; queens are tracked
-separately and linked to a hive:
+separately and linked to a hive; queen observations hang off a queen:
 
 ```
 Apiary → Hive → Hive Inspection
               ↑
             Queen (active ↔ inactive)
+              ↓
+            Queen Observation
 ```
 
 ## Requirements
@@ -75,7 +79,18 @@ After installation, navigate to **Administration → Structure → HiveLog**
    queen on a hive that already has one automatically marks the previous
    queen inactive and detaches it from the hive.
 
-4. **Log inspections** — From the hive view page, click "Add Inspection". Each
+4. **Log queen observations** — From the hive view page, beside the
+   **Edit Queen** button, an **Add Observation** button opens a form
+   scoped to the currently-active queen. Observations are listed at the
+   bottom of the queen page (newest first). Each observation captures:
+   - Observation date
+   - Health (Excellent / Good / Fair / Poor)
+   - Temperament (Calm / Moderate / Aggressive)
+   - Active (was the queen observed actively laying / moving)
+   - Free-text notes
+   - Photos (multi-value image field)
+
+5. **Log inspections** — From the hive view page, click "Add Inspection". Each
    inspection captures:
    - **External check (before opening)** — Flight activity, dead bees, signs of
      robbing, wasps, hive weight (hefting)
@@ -128,6 +143,7 @@ View, Edit, and Delete tabs are available on each entity page.
 | View/Add/Edit/Delete hives       | Per-operation access to hives    |
 | View/Add/Edit/Delete hive inspections | Per-operation access to inspections |
 | View/Add/Edit/Delete queens      | Per-operation access to queens   |
+| View/Add/Edit/Delete queen observations | Per-operation access to queen observations |
 
 Users with "Administer HiveLog" bypass all individual permission checks.
 
@@ -156,6 +172,11 @@ Users with "Administer HiveLog" bypass all individual permission checks.
 | `/admin/hivelog/queen/{id}`                   | View queen             |
 | `/admin/hivelog/queen/{id}/edit`              | Edit queen             |
 | `/admin/hivelog/queen/{id}/delete`            | Delete queen           |
+| `/admin/hivelog/queen-observations`           | Queen observation list |
+| `/admin/hivelog/queen/{id}/observation/add`   | Add observation to queen |
+| `/admin/hivelog/queen-observation/{id}`       | View queen observation |
+| `/admin/hivelog/queen-observation/{id}/edit`  | Edit queen observation |
+| `/admin/hivelog/queen-observation/{id}/delete` | Delete queen observation |
 
 ## Module Structure
 
@@ -176,7 +197,8 @@ hivelog/
 │   │   ├── Apiary.php            # Apiary content entity
 │   │   ├── Hive.php              # Hive content entity
 │   │   ├── HiveInspection.php    # Inspection content entity
-│   │   └── Queen.php             # Queen content entity
+│   │   ├── Queen.php             # Queen content entity
+│   │   └── QueenObservation.php  # Queen observation content entity
 │   ├── Form/
 │   │   ├── ApiaryForm.php        # Apiary add/edit form
 │   │   ├── ApiaryDeleteForm.php
@@ -185,29 +207,35 @@ hivelog/
 │   │   ├── HiveInspectionForm.php    # Inspection add/edit form
 │   │   ├── HiveInspectionDeleteForm.php
 │   │   ├── QueenForm.php         # Queen add/edit form
-│   │   └── QueenDeleteForm.php
+│   │   ├── QueenDeleteForm.php
+│   │   ├── QueenObservationForm.php  # Queen observation add/edit form
+│   │   └── QueenObservationDeleteForm.php
 │   ├── Controller/
 │   │   ├── ApiaryController.php      # Apiary view (with hives table)
 │   │   ├── HiveController.php        # Hive view (queen + histogram + inspections)
 │   │   ├── HiveInspectionController.php  # Inspection view
-│   │   └── QueenController.php       # Queen view + hive-scoped add
+│   │   ├── QueenController.php       # Queen view + hive-scoped add
+│   │   └── QueenObservationController.php  # Observation view + queen-scoped add
 │   ├── Breadcrumb/
 │   │   └── HivelogBreadcrumbBuilder.php  # Breadcrumb builder service
 │   ├── ApiaryListBuilder.php
 │   ├── HiveListBuilder.php
 │   ├── HiveInspectionListBuilder.php
 │   ├── QueenListBuilder.php
+│   ├── QueenObservationListBuilder.php
 │   ├── ApiaryAccessControlHandler.php
 │   ├── HiveAccessControlHandler.php
 │   ├── HiveInspectionAccessControlHandler.php
-│   └── QueenAccessControlHandler.php
+│   ├── QueenAccessControlHandler.php
+│   └── QueenObservationAccessControlHandler.php
 └── tests/
     └── src/
         ├── Kernel/
         │   ├── ApiaryTest.php            # Apiary entity tests
         │   ├── HiveTest.php              # Hive entity + queen section tests
         │   ├── HiveInspectionTest.php    # Inspection entity tests
-        │   └── QueenTest.php             # Queen CRUD + colour + invariant tests
+        │   ├── QueenTest.php             # Queen CRUD + colour + invariant tests
+        │   └── QueenObservationTest.php  # Queen observation CRUD + view tests
         └── Unit/
             └── Breadcrumb/
                 └── HivelogBreadcrumbBuilderTest.php  # Breadcrumb unit tests
@@ -258,6 +286,7 @@ drush cr
      signal is already captured by `queen_cells`).
    - `10008` — Install the `queen` entity type and drop the `queen_year` /
      `queen_colour` columns from `hive`. No data migration.
+   - `10009` — Install the `queen_observation` entity type.
 3. `drush cr` — Rebuilds caches so Drupal picks up any changes to entity
    definitions, routing, or services.
 
