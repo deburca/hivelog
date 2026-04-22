@@ -97,8 +97,8 @@ class HiveController extends ControllerBase {
     // so the summary chart is not affected by active filters or paging.
     // Placed above the Inspections heading/Add Inspection action so it
     // reads as a summary of the whole inspection history.
-    [$histogram_points, $histogram_inspections] = $this->collectHistogramPoints($hive);
-    $histogram = $this->buildWeightHistogram($histogram_points);
+    [$histogram_points, $histogram_inspections, $axis_start, $axis_end] = $this->collectHistogramPoints($hive);
+    $histogram = $this->buildWeightHistogram($histogram_points, $axis_start, $axis_end);
     if (!empty($histogram)) {
       $build['weight_histogram'] = $histogram + ['#weight' => 7];
     }
@@ -372,13 +372,27 @@ class HiveController extends ControllerBase {
   }
 
   /**
+   * Default start of the histogram's beekeeping season window (mm-dd).
+   */
+  protected const HISTOGRAM_SEASON_START = '05-01';
+
+  /**
+   * Default end of the histogram's beekeeping season window (mm-dd).
+   */
+  protected const HISTOGRAM_SEASON_END = '08-31';
+
+  /**
    * Collects histogram data points from the full inspection set for a hive.
    *
    * The histogram summarises the year of the most recent inspection and is
-   * deliberately not restricted by filters or pagination.
+   * deliberately not restricted by filters or pagination. The axis range is
+   * anchored to the configured beekeeping season window (01/05–31/08) and
+   * widened out to the first/last inspection of the year when they fall
+   * outside that window.
    *
-   * @return array{0: array<int, array{date:string, mmdd:string, weight:float, year:string}>, 1: \Drupal\hivelog\Entity\HiveInspection[]}
-   *   Tuple of [histogram data points, inspections loaded for the histogram].
+   * @return array{0: array<int, array{date:string, mmdd:string, weight:float, year:string}>, 1: \Drupal\hivelog\Entity\HiveInspection[], 2: ?string, 3: ?string}
+   *   Tuple of [histogram data points, inspections loaded for the histogram,
+   *   axis start date (YYYY-MM-DD), axis end date (YYYY-MM-DD)].
    */
   protected function collectHistogramPoints(Hive $hive): array {
     $inspection_ids = $this->entityTypeManager
@@ -390,7 +404,7 @@ class HiveController extends ControllerBase {
       ->execute();
 
     if (!$inspection_ids) {
-      return [[], []];
+      return [[], [], NULL, NULL];
     }
     $inspections = $this->entityTypeManager
       ->getStorage('hive_inspection')
@@ -405,7 +419,7 @@ class HiveController extends ControllerBase {
       }
     }
     if (!$most_recent) {
-      return [[], $inspections];
+      return [[], $inspections, NULL, NULL];
     }
     $year = substr($most_recent, 0, 4);
 
@@ -429,7 +443,21 @@ class HiveController extends ControllerBase {
 
     usort($points, fn($a, $b) => strcmp($a['date'], $b['date']));
 
-    return [$points, $inspections];
+    if (empty($points)) {
+      return [[], $inspections, NULL, NULL];
+    }
+
+    // Anchor the axis to the beekeeping season and widen only when the data
+    // itself extends past those bounds. YYYY-MM-DD strings compare
+    // lexicographically so no DateTime parsing is required here.
+    $season_start = $year . '-' . static::HISTOGRAM_SEASON_START;
+    $season_end = $year . '-' . static::HISTOGRAM_SEASON_END;
+    $first_date = $points[0]['date'];
+    $last_date = $points[count($points) - 1]['date'];
+    $axis_start = $first_date < $season_start ? $first_date : $season_start;
+    $axis_end = $last_date > $season_end ? $last_date : $season_end;
+
+    return [$points, $inspections, $axis_start, $axis_end];
   }
 
   /**
@@ -493,36 +521,71 @@ class HiveController extends ControllerBase {
   /**
    * Builds a letterboxed vertical histogram of inspection weights.
    *
+   * Bars are positioned proportionally along a calendar-time X axis that
+   * spans [axis_start, axis_end]. Month start tick marks are rendered
+   * beneath the axis to orient the reader.
+   *
    * @param array<int, array{date:string, mmdd:string, weight:float, year?:string}> $points
    *   Pre-collected data points for the target year.
+   * @param string|null $axis_start
+   *   The left edge of the X axis, as a YYYY-MM-DD date.
+   * @param string|null $axis_end
+   *   The right edge of the X axis, as a YYYY-MM-DD date.
    *
    * @return array
    *   A render array for the histogram, or an empty array if there is nothing
    *   to display.
    */
-  protected function buildWeightHistogram(array $points): array {
-    if (empty($points)) {
+  protected function buildWeightHistogram(array $points, ?string $axis_start = NULL, ?string $axis_end = NULL): array {
+    if (empty($points) || !$axis_start || !$axis_end) {
       return [];
     }
 
     $year = $points[0]['year'] ?? substr($points[0]['date'], 0, 4);
 
-    // SVG layout constants.
+    // SVG layout constants. Padding_x is wider than before to make room for
+    // data points that sit right on the axis edges.
     $svg_width = 800;
     $svg_height = 300;
     $padding_top = 40;
-    $padding_bottom = 40;
-    $padding_x = 20;
+    $padding_bottom = 50;
+    $padding_x = 40;
     $chart_height = $svg_height - $padding_top - $padding_bottom;
     $chart_width = $svg_width - (2 * $padding_x);
-    $slot_width = $chart_width / max(count($points), 1);
-    $bar_width = (int) min($slot_width * 0.6, 60);
     $max_weight = max(array_column($points, 'weight')) ?: 1.0;
     $axis_y = $padding_top + $chart_height;
 
+    // Convert the axis bounds and each point's date to day-of-year. Since
+    // collectHistogramPoints() restricts points to a single year, using
+    // day-of-year (0-based) keeps the math simple and avoids timestamp /
+    // timezone concerns.
+    $start_doy = $this->dayOfYear($axis_start);
+    $end_doy = $this->dayOfYear($axis_end);
+    $total_days = max($end_doy - $start_doy, 1);
+
+    // Fixed bar width, shrunk if two adjacent points sit very close together.
+    $bar_width = 18;
+    if (count($points) > 1) {
+      $min_gap_px = $chart_width;
+      $prev_doy = NULL;
+      foreach ($points as $point) {
+        $doy = $this->dayOfYear($point['date']);
+        if ($prev_doy !== NULL) {
+          $gap_px = (($doy - $prev_doy) / $total_days) * $chart_width;
+          if ($gap_px > 0) {
+            $min_gap_px = min($min_gap_px, $gap_px);
+          }
+        }
+        $prev_doy = $doy;
+      }
+      $bar_width = (int) max(4, min($bar_width, $min_gap_px * 0.9));
+    }
+
     $bars = [];
-    foreach ($points as $i => $point) {
-      $center_x = $padding_x + ($slot_width * ($i + 0.5));
+    foreach ($points as $point) {
+      $doy = $this->dayOfYear($point['date']);
+      $fraction = ($doy - $start_doy) / $total_days;
+      $center_x = $padding_x + ($fraction * $chart_width);
       $bar_height = ($point['weight'] / $max_weight) * $chart_height;
       $bar_y = $padding_top + ($chart_height - $bar_height);
       $bars[] = [
@@ -531,9 +594,38 @@ class HiveController extends ControllerBase {
         'height' => (int) round($bar_height),
         'label_x' => (int) round($center_x),
         'value_y' => max((int) round($bar_y) - 6, $padding_top - 4),
-        'date_y' => $axis_y + 16,
+        'date_y' => $axis_y + 14,
         'mmdd' => $point['mmdd'],
         'weight_label' => rtrim(rtrim(number_format($point['weight'], 2, '.', ''), '0'), '.') . ' kg',
+      ];
+    }
+
+    // Month tick marks: for each month whose first day falls within the
+    // axis range, place a short tick below the axis and render a three
+    // letter month abbreviation below it.
+    $ticks = [];
+    $month_names = [
+      1 => 'Jan', 2 => 'Feb', 3 => 'Mar', 4 => 'Apr',
+      5 => 'May', 6 => 'Jun', 7 => 'Jul', 8 => 'Aug',
+      9 => 'Sep', 10 => 'Oct', 11 => 'Nov', 12 => 'Dec',
+    ];
+    $start_month = (int) substr($axis_start, 5, 2);
+    $end_month = (int) substr($axis_end, 5, 2);
+    for ($m = $start_month; $m <= min($end_month + 1, 12); $m++) {
+      $tick_date = sprintf('%s-%02d-01', $year, $m);
+      if ($tick_date < $axis_start || $tick_date > $axis_end) {
+        continue;
+      }
+      $doy = $this->dayOfYear($tick_date);
+      $fraction = ($doy - $start_doy) / $total_days;
+      $x = (int) round($padding_x + $fraction * $chart_width);
+      $ticks[] = [
+        'x' => $x,
+        'y1' => $axis_y,
+        'y2' => $axis_y + 4,
+        'label_x' => $x,
+        'label_y' => $axis_y + 32,
+        'label' => $month_names[$m] ?? '',
       ];
     }
 
@@ -556,7 +648,7 @@ class HiveController extends ControllerBase {
       ],
       'chart' => [
         '#type' => 'inline_template',
-        '#template' => '<div class="hivelog-weight-histogram__frame"><svg viewBox="0 0 {{ svg_width }} {{ svg_height }}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="{{ label }}"><title>{{ label }}</title>{% for bar in bars %}<rect class="hivelog-weight-histogram__bar" x="{{ bar.x }}" y="{{ bar.y }}" width="{{ bar_width }}" height="{{ bar.height }}" fill="#f2a42e" /><text class="hivelog-weight-histogram__value" x="{{ bar.label_x }}" y="{{ bar.value_y }}" text-anchor="middle" font-size="12" fill="#333">{{ bar.weight_label }}</text><text class="hivelog-weight-histogram__date" x="{{ bar.label_x }}" y="{{ bar.date_y }}" text-anchor="middle" font-size="11" fill="#333">{{ bar.mmdd }}</text>{% endfor %}<line x1="{{ padding_x }}" y1="{{ axis_y }}" x2="{{ svg_width - padding_x }}" y2="{{ axis_y }}" stroke="#666" stroke-width="1" /></svg></div>',
+        '#template' => '<div class="hivelog-weight-histogram__frame"><svg viewBox="0 0 {{ svg_width }} {{ svg_height }}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="{{ label }}"><title>{{ label }}</title>{% for bar in bars %}<rect class="hivelog-weight-histogram__bar" x="{{ bar.x }}" y="{{ bar.y }}" width="{{ bar_width }}" height="{{ bar.height }}" fill="#f2a42e" /><text class="hivelog-weight-histogram__value" x="{{ bar.label_x }}" y="{{ bar.value_y }}" text-anchor="middle" font-size="12" fill="#333">{{ bar.weight_label }}</text><text class="hivelog-weight-histogram__date" x="{{ bar.label_x }}" y="{{ bar.date_y }}" text-anchor="middle" font-size="11" fill="#333">{{ bar.mmdd }}</text>{% endfor %}<line x1="{{ padding_x }}" y1="{{ axis_y }}" x2="{{ svg_width - padding_x }}" y2="{{ axis_y }}" stroke="#666" stroke-width="1" />{% for tick in ticks %}<line class="hivelog-weight-histogram__tick" x1="{{ tick.x }}" y1="{{ tick.y1 }}" x2="{{ tick.x }}" y2="{{ tick.y2 }}" stroke="#666" stroke-width="1" /><text class="hivelog-weight-histogram__month" x="{{ tick.label_x }}" y="{{ tick.label_y }}" text-anchor="middle" font-size="11" fill="#666">{{ tick.label }}</text>{% endfor %}</svg></div>',
         '#context' => [
           'label' => $this->t('Inspection weights for @year', ['@year' => $year]),
           'svg_width' => $svg_width,
@@ -565,9 +657,21 @@ class HiveController extends ControllerBase {
           'axis_y' => $axis_y,
           'bar_width' => $bar_width,
           'bars' => $bars,
+          'ticks' => $ticks,
         ],
       ],
     ];
+  }
+
+  /**
+   * Returns the zero-based day of the year for a YYYY-MM-DD date.
+   */
+  protected function dayOfYear(string $date): int {
+    $dt = \DateTimeImmutable::createFromFormat('!Y-m-d', $date);
+    if ($dt === FALSE) {
+      return 0;
+    }
+    return (int) $dt->format('z');
   }
 
 }
