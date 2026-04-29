@@ -303,3 +303,32 @@ function hivelog_update_10009(&$sandbox) {
 
   return t('Installed the Queen Observation entity type.');
 }
+
+/**
+ * Add Central Beehive Registration (CBR) number field to user accounts.
+ *
+ * Issue #59: each user can record a national/central beehive registration
+ * number on their profile. The CBR is surfaced on the HiveLog landing page
+ * and on each apiary row. The field is provided by hivelog via
+ * hook_entity_base_field_info(), and this hook makes the storage available
+ * on existing sites.
+ */
+function hivelog_update_10010(&$sandbox) {
+  $manager = \Drupal::entityDefinitionUpdateManager();
+  if ($manager->getFieldStorageDefinition('cbr_number', 'user')) {
+    return t('CBR field already installed; nothing to do.');
+  }
+
+  $entity_type = \Drupal::entityTypeManager()->getDefinition('user');
+  $fields = hivelog_entity_base_field_info($entity_type);
+  if (isset($fields['cbr_number'])) {
+    $manager->installFieldStorageDefinition(
+      'cbr_number',
+      'user',
+      'hivelog',
+      $fields['cbr_number']
+    );
+  }
+
+  return t('Added CBR number field to user accounts.');
+}

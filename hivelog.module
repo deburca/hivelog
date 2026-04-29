@@ -4,3 +4,40 @@
  * @file
  * Primary module hooks for HiveLog module.
  */
+
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Field\BaseFieldDefinition;
+
+/**
+ * Implements hook_entity_base_field_info().
+ *
+ * Adds a Central Beehive Registration (CBR) number base field to the user
+ * entity so each user can record their national/central beehive
+ * registration number on their profile. The field is surfaced on the
+ * standard user form/view and on the HiveLog landing page.
+ */
+function hivelog_entity_base_field_info(EntityTypeInterface $entity_type) {
+  if ($entity_type->id() !== 'user') {
+    return [];
+  }
+
+  $fields = [];
+  $fields['cbr_number'] = BaseFieldDefinition::create('string')
+    ->setLabel(t('Central Beehive Registration (CBR) number'))
+    ->setDescription(t('Your national/central beehive registration number, if any.'))
+    ->setProvider('hivelog')
+    ->setSetting('max_length', 64)
+    ->setDisplayOptions('form', [
+      'type' => 'string_textfield',
+      'weight' => 5,
+    ])
+    ->setDisplayOptions('view', [
+      'type' => 'string',
+      'label' => 'inline',
+      'weight' => 5,
+    ])
+    ->setDisplayConfigurable('form', TRUE)
+    ->setDisplayConfigurable('view', TRUE);
+
+  return $fields;
+}
