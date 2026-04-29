@@ -90,7 +90,13 @@ After installation, navigate to **Administration → Structure → HiveLog**
    - Free-text notes
    - Photos (multi-value image field)
 
-5. **Log inspections** — From the hive view page, click "Add Inspection". Each
+5. **Record your CBR number** — Each user can store a Central Beehive
+   Registration (CBR) number on their account (`/user/{uid}/edit`). The
+   number is shown as a caption on the HiveLog landing page and rendered
+   as the first column of every apiary row, so the apiary list always
+   identifies the registered owner alongside the apiary.
+
+6. **Log inspections** — From the hive view page, click "Add Inspection". Each
    inspection captures:
    - **External check (before opening)** — Flight activity, dead bees, signs of
      robbing, wasps, hive weight (hefting)
@@ -286,7 +292,9 @@ drush cr
      signal is already captured by `queen_cells`).
    - `10008` — Install the `queen` entity type and drop the `queen_year` /
      `queen_colour` columns from `hive`. No data migration.
-   - `10009` — Install the `queen_observation` entity type.
+  - `10009` — Install the `queen_observation` entity type.
+  - `10010` — Install the `cbr_number` (Central Beehive Registration) base
+    field on the `user` entity. No data migration.
 3. `drush cr` — Rebuilds caches so Drupal picks up any changes to entity
    definitions, routing, or services.
 
