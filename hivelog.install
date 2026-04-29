@@ -303,3 +303,56 @@ function hivelog_update_10009(&$sandbox) {
 
   return t('Installed the Queen Observation entity type.');
 }
+
+/**
+ * Refresh apiary.geolocation storage and uninstall stranded user.cbr_number.
+ *
+ * Issue #61: the Drupal status page reports two mismatches under
+ * "Mismatched entity and/or field definitions".
+ *
+ * 1. apiary.geolocation — `hivelog_update_10002` recorded the geofield's
+ *    BaseFieldDefinition wholesale (including form widget, view formatter,
+ *    label and description). Subsequent commits changed the form widget to
+ *    `leaflet_widget_default`, the view formatter label to `hidden`, and
+ *    expanded the description, all without a paired update hook. The
+ *    entity definition update manager compares storage definitions
+ *    strictly so any drift triggers the warning. Re-sync the stored
+ *    definition with the current `Apiary::baseFieldDefinitions()`; the
+ *    underlying table schema is unchanged.
+ *
+ * 2. user.cbr_number — a stranded base field on the User entity whose
+ *    `provider` is `hivelog` but which is no longer defined by any code
+ *    in this module. It must have been added by a previous iteration that
+ *    was removed without an uninstall hook. Drop the orphan storage so
+ *    the status page clears.
+ */
+function hivelog_update_10010(&$sandbox) {
+  $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  $entity_field_manager = \Drupal::service('entity_field.manager');
+  $last_installed_schema_repository = \Drupal::service('entity.last_installed_schema.repository');
+
+  // 1. Re-sync apiary.geolocation with the current base field definition.
+  // Use the entity field manager so the returned definition has its name,
+  // target entity type id and provider populated — updateFieldStorageDefinition()
+  // looks the existing definition up via those.
+  $apiary_fields = $entity_field_manager->getBaseFieldDefinitions('apiary');
+  if (isset($apiary_fields['geolocation'])) {
+    $entity_definition_update_manager->updateFieldStorageDefinition(
+      $apiary_fields['geolocation']
+    );
+  }
+
+  // 2. Uninstall the stranded user.cbr_number field storage. The field is
+  // no longer defined in code, so we have to fetch the definition from the
+  // last-installed schema repository (entityDefinitionUpdateManager only
+  // sees fields that still have a provider).
+  $installed_user_fields = $last_installed_schema_repository
+    ->getLastInstalledFieldStorageDefinitions('user');
+  if (isset($installed_user_fields['cbr_number'])) {
+    $entity_definition_update_manager->uninstallFieldStorageDefinition(
+      $installed_user_fields['cbr_number']
+    );
+  }
+
+  return t('Refreshed apiary.geolocation storage definition and removed stranded user.cbr_number field.');
+}
