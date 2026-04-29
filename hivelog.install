@@ -332,3 +332,40 @@ function hivelog_update_10010(&$sandbox) {
 
   return t('Added CBR number field to user accounts.');
 }
+
+/**
+ * Re-sync the apiary.geolocation stored field storage definition.
+ *
+ * Issue #61: the Drupal status page reports "Apiary — The Geolocation
+ * field needs to be updated" because the BaseFieldDefinition snapshot
+ * recorded by hivelog_update_10002 has drifted from the live
+ * Apiary::baseFieldDefinitions(). Two later commits modified the field
+ * without a paired update hook:
+ *
+ * - PR #2 swapped the form widget from `geofield_latlon` to
+ *   `leaflet_widget_default` (with leaflet map settings) and expanded
+ *   the description.
+ * - PR #5 changed the view formatter label from `above` to `hidden`.
+ *
+ * EntityDefinitionUpdateManager compares storage definitions strictly,
+ * so any drift — including non-schema-affecting display options —
+ * triggers the warning. The underlying geofield columns are unchanged;
+ * only the recorded definition needs to be refreshed.
+ */
+function hivelog_update_10011(&$sandbox) {
+  $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  $entity_field_manager = \Drupal::service('entity_field.manager');
+
+  // Use the entity field manager so the definition we hand over has its
+  // name, target entity type id and provider populated —
+  // updateFieldStorageDefinition() looks the existing definition up via
+  // those properties.
+  $apiary_fields = $entity_field_manager->getBaseFieldDefinitions('apiary');
+  if (isset($apiary_fields['geolocation'])) {
+    $entity_definition_update_manager->updateFieldStorageDefinition(
+      $apiary_fields['geolocation']
+    );
+  }
+
+  return t('Re-synced apiary.geolocation stored field storage definition.');
+}
