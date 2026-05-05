@@ -179,9 +179,9 @@ class QueenObservationTest extends KernelTestBase {
       'id' => 'observation_editor',
       'label' => 'Observation editor',
     ]);
-    $role->grantPermission('view queen observation');
-    $role->grantPermission('edit queen observation');
-    $role->grantPermission('delete queen observation');
+    $role->grantPermission('view any queen observation');
+    $role->grantPermission('edit any queen observation');
+    $role->grantPermission('delete any queen observation');
     $role->save();
     $user->addRole('observation_editor');
     $user->save();

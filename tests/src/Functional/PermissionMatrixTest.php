@@ -102,9 +102,9 @@ class PermissionMatrixTest extends BrowserTestBase {
    */
   public function testViewOnlyPermissions(): void {
     $viewer = $this->drupalCreateUser([
-      'view apiary',
-      'view hive',
-      'view hive inspection',
+      'view any apiary',
+      'view any hive',
+      'view any hive inspection',
     ]);
     $this->drupalLogin($viewer);
 
@@ -181,8 +181,8 @@ class PermissionMatrixTest extends BrowserTestBase {
    */
   public function testEditOnlyPermission(): void {
     $editor = $this->drupalCreateUser([
-      'view hive',
-      'edit hive',
+      'view any hive',
+      'edit any hive',
     ]);
     $this->drupalLogin($editor);
 

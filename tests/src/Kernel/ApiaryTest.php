@@ -195,13 +195,13 @@ class ApiaryTest extends KernelTestBase {
       'id' => 'apiary_view_only',
       'label' => 'Apiary view only',
     ]);
-    $role->grantPermission('view apiary');
+    $role->grantPermission('view any apiary');
     $role->save();
     $authenticated = Role::load('authenticated');
     if ($authenticated) {
-      $authenticated->revokePermission('view hive');
-      $authenticated->revokePermission('edit hive');
-      $authenticated->revokePermission('delete hive');
+      $authenticated->revokePermission('view any hive');
+      $authenticated->revokePermission('edit any hive');
+      $authenticated->revokePermission('delete any hive');
       $authenticated->save();
     }
     $viewer->addRole('apiary_view_only');
@@ -235,10 +235,10 @@ class ApiaryTest extends KernelTestBase {
     $this->assertEquals('/admin/hivelog/inspections', $inspection_route->getPath());
     $this->assertEquals('/admin/hivelog/queens', $queen_route->getPath());
     $this->assertEquals('/admin/hivelog/queen-observations', $observation_route->getPath());
-    $this->assertEquals('view hive+administer hivelog', $hive_route->getRequirement('_permission'));
-    $this->assertEquals('view hive inspection+administer hivelog', $inspection_route->getRequirement('_permission'));
-    $this->assertEquals('view queen+administer hivelog', $queen_route->getRequirement('_permission'));
-    $this->assertEquals('view queen observation+administer hivelog', $observation_route->getRequirement('_permission'));
+    $this->assertEquals('view own hive+view any hive+administer hivelog', $hive_route->getRequirement('_permission'));
+    $this->assertEquals('view own hive inspection+view any hive inspection+administer hivelog', $inspection_route->getRequirement('_permission'));
+    $this->assertEquals('view own queen+view any queen+administer hivelog', $queen_route->getRequirement('_permission'));
+    $this->assertEquals('view own queen observation+view any queen observation+administer hivelog', $observation_route->getRequirement('_permission'));
 
     $menu_links = \Drupal::service('plugin.manager.menu.link')->getDefinitions();
     $this->assertArrayHasKey('hivelog.hives', $menu_links);

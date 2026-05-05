@@ -6,6 +6,7 @@ use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\EntityAccessControlHandler;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\user\EntityOwnerInterface;
 
 /**
  * Access control handler for Queen entities.
@@ -20,15 +21,18 @@ class QueenAccessControlHandler extends EntityAccessControlHandler {
       return AccessResult::allowed()->cachePerPermissions();
     }
 
+    $is_owner = ($entity instanceof EntityOwnerInterface)
+      && ((int) $entity->getOwnerId() === (int) $account->id());
+
     switch ($operation) {
       case 'view':
-        return AccessResult::allowedIfHasPermission($account, 'view queen');
+        return $this->checkOwnershipAccess($account, $is_owner, 'view any queen', 'view own queen');
 
       case 'update':
-        return AccessResult::allowedIfHasPermission($account, 'edit queen');
+        return $this->checkOwnershipAccess($account, $is_owner, 'edit any queen', 'edit own queen');
 
       case 'delete':
-        return AccessResult::allowedIfHasPermission($account, 'delete queen');
+        return $this->checkOwnershipAccess($account, $is_owner, 'delete any queen', 'delete own queen');
     }
 
     return AccessResult::neutral();
@@ -42,6 +46,19 @@ class QueenAccessControlHandler extends EntityAccessControlHandler {
       'administer hivelog',
       'add queen',
     ], 'OR');
+  }
+
+  /**
+   * Checks access based on "any" and "own" permissions.
+   */
+  protected function checkOwnershipAccess(AccountInterface $account, bool $is_owner, string $any_permission, string $own_permission): AccessResult {
+    if ($account->hasPermission($any_permission)) {
+      return AccessResult::allowed()->cachePerPermissions();
+    }
+    if ($is_owner && $account->hasPermission($own_permission)) {
+      return AccessResult::allowed()->cachePerPermissions()->cachePerUser();
+    }
+    return AccessResult::neutral()->cachePerPermissions()->cachePerUser();
   }
 
 }
