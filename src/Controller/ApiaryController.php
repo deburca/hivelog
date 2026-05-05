@@ -161,6 +161,8 @@ class ApiaryController extends ControllerBase {
         ? $this->t('No hives match the current filters.')
         : $this->t('No hives have been added to this apiary yet.'),
       '#weight' => 12,
+      '#attributes' => ['class' => ['hivelog-table']],
+      '#attached' => ['library' => ['hivelog/tables']],
     ];
 
     $build['hives_pager'] = [

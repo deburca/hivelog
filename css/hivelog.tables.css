@@ -1,0 +1,37 @@
+/**
+ * @file
+ * Table styling for HiveLog entity list tables.
+ *
+ * Ensures tables span the full available width and display horizontal
+ * dividing lines between rows for readability.
+ */
+
+/* Full-width tables. */
+.hivelog-table,
+.hivelog-inspection-table,
+.hivelog-queen-table,
+.hivelog-queen-observation-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+/* Horizontal dividers between rows. */
+.hivelog-table th,
+.hivelog-table td,
+.hivelog-inspection-table th,
+.hivelog-inspection-table td,
+.hivelog-queen-table th,
+.hivelog-queen-table td,
+.hivelog-queen-observation-table th,
+.hivelog-queen-observation-table td {
+  border-bottom: 1px solid #e0e0e0;
+  padding: 0.5rem 0.75rem;
+}
+
+/* Header bottom border slightly heavier. */
+.hivelog-table thead th,
+.hivelog-inspection-table thead th,
+.hivelog-queen-table thead th,
+.hivelog-queen-observation-table thead th {
+  border-bottom: 2px solid #ccc;
+}

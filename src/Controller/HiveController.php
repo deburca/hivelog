@@ -208,6 +208,8 @@ class HiveController extends ControllerBase {
         ? $this->t('No inspections match the current filters.')
         : $this->t('No inspections have been recorded for this hive yet.'),
       '#weight' => 12,
+      '#attributes' => ['class' => ['hivelog-table']],
+      '#attached' => ['library' => ['hivelog/tables']],
     ];
 
     $build['inspections_pager'] = [
@@ -290,6 +292,8 @@ class HiveController extends ControllerBase {
       $section['details'] = [
         '#type' => 'table',
         '#header' => [$this->t('Field'), $this->t('Value')],
+        '#attributes' => ['class' => ['hivelog-table']],
+        '#attached' => ['library' => ['hivelog/tables']],
         '#rows' => [
           [$this->t('Queen ID'), $queen->toLink()->toString()],
           [$this->t('Colour'), $colour_label],

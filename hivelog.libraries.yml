@@ -10,6 +10,12 @@ images:
     component:
       css/hivelog.images.css: {}
 
+tables:
+  version: 1.x
+  css:
+    component:
+      css/hivelog.tables.css: {}
+
 filter_form:
   version: 1.x
   css:

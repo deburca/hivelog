@@ -255,6 +255,7 @@ class HiveInspectionController extends ControllerBase {
         '#attributes' => [
           'class' => ['hivelog-inspection-table'],
         ],
+        '#attached' => ['library' => ['hivelog/tables']],
       ],
     ];
   }
