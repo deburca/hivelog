@@ -46,11 +46,11 @@ use Drupal\user\EntityOwnerTrait;
     'owner' => 'uid',
   ],
   links: [
-    'canonical' => '/admin/hivelog/apiary/{apiary}',
-    'add-form' => '/admin/hivelog/apiary/add',
-    'edit-form' => '/admin/hivelog/apiary/{apiary}/edit',
-    'delete-form' => '/admin/hivelog/apiary/{apiary}/delete',
-    'collection' => '/admin/hivelog',
+    'canonical' => '/hivelog/apiary/{apiary}',
+    'add-form' => '/hivelog/apiary/add',
+    'edit-form' => '/hivelog/apiary/{apiary}/edit',
+    'delete-form' => '/hivelog/apiary/{apiary}/delete',
+    'collection' => '/hivelog',
   ],
 )]
 class Apiary extends ContentEntityBase implements EntityChangedInterface, EntityOwnerInterface {

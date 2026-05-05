@@ -46,9 +46,9 @@ use Drupal\user\EntityOwnerTrait;
     'owner' => 'uid',
   ],
   links: [
-    'canonical' => '/admin/hivelog/inspection/{hive_inspection}',
-    'edit-form' => '/admin/hivelog/inspection/{hive_inspection}/edit',
-    'delete-form' => '/admin/hivelog/inspection/{hive_inspection}/delete',
+    'canonical' => '/hivelog/inspection/{hive_inspection}',
+    'edit-form' => '/hivelog/inspection/{hive_inspection}/edit',
+    'delete-form' => '/hivelog/inspection/{hive_inspection}/delete',
   ],
 )]
 class HiveInspection extends ContentEntityBase implements EntityChangedInterface, EntityOwnerInterface {

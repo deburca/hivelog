@@ -42,7 +42,7 @@ class EntityCrudJourneyTest extends BrowserTestBase {
    */
   public function testApiaryCrudJourney(): void {
     // Create.
-    $this->drupalGet('/admin/hivelog/apiary/add');
+    $this->drupalGet('/hivelog/apiary/add');
     $this->assertSession()->statusCodeEquals(200);
     $this->submitForm([
       'name[0][value]' => 'Home Apiary',
@@ -59,7 +59,7 @@ class EntityCrudJourneyTest extends BrowserTestBase {
     $apiary = reset($apiaries);
 
     // Edit.
-    $this->drupalGet('/admin/hivelog/apiary/' . $apiary->id() . '/edit');
+    $this->drupalGet('/hivelog/apiary/' . $apiary->id() . '/edit');
     $this->assertSession()->statusCodeEquals(200);
     $this->submitForm([
       'name[0][value]' => 'Home Apiary Renamed',
@@ -68,7 +68,7 @@ class EntityCrudJourneyTest extends BrowserTestBase {
     $this->assertEquals('Home Apiary Renamed', $reloaded->label());
 
     // Delete.
-    $this->drupalGet('/admin/hivelog/apiary/' . $apiary->id() . '/delete');
+    $this->drupalGet('/hivelog/apiary/' . $apiary->id() . '/delete');
     $this->assertSession()->statusCodeEquals(200);
     $this->submitForm([], 'Delete');
     $this->assertNull(Apiary::load($apiary->id()));
@@ -83,7 +83,7 @@ class EntityCrudJourneyTest extends BrowserTestBase {
 
     // Create via the scoped /apiary/{apiary}/hive/add route so the parent
     // reference is pre-populated by HiveController::addForm().
-    $this->drupalGet('/admin/hivelog/apiary/' . $apiary->id() . '/hive/add');
+    $this->drupalGet('/hivelog/apiary/' . $apiary->id() . '/hive/add');
     $this->assertSession()->statusCodeEquals(200);
     $this->submitForm([
       'name[0][value]' => 'CRUD Hive',
@@ -99,7 +99,7 @@ class EntityCrudJourneyTest extends BrowserTestBase {
     $this->assertEquals($apiary->id(), $hive->get('apiary')->target_id);
 
     // Edit.
-    $this->drupalGet('/admin/hivelog/hive/' . $hive->id() . '/edit');
+    $this->drupalGet('/hivelog/hive/' . $hive->id() . '/edit');
     $this->assertSession()->statusCodeEquals(200);
     $this->submitForm([
       'name[0][value]' => 'CRUD Hive Renamed',
@@ -110,7 +110,7 @@ class EntityCrudJourneyTest extends BrowserTestBase {
     $this->assertEquals('inactive', $reloaded->get('status')->value);
 
     // Delete.
-    $this->drupalGet('/admin/hivelog/hive/' . $hive->id() . '/delete');
+    $this->drupalGet('/hivelog/hive/' . $hive->id() . '/delete');
     $this->assertSession()->statusCodeEquals(200);
     $this->submitForm([], 'Delete');
     $this->assertNull(Hive::load($hive->id()));
@@ -131,7 +131,7 @@ class EntityCrudJourneyTest extends BrowserTestBase {
     $hive->save();
 
     // Create via /hive/{hive}/inspection/add.
-    $this->drupalGet('/admin/hivelog/hive/' . $hive->id() . '/inspection/add');
+    $this->drupalGet('/hivelog/hive/' . $hive->id() . '/inspection/add');
     $this->assertSession()->statusCodeEquals(200);
     $this->submitForm([
       'inspection_date[0][value][date]' => '2024-06-15',
@@ -147,7 +147,7 @@ class EntityCrudJourneyTest extends BrowserTestBase {
     $this->assertEquals('2024-06-15', $inspection->get('inspection_date')->value);
 
     // Edit.
-    $this->drupalGet('/admin/hivelog/inspection/' . $inspection->id() . '/edit');
+    $this->drupalGet('/hivelog/inspection/' . $inspection->id() . '/edit');
     $this->assertSession()->statusCodeEquals(200);
     $this->submitForm([
       'notes[0][value]' => 'Updated notes.',
@@ -156,7 +156,7 @@ class EntityCrudJourneyTest extends BrowserTestBase {
     $this->assertEquals('Updated notes.', $reloaded->get('notes')->value);
 
     // Delete.
-    $this->drupalGet('/admin/hivelog/inspection/' . $inspection->id() . '/delete');
+    $this->drupalGet('/hivelog/inspection/' . $inspection->id() . '/delete');
     $this->assertSession()->statusCodeEquals(200);
     $this->submitForm([], 'Delete');
     $this->assertNull(HiveInspection::load($inspection->id()));

@@ -74,21 +74,21 @@ class PermissionMatrixTest extends BrowserTestBase {
    */
   public function testAnonymousHasNoAccess(): void {
     $paths = [
-      '/admin/hivelog',
-      '/admin/hivelog/hives',
-      '/admin/hivelog/inspections',
-      '/admin/hivelog/apiary/add',
-      '/admin/hivelog/apiary/' . $this->apiary->id(),
-      '/admin/hivelog/apiary/' . $this->apiary->id() . '/edit',
-      '/admin/hivelog/apiary/' . $this->apiary->id() . '/delete',
-      '/admin/hivelog/apiary/' . $this->apiary->id() . '/hive/add',
-      '/admin/hivelog/hive/' . $this->hive->id(),
-      '/admin/hivelog/hive/' . $this->hive->id() . '/edit',
-      '/admin/hivelog/hive/' . $this->hive->id() . '/delete',
-      '/admin/hivelog/hive/' . $this->hive->id() . '/inspection/add',
-      '/admin/hivelog/inspection/' . $this->inspection->id(),
-      '/admin/hivelog/inspection/' . $this->inspection->id() . '/edit',
-      '/admin/hivelog/inspection/' . $this->inspection->id() . '/delete',
+      '/hivelog',
+      '/hivelog/hives',
+      '/hivelog/inspections',
+      '/hivelog/apiary/add',
+      '/hivelog/apiary/' . $this->apiary->id(),
+      '/hivelog/apiary/' . $this->apiary->id() . '/edit',
+      '/hivelog/apiary/' . $this->apiary->id() . '/delete',
+      '/hivelog/apiary/' . $this->apiary->id() . '/hive/add',
+      '/hivelog/hive/' . $this->hive->id(),
+      '/hivelog/hive/' . $this->hive->id() . '/edit',
+      '/hivelog/hive/' . $this->hive->id() . '/delete',
+      '/hivelog/hive/' . $this->hive->id() . '/inspection/add',
+      '/hivelog/inspection/' . $this->inspection->id(),
+      '/hivelog/inspection/' . $this->inspection->id() . '/edit',
+      '/hivelog/inspection/' . $this->inspection->id() . '/delete',
     ];
 
     foreach ($paths as $path) {
@@ -109,35 +109,35 @@ class PermissionMatrixTest extends BrowserTestBase {
     $this->drupalLogin($viewer);
 
     // View is allowed on collections and canonicals.
-    $this->drupalGet('/admin/hivelog');
+    $this->drupalGet('/hivelog');
     $this->assertSession()->statusCodeEquals(200);
-    $this->drupalGet('/admin/hivelog/apiary/' . $this->apiary->id());
+    $this->drupalGet('/hivelog/apiary/' . $this->apiary->id());
     $this->assertSession()->statusCodeEquals(200);
-    $this->drupalGet('/admin/hivelog/hive/' . $this->hive->id());
+    $this->drupalGet('/hivelog/hive/' . $this->hive->id());
     $this->assertSession()->statusCodeEquals(200);
-    $this->drupalGet('/admin/hivelog/inspection/' . $this->inspection->id());
+    $this->drupalGet('/hivelog/inspection/' . $this->inspection->id());
     $this->assertSession()->statusCodeEquals(200);
 
     // Add/edit/delete routes are denied.
     foreach ([
-      '/admin/hivelog/apiary/add',
-      '/admin/hivelog/apiary/' . $this->apiary->id() . '/edit',
-      '/admin/hivelog/apiary/' . $this->apiary->id() . '/delete',
-      '/admin/hivelog/apiary/' . $this->apiary->id() . '/hive/add',
-      '/admin/hivelog/hive/' . $this->hive->id() . '/edit',
-      '/admin/hivelog/hive/' . $this->hive->id() . '/delete',
-      '/admin/hivelog/hive/' . $this->hive->id() . '/inspection/add',
-      '/admin/hivelog/inspection/' . $this->inspection->id() . '/edit',
-      '/admin/hivelog/inspection/' . $this->inspection->id() . '/delete',
+      '/hivelog/apiary/add',
+      '/hivelog/apiary/' . $this->apiary->id() . '/edit',
+      '/hivelog/apiary/' . $this->apiary->id() . '/delete',
+      '/hivelog/apiary/' . $this->apiary->id() . '/hive/add',
+      '/hivelog/hive/' . $this->hive->id() . '/edit',
+      '/hivelog/hive/' . $this->hive->id() . '/delete',
+      '/hivelog/hive/' . $this->hive->id() . '/inspection/add',
+      '/hivelog/inspection/' . $this->inspection->id() . '/edit',
+      '/hivelog/inspection/' . $this->inspection->id() . '/delete',
     ] as $denied_path) {
       $this->drupalGet($denied_path);
       $this->assertSession()->statusCodeEquals(403);
     }
 
     // On canonical pages the Edit and Delete tabs must NOT be visible.
-    $this->drupalGet('/admin/hivelog/apiary/' . $this->apiary->id());
-    $this->assertSession()->linkByHrefNotExists('/admin/hivelog/apiary/' . $this->apiary->id() . '/edit');
-    $this->assertSession()->linkByHrefNotExists('/admin/hivelog/apiary/' . $this->apiary->id() . '/delete');
+    $this->drupalGet('/hivelog/apiary/' . $this->apiary->id());
+    $this->assertSession()->linkByHrefNotExists('/hivelog/apiary/' . $this->apiary->id() . '/edit');
+    $this->assertSession()->linkByHrefNotExists('/hivelog/apiary/' . $this->apiary->id() . '/delete');
   }
 
   /**
@@ -148,21 +148,21 @@ class PermissionMatrixTest extends BrowserTestBase {
     $this->drupalLogin($admin);
 
     $routes = [
-      '/admin/hivelog',
-      '/admin/hivelog/hives',
-      '/admin/hivelog/inspections',
-      '/admin/hivelog/apiary/add',
-      '/admin/hivelog/apiary/' . $this->apiary->id(),
-      '/admin/hivelog/apiary/' . $this->apiary->id() . '/edit',
-      '/admin/hivelog/apiary/' . $this->apiary->id() . '/delete',
-      '/admin/hivelog/apiary/' . $this->apiary->id() . '/hive/add',
-      '/admin/hivelog/hive/' . $this->hive->id(),
-      '/admin/hivelog/hive/' . $this->hive->id() . '/edit',
-      '/admin/hivelog/hive/' . $this->hive->id() . '/delete',
-      '/admin/hivelog/hive/' . $this->hive->id() . '/inspection/add',
-      '/admin/hivelog/inspection/' . $this->inspection->id(),
-      '/admin/hivelog/inspection/' . $this->inspection->id() . '/edit',
-      '/admin/hivelog/inspection/' . $this->inspection->id() . '/delete',
+      '/hivelog',
+      '/hivelog/hives',
+      '/hivelog/inspections',
+      '/hivelog/apiary/add',
+      '/hivelog/apiary/' . $this->apiary->id(),
+      '/hivelog/apiary/' . $this->apiary->id() . '/edit',
+      '/hivelog/apiary/' . $this->apiary->id() . '/delete',
+      '/hivelog/apiary/' . $this->apiary->id() . '/hive/add',
+      '/hivelog/hive/' . $this->hive->id(),
+      '/hivelog/hive/' . $this->hive->id() . '/edit',
+      '/hivelog/hive/' . $this->hive->id() . '/delete',
+      '/hivelog/hive/' . $this->hive->id() . '/inspection/add',
+      '/hivelog/inspection/' . $this->inspection->id(),
+      '/hivelog/inspection/' . $this->inspection->id() . '/edit',
+      '/hivelog/inspection/' . $this->inspection->id() . '/delete',
     ];
 
     foreach ($routes as $path) {
@@ -171,9 +171,9 @@ class PermissionMatrixTest extends BrowserTestBase {
     }
 
     // Canonical apiary page exposes Edit and Delete tabs for admins.
-    $this->drupalGet('/admin/hivelog/apiary/' . $this->apiary->id());
-    $this->assertSession()->linkByHrefExists('/admin/hivelog/apiary/' . $this->apiary->id() . '/edit');
-    $this->assertSession()->linkByHrefExists('/admin/hivelog/apiary/' . $this->apiary->id() . '/delete');
+    $this->drupalGet('/hivelog/apiary/' . $this->apiary->id());
+    $this->assertSession()->linkByHrefExists('/hivelog/apiary/' . $this->apiary->id() . '/edit');
+    $this->assertSession()->linkByHrefExists('/hivelog/apiary/' . $this->apiary->id() . '/delete');
   }
 
   /**
@@ -186,17 +186,17 @@ class PermissionMatrixTest extends BrowserTestBase {
     ]);
     $this->drupalLogin($editor);
 
-    $this->drupalGet('/admin/hivelog/hive/' . $this->hive->id());
+    $this->drupalGet('/hivelog/hive/' . $this->hive->id());
     $this->assertSession()->statusCodeEquals(200);
 
     // Edit tab is visible; Delete tab is not.
-    $this->assertSession()->linkByHrefExists('/admin/hivelog/hive/' . $this->hive->id() . '/edit');
-    $this->assertSession()->linkByHrefNotExists('/admin/hivelog/hive/' . $this->hive->id() . '/delete');
+    $this->assertSession()->linkByHrefExists('/hivelog/hive/' . $this->hive->id() . '/edit');
+    $this->assertSession()->linkByHrefNotExists('/hivelog/hive/' . $this->hive->id() . '/delete');
 
-    $this->drupalGet('/admin/hivelog/hive/' . $this->hive->id() . '/edit');
+    $this->drupalGet('/hivelog/hive/' . $this->hive->id() . '/edit');
     $this->assertSession()->statusCodeEquals(200);
 
-    $this->drupalGet('/admin/hivelog/hive/' . $this->hive->id() . '/delete');
+    $this->drupalGet('/hivelog/hive/' . $this->hive->id() . '/delete');
     $this->assertSession()->statusCodeEquals(403);
   }
 

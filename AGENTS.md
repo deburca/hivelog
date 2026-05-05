@@ -141,7 +141,7 @@ control handlers in `src/*AccessControlHandler.php` mirror the same rule.
 Only one service is registered (`hivelog.services.yml`):
 `hivelog.breadcrumb` — a `BreadcrumbBuilder` with priority 100 that produces
 the Apiary → Hive → Inspection trail on any hivelog route. When adding new
-routes under `/admin/hivelog/...` make sure the breadcrumb builder's
+routes under `/hivelog/...` make sure the breadcrumb builder's
 `applies()` logic still matches.
 
 ### Tests

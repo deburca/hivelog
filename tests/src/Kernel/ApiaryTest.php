@@ -231,10 +231,10 @@ class ApiaryTest extends KernelTestBase {
     $queen_route = $route_provider->getRouteByName('entity.queen.collection');
     $observation_route = $route_provider->getRouteByName('entity.queen_observation.collection');
 
-    $this->assertEquals('/admin/hivelog/hives', $hive_route->getPath());
-    $this->assertEquals('/admin/hivelog/inspections', $inspection_route->getPath());
-    $this->assertEquals('/admin/hivelog/queens', $queen_route->getPath());
-    $this->assertEquals('/admin/hivelog/queen-observations', $observation_route->getPath());
+    $this->assertEquals('/hivelog/hives', $hive_route->getPath());
+    $this->assertEquals('/hivelog/inspections', $inspection_route->getPath());
+    $this->assertEquals('/hivelog/queens', $queen_route->getPath());
+    $this->assertEquals('/hivelog/queen-observations', $observation_route->getPath());
     $this->assertEquals('view own hive+view any hive+administer hivelog', $hive_route->getRequirement('_permission'));
     $this->assertEquals('view own hive inspection+view any hive inspection+administer hivelog', $inspection_route->getRequirement('_permission'));
     $this->assertEquals('view own queen+view any queen+administer hivelog', $queen_route->getRequirement('_permission'));

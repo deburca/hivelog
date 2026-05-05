@@ -1,6 +1,6 @@
 # Apiary routes.
 entity.apiary.collection:
-  path: '/admin/hivelog'
+  path: '/hivelog'
   defaults:
     _entity_list: 'apiary'
     _title: 'HiveLog - Apiaries'
@@ -8,7 +8,7 @@ entity.apiary.collection:
     _permission: 'view own apiary+view any apiary+administer hivelog'
 
 entity.apiary.add_form:
-  path: '/admin/hivelog/apiary/add'
+  path: '/hivelog/apiary/add'
   defaults:
     _entity_form: 'apiary.add'
     _title: 'Add Apiary'
@@ -16,7 +16,7 @@ entity.apiary.add_form:
     _permission: 'add apiary+administer hivelog'
 
 entity.apiary.canonical:
-  path: '/admin/hivelog/apiary/{apiary}'
+  path: '/hivelog/apiary/{apiary}'
   defaults:
     _controller: '\Drupal\hivelog\Controller\ApiaryController::view'
     _title_callback: '\Drupal\hivelog\Controller\ApiaryController::title'
@@ -28,7 +28,7 @@ entity.apiary.canonical:
         type: entity:apiary
 
 entity.apiary.edit_form:
-  path: '/admin/hivelog/apiary/{apiary}/edit'
+  path: '/hivelog/apiary/{apiary}/edit'
   defaults:
     _entity_form: 'apiary.edit'
     _title: 'Edit Apiary'
@@ -40,7 +40,7 @@ entity.apiary.edit_form:
         type: entity:apiary
 
 entity.apiary.delete_form:
-  path: '/admin/hivelog/apiary/{apiary}/delete'
+  path: '/hivelog/apiary/{apiary}/delete'
   defaults:
     _entity_form: 'apiary.delete'
     _title: 'Delete Apiary'
@@ -53,7 +53,7 @@ entity.apiary.delete_form:
 
 # Hive routes.
 entity.hive.collection:
-  path: '/admin/hivelog/hives'
+  path: '/hivelog/hives'
   defaults:
     _entity_list: 'hive'
     _title: 'HiveLog - Hives'
@@ -61,7 +61,7 @@ entity.hive.collection:
     _permission: 'view own hive+view any hive+administer hivelog'
 
 hivelog.hive.add:
-  path: '/admin/hivelog/apiary/{apiary}/hive/add'
+  path: '/hivelog/apiary/{apiary}/hive/add'
   defaults:
     _controller: '\Drupal\hivelog\Controller\HiveController::addForm'
     _title: 'Add Hive'
@@ -73,7 +73,7 @@ hivelog.hive.add:
         type: entity:apiary
 
 entity.hive.canonical:
-  path: '/admin/hivelog/hive/{hive}'
+  path: '/hivelog/hive/{hive}'
   defaults:
     _controller: '\Drupal\hivelog\Controller\HiveController::view'
     _title_callback: '\Drupal\hivelog\Controller\HiveController::title'
@@ -85,7 +85,7 @@ entity.hive.canonical:
         type: entity:hive
 
 entity.hive.edit_form:
-  path: '/admin/hivelog/hive/{hive}/edit'
+  path: '/hivelog/hive/{hive}/edit'
   defaults:
     _entity_form: 'hive.edit'
     _title: 'Edit Hive'
@@ -97,7 +97,7 @@ entity.hive.edit_form:
         type: entity:hive
 
 entity.hive.delete_form:
-  path: '/admin/hivelog/hive/{hive}/delete'
+  path: '/hivelog/hive/{hive}/delete'
   defaults:
     _entity_form: 'hive.delete'
     _title: 'Delete Hive'
@@ -110,7 +110,7 @@ entity.hive.delete_form:
 
 # Inspection routes.
 entity.hive_inspection.collection:
-  path: '/admin/hivelog/inspections'
+  path: '/hivelog/inspections'
   defaults:
     _entity_list: 'hive_inspection'
     _title: 'HiveLog - Inspections'
@@ -118,7 +118,7 @@ entity.hive_inspection.collection:
     _permission: 'view own hive inspection+view any hive inspection+administer hivelog'
 
 hivelog.inspection.add:
-  path: '/admin/hivelog/hive/{hive}/inspection/add'
+  path: '/hivelog/hive/{hive}/inspection/add'
   defaults:
     _controller: '\Drupal\hivelog\Controller\HiveInspectionController::addForm'
     _title: 'Add Inspection'
@@ -130,7 +130,7 @@ hivelog.inspection.add:
         type: entity:hive
 
 entity.hive_inspection.canonical:
-  path: '/admin/hivelog/inspection/{hive_inspection}'
+  path: '/hivelog/inspection/{hive_inspection}'
   defaults:
     _controller: '\Drupal\hivelog\Controller\HiveInspectionController::view'
     _title_callback: '\Drupal\hivelog\Controller\HiveInspectionController::title'
@@ -142,7 +142,7 @@ entity.hive_inspection.canonical:
         type: entity:hive_inspection
 
 entity.hive_inspection.edit_form:
-  path: '/admin/hivelog/inspection/{hive_inspection}/edit'
+  path: '/hivelog/inspection/{hive_inspection}/edit'
   defaults:
     _entity_form: 'hive_inspection.edit'
     _title: 'Edit Inspection'
@@ -154,7 +154,7 @@ entity.hive_inspection.edit_form:
         type: entity:hive_inspection
 
 entity.hive_inspection.delete_form:
-  path: '/admin/hivelog/inspection/{hive_inspection}/delete'
+  path: '/hivelog/inspection/{hive_inspection}/delete'
   defaults:
     _entity_form: 'hive_inspection.delete'
     _title: 'Delete Inspection'
@@ -167,7 +167,7 @@ entity.hive_inspection.delete_form:
 
 # Queen routes.
 entity.queen.collection:
-  path: '/admin/hivelog/queens'
+  path: '/hivelog/queens'
   defaults:
     _entity_list: 'queen'
     _title: 'HiveLog - Queens'
@@ -175,7 +175,7 @@ entity.queen.collection:
     _permission: 'view own queen+view any queen+administer hivelog'
 
 entity.queen.add_form:
-  path: '/admin/hivelog/queen/add'
+  path: '/hivelog/queen/add'
   defaults:
     _entity_form: 'queen.add'
     _title: 'Add Queen'
@@ -183,7 +183,7 @@ entity.queen.add_form:
     _permission: 'add queen+administer hivelog'
 
 hivelog.queen.add:
-  path: '/admin/hivelog/hive/{hive}/queen/add'
+  path: '/hivelog/hive/{hive}/queen/add'
   defaults:
     _controller: '\Drupal\hivelog\Controller\QueenController::addForm'
     _title: 'Add Queen'
@@ -195,7 +195,7 @@ hivelog.queen.add:
         type: entity:hive
 
 entity.queen.canonical:
-  path: '/admin/hivelog/queen/{queen}'
+  path: '/hivelog/queen/{queen}'
   defaults:
     _controller: '\Drupal\hivelog\Controller\QueenController::view'
     _title_callback: '\Drupal\hivelog\Controller\QueenController::title'
@@ -207,7 +207,7 @@ entity.queen.canonical:
         type: entity:queen
 
 entity.queen.edit_form:
-  path: '/admin/hivelog/queen/{queen}/edit'
+  path: '/hivelog/queen/{queen}/edit'
   defaults:
     _entity_form: 'queen.edit'
     _title: 'Edit Queen'
@@ -219,7 +219,7 @@ entity.queen.edit_form:
         type: entity:queen
 
 entity.queen.delete_form:
-  path: '/admin/hivelog/queen/{queen}/delete'
+  path: '/hivelog/queen/{queen}/delete'
   defaults:
     _entity_form: 'queen.delete'
     _title: 'Delete Queen'
@@ -232,7 +232,7 @@ entity.queen.delete_form:
 
 # Queen observation routes.
 entity.queen_observation.collection:
-  path: '/admin/hivelog/queen-observations'
+  path: '/hivelog/queen-observations'
   defaults:
     _entity_list: 'queen_observation'
     _title: 'HiveLog - Queen Observations'
@@ -240,7 +240,7 @@ entity.queen_observation.collection:
     _permission: 'view own queen observation+view any queen observation+administer hivelog'
 
 hivelog.queen_observation.add:
-  path: '/admin/hivelog/queen/{queen}/observation/add'
+  path: '/hivelog/queen/{queen}/observation/add'
   defaults:
     _controller: '\Drupal\hivelog\Controller\QueenObservationController::addForm'
     _title: 'Add Queen Observation'
@@ -252,7 +252,7 @@ hivelog.queen_observation.add:
         type: entity:queen
 
 entity.queen_observation.canonical:
-  path: '/admin/hivelog/queen-observation/{queen_observation}'
+  path: '/hivelog/queen-observation/{queen_observation}'
   defaults:
     _controller: '\Drupal\hivelog\Controller\QueenObservationController::view'
     _title_callback: '\Drupal\hivelog\Controller\QueenObservationController::title'
@@ -264,7 +264,7 @@ entity.queen_observation.canonical:
         type: entity:queen_observation
 
 entity.queen_observation.edit_form:
-  path: '/admin/hivelog/queen-observation/{queen_observation}/edit'
+  path: '/hivelog/queen-observation/{queen_observation}/edit'
   defaults:
     _entity_form: 'queen_observation.edit'
     _title: 'Edit Queen Observation'
@@ -276,7 +276,7 @@ entity.queen_observation.edit_form:
         type: entity:queen_observation
 
 entity.queen_observation.delete_form:
-  path: '/admin/hivelog/queen-observation/{queen_observation}/delete'
+  path: '/hivelog/queen-observation/{queen_observation}/delete'
   defaults:
     _entity_form: 'queen_observation.delete'
     _title: 'Delete Queen Observation'

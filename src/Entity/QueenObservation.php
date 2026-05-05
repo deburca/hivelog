@@ -51,10 +51,10 @@ use Drupal\user\EntityOwnerTrait;
     'owner' => 'uid',
   ],
   links: [
-    'canonical' => '/admin/hivelog/queen-observation/{queen_observation}',
-    'edit-form' => '/admin/hivelog/queen-observation/{queen_observation}/edit',
-    'delete-form' => '/admin/hivelog/queen-observation/{queen_observation}/delete',
-    'collection' => '/admin/hivelog/queen-observations',
+    'canonical' => '/hivelog/queen-observation/{queen_observation}',
+    'edit-form' => '/hivelog/queen-observation/{queen_observation}/edit',
+    'delete-form' => '/hivelog/queen-observation/{queen_observation}/delete',
+    'collection' => '/hivelog/queen-observations',
   ],
 )]
 class QueenObservation extends ContentEntityBase implements EntityChangedInterface, EntityOwnerInterface {

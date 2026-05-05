@@ -64,7 +64,7 @@ class ControllerCacheMetadataTest extends KernelTestBase {
 
     // FormBuilder requires a session on the current request; ensure one is
     // present since the controllers build forms.
-    $request = Request::create('/admin/hivelog/apiary/1', 'GET');
+    $request = Request::create('/hivelog/apiary/1', 'GET');
     $request->setSession(new Session(new MockArraySessionStorage()));
     \Drupal::service('request_stack')->push($request);
   }
