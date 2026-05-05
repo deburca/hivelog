@@ -1,14 +1,14 @@
 # Apiary routes.
 entity.apiary.collection:
-  path: '/admin/hivelog'
+  path: '/hivelog'
   defaults:
     _entity_list: 'apiary'
     _title: 'HiveLog - Apiaries'
   requirements:
-    _permission: 'view apiary+administer hivelog'
+    _permission: 'view own apiary+view any apiary+administer hivelog'
 
 entity.apiary.add_form:
-  path: '/admin/hivelog/apiary/add'
+  path: '/hivelog/apiary/add'
   defaults:
     _entity_form: 'apiary.add'
     _title: 'Add Apiary'
@@ -16,36 +16,36 @@ entity.apiary.add_form:
     _permission: 'add apiary+administer hivelog'
 
 entity.apiary.canonical:
-  path: '/admin/hivelog/apiary/{apiary}'
+  path: '/hivelog/apiary/{apiary}'
   defaults:
     _controller: '\Drupal\hivelog\Controller\ApiaryController::view'
     _title_callback: '\Drupal\hivelog\Controller\ApiaryController::title'
   requirements:
-    _permission: 'view apiary+administer hivelog'
+    _permission: 'view own apiary+view any apiary+administer hivelog'
   options:
     parameters:
       apiary:
         type: entity:apiary
 
 entity.apiary.edit_form:
-  path: '/admin/hivelog/apiary/{apiary}/edit'
+  path: '/hivelog/apiary/{apiary}/edit'
   defaults:
     _entity_form: 'apiary.edit'
     _title: 'Edit Apiary'
   requirements:
-    _permission: 'edit apiary+administer hivelog'
+    _permission: 'edit own apiary+edit any apiary+administer hivelog'
   options:
     parameters:
       apiary:
         type: entity:apiary
 
 entity.apiary.delete_form:
-  path: '/admin/hivelog/apiary/{apiary}/delete'
+  path: '/hivelog/apiary/{apiary}/delete'
   defaults:
     _entity_form: 'apiary.delete'
     _title: 'Delete Apiary'
   requirements:
-    _permission: 'delete apiary+administer hivelog'
+    _permission: 'delete own apiary+delete any apiary+administer hivelog'
   options:
     parameters:
       apiary:
@@ -53,15 +53,15 @@ entity.apiary.delete_form:
 
 # Hive routes.
 entity.hive.collection:
-  path: '/admin/hivelog/hives'
+  path: '/hivelog/hives'
   defaults:
     _entity_list: 'hive'
     _title: 'HiveLog - Hives'
   requirements:
-    _permission: 'view hive+administer hivelog'
+    _permission: 'view own hive+view any hive+administer hivelog'
 
 hivelog.hive.add:
-  path: '/admin/hivelog/apiary/{apiary}/hive/add'
+  path: '/hivelog/apiary/{apiary}/hive/add'
   defaults:
     _controller: '\Drupal\hivelog\Controller\HiveController::addForm'
     _title: 'Add Hive'
@@ -73,36 +73,36 @@ hivelog.hive.add:
         type: entity:apiary
 
 entity.hive.canonical:
-  path: '/admin/hivelog/hive/{hive}'
+  path: '/hivelog/hive/{hive}'
   defaults:
     _controller: '\Drupal\hivelog\Controller\HiveController::view'
     _title_callback: '\Drupal\hivelog\Controller\HiveController::title'
   requirements:
-    _permission: 'view hive+administer hivelog'
+    _permission: 'view own hive+view any hive+administer hivelog'
   options:
     parameters:
       hive:
         type: entity:hive
 
 entity.hive.edit_form:
-  path: '/admin/hivelog/hive/{hive}/edit'
+  path: '/hivelog/hive/{hive}/edit'
   defaults:
     _entity_form: 'hive.edit'
     _title: 'Edit Hive'
   requirements:
-    _permission: 'edit hive+administer hivelog'
+    _permission: 'edit own hive+edit any hive+administer hivelog'
   options:
     parameters:
       hive:
         type: entity:hive
 
 entity.hive.delete_form:
-  path: '/admin/hivelog/hive/{hive}/delete'
+  path: '/hivelog/hive/{hive}/delete'
   defaults:
     _entity_form: 'hive.delete'
     _title: 'Delete Hive'
   requirements:
-    _permission: 'delete hive+administer hivelog'
+    _permission: 'delete own hive+delete any hive+administer hivelog'
   options:
     parameters:
       hive:
@@ -110,15 +110,15 @@ entity.hive.delete_form:
 
 # Inspection routes.
 entity.hive_inspection.collection:
-  path: '/admin/hivelog/inspections'
+  path: '/hivelog/inspections'
   defaults:
     _entity_list: 'hive_inspection'
     _title: 'HiveLog - Inspections'
   requirements:
-    _permission: 'view hive inspection+administer hivelog'
+    _permission: 'view own hive inspection+view any hive inspection+administer hivelog'
 
 hivelog.inspection.add:
-  path: '/admin/hivelog/hive/{hive}/inspection/add'
+  path: '/hivelog/hive/{hive}/inspection/add'
   defaults:
     _controller: '\Drupal\hivelog\Controller\HiveInspectionController::addForm'
     _title: 'Add Inspection'
@@ -130,36 +130,36 @@ hivelog.inspection.add:
         type: entity:hive
 
 entity.hive_inspection.canonical:
-  path: '/admin/hivelog/inspection/{hive_inspection}'
+  path: '/hivelog/inspection/{hive_inspection}'
   defaults:
     _controller: '\Drupal\hivelog\Controller\HiveInspectionController::view'
     _title_callback: '\Drupal\hivelog\Controller\HiveInspectionController::title'
   requirements:
-    _permission: 'view hive inspection+administer hivelog'
+    _permission: 'view own hive inspection+view any hive inspection+administer hivelog'
   options:
     parameters:
       hive_inspection:
         type: entity:hive_inspection
 
 entity.hive_inspection.edit_form:
-  path: '/admin/hivelog/inspection/{hive_inspection}/edit'
+  path: '/hivelog/inspection/{hive_inspection}/edit'
   defaults:
     _entity_form: 'hive_inspection.edit'
     _title: 'Edit Inspection'
   requirements:
-    _permission: 'edit hive inspection+administer hivelog'
+    _permission: 'edit own hive inspection+edit any hive inspection+administer hivelog'
   options:
     parameters:
       hive_inspection:
         type: entity:hive_inspection
 
 entity.hive_inspection.delete_form:
-  path: '/admin/hivelog/inspection/{hive_inspection}/delete'
+  path: '/hivelog/inspection/{hive_inspection}/delete'
   defaults:
     _entity_form: 'hive_inspection.delete'
     _title: 'Delete Inspection'
   requirements:
-    _permission: 'delete hive inspection+administer hivelog'
+    _permission: 'delete own hive inspection+delete any hive inspection+administer hivelog'
   options:
     parameters:
       hive_inspection:
@@ -167,15 +167,15 @@ entity.hive_inspection.delete_form:
 
 # Queen routes.
 entity.queen.collection:
-  path: '/admin/hivelog/queens'
+  path: '/hivelog/queens'
   defaults:
     _entity_list: 'queen'
     _title: 'HiveLog - Queens'
   requirements:
-    _permission: 'view queen+administer hivelog'
+    _permission: 'view own queen+view any queen+administer hivelog'
 
 entity.queen.add_form:
-  path: '/admin/hivelog/queen/add'
+  path: '/hivelog/queen/add'
   defaults:
     _entity_form: 'queen.add'
     _title: 'Add Queen'
@@ -183,7 +183,7 @@ entity.queen.add_form:
     _permission: 'add queen+administer hivelog'
 
 hivelog.queen.add:
-  path: '/admin/hivelog/hive/{hive}/queen/add'
+  path: '/hivelog/hive/{hive}/queen/add'
   defaults:
     _controller: '\Drupal\hivelog\Controller\QueenController::addForm'
     _title: 'Add Queen'
@@ -195,36 +195,36 @@ hivelog.queen.add:
         type: entity:hive
 
 entity.queen.canonical:
-  path: '/admin/hivelog/queen/{queen}'
+  path: '/hivelog/queen/{queen}'
   defaults:
     _controller: '\Drupal\hivelog\Controller\QueenController::view'
     _title_callback: '\Drupal\hivelog\Controller\QueenController::title'
   requirements:
-    _permission: 'view queen+administer hivelog'
+    _permission: 'view own queen+view any queen+administer hivelog'
   options:
     parameters:
       queen:
         type: entity:queen
 
 entity.queen.edit_form:
-  path: '/admin/hivelog/queen/{queen}/edit'
+  path: '/hivelog/queen/{queen}/edit'
   defaults:
     _entity_form: 'queen.edit'
     _title: 'Edit Queen'
   requirements:
-    _permission: 'edit queen+administer hivelog'
+    _permission: 'edit own queen+edit any queen+administer hivelog'
   options:
     parameters:
       queen:
         type: entity:queen
 
 entity.queen.delete_form:
-  path: '/admin/hivelog/queen/{queen}/delete'
+  path: '/hivelog/queen/{queen}/delete'
   defaults:
     _entity_form: 'queen.delete'
     _title: 'Delete Queen'
   requirements:
-    _permission: 'delete queen+administer hivelog'
+    _permission: 'delete own queen+delete any queen+administer hivelog'
   options:
     parameters:
       queen:
@@ -232,15 +232,15 @@ entity.queen.delete_form:
 
 # Queen observation routes.
 entity.queen_observation.collection:
-  path: '/admin/hivelog/queen-observations'
+  path: '/hivelog/queen-observations'
   defaults:
     _entity_list: 'queen_observation'
     _title: 'HiveLog - Queen Observations'
   requirements:
-    _permission: 'view queen observation+administer hivelog'
+    _permission: 'view own queen observation+view any queen observation+administer hivelog'
 
 hivelog.queen_observation.add:
-  path: '/admin/hivelog/queen/{queen}/observation/add'
+  path: '/hivelog/queen/{queen}/observation/add'
   defaults:
     _controller: '\Drupal\hivelog\Controller\QueenObservationController::addForm'
     _title: 'Add Queen Observation'
@@ -252,36 +252,36 @@ hivelog.queen_observation.add:
         type: entity:queen
 
 entity.queen_observation.canonical:
-  path: '/admin/hivelog/queen-observation/{queen_observation}'
+  path: '/hivelog/queen-observation/{queen_observation}'
   defaults:
     _controller: '\Drupal\hivelog\Controller\QueenObservationController::view'
     _title_callback: '\Drupal\hivelog\Controller\QueenObservationController::title'
   requirements:
-    _permission: 'view queen observation+administer hivelog'
+    _permission: 'view own queen observation+view any queen observation+administer hivelog'
   options:
     parameters:
       queen_observation:
         type: entity:queen_observation
 
 entity.queen_observation.edit_form:
-  path: '/admin/hivelog/queen-observation/{queen_observation}/edit'
+  path: '/hivelog/queen-observation/{queen_observation}/edit'
   defaults:
     _entity_form: 'queen_observation.edit'
     _title: 'Edit Queen Observation'
   requirements:
-    _permission: 'edit queen observation+administer hivelog'
+    _permission: 'edit own queen observation+edit any queen observation+administer hivelog'
   options:
     parameters:
       queen_observation:
         type: entity:queen_observation
 
 entity.queen_observation.delete_form:
-  path: '/admin/hivelog/queen-observation/{queen_observation}/delete'
+  path: '/hivelog/queen-observation/{queen_observation}/delete'
   defaults:
     _entity_form: 'queen_observation.delete'
     _title: 'Delete Queen Observation'
   requirements:
-    _permission: 'delete queen observation+administer hivelog'
+    _permission: 'delete own queen observation+delete any queen observation+administer hivelog'
   options:
     parameters:
       queen_observation:

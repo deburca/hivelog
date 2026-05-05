@@ -66,7 +66,7 @@ class EmbeddedTableFilterPaginationTest extends KernelTestBase {
    * Pushes a request with the given query parameters onto the request stack.
    */
   protected function pushRequestWithQuery(array $query): void {
-    $request = Request::create('/admin/hivelog/apiary/1', 'GET', $query);
+    $request = Request::create('/hivelog/apiary/1', 'GET', $query);
     // FormBuilder requires a session on the current request.
     $request->setSession(new Session(new MockArraySessionStorage()));
     \Drupal::service('request_stack')->push($request);

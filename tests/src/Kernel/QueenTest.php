@@ -292,9 +292,9 @@ class QueenTest extends KernelTestBase {
       'id' => 'queen_editor',
       'label' => 'Queen editor',
     ]);
-    $role->grantPermission('view queen');
-    $role->grantPermission('edit queen');
-    $role->grantPermission('delete queen');
+    $role->grantPermission('view any queen');
+    $role->grantPermission('edit any queen');
+    $role->grantPermission('delete any queen');
     $role->save();
     $user->addRole('queen_editor');
     $user->save();

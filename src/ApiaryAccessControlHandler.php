@@ -9,8 +9,14 @@ use Drupal\Core\Session\AccountInterface;
 
 /**
  * Access control handler for Apiary entities.
+ *
+ * - view: site-wide "any" OR apiary member OR public apiary.
+ * - update: site-wide "any" OR apiary owner only.
+ * - delete: site-wide "any" OR apiary owner only.
  */
 class ApiaryAccessControlHandler extends EntityAccessControlHandler {
+
+  use ApiaryAccessTrait;
 
   /**
    * {@inheritdoc}
@@ -20,15 +26,18 @@ class ApiaryAccessControlHandler extends EntityAccessControlHandler {
       return AccessResult::allowed()->cachePerPermissions();
     }
 
+    $apiary = $this->resolveApiary($entity);
+
     switch ($operation) {
       case 'view':
-        return AccessResult::allowedIfHasPermission($account, 'view apiary');
+        return $this->checkApiaryViewAccess($apiary, $account, 'view any apiary', 'view own apiary');
 
       case 'update':
-        return AccessResult::allowedIfHasPermission($account, 'edit apiary');
+        // Only apiary owner can edit the apiary itself.
+        return $this->checkApiaryOwnerDeleteAccess($apiary, $account, 'edit any apiary', 'edit own apiary');
 
       case 'delete':
-        return AccessResult::allowedIfHasPermission($account, 'delete apiary');
+        return $this->checkApiaryOwnerDeleteAccess($apiary, $account, 'delete any apiary', 'delete own apiary');
     }
 
     return AccessResult::neutral();

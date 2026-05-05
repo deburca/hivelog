@@ -209,13 +209,11 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $breadcrumb = $this->builder->build($route_match);
     $links = $breadcrumb->getLinks();
 
-    $this->assertCount(3, $links);
+    $this->assertCount(2, $links);
     $this->assertEquals('Home', (string) $links[0]->getText());
     $this->assertEquals('<front>', $links[0]->getUrl()->getRouteName());
-    $this->assertEquals('Structure', (string) $links[1]->getText());
-    $this->assertEquals('system.admin_structure', $links[1]->getUrl()->getRouteName());
-    $this->assertEquals('HiveLog', (string) $links[2]->getText());
-    $this->assertEquals('entity.apiary.collection', $links[2]->getUrl()->getRouteName());
+    $this->assertEquals('HiveLog', (string) $links[1]->getText());
+    $this->assertEquals('entity.apiary.collection', $links[1]->getUrl()->getRouteName());
     $this->assertContains('route', $breadcrumb->getCacheContexts());
   }
 
@@ -235,7 +233,7 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $breadcrumb = $this->builder->build($route_match);
     $links = $breadcrumb->getLinks();
 
-    $this->assertCount(3, $links);
+    $this->assertCount(2, $links);
     $this->assertContains('apiary:1', $breadcrumb->getCacheTags());
   }
 
@@ -254,10 +252,10 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $breadcrumb = $this->builder->build($route_match);
     $links = $breadcrumb->getLinks();
 
-    $this->assertCount(4, $links);
-    $this->assertEquals('Mountain Apiary', (string) $links[3]->getText());
-    $this->assertEquals('entity.apiary.canonical', $links[3]->getUrl()->getRouteName());
-    $this->assertEquals(['apiary' => 2], $links[3]->getUrl()->getRouteParameters());
+    $this->assertCount(3, $links);
+    $this->assertEquals('Mountain Apiary', (string) $links[2]->getText());
+    $this->assertEquals('entity.apiary.canonical', $links[2]->getUrl()->getRouteName());
+    $this->assertEquals(['apiary' => 2], $links[2]->getUrl()->getRouteParameters());
     $this->assertContains('apiary:2', $breadcrumb->getCacheTags());
   }
 
@@ -278,9 +276,9 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $breadcrumb = $this->builder->build($route_match);
     $links = $breadcrumb->getLinks();
 
-    $this->assertCount(4, $links);
-    $this->assertEquals('Home Apiary', (string) $links[3]->getText());
-    $this->assertEquals('entity.apiary.canonical', $links[3]->getUrl()->getRouteName());
+    $this->assertCount(3, $links);
+    $this->assertEquals('Home Apiary', (string) $links[2]->getText());
+    $this->assertEquals('entity.apiary.canonical', $links[2]->getUrl()->getRouteName());
     $this->assertContains('apiary:1', $breadcrumb->getCacheTags());
     $this->assertContains('hive:5', $breadcrumb->getCacheTags());
   }
@@ -301,11 +299,11 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $breadcrumb = $this->builder->build($route_match);
     $links = $breadcrumb->getLinks();
 
-    $this->assertCount(5, $links);
-    $this->assertEquals('Home Apiary', (string) $links[3]->getText());
-    $this->assertEquals('Hive Alpha', (string) $links[4]->getText());
-    $this->assertEquals('entity.hive.canonical', $links[4]->getUrl()->getRouteName());
-    $this->assertEquals(['hive' => 5], $links[4]->getUrl()->getRouteParameters());
+    $this->assertCount(4, $links);
+    $this->assertEquals('Home Apiary', (string) $links[2]->getText());
+    $this->assertEquals('Hive Alpha', (string) $links[3]->getText());
+    $this->assertEquals('entity.hive.canonical', $links[3]->getUrl()->getRouteName());
+    $this->assertEquals(['hive' => 5], $links[3]->getUrl()->getRouteParameters());
   }
 
   /**
@@ -326,9 +324,9 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $breadcrumb = $this->builder->build($route_match);
     $links = $breadcrumb->getLinks();
 
-    $this->assertCount(5, $links);
-    $this->assertEquals('Home Apiary', (string) $links[3]->getText());
-    $this->assertEquals('Hive Alpha', (string) $links[4]->getText());
+    $this->assertCount(4, $links);
+    $this->assertEquals('Home Apiary', (string) $links[2]->getText());
+    $this->assertEquals('Hive Alpha', (string) $links[3]->getText());
     $this->assertContains('hive_inspection:10', $breadcrumb->getCacheTags());
     $this->assertContains('hive:5', $breadcrumb->getCacheTags());
     $this->assertContains('apiary:1', $breadcrumb->getCacheTags());
@@ -352,12 +350,12 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $breadcrumb = $this->builder->build($route_match);
     $links = $breadcrumb->getLinks();
 
-    $this->assertCount(6, $links);
-    $this->assertEquals('Home Apiary', (string) $links[3]->getText());
-    $this->assertEquals('Hive Alpha', (string) $links[4]->getText());
-    $this->assertEquals('Inspection on 2024-06-15', (string) $links[5]->getText());
-    $this->assertEquals('entity.hive_inspection.canonical', $links[5]->getUrl()->getRouteName());
-    $this->assertEquals(['hive_inspection' => 10], $links[5]->getUrl()->getRouteParameters());
+    $this->assertCount(5, $links);
+    $this->assertEquals('Home Apiary', (string) $links[2]->getText());
+    $this->assertEquals('Hive Alpha', (string) $links[3]->getText());
+    $this->assertEquals('Inspection on 2024-06-15', (string) $links[4]->getText());
+    $this->assertEquals('entity.hive_inspection.canonical', $links[4]->getUrl()->getRouteName());
+    $this->assertEquals(['hive_inspection' => 10], $links[4]->getUrl()->getRouteParameters());
   }
 
   /**
@@ -376,9 +374,9 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $breadcrumb = $this->builder->build($route_match);
     $links = $breadcrumb->getLinks();
 
-    $this->assertCount(4, $links);
-    $this->assertEquals('Garden Apiary', (string) $links[3]->getText());
-    $this->assertEquals('entity.apiary.canonical', $links[3]->getUrl()->getRouteName());
+    $this->assertCount(3, $links);
+    $this->assertEquals('Garden Apiary', (string) $links[2]->getText());
+    $this->assertEquals('entity.apiary.canonical', $links[2]->getUrl()->getRouteName());
   }
 
   /**
@@ -398,10 +396,10 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $breadcrumb = $this->builder->build($route_match);
     $links = $breadcrumb->getLinks();
 
-    $this->assertCount(5, $links);
-    $this->assertEquals('Home Apiary', (string) $links[3]->getText());
-    $this->assertEquals('Hive Beta', (string) $links[4]->getText());
-    $this->assertEquals('entity.hive.canonical', $links[4]->getUrl()->getRouteName());
+    $this->assertCount(4, $links);
+    $this->assertEquals('Home Apiary', (string) $links[2]->getText());
+    $this->assertEquals('Hive Beta', (string) $links[3]->getText());
+    $this->assertEquals('entity.hive.canonical', $links[3]->getUrl()->getRouteName());
   }
 
   /**
@@ -423,9 +421,9 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $breadcrumb = $this->builder->build($route_match);
     $links = $breadcrumb->getLinks();
 
-    $this->assertCount(5, $links);
-    $this->assertEquals('Home Apiary', (string) $links[3]->getText());
-    $this->assertEquals('Hive Alpha', (string) $links[4]->getText());
+    $this->assertCount(4, $links);
+    $this->assertEquals('Home Apiary', (string) $links[2]->getText());
+    $this->assertEquals('Hive Alpha', (string) $links[3]->getText());
     $this->assertContains('queen:20', $breadcrumb->getCacheTags());
     $this->assertContains('hive:5', $breadcrumb->getCacheTags());
     $this->assertContains('apiary:1', $breadcrumb->getCacheTags());
@@ -450,12 +448,12 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $breadcrumb = $this->builder->build($route_match);
     $links = $breadcrumb->getLinks();
 
-    $this->assertCount(6, $links);
-    $this->assertEquals('Home Apiary', (string) $links[3]->getText());
-    $this->assertEquals('Hive Alpha', (string) $links[4]->getText());
-    $this->assertEquals('Q-2024-001', (string) $links[5]->getText());
-    $this->assertEquals('entity.queen.canonical', $links[5]->getUrl()->getRouteName());
-    $this->assertEquals(['queen' => 20], $links[5]->getUrl()->getRouteParameters());
+    $this->assertCount(5, $links);
+    $this->assertEquals('Home Apiary', (string) $links[2]->getText());
+    $this->assertEquals('Hive Alpha', (string) $links[3]->getText());
+    $this->assertEquals('Q-2024-001', (string) $links[4]->getText());
+    $this->assertEquals('entity.queen.canonical', $links[4]->getUrl()->getRouteName());
+    $this->assertEquals(['queen' => 20], $links[4]->getUrl()->getRouteParameters());
   }
 
   /**
@@ -480,10 +478,10 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $breadcrumb = $this->builder->build($route_match);
     $links = $breadcrumb->getLinks();
 
-    $this->assertCount(6, $links);
-    $this->assertEquals('Home Apiary', (string) $links[3]->getText());
-    $this->assertEquals('Hive Alpha', (string) $links[4]->getText());
-    $this->assertEquals('Q-2024-001', (string) $links[5]->getText());
+    $this->assertCount(5, $links);
+    $this->assertEquals('Home Apiary', (string) $links[2]->getText());
+    $this->assertEquals('Hive Alpha', (string) $links[3]->getText());
+    $this->assertEquals('Q-2024-001', (string) $links[4]->getText());
     $this->assertContains('queen_observation:30', $breadcrumb->getCacheTags());
     $this->assertContains('queen:20', $breadcrumb->getCacheTags());
     $this->assertContains('hive:5', $breadcrumb->getCacheTags());
@@ -511,12 +509,12 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $breadcrumb = $this->builder->build($route_match);
     $links = $breadcrumb->getLinks();
 
-    $this->assertCount(7, $links);
-    $this->assertEquals('Home Apiary', (string) $links[3]->getText());
-    $this->assertEquals('Hive Alpha', (string) $links[4]->getText());
-    $this->assertEquals('Q-2024-001', (string) $links[5]->getText());
-    $this->assertEquals('Observation A', (string) $links[6]->getText());
-    $this->assertEquals('entity.queen_observation.canonical', $links[6]->getUrl()->getRouteName());
+    $this->assertCount(6, $links);
+    $this->assertEquals('Home Apiary', (string) $links[2]->getText());
+    $this->assertEquals('Hive Alpha', (string) $links[3]->getText());
+    $this->assertEquals('Q-2024-001', (string) $links[4]->getText());
+    $this->assertEquals('Observation A', (string) $links[5]->getText());
+    $this->assertEquals('entity.queen_observation.canonical', $links[5]->getUrl()->getRouteName());
   }
 
   /**
@@ -539,11 +537,11 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $breadcrumb = $this->builder->build($route_match);
     $links = $breadcrumb->getLinks();
 
-    $this->assertCount(6, $links);
-    $this->assertEquals('Home Apiary', (string) $links[3]->getText());
-    $this->assertEquals('Hive Alpha', (string) $links[4]->getText());
-    $this->assertEquals('Q-2024-001', (string) $links[5]->getText());
-    $this->assertEquals('entity.queen.canonical', $links[5]->getUrl()->getRouteName());
+    $this->assertCount(5, $links);
+    $this->assertEquals('Home Apiary', (string) $links[2]->getText());
+    $this->assertEquals('Hive Alpha', (string) $links[3]->getText());
+    $this->assertEquals('Q-2024-001', (string) $links[4]->getText());
+    $this->assertEquals('entity.queen.canonical', $links[4]->getUrl()->getRouteName());
   }
 
   /**
@@ -564,10 +562,10 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $breadcrumb = $this->builder->build($route_match);
     $links = $breadcrumb->getLinks();
 
-    $this->assertCount(5, $links);
-    $this->assertEquals('Home Apiary', (string) $links[3]->getText());
-    $this->assertEquals('Hive Gamma', (string) $links[4]->getText());
-    $this->assertEquals('entity.hive.canonical', $links[4]->getUrl()->getRouteName());
+    $this->assertCount(4, $links);
+    $this->assertEquals('Home Apiary', (string) $links[2]->getText());
+    $this->assertEquals('Hive Gamma', (string) $links[3]->getText());
+    $this->assertEquals('entity.hive.canonical', $links[3]->getUrl()->getRouteName());
   }
 
   // -------------------------------------------------------------------------

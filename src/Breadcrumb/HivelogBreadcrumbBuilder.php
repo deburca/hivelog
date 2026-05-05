@@ -55,9 +55,8 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
     $breadcrumb = new Breadcrumb();
     $breadcrumb->addCacheContexts(['route']);
 
-    // Home > Structure > HiveLog.
+    // Home > HiveLog.
     $breadcrumb->addLink(Link::createFromRoute($this->t('Home'), '<front>'));
-    $breadcrumb->addLink(Link::createFromRoute($this->t('Structure'), 'system.admin_structure'));
     $breadcrumb->addLink(Link::createFromRoute($this->t('HiveLog'), 'entity.apiary.collection'));
 
     $route_name = $route_match->getRouteName();

@@ -9,8 +9,15 @@ use Drupal\Core\Session\AccountInterface;
 
 /**
  * Access control handler for Hive Inspection entities.
+ *
+ * Access is scoped to the parent apiary (via hive → apiary):
+ * - view: site-wide "any" OR apiary member OR public apiary.
+ * - update: site-wide "any" OR apiary member.
+ * - delete: site-wide "any" OR apiary owner OR beekeeper who created it.
  */
 class HiveInspectionAccessControlHandler extends EntityAccessControlHandler {
+
+  use ApiaryAccessTrait;
 
   /**
    * {@inheritdoc}
@@ -20,15 +27,17 @@ class HiveInspectionAccessControlHandler extends EntityAccessControlHandler {
       return AccessResult::allowed()->cachePerPermissions();
     }
 
+    $apiary = $this->resolveApiary($entity);
+
     switch ($operation) {
       case 'view':
-        return AccessResult::allowedIfHasPermission($account, 'view hive inspection');
+        return $this->checkApiaryViewAccess($apiary, $account, 'view any hive inspection', 'view own hive inspection');
 
       case 'update':
-        return AccessResult::allowedIfHasPermission($account, 'edit hive inspection');
+        return $this->checkApiaryEditAccess($apiary, $account, 'edit any hive inspection', 'edit own hive inspection');
 
       case 'delete':
-        return AccessResult::allowedIfHasPermission($account, 'delete hive inspection');
+        return $this->checkApiaryMemberDeleteAccess($apiary, $entity, $account, 'delete any hive inspection', 'delete own hive inspection');
     }
 
     return AccessResult::neutral();

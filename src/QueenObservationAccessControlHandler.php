@@ -9,8 +9,15 @@ use Drupal\Core\Session\AccountInterface;
 
 /**
  * Access control handler for Queen Observation entities.
+ *
+ * Access is scoped to the parent apiary (via observation → queen → hive → apiary).
+ * - view: site-wide "any" OR apiary member OR public apiary.
+ * - update: site-wide "any" OR apiary member.
+ * - delete: site-wide "any" OR apiary owner OR beekeeper who created it.
  */
 class QueenObservationAccessControlHandler extends EntityAccessControlHandler {
+
+  use ApiaryAccessTrait;
 
   /**
    * {@inheritdoc}
@@ -20,15 +27,17 @@ class QueenObservationAccessControlHandler extends EntityAccessControlHandler {
       return AccessResult::allowed()->cachePerPermissions();
     }
 
+    $apiary = $this->resolveApiary($entity);
+
     switch ($operation) {
       case 'view':
-        return AccessResult::allowedIfHasPermission($account, 'view queen observation');
+        return $this->checkApiaryViewAccess($apiary, $account, 'view any queen observation', 'view own queen observation');
 
       case 'update':
-        return AccessResult::allowedIfHasPermission($account, 'edit queen observation');
+        return $this->checkApiaryEditAccess($apiary, $account, 'edit any queen observation', 'edit own queen observation');
 
       case 'delete':
-        return AccessResult::allowedIfHasPermission($account, 'delete queen observation');
+        return $this->checkApiaryMemberDeleteAccess($apiary, $entity, $account, 'delete any queen observation', 'delete own queen observation');
     }
 
     return AccessResult::neutral();

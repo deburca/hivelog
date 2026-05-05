@@ -2,62 +2,82 @@ administer hivelog:
   title: 'Administer HiveLog'
   description: 'Full administrative access to the HiveLog module.'
 
-view apiary:
-  title: 'View apiaries'
-
+# Apiary permissions.
+view own apiary:
+  title: 'View own apiaries'
+view any apiary:
+  title: 'View any apiary'
 add apiary:
   title: 'Add apiaries'
+edit own apiary:
+  title: 'Edit own apiaries'
+edit any apiary:
+  title: 'Edit any apiary'
+delete own apiary:
+  title: 'Delete own apiaries'
+delete any apiary:
+  title: 'Delete any apiary'
 
-edit apiary:
-  title: 'Edit apiaries'
-
-delete apiary:
-  title: 'Delete apiaries'
-
-view hive:
-  title: 'View hives'
-
+# Hive permissions.
+view own hive:
+  title: 'View own hives'
+view any hive:
+  title: 'View any hive'
 add hive:
   title: 'Add hives'
+edit own hive:
+  title: 'Edit own hives'
+edit any hive:
+  title: 'Edit any hive'
+delete own hive:
+  title: 'Delete own hives'
+delete any hive:
+  title: 'Delete any hive'
 
-edit hive:
-  title: 'Edit hives'
-
-delete hive:
-  title: 'Delete hives'
-
-view hive inspection:
-  title: 'View hive inspections'
-
+# Hive inspection permissions.
+view own hive inspection:
+  title: 'View own hive inspections'
+view any hive inspection:
+  title: 'View any hive inspection'
 add hive inspection:
   title: 'Add hive inspections'
+edit own hive inspection:
+  title: 'Edit own hive inspections'
+edit any hive inspection:
+  title: 'Edit any hive inspection'
+delete own hive inspection:
+  title: 'Delete own hive inspections'
+delete any hive inspection:
+  title: 'Delete any hive inspection'
 
-edit hive inspection:
-  title: 'Edit hive inspections'
-
-delete hive inspection:
-  title: 'Delete hive inspections'
-
-view queen:
-  title: 'View queens'
-
+# Queen permissions.
+view own queen:
+  title: 'View own queens'
+view any queen:
+  title: 'View any queen'
 add queen:
   title: 'Add queens'
+edit own queen:
+  title: 'Edit own queens'
+edit any queen:
+  title: 'Edit any queen'
+delete own queen:
+  title: 'Delete own queens'
+delete any queen:
+  title: 'Delete any queen'
 
-edit queen:
-  title: 'Edit queens'
-
-delete queen:
-  title: 'Delete queens'
-
-view queen observation:
-  title: 'View queen observations'
-
+# Queen observation permissions.
+view own queen observation:
+  title: 'View own queen observations'
+view any queen observation:
+  title: 'View any queen observation'
 add queen observation:
   title: 'Add queen observations'
-
-edit queen observation:
-  title: 'Edit queen observations'
-
-delete queen observation:
-  title: 'Delete queen observations'
+edit own queen observation:
+  title: 'Edit own queen observations'
+edit any queen observation:
+  title: 'Edit any queen observation'
+delete own queen observation:
+  title: 'Delete own queen observations'
+delete any queen observation:
+  title: 'Delete any queen observation'

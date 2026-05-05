@@ -53,11 +53,11 @@ use Drupal\user\EntityOwnerTrait;
     'owner' => 'uid',
   ],
   links: [
-    'canonical' => '/admin/hivelog/queen/{queen}',
-    'add-form' => '/admin/hivelog/queen/add',
-    'edit-form' => '/admin/hivelog/queen/{queen}/edit',
-    'delete-form' => '/admin/hivelog/queen/{queen}/delete',
-    'collection' => '/admin/hivelog/queens',
+    'canonical' => '/hivelog/queen/{queen}',
+    'add-form' => '/hivelog/queen/add',
+    'edit-form' => '/hivelog/queen/{queen}/edit',
+    'delete-form' => '/hivelog/queen/{queen}/delete',
+    'collection' => '/hivelog/queens',
   ],
 )]
 class Queen extends ContentEntityBase implements EntityChangedInterface, EntityOwnerInterface {

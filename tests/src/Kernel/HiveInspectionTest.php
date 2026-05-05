@@ -464,9 +464,9 @@ class HiveInspectionTest extends KernelTestBase {
       'id' => 'inspection_editor',
       'label' => 'Inspection editor',
     ]);
-    $role->grantPermission('view hive inspection');
-    $role->grantPermission('edit hive inspection');
-    $role->grantPermission('delete hive inspection');
+    $role->grantPermission('view any hive inspection');
+    $role->grantPermission('edit any hive inspection');
+    $role->grantPermission('delete any hive inspection');
     $role->save();
     $this->user->addRole('inspection_editor');
     $this->user->save();

@@ -1,0 +1,243 @@
+<?php
+
+namespace Drupal\hivelog;
+
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\hivelog\Entity\Apiary;
+
+/**
+ * Shared helpers for apiary-scoped access control.
+ *
+ * Used by all hivelog entity access control handlers to resolve the parent
+ * apiary from a child entity and check membership / visibility.
+ */
+trait ApiaryAccessTrait {
+
+  /**
+   * Resolves the parent Apiary from a child entity.
+   *
+   * Traverses the entity reference chain:
+   * - Apiary: returns itself.
+   * - Hive: hive → apiary.
+   * - HiveInspection: inspection → hive → apiary.
+   * - Queen: queen → hive → apiary (hive may be NULL).
+   * - QueenObservation: observation → queen → hive → apiary.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity to resolve the apiary from.
+   *
+   * @return \Drupal\hivelog\Entity\Apiary|null
+   *   The parent apiary, or NULL if the chain is broken.
+   */
+  protected function resolveApiary(EntityInterface $entity): ?Apiary {
+    if ($entity instanceof Apiary) {
+      return $entity;
+    }
+
+    $entity_type = $entity->getEntityTypeId();
+
+    // Hive → apiary.
+    if ($entity_type === 'hive') {
+      return $entity->get('apiary')->entity;
+    }
+
+    // HiveInspection → hive → apiary.
+    if ($entity_type === 'hive_inspection') {
+      $hive = $entity->get('hive')->entity;
+      return $hive ? $hive->get('apiary')->entity : NULL;
+    }
+
+    // Queen → hive → apiary (hive is optional on queens).
+    if ($entity_type === 'queen') {
+      $hive = $entity->get('hive')->entity;
+      return $hive ? $hive->get('apiary')->entity : NULL;
+    }
+
+    // QueenObservation → queen → hive → apiary.
+    if ($entity_type === 'queen_observation') {
+      $queen = $entity->get('queen')->entity;
+      if ($queen) {
+        $hive = $queen->get('hive')->entity;
+        return $hive ? $hive->get('apiary')->entity : NULL;
+      }
+      return NULL;
+    }
+
+    return NULL;
+  }
+
+  /**
+   * Checks view access considering apiary membership and visibility.
+   *
+   * @param \Drupal\hivelog\Entity\Apiary|null $apiary
+   *   The parent apiary (NULL if the chain is broken).
+   * @param \Drupal\Core\Session\AccountInterface $account
+   *   The user account.
+   * @param string $any_permission
+   *   The "any" permission (site-wide override).
+   * @param string $own_permission
+   *   The "own" permission (apiary-member scoped).
+   *
+   * @return \Drupal\Core\Access\AccessResult
+   *   The access result.
+   */
+  protected function checkApiaryViewAccess(?Apiary $apiary, AccountInterface $account, string $any_permission, string $own_permission): AccessResult {
+    // Site-wide "any" permission always grants access.
+    if ($account->hasPermission($any_permission)) {
+      return AccessResult::allowed()->cachePerPermissions();
+    }
+
+    if (!$apiary) {
+      return AccessResult::neutral()->cachePerPermissions()->cachePerUser();
+    }
+
+    // Apiary member with the "own" permission.
+    if ($apiary->isApiaryMember($account) && $account->hasPermission($own_permission)) {
+      return AccessResult::allowed()
+        ->cachePerPermissions()
+        ->cachePerUser()
+        ->addCacheableDependency($apiary);
+    }
+
+    // Public apiary: any user with the "own" permission can view.
+    if ($apiary->isPublic() && $account->hasPermission($own_permission)) {
+      return AccessResult::allowed()
+        ->cachePerPermissions()
+        ->cachePerUser()
+        ->addCacheableDependency($apiary);
+    }
+
+    return AccessResult::neutral()
+      ->cachePerPermissions()
+      ->cachePerUser()
+      ->addCacheableDependency($apiary);
+  }
+
+  /**
+   * Checks edit access considering apiary membership.
+   *
+   * Grants access to the apiary owner and approved beekeepers.
+   *
+   * @param \Drupal\hivelog\Entity\Apiary|null $apiary
+   *   The parent apiary.
+   * @param \Drupal\Core\Session\AccountInterface $account
+   *   The user account.
+   * @param string $any_permission
+   *   The "any" permission (site-wide override).
+   * @param string $own_permission
+   *   The "own" permission (apiary-member scoped).
+   *
+   * @return \Drupal\Core\Access\AccessResult
+   *   The access result.
+   */
+  protected function checkApiaryEditAccess(?Apiary $apiary, AccountInterface $account, string $any_permission, string $own_permission): AccessResult {
+    if ($account->hasPermission($any_permission)) {
+      return AccessResult::allowed()->cachePerPermissions();
+    }
+
+    if (!$apiary) {
+      return AccessResult::neutral()->cachePerPermissions()->cachePerUser();
+    }
+
+    if ($apiary->isApiaryMember($account) && $account->hasPermission($own_permission)) {
+      return AccessResult::allowed()
+        ->cachePerPermissions()
+        ->cachePerUser()
+        ->addCacheableDependency($apiary);
+    }
+
+    return AccessResult::neutral()
+      ->cachePerPermissions()
+      ->cachePerUser()
+      ->addCacheableDependency($apiary);
+  }
+
+  /**
+   * Checks delete access — apiary owner only (plus site-wide "any").
+   *
+   * @param \Drupal\hivelog\Entity\Apiary|null $apiary
+   *   The parent apiary.
+   * @param \Drupal\Core\Session\AccountInterface $account
+   *   The user account.
+   * @param string $any_permission
+   *   The "any" permission (site-wide override).
+   * @param string $own_permission
+   *   The "own" permission (owner-scoped).
+   *
+   * @return \Drupal\Core\Access\AccessResult
+   *   The access result.
+   */
+  protected function checkApiaryOwnerDeleteAccess(?Apiary $apiary, AccountInterface $account, string $any_permission, string $own_permission): AccessResult {
+    if ($account->hasPermission($any_permission)) {
+      return AccessResult::allowed()->cachePerPermissions();
+    }
+
+    if (!$apiary) {
+      return AccessResult::neutral()->cachePerPermissions()->cachePerUser();
+    }
+
+    // Only the apiary owner can delete.
+    $is_owner = (int) $apiary->getOwnerId() === (int) $account->id();
+    if ($is_owner && $account->hasPermission($own_permission)) {
+      return AccessResult::allowed()
+        ->cachePerPermissions()
+        ->cachePerUser()
+        ->addCacheableDependency($apiary);
+    }
+
+    return AccessResult::neutral()
+      ->cachePerPermissions()
+      ->cachePerUser()
+      ->addCacheableDependency($apiary);
+  }
+
+  /**
+   * Checks delete access — apiary owner OR the entity creator.
+   *
+   * Used for inspections and observations where the beekeeper who created
+   * the record may also delete it.
+   *
+   * @param \Drupal\hivelog\Entity\Apiary|null $apiary
+   *   The parent apiary.
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity being deleted.
+   * @param \Drupal\Core\Session\AccountInterface $account
+   *   The user account.
+   * @param string $any_permission
+   *   The "any" permission.
+   * @param string $own_permission
+   *   The "own" permission.
+   *
+   * @return \Drupal\Core\Access\AccessResult
+   *   The access result.
+   */
+  protected function checkApiaryMemberDeleteAccess(?Apiary $apiary, EntityInterface $entity, AccountInterface $account, string $any_permission, string $own_permission): AccessResult {
+    if ($account->hasPermission($any_permission)) {
+      return AccessResult::allowed()->cachePerPermissions();
+    }
+
+    if (!$apiary) {
+      return AccessResult::neutral()->cachePerPermissions()->cachePerUser();
+    }
+
+    $is_apiary_owner = (int) $apiary->getOwnerId() === (int) $account->id();
+    $is_entity_creator = method_exists($entity, 'getOwnerId')
+      && (int) $entity->getOwnerId() === (int) $account->id();
+
+    if (($is_apiary_owner || ($apiary->isApiaryMember($account) && $is_entity_creator))
+      && $account->hasPermission($own_permission)) {
+      return AccessResult::allowed()
+        ->cachePerPermissions()
+        ->cachePerUser()
+        ->addCacheableDependency($apiary);
+    }
+
+    return AccessResult::neutral()
+      ->cachePerPermissions()
+      ->cachePerUser()
+      ->addCacheableDependency($apiary);
+  }
+
+}

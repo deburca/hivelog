@@ -49,7 +49,7 @@ Entity database tables are created automatically on install.
 ## Usage
 
 After installation, navigate to **Administration → Structure → HiveLog**
-(`/admin/hivelog`).
+(`/hivelog`).
 
 ### Workflow
 
@@ -157,32 +157,32 @@ Users with "Administer HiveLog" bypass all individual permission checks.
 
 | Path                                          | Description            |
 |-----------------------------------------------|------------------------|
-| `/admin/hivelog`                              | Apiary list            |
-| `/admin/hivelog/hives`                        | Hive list              |
-| `/admin/hivelog/inspections`                  | Inspection list        |
-| `/admin/hivelog/apiary/add`                   | Add apiary             |
-| `/admin/hivelog/apiary/{id}`                  | View apiary            |
-| `/admin/hivelog/apiary/{id}/edit`             | Edit apiary            |
-| `/admin/hivelog/apiary/{id}/delete`           | Delete apiary          |
-| `/admin/hivelog/apiary/{id}/hive/add`         | Add hive to apiary     |
-| `/admin/hivelog/hive/{id}`                    | View hive              |
-| `/admin/hivelog/hive/{id}/edit`               | Edit hive              |
-| `/admin/hivelog/hive/{id}/delete`             | Delete hive            |
-| `/admin/hivelog/hive/{id}/inspection/add`     | Add inspection to hive |
-| `/admin/hivelog/inspection/{id}`              | View inspection        |
-| `/admin/hivelog/inspection/{id}/edit`         | Edit inspection        |
-| `/admin/hivelog/inspection/{id}/delete`       | Delete inspection      |
-| `/admin/hivelog/queens`                       | Queen list             |
-| `/admin/hivelog/queen/add`                    | Add queen              |
-| `/admin/hivelog/hive/{id}/queen/add`          | Add queen to hive      |
-| `/admin/hivelog/queen/{id}`                   | View queen             |
-| `/admin/hivelog/queen/{id}/edit`              | Edit queen             |
-| `/admin/hivelog/queen/{id}/delete`            | Delete queen           |
-| `/admin/hivelog/queen-observations`           | Queen observation list |
-| `/admin/hivelog/queen/{id}/observation/add`   | Add observation to queen |
-| `/admin/hivelog/queen-observation/{id}`       | View queen observation |
-| `/admin/hivelog/queen-observation/{id}/edit`  | Edit queen observation |
-| `/admin/hivelog/queen-observation/{id}/delete` | Delete queen observation |
+| `/hivelog`                              | Apiary list            |
+| `/hivelog/hives`                        | Hive list              |
+| `/hivelog/inspections`                  | Inspection list        |
+| `/hivelog/apiary/add`                   | Add apiary             |
+| `/hivelog/apiary/{id}`                  | View apiary            |
+| `/hivelog/apiary/{id}/edit`             | Edit apiary            |
+| `/hivelog/apiary/{id}/delete`           | Delete apiary          |
+| `/hivelog/apiary/{id}/hive/add`         | Add hive to apiary     |
+| `/hivelog/hive/{id}`                    | View hive              |
+| `/hivelog/hive/{id}/edit`               | Edit hive              |
+| `/hivelog/hive/{id}/delete`             | Delete hive            |
+| `/hivelog/hive/{id}/inspection/add`     | Add inspection to hive |
+| `/hivelog/inspection/{id}`              | View inspection        |
+| `/hivelog/inspection/{id}/edit`         | Edit inspection        |
+| `/hivelog/inspection/{id}/delete`       | Delete inspection      |
+| `/hivelog/queens`                       | Queen list             |
+| `/hivelog/queen/add`                    | Add queen              |
+| `/hivelog/hive/{id}/queen/add`          | Add queen to hive      |
+| `/hivelog/queen/{id}`                   | View queen             |
+| `/hivelog/queen/{id}/edit`              | Edit queen             |
+| `/hivelog/queen/{id}/delete`            | Delete queen           |
+| `/hivelog/queen-observations`           | Queen observation list |
+| `/hivelog/queen/{id}/observation/add`   | Add observation to queen |
+| `/hivelog/queen-observation/{id}`       | View queen observation |
+| `/hivelog/queen-observation/{id}/edit`  | Edit queen observation |
+| `/hivelog/queen-observation/{id}/delete` | Delete queen observation |
 
 ## Module Structure
 
