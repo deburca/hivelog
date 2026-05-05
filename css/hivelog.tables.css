@@ -28,6 +28,14 @@
   padding: 0.5rem 0.75rem;
 }
 
+/* Solid background for operations dropdown so underlying text is hidden. */
+.hivelog-table .dropbutton-wrapper .dropbutton-widget,
+.hivelog-inspection-table .dropbutton-wrapper .dropbutton-widget,
+.hivelog-queen-table .dropbutton-wrapper .dropbutton-widget,
+.hivelog-queen-observation-table .dropbutton-wrapper .dropbutton-widget {
+  background-color: #fff;
+}
+
 /* Header bottom border slightly heavier; left-align titles. */
 .hivelog-table thead th,
 .hivelog-inspection-table thead th,
