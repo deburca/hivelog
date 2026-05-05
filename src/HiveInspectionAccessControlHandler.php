@@ -6,12 +6,18 @@ use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\EntityAccessControlHandler;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\user\EntityOwnerInterface;
 
 /**
  * Access control handler for Hive Inspection entities.
+ *
+ * Access is scoped to the parent apiary (via hive → apiary):
+ * - view: site-wide "any" OR apiary member OR public apiary.
+ * - update: site-wide "any" OR apiary member.
+ * - delete: site-wide "any" OR apiary owner OR beekeeper who created it.
  */
 class HiveInspectionAccessControlHandler extends EntityAccessControlHandler {
+
+  use ApiaryAccessTrait;
 
   /**
    * {@inheritdoc}
@@ -21,18 +27,17 @@ class HiveInspectionAccessControlHandler extends EntityAccessControlHandler {
       return AccessResult::allowed()->cachePerPermissions();
     }
 
-    $is_owner = ($entity instanceof EntityOwnerInterface)
-      && ((int) $entity->getOwnerId() === (int) $account->id());
+    $apiary = $this->resolveApiary($entity);
 
     switch ($operation) {
       case 'view':
-        return $this->checkOwnershipAccess($account, $is_owner, 'view any hive inspection', 'view own hive inspection');
+        return $this->checkApiaryViewAccess($apiary, $account, 'view any hive inspection', 'view own hive inspection');
 
       case 'update':
-        return $this->checkOwnershipAccess($account, $is_owner, 'edit any hive inspection', 'edit own hive inspection');
+        return $this->checkApiaryEditAccess($apiary, $account, 'edit any hive inspection', 'edit own hive inspection');
 
       case 'delete':
-        return $this->checkOwnershipAccess($account, $is_owner, 'delete any hive inspection', 'delete own hive inspection');
+        return $this->checkApiaryMemberDeleteAccess($apiary, $entity, $account, 'delete any hive inspection', 'delete own hive inspection');
     }
 
     return AccessResult::neutral();
@@ -46,19 +51,6 @@ class HiveInspectionAccessControlHandler extends EntityAccessControlHandler {
       'administer hivelog',
       'add hive inspection',
     ], 'OR');
-  }
-
-  /**
-   * Checks access based on "any" and "own" permissions.
-   */
-  protected function checkOwnershipAccess(AccountInterface $account, bool $is_owner, string $any_permission, string $own_permission): AccessResult {
-    if ($account->hasPermission($any_permission)) {
-      return AccessResult::allowed()->cachePerPermissions();
-    }
-    if ($is_owner && $account->hasPermission($own_permission)) {
-      return AccessResult::allowed()->cachePerPermissions()->cachePerUser();
-    }
-    return AccessResult::neutral()->cachePerPermissions()->cachePerUser();
   }
 
 }

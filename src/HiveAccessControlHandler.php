@@ -6,12 +6,18 @@ use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\EntityAccessControlHandler;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\user\EntityOwnerInterface;
 
 /**
  * Access control handler for Hive entities.
+ *
+ * Access is scoped to the parent apiary:
+ * - view: site-wide "any" OR apiary member OR public apiary.
+ * - update: site-wide "any" OR apiary member (owner + beekeepers).
+ * - delete: site-wide "any" OR apiary owner only.
  */
 class HiveAccessControlHandler extends EntityAccessControlHandler {
+
+  use ApiaryAccessTrait;
 
   /**
    * {@inheritdoc}
@@ -21,18 +27,17 @@ class HiveAccessControlHandler extends EntityAccessControlHandler {
       return AccessResult::allowed()->cachePerPermissions();
     }
 
-    $is_owner = ($entity instanceof EntityOwnerInterface)
-      && ((int) $entity->getOwnerId() === (int) $account->id());
+    $apiary = $this->resolveApiary($entity);
 
     switch ($operation) {
       case 'view':
-        return $this->checkOwnershipAccess($account, $is_owner, 'view any hive', 'view own hive');
+        return $this->checkApiaryViewAccess($apiary, $account, 'view any hive', 'view own hive');
 
       case 'update':
-        return $this->checkOwnershipAccess($account, $is_owner, 'edit any hive', 'edit own hive');
+        return $this->checkApiaryEditAccess($apiary, $account, 'edit any hive', 'edit own hive');
 
       case 'delete':
-        return $this->checkOwnershipAccess($account, $is_owner, 'delete any hive', 'delete own hive');
+        return $this->checkApiaryOwnerDeleteAccess($apiary, $account, 'delete any hive', 'delete own hive');
     }
 
     return AccessResult::neutral();
@@ -46,19 +51,6 @@ class HiveAccessControlHandler extends EntityAccessControlHandler {
       'administer hivelog',
       'add hive',
     ], 'OR');
-  }
-
-  /**
-   * Checks access based on "any" and "own" permissions.
-   */
-  protected function checkOwnershipAccess(AccountInterface $account, bool $is_owner, string $any_permission, string $own_permission): AccessResult {
-    if ($account->hasPermission($any_permission)) {
-      return AccessResult::allowed()->cachePerPermissions();
-    }
-    if ($is_owner && $account->hasPermission($own_permission)) {
-      return AccessResult::allowed()->cachePerPermissions()->cachePerUser();
-    }
-    return AccessResult::neutral()->cachePerPermissions()->cachePerUser();
   }
 
 }

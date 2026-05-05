@@ -422,3 +422,38 @@ function hivelog_update_10012(&$sandbox) {
   }
   return t('No roles had old hivelog permissions to migrate.');
 }
+
+/**
+ * Install beekeepers and visibility fields on the Apiary entity.
+ *
+ * Issue #66: apiary-scoped access control. The apiary owner can assign
+ * beekeepers who may then view and edit hives/inspections within the
+ * apiary. The visibility field controls whether non-members can view
+ * the apiary and its children. Existing apiaries default to 'private'
+ * with an empty beekeepers list (owner-only access, same as before).
+ */
+function hivelog_update_10013(&$sandbox) {
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+
+  $field_definitions = \Drupal\hivelog\Entity\Apiary::baseFieldDefinitions(
+    $entity_type_manager->getDefinition('apiary')
+  );
+
+  foreach (['beekeepers', 'visibility'] as $field_name) {
+    if (isset($field_definitions[$field_name])) {
+      $existing = $entity_definition_update_manager
+        ->getFieldStorageDefinition($field_name, 'apiary');
+      if (!$existing) {
+        $entity_definition_update_manager->installFieldStorageDefinition(
+          $field_name,
+          'apiary',
+          'hivelog',
+          $field_definitions[$field_name]
+        );
+      }
+    }
+  }
+
+  return t('Installed beekeepers and visibility fields on the Apiary entity.');
+}

@@ -10,6 +10,8 @@ use Drupal\Core\Entity\EntityChangedInterface;
 use Drupal\Core\Entity\EntityChangedTrait;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\Field\FieldStorageDefinitionInterface;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\hivelog\ApiaryAccessControlHandler;
 use Drupal\hivelog\ApiaryListBuilder;
@@ -57,6 +59,40 @@ class Apiary extends ContentEntityBase implements EntityChangedInterface, Entity
 
   use EntityChangedTrait;
   use EntityOwnerTrait;
+
+  /**
+   * Checks whether the given account is a member of this apiary.
+   *
+   * A member is either the apiary owner or a user listed in the
+   * beekeepers field.
+   *
+   * @param \Drupal\Core\Session\AccountInterface $account
+   *   The user account to check.
+   *
+   * @return bool
+   *   TRUE if the account is the apiary owner or an approved beekeeper.
+   */
+  public function isApiaryMember(AccountInterface $account): bool {
+    if ((int) $this->getOwnerId() === (int) $account->id()) {
+      return TRUE;
+    }
+    foreach ($this->get('beekeepers') as $item) {
+      if ((int) $item->target_id === (int) $account->id()) {
+        return TRUE;
+      }
+    }
+    return FALSE;
+  }
+
+  /**
+   * Checks whether this apiary is publicly visible.
+   *
+   * @return bool
+   *   TRUE if the visibility field is set to 'public'.
+   */
+  public function isPublic(): bool {
+    return $this->get('visibility')->value === 'public';
+  }
 
   /**
    * {@inheritdoc}
@@ -145,12 +181,44 @@ class Apiary extends ContentEntityBase implements EntityChangedInterface, Entity
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
+    $fields['beekeepers'] = BaseFieldDefinition::create('entity_reference')
+      ->setLabel(t('Beekeepers'))
+      ->setDescription(t('Users who are approved to manage hives and record inspections in this apiary. The apiary owner always has full access and does not need to be listed here.'))
+      ->setSetting('target_type', 'user')
+      ->setCardinality(FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED)
+      ->setDisplayOptions('form', [
+        'type' => 'entity_reference_autocomplete',
+        'weight' => 5,
+        'settings' => [
+          'match_operator' => 'CONTAINS',
+          'size' => 60,
+        ],
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
+
+    $fields['visibility'] = BaseFieldDefinition::create('list_string')
+      ->setLabel(t('Visibility'))
+      ->setDescription(t('Controls whether non-members can view this apiary and its hives. Private apiaries are only visible to the owner and approved beekeepers.'))
+      ->setRequired(TRUE)
+      ->setDefaultValue('private')
+      ->setSetting('allowed_values', [
+        'private' => 'Private',
+        'public' => 'Public',
+      ])
+      ->setDisplayOptions('form', [
+        'type' => 'options_select',
+        'weight' => 6,
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
+
     $fields['uid']
       ->setLabel(t('Owner'))
       ->setDescription(t('The user who owns this apiary.'))
       ->setDisplayOptions('form', [
         'type' => 'entity_reference_autocomplete',
-        'weight' => 5,
+        'weight' => 7,
         'settings' => [
           'match_operator' => 'CONTAINS',
           'size' => 60,
