@@ -28,10 +28,11 @@
   padding: 0.5rem 0.75rem;
 }
 
-/* Header bottom border slightly heavier. */
+/* Header bottom border slightly heavier; left-align titles. */
 .hivelog-table thead th,
 .hivelog-inspection-table thead th,
 .hivelog-queen-table thead th,
 .hivelog-queen-observation-table thead th {
   border-bottom: 2px solid #ccc;
+  text-align: left;
 }
