@@ -1,0 +1,26 @@
+{
+    "name": "hivelog/hivelog",
+    "description": "Drupal 11 module – beekeeping activity logger for managing apiaries, hives, inspections, queens, and queen observations.",
+    "type": "drupal-module",
+    "license": "GPL-2.0-or-later",
+    "homepage": "https://github.com/deburca/hivelog",
+    "authors": [
+        {
+            "name": "Paddy de Búrca",
+            "role": "Maintainer"
+        }
+    ],
+    "require": {
+        "php": ">=8.3",
+        "drupal/core": "^11",
+        "drupal/geofield": "^1",
+        "drupal/leaflet": "^10"
+    },
+    "extra": {
+        "drupal": {
+            "module-name": "hivelog"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
