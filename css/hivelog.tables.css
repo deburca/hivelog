@@ -1,13 +1,12 @@
 /**
  * @file
- * Table styling for HiveLog entity list tables.
+ * Table styling for HiveLog detail-section tables.
  *
- * Ensures tables span the full available width and display horizontal
- * dividing lines between rows for readability.
+ * Covers inspection, queen, and observation detail view tables.
+ * Entity list tables use the hivelog:entity-table SDC component instead.
  */
 
 /* Full-width tables. */
-.hivelog-table,
 .hivelog-inspection-table,
 .hivelog-queen-table,
 .hivelog-queen-observation-table {
@@ -16,8 +15,6 @@
 }
 
 /* Horizontal dividers between rows. */
-.hivelog-table th,
-.hivelog-table td,
 .hivelog-inspection-table th,
 .hivelog-inspection-table td,
 .hivelog-queen-table th,
@@ -28,16 +25,7 @@
   padding: 0.5rem 0.75rem;
 }
 
-/* Solid background for operations dropdown so underlying text is hidden. */
-.hivelog-table .dropbutton-wrapper .dropbutton-widget,
-.hivelog-inspection-table .dropbutton-wrapper .dropbutton-widget,
-.hivelog-queen-table .dropbutton-wrapper .dropbutton-widget,
-.hivelog-queen-observation-table .dropbutton-wrapper .dropbutton-widget {
-  background-color: #fff;
-}
-
 /* Header bottom border slightly heavier; left-align titles. */
-.hivelog-table thead th,
 .hivelog-inspection-table thead th,
 .hivelog-queen-table thead th,
 .hivelog-queen-observation-table thead th {

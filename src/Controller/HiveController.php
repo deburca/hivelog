@@ -9,6 +9,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\Query\QueryInterface;
 use Drupal\Core\File\FileUrlGeneratorInterface;
 use Drupal\Core\Form\FormBuilderInterface;
+use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Url;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\Hive;
@@ -41,12 +42,18 @@ class HiveController extends ControllerBase {
    */
   protected FileUrlGeneratorInterface $fileUrlGenerator;
 
+  /**
+   * The renderer.
+   */
+  protected RendererInterface $renderer;
+
   public function __construct(
     EntityTypeManagerInterface $entity_type_manager,
     EntityFormBuilderInterface $entity_form_builder,
     FormBuilderInterface $form_builder,
     FileUrlGeneratorInterface $file_url_generator,
     RequestStack $request_stack,
+    RendererInterface $renderer,
   ) {
     // $entityTypeManager / $entityFormBuilder / $formBuilder are untyped
     // properties inherited from ControllerBase; assign them rather than
@@ -56,6 +63,7 @@ class HiveController extends ControllerBase {
     $this->formBuilder = $form_builder;
     $this->fileUrlGenerator = $file_url_generator;
     $this->requestStack = $request_stack;
+    $this->renderer = $renderer;
   }
 
   /**
@@ -68,6 +76,7 @@ class HiveController extends ControllerBase {
       $container->get('form_builder'),
       $container->get('file_url_generator'),
       $container->get('request_stack'),
+      $container->get('renderer'),
     );
   }
 
@@ -170,46 +179,53 @@ class HiveController extends ControllerBase {
     $rows = [];
     foreach ($inspections as $inspection) {
       $weight = $inspection->get('weight')->value;
+      $actions = [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['hivelog-table-actions']],
+        'view' => [
+          '#type' => 'link',
+          '#title' => $this->t('View'),
+          '#url' => $inspection->toUrl('canonical'),
+          '#attributes' => ['class' => ['button']],
+        ],
+        'edit' => [
+          '#type' => 'link',
+          '#title' => $this->t('Edit'),
+          '#url' => $inspection->toUrl('edit-form'),
+          '#attributes' => ['class' => ['button']],
+        ],
+        'delete' => [
+          '#type' => 'link',
+          '#title' => $this->t('Delete'),
+          '#url' => $inspection->toUrl('delete-form'),
+          '#attributes' => ['class' => ['button', 'button--danger']],
+        ],
+      ];
       $rows[] = [
-        $inspection->get('inspection_date')->value ?: $this->t('N/A'),
-        $weight !== NULL ? $weight . ' kg' : '',
-        $inspection->get('queen_seen')->value ? $this->t('Yes') : $this->t('No'),
-        $inspection->get('brood_pattern')->value ? $inspection->get('brood_pattern')->getSetting('allowed_values')[$inspection->get('brood_pattern')->value] ?? '' : '',
-        $inspection->get('honey_stores')->value ? $inspection->get('honey_stores')->getSetting('allowed_values')[$inspection->get('honey_stores')->value] ?? '' : '',
-        $inspection->get('temperament')->value ? $inspection->get('temperament')->getSetting('allowed_values')[$inspection->get('temperament')->value] ?? '' : '',
-        $inspection->get('population')->value ? $inspection->get('population')->getSetting('allowed_values')[$inspection->get('population')->value] ?? '' : '',
-        [
-          'data' => [
-            '#type' => 'operations',
-            '#links' => [
-              'view' => [
-                'title' => $this->t('View'),
-                'url' => $inspection->toUrl('canonical'),
-              ],
-              'edit' => [
-                'title' => $this->t('Edit'),
-                'url' => $inspection->toUrl('edit-form'),
-              ],
-              'delete' => [
-                'title' => $this->t('Delete'),
-                'url' => $inspection->toUrl('delete-form'),
-              ],
-            ],
-          ],
+        'cells' => [
+          (string) ($inspection->get('inspection_date')->value ?: $this->t('N/A')),
+          $weight !== NULL ? $weight . ' kg' : '',
+          (string) ($inspection->get('queen_seen')->value ? $this->t('Yes') : $this->t('No')),
+          $inspection->get('brood_pattern')->value ? $inspection->get('brood_pattern')->getSetting('allowed_values')[$inspection->get('brood_pattern')->value] ?? '' : '',
+          $inspection->get('honey_stores')->value ? $inspection->get('honey_stores')->getSetting('allowed_values')[$inspection->get('honey_stores')->value] ?? '' : '',
+          $inspection->get('temperament')->value ? $inspection->get('temperament')->getSetting('allowed_values')[$inspection->get('temperament')->value] ?? '' : '',
+          $inspection->get('population')->value ? $inspection->get('population')->getSetting('allowed_values')[$inspection->get('population')->value] ?? '' : '',
+          $this->renderer->renderInIsolation($actions),
         ],
       ];
     }
 
     $build['inspections_table'] = [
-      '#type' => 'table',
-      '#header' => $header,
-      '#rows' => $rows,
-      '#empty' => !empty($filters)
-        ? $this->t('No inspections match the current filters.')
-        : $this->t('No inspections have been recorded for this hive yet.'),
+      '#type' => 'component',
+      '#component' => 'hivelog:entity-table',
+      '#props' => [
+        'headers' => array_map('strval', $header),
+        'rows' => $rows,
+        'empty_message' => (string) (!empty($filters)
+          ? $this->t('No inspections match the current filters.')
+          : $this->t('No inspections have been recorded for this hive yet.')),
+      ],
       '#weight' => 12,
-      '#attributes' => ['class' => ['hivelog-table']],
-      '#attached' => ['library' => ['hivelog/tables']],
     ];
 
     $build['inspections_pager'] = [
@@ -292,7 +308,7 @@ class HiveController extends ControllerBase {
       $section['details'] = [
         '#type' => 'table',
         '#header' => [$this->t('Field'), $this->t('Value')],
-        '#attributes' => ['class' => ['hivelog-table']],
+        '#attributes' => ['class' => ['hivelog-queen-table']],
         '#attached' => ['library' => ['hivelog/tables']],
         '#rows' => [
           [$this->t('Queen ID'), $queen->toLink()->toString()],

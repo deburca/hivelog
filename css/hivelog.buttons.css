@@ -13,7 +13,8 @@
 .hivelog-inspection-actions .button,
 .hivelog-queen-actions .button,
 .hivelog-queen-observation-actions .button,
-.hivelog-entity-form .form-actions .button {
+.hivelog-entity-form .form-actions .button,
+.hivelog-table-actions .button {
   display: inline-block;
   padding: 0.45em 1em;
   border: 1px solid #8e929c;
@@ -32,7 +33,8 @@
 .hivelog-inspection-actions .button:hover,
 .hivelog-queen-actions .button:hover,
 .hivelog-queen-observation-actions .button:hover,
-.hivelog-entity-form .form-actions .button:hover {
+.hivelog-entity-form .form-actions .button:hover,
+.hivelog-table-actions .button:hover {
   background-color: #e5e7eb;
   border-color: #6b7280;
 }
@@ -43,7 +45,8 @@
 .hivelog-inspection-actions .button--primary,
 .hivelog-queen-actions .button--primary,
 .hivelog-queen-observation-actions .button--primary,
-.hivelog-entity-form .form-actions .button--primary {
+.hivelog-entity-form .form-actions .button--primary,
+.hivelog-table-actions .button--primary {
   background-color: #2563eb;
   border-color: #1d4ed8;
   color: #fff;
@@ -54,7 +57,8 @@
 .hivelog-inspection-actions .button--primary:hover,
 .hivelog-queen-actions .button--primary:hover,
 .hivelog-queen-observation-actions .button--primary:hover,
-.hivelog-entity-form .form-actions .button--primary:hover {
+.hivelog-entity-form .form-actions .button--primary:hover,
+.hivelog-table-actions .button--primary:hover {
   background-color: #1d4ed8;
   border-color: #1e40af;
 }
@@ -63,7 +67,8 @@
 .hivelog-inspection-actions .button--danger,
 .hivelog-queen-actions .button--danger,
 .hivelog-queen-observation-actions .button--danger,
-.hivelog-entity-form .form-actions .button--danger {
+.hivelog-entity-form .form-actions .button--danger,
+.hivelog-table-actions .button--danger {
   background-color: #dc2626;
   border-color: #b91c1c;
   color: #fff;
@@ -72,7 +77,8 @@
 .hivelog-inspection-actions .button--danger:hover,
 .hivelog-queen-actions .button--danger:hover,
 .hivelog-queen-observation-actions .button--danger:hover,
-.hivelog-entity-form .form-actions .button--danger:hover {
+.hivelog-entity-form .form-actions .button--danger:hover,
+.hivelog-table-actions .button--danger:hover {
   background-color: #b91c1c;
   border-color: #991b1b;
 }

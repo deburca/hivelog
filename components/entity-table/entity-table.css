@@ -1,0 +1,23 @@
+/**
+ * @file
+ * Styling for the hivelog:entity-table SDC component.
+ *
+ * Full-width table with horizontal row dividers and left-aligned headers.
+ */
+
+.hivelog-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.hivelog-table th,
+.hivelog-table td {
+  border-bottom: 1px solid #e0e0e0;
+  padding: 0.5rem 0.75rem;
+}
+
+/* Header bottom border slightly heavier; left-align titles. */
+.hivelog-table thead th {
+  border-bottom: 2px solid #ccc;
+  text-align: left;
+}

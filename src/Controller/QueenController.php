@@ -8,6 +8,7 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\EntityFormBuilderInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Url;
 use Drupal\hivelog\Entity\Hive;
 use Drupal\hivelog\Entity\Queen;
@@ -33,10 +34,16 @@ class QueenController extends ControllerBase {
    */
   protected DateFormatterInterface $dateFormatter;
 
+  /**
+   * The renderer.
+   */
+  protected RendererInterface $renderer;
+
   public function __construct(
     EntityTypeManagerInterface $entity_type_manager,
     EntityFormBuilderInterface $entity_form_builder,
     DateFormatterInterface $date_formatter,
+    RendererInterface $renderer,
   ) {
     // $entityTypeManager and $entityFormBuilder are untyped properties
     // inherited from ControllerBase; assign them rather than redeclaring
@@ -44,6 +51,7 @@ class QueenController extends ControllerBase {
     $this->entityTypeManager = $entity_type_manager;
     $this->entityFormBuilder = $entity_form_builder;
     $this->dateFormatter = $date_formatter;
+    $this->renderer = $renderer;
   }
 
   /**
@@ -54,6 +62,7 @@ class QueenController extends ControllerBase {
       $container->get('entity_type.manager'),
       $container->get('entity.form_builder'),
       $container->get('date.formatter'),
+      $container->get('renderer'),
     );
   }
 
@@ -154,41 +163,48 @@ class QueenController extends ControllerBase {
     foreach ($observations as $observation) {
       $health = $observation->get('health')->value;
       $temperament = $observation->get('temperament')->value;
+      $actions = [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['hivelog-table-actions']],
+        'view' => [
+          '#type' => 'link',
+          '#title' => $this->t('View'),
+          '#url' => $observation->toUrl('canonical'),
+          '#attributes' => ['class' => ['button']],
+        ],
+        'edit' => [
+          '#type' => 'link',
+          '#title' => $this->t('Edit'),
+          '#url' => $observation->toUrl('edit-form'),
+          '#attributes' => ['class' => ['button']],
+        ],
+        'delete' => [
+          '#type' => 'link',
+          '#title' => $this->t('Delete'),
+          '#url' => $observation->toUrl('delete-form'),
+          '#attributes' => ['class' => ['button', 'button--danger']],
+        ],
+      ];
       $rows[] = [
-        $observation->toLink($observation->get('observation_date')->value ?: $this->t('N/A'))->toString(),
-        $health ? ($observation->get('health')->getSetting('allowed_values')[$health] ?? $health) : '',
-        $temperament ? ($observation->get('temperament')->getSetting('allowed_values')[$temperament] ?? $temperament) : '',
-        $observation->get('active')->value ? $this->t('Yes') : $this->t('No'),
-        [
-          'data' => [
-            '#type' => 'operations',
-            '#links' => [
-              'view' => [
-                'title' => $this->t('View'),
-                'url' => $observation->toUrl('canonical'),
-              ],
-              'edit' => [
-                'title' => $this->t('Edit'),
-                'url' => $observation->toUrl('edit-form'),
-              ],
-              'delete' => [
-                'title' => $this->t('Delete'),
-                'url' => $observation->toUrl('delete-form'),
-              ],
-            ],
-          ],
+        'cells' => [
+          $observation->toLink($observation->get('observation_date')->value ?: $this->t('N/A'))->toString(),
+          $health ? ($observation->get('health')->getSetting('allowed_values')[$health] ?? $health) : '',
+          $temperament ? ($observation->get('temperament')->getSetting('allowed_values')[$temperament] ?? $temperament) : '',
+          (string) ($observation->get('active')->value ? $this->t('Yes') : $this->t('No')),
+          $this->renderer->renderInIsolation($actions),
         ],
       ];
     }
 
     $build['observations_table'] = [
-      '#type' => 'table',
-      '#header' => $header,
-      '#rows' => $rows,
-      '#empty' => $this->t('No observations have been recorded for this queen yet.'),
+      '#type' => 'component',
+      '#component' => 'hivelog:entity-table',
+      '#props' => [
+        'headers' => array_map('strval', $header),
+        'rows' => $rows,
+        'empty_message' => (string) $this->t('No observations have been recorded for this queen yet.'),
+      ],
       '#weight' => 21,
-      '#attributes' => ['class' => ['hivelog-table']],
-      '#attached' => ['library' => ['hivelog/tables']],
     ];
 
     $build['observations_pager'] = [
