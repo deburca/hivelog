@@ -9,6 +9,7 @@ use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\EntityFormBuilderInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\File\FileUrlGeneratorInterface;
+use Drupal\Core\Render\RendererInterface;
 use Drupal\hivelog\Entity\Hive;
 use Drupal\hivelog\Entity\HiveInspection;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -28,11 +29,17 @@ class HiveInspectionController extends ControllerBase {
    */
   protected DateFormatterInterface $dateFormatter;
 
+  /**
+   * The renderer.
+   */
+  protected RendererInterface $renderer;
+
   public function __construct(
     EntityTypeManagerInterface $entity_type_manager,
     EntityFormBuilderInterface $entity_form_builder,
     FileUrlGeneratorInterface $file_url_generator,
     DateFormatterInterface $date_formatter,
+    RendererInterface $renderer,
   ) {
     // $entityTypeManager and $entityFormBuilder are untyped properties
     // inherited from ControllerBase; assign them rather than redeclaring
@@ -41,6 +48,7 @@ class HiveInspectionController extends ControllerBase {
     $this->entityFormBuilder = $entity_form_builder;
     $this->fileUrlGenerator = $file_url_generator;
     $this->dateFormatter = $date_formatter;
+    $this->renderer = $renderer;
   }
 
   /**
@@ -52,6 +60,7 @@ class HiveInspectionController extends ControllerBase {
       $container->get('entity.form_builder'),
       $container->get('file_url_generator'),
       $container->get('date.formatter'),
+      $container->get('renderer'),
     );
   }
 
@@ -193,35 +202,43 @@ class HiveInspectionController extends ControllerBase {
    * Builds Edit and Delete action links for the inspection view.
    */
   protected function buildActions(HiveInspection $hive_inspection): array {
-    $links = [];
-
+    $buttons = [];
     if ($hive_inspection->access('update')) {
-      $links['edit'] = [
-        '#type' => 'link',
-        '#title' => $this->t('Edit'),
-        '#url' => $hive_inspection->toUrl('edit-form'),
-        '#attributes' => ['class' => ['button', 'button--primary']],
-      ];
+      $buttons[] = ['title' => $this->t('Edit'), 'url' => $hive_inspection->toUrl('edit-form'), 'class' => ['button', 'button--primary']];
     }
-
     if ($hive_inspection->access('delete')) {
-      $links['delete'] = [
-        '#type' => 'link',
-        '#title' => $this->t('Delete'),
-        '#url' => $hive_inspection->toUrl('delete-form'),
-        '#attributes' => ['class' => ['button', 'button--danger']],
-      ];
+      $buttons[] = ['title' => $this->t('Delete'), 'url' => $hive_inspection->toUrl('delete-form'), 'class' => ['button', 'button--danger']];
     }
-
-    if (empty($links)) {
+    if (empty($buttons)) {
       return [];
     }
-
     return [
-      '#type' => 'container',
-      '#attributes' => ['class' => ['hivelog-inspection-actions']],
+      '#type' => 'component',
+      '#component' => 'hivelog:button-group',
+      '#props' => ['buttons' => $this->renderButtons($buttons)],
       '#weight' => -10,
-    ] + $links;
+    ];
+  }
+
+  /**
+   * Pre-renders an array of button definitions to HTML strings.
+   *
+   * @param array<int, array{title: mixed, url: \Drupal\Core\Url, class: string[]}> $definitions
+   *
+   * @return string[]
+   */
+  protected function renderButtons(array $definitions): array {
+    $buttons = [];
+    foreach ($definitions as $def) {
+      $link = [
+        '#type' => 'link',
+        '#title' => $def['title'],
+        '#url' => $def['url'],
+        '#attributes' => ['class' => $def['class']],
+      ];
+      $buttons[] = (string) $this->renderer->renderInIsolation($link);
+    }
+    return $buttons;
   }
 
   /**

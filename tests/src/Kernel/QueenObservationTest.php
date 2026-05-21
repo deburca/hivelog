@@ -206,8 +206,9 @@ class QueenObservationTest extends KernelTestBase {
     $this->assertArrayHasKey('overview', $build);
     $this->assertArrayHasKey('observations', $build);
     $this->assertArrayHasKey('notes', $build);
-    $this->assertArrayHasKey('edit', $build['actions']);
-    $this->assertArrayHasKey('delete', $build['actions']);
+    $this->assertEquals('component', $build['actions']['#type']);
+    $this->assertEquals('hivelog:button-group', $build['actions']['#component']);
+    $this->assertCount(2, $build['actions']['#props']['buttons']);
 
     $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
     $this->assertStringContainsString('Overview', $html);

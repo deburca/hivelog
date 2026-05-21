@@ -1,0 +1,22 @@
+$schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schemas/v1/metadata.schema.json
+
+name: Button Group
+status: stable
+description: Inline flex container for a group of action buttons.
+
+props:
+  type: object
+  required:
+    - buttons
+  properties:
+    buttons:
+      type: array
+      title: Buttons
+      description: >
+        Pre-rendered HTML strings for each button in the group.
+      items:
+        type: string
+
+libraryOverrides:
+  dependencies:
+    - hivelog/buttons
