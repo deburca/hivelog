@@ -187,6 +187,8 @@ class QueenController extends ControllerBase {
       '#rows' => $rows,
       '#empty' => $this->t('No observations have been recorded for this queen yet.'),
       '#weight' => 21,
+      '#attributes' => ['class' => ['hivelog-table']],
+      '#attached' => ['library' => ['hivelog/tables']],
     ];
 
     $build['observations_pager'] = [
@@ -280,6 +282,7 @@ class QueenController extends ControllerBase {
         '#attributes' => [
           'class' => ['hivelog-queen-table'],
         ],
+        '#attached' => ['library' => ['hivelog/tables']],
       ],
     ];
   }

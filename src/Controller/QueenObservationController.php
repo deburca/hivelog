@@ -226,6 +226,7 @@ class QueenObservationController extends ControllerBase {
         '#attributes' => [
           'class' => ['hivelog-queen-observation-table'],
         ],
+        '#attached' => ['library' => ['hivelog/tables']],
       ],
     ];
   }
