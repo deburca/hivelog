@@ -82,3 +82,19 @@
   background-color: #b91c1c;
   border-color: #991b1b;
 }
+
+/* CBR summary banner. */
+.hivelog-cbr-summary {
+  padding: 0.6em 1em;
+  margin-bottom: 1em;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  background-color: #f9fafb;
+  font-size: 0.9rem;
+  color: #374151;
+}
+
+.hivelog-cbr-summary a {
+  color: #2563eb;
+  text-decoration: underline;
+}

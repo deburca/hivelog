@@ -22,6 +22,11 @@ class ApiaryListBuilder extends EntityListBuilder {
   use StringTranslationTrait;
 
   /**
+   * Number of apiaries shown per page.
+   */
+  protected $limit = 20;
+
+  /**
    * The current user account.
    */
   protected AccountInterface $currentUser;
@@ -109,9 +114,12 @@ class ApiaryListBuilder extends EntityListBuilder {
       ];
     }
     $row['operations']['data'] = [
-      '#type' => 'container',
-      '#attributes' => ['class' => ['hivelog-table-actions']],
-    ] + $links;
+      '#type' => 'component',
+      '#component' => 'hivelog:button-group',
+      '#props' => [
+        'buttons' => $this->renderButtons($links),
+      ],
+    ];
 
     return $row;
   }
@@ -144,6 +152,29 @@ class ApiaryListBuilder extends EntityListBuilder {
       ];
     }
 
+    // Heading row with "Add Apiary" action, matching the pattern used on
+    // all other list pages in the module.
+    $build['heading'] = [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['hivelog-list-heading']],
+      '#weight' => -90,
+      'title' => [
+        '#type' => 'html_tag',
+        '#tag' => 'h3',
+        '#value' => $this->t('Apiaries'),
+        '#attributes' => ['class' => ['hivelog-list-heading__title']],
+      ],
+      'add' => [
+        '#type' => 'link',
+        '#title' => $this->t('Add Apiary'),
+        '#url' => Url::fromRoute('entity.apiary.add_form'),
+        '#attributes' => [
+          'class' => ['button', 'button--primary', 'hivelog-list-heading__action'],
+        ],
+      ],
+      '#attached' => ['library' => ['hivelog/buttons']],
+    ];
+
     $build['table'] = [
       '#type' => 'component',
       '#component' => 'hivelog:entity-table',
@@ -158,6 +189,12 @@ class ApiaryListBuilder extends EntityListBuilder {
         'contexts' => $this->entityType->getListCacheContexts(),
         'tags' => $this->entityType->getListCacheTags(),
       ],
+    ];
+
+    // Add pager since $this->limit is set.
+    $build['pager'] = [
+      '#type' => 'pager',
+      '#weight' => 10,
     ];
 
     /** @var \Drupal\user\UserInterface|null $current */
@@ -209,6 +246,22 @@ class ApiaryListBuilder extends EntityListBuilder {
       return '';
     }
     return trim((string) $user->get('cbr_number')->value);
+  }
+
+  /**
+   * Pre-renders an array of link render elements to HTML strings.
+   *
+   * @param array $links
+   *   Associative array of link render elements keyed by name.
+   *
+   * @return string[]
+   */
+  protected function renderButtons(array $links): array {
+    $buttons = [];
+    foreach ($links as $link) {
+      $buttons[] = (string) $this->renderer->renderInIsolation($link);
+    }
+    return $buttons;
   }
 
 }

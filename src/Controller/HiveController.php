@@ -180,25 +180,14 @@ class HiveController extends ControllerBase {
     foreach ($inspections as $inspection) {
       $weight = $inspection->get('weight')->value;
       $actions = [
-        '#type' => 'container',
-        '#attributes' => ['class' => ['hivelog-table-actions']],
-        'view' => [
-          '#type' => 'link',
-          '#title' => $this->t('View'),
-          '#url' => $inspection->toUrl('canonical'),
-          '#attributes' => ['class' => ['button']],
-        ],
-        'edit' => [
-          '#type' => 'link',
-          '#title' => $this->t('Edit'),
-          '#url' => $inspection->toUrl('edit-form'),
-          '#attributes' => ['class' => ['button']],
-        ],
-        'delete' => [
-          '#type' => 'link',
-          '#title' => $this->t('Delete'),
-          '#url' => $inspection->toUrl('delete-form'),
-          '#attributes' => ['class' => ['button', 'button--danger']],
+        '#type' => 'component',
+        '#component' => 'hivelog:button-group',
+        '#props' => [
+          'buttons' => $this->renderButtons([
+            ['title' => $this->t('View'), 'url' => $inspection->toUrl('canonical'), 'class' => ['button']],
+            ['title' => $this->t('Edit'), 'url' => $inspection->toUrl('edit-form'), 'class' => ['button']],
+            ['title' => $this->t('Delete'), 'url' => $inspection->toUrl('delete-form'), 'class' => ['button', 'button--danger']],
+          ]),
         ],
       ];
       $rows[] = [
@@ -692,6 +681,27 @@ class HiveController extends ControllerBase {
       return 0;
     }
     return (int) $dt->format('z');
+  }
+
+  /**
+   * Pre-renders an array of button definitions to HTML strings.
+   *
+   * @param array<int, array{title: mixed, url: \Drupal\Core\Url, class: string[]}> $definitions
+   *
+   * @return string[]
+   */
+  protected function renderButtons(array $definitions): array {
+    $buttons = [];
+    foreach ($definitions as $def) {
+      $link = [
+        '#type' => 'link',
+        '#title' => $def['title'],
+        '#url' => $def['url'],
+        '#attributes' => ['class' => $def['class']],
+      ];
+      $buttons[] = (string) $this->renderer->renderInIsolation($link);
+    }
+    return $buttons;
   }
 
 }

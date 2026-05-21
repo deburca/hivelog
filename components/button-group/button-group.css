@@ -1,0 +1,17 @@
+/**
+ * @file
+ * Styling for the hivelog:button-group SDC component.
+ *
+ * Inline flex container for adjacent action buttons with consistent spacing.
+ */
+
+.hivelog-button-group {
+  display: inline-flex;
+  gap: 0.4em;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.hivelog-button-group .button {
+  margin-right: 0;
+}

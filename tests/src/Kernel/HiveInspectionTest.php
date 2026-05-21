@@ -477,17 +477,14 @@ class HiveInspectionTest extends KernelTestBase {
     $build = $controller->view($inspection);
 
     $this->assertArrayHasKey('actions', $build);
-    $this->assertArrayHasKey('edit', $build['actions']);
-    $this->assertArrayHasKey('delete', $build['actions']);
-    $this->assertEquals(
-      $inspection->toUrl('edit-form')->toString(),
-      $build['actions']['edit']['#url']->toString()
-    );
+    $this->assertEquals('component', $build['actions']['#type']);
+    $this->assertEquals('hivelog:button-group', $build['actions']['#component']);
+    $this->assertCount(2, $build['actions']['#props']['buttons']);
 
     $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
     $this->assertStringContainsString('Edit', $html);
     $this->assertStringContainsString('Delete', $html);
-    $this->assertStringContainsString('hivelog-inspection-actions', $html);
+    $this->assertStringContainsString('hivelog-button-group', $html);
   }
 
   /**
