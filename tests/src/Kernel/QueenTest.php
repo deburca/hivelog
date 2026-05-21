@@ -415,7 +415,7 @@ class QueenTest extends KernelTestBase {
     $this->assertArrayHasKey('observations_table', $build);
     $this->assertArrayHasKey('observations_pager', $build);
     // Two observation rows rendered.
-    $this->assertCount(2, $build['observations_table']['#rows']);
+    $this->assertCount(2, $build['observations_table']['#props']['rows']);
 
     $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
     $this->assertStringContainsString('Observations', $html);

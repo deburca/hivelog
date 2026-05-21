@@ -7,6 +7,7 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\Query\QueryInterface;
 use Drupal\Core\Form\FormBuilderInterface;
+use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
 use Drupal\hivelog\Entity\Apiary;
@@ -34,11 +35,17 @@ class ApiaryController extends ControllerBase {
    */
   protected RequestStack $requestStack;
 
+  /**
+   * The renderer.
+   */
+  protected RendererInterface $renderer;
+
   public function __construct(
     EntityTypeManagerInterface $entity_type_manager,
     FormBuilderInterface $form_builder,
     AccountInterface $current_user,
     RequestStack $request_stack,
+    RendererInterface $renderer,
   ) {
     // $entityTypeManager / $formBuilder / $currentUser are untyped properties
     // inherited from ControllerBase; assign rather than redeclare them.
@@ -46,6 +53,7 @@ class ApiaryController extends ControllerBase {
     $this->formBuilder = $form_builder;
     $this->currentUser = $current_user;
     $this->requestStack = $request_stack;
+    $this->renderer = $renderer;
   }
 
   /**
@@ -57,6 +65,7 @@ class ApiaryController extends ControllerBase {
       $container->get('form_builder'),
       $container->get('current_user'),
       $container->get('request_stack'),
+      $container->get('renderer'),
     );
   }
 
@@ -130,39 +139,44 @@ class ApiaryController extends ControllerBase {
 
     $rows = [];
     foreach ($hives as $hive) {
+      $actions = [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['hivelog-table-actions']],
+        'edit' => [
+          '#type' => 'link',
+          '#title' => $this->t('Edit'),
+          '#url' => $hive->toUrl('edit-form'),
+          '#attributes' => ['class' => ['button']],
+        ],
+        'delete' => [
+          '#type' => 'link',
+          '#title' => $this->t('Delete'),
+          '#url' => $hive->toUrl('delete-form'),
+          '#attributes' => ['class' => ['button', 'button--danger']],
+        ],
+      ];
       $rows[] = [
-        $hive->toLink()->toString(),
-        $hive->get('bee_breed')->value ? $hive->get('bee_breed')->getSetting('allowed_values')[$hive->get('bee_breed')->value] ?? $hive->get('bee_breed')->value : '',
-        $hive->get('temperament')->value ? $hive->get('temperament')->getSetting('allowed_values')[$hive->get('temperament')->value] ?? $hive->get('temperament')->value : '',
-        $hive->get('status')->getSetting('allowed_values')[$hive->get('status')->value] ?? $hive->get('status')->value,
-        [
-          'data' => [
-            '#type' => 'operations',
-            '#links' => [
-              'edit' => [
-                'title' => $this->t('Edit'),
-                'url' => $hive->toUrl('edit-form'),
-              ],
-              'delete' => [
-                'title' => $this->t('Delete'),
-                'url' => $hive->toUrl('delete-form'),
-              ],
-            ],
-          ],
+        'cells' => [
+          $hive->toLink()->toString(),
+          $hive->get('bee_breed')->value ? $hive->get('bee_breed')->getSetting('allowed_values')[$hive->get('bee_breed')->value] ?? $hive->get('bee_breed')->value : '',
+          $hive->get('temperament')->value ? $hive->get('temperament')->getSetting('allowed_values')[$hive->get('temperament')->value] ?? $hive->get('temperament')->value : '',
+          $hive->get('status')->getSetting('allowed_values')[$hive->get('status')->value] ?? $hive->get('status')->value,
+          $this->renderer->renderInIsolation($actions),
         ],
       ];
     }
 
     $build['hives_table'] = [
-      '#type' => 'table',
-      '#header' => $header,
-      '#rows' => $rows,
-      '#empty' => !empty($filters)
-        ? $this->t('No hives match the current filters.')
-        : $this->t('No hives have been added to this apiary yet.'),
+      '#type' => 'component',
+      '#component' => 'hivelog:entity-table',
+      '#props' => [
+        'headers' => array_map('strval', $header),
+        'rows' => $rows,
+        'empty_message' => (string) (!empty($filters)
+          ? $this->t('No hives match the current filters.')
+          : $this->t('No hives have been added to this apiary yet.')),
+      ],
       '#weight' => 12,
-      '#attributes' => ['class' => ['hivelog-table']],
-      '#attached' => ['library' => ['hivelog/tables']],
     ];
 
     $build['hives_pager'] = [

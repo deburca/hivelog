@@ -7,8 +7,10 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityListBuilder;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\Url;
 use Drupal\user\UserInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -30,6 +32,11 @@ class ApiaryListBuilder extends EntityListBuilder {
   protected EntityStorageInterface $userStorage;
 
   /**
+   * The renderer.
+   */
+  protected RendererInterface $renderer;
+
+  /**
    * Constructs a new ApiaryListBuilder.
    */
   public function __construct(
@@ -37,10 +44,12 @@ class ApiaryListBuilder extends EntityListBuilder {
     EntityStorageInterface $storage,
     AccountInterface $current_user,
     EntityStorageInterface $user_storage,
+    RendererInterface $renderer,
   ) {
     parent::__construct($entity_type, $storage);
     $this->currentUser = $current_user;
     $this->userStorage = $user_storage;
+    $this->renderer = $renderer;
   }
 
   /**
@@ -53,6 +62,7 @@ class ApiaryListBuilder extends EntityListBuilder {
       $entity_type_manager->getStorage($entity_type->id()),
       $container->get('current_user'),
       $entity_type_manager->getStorage('user'),
+      $container->get('renderer'),
     );
   }
 
@@ -78,18 +88,77 @@ class ApiaryListBuilder extends EntityListBuilder {
       ? mb_strimwidth($entity->get('location')->value, 0, 60, '...')
       : '';
     $row['owner'] = $owner ? $owner->getDisplayName() : '';
-    return $row + parent::buildRow($entity);
+
+    // Build operations as plain button links instead of the default
+    // dropbutton widget returned by parent::buildRow().
+    $links = [];
+    if ($entity->access('update') && $entity->hasLinkTemplate('edit-form')) {
+      $links['edit'] = [
+        '#type' => 'link',
+        '#title' => $this->t('Edit'),
+        '#url' => $entity->toUrl('edit-form'),
+        '#attributes' => ['class' => ['button']],
+      ];
+    }
+    if ($entity->access('delete') && $entity->hasLinkTemplate('delete-form')) {
+      $links['delete'] = [
+        '#type' => 'link',
+        '#title' => $this->t('Delete'),
+        '#url' => $entity->toUrl('delete-form'),
+        '#attributes' => ['class' => ['button', 'button--danger']],
+      ];
+    }
+    $row['operations']['data'] = [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['hivelog-table-actions']],
+    ] + $links;
+
+    return $row;
   }
 
   /**
    * {@inheritdoc}
    */
   public function render() {
-    $build = parent::render();
+    // Build the table using the SDC component instead of the inherited
+    // #type => 'table' from EntityListBuilder::render().
+    $headers = array_map('strval', array_values($this->buildHeader()));
+    $rows = [];
+    foreach ($this->load() as $entity) {
+      $row = $this->buildRow($entity);
+      if (!$row) {
+        continue;
+      }
+      // Pre-render the operations cell (which contains render arrays).
+      $ops = $row['operations']['data'] ?? [];
+      $ops_html = !empty($ops) ? $this->renderer->renderInIsolation($ops) : '';
 
-    // Apply the shared table styling (full-width, solid dropdown background).
-    $build['table']['#attributes']['class'][] = 'hivelog-table';
-    $build['table']['#attached']['library'][] = 'hivelog/tables';
+      $rows[] = [
+        'cells' => [
+          $row['cbr'] instanceof \Stringable ? (string) $row['cbr'] : $row['cbr'],
+          $row['name'] instanceof \Stringable ? (string) $row['name'] : $row['name'],
+          $row['location'] ?? '',
+          $row['owner'] ?? '',
+          $ops_html,
+        ],
+      ];
+    }
+
+    $build['table'] = [
+      '#type' => 'component',
+      '#component' => 'hivelog:entity-table',
+      '#props' => [
+        'headers' => $headers,
+        'rows' => $rows,
+        'empty_message' => (string) $this->t('There are no @label yet.', [
+          '@label' => $this->entityType->getPluralLabel(),
+        ]),
+      ],
+      '#cache' => [
+        'contexts' => $this->entityType->getListCacheContexts(),
+        'tags' => $this->entityType->getListCacheTags(),
+      ],
+    ];
 
     /** @var \Drupal\user\UserInterface|null $current */
     $current = $this->userStorage->load($this->currentUser->id());

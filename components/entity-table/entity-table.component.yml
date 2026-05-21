@@ -1,0 +1,35 @@
+$schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schemas/v1/metadata.schema.json
+
+name: Entity Table
+status: stable
+description: A reusable table component for HiveLog entity list pages.
+
+props:
+  type: object
+  required:
+    - headers
+  properties:
+    headers:
+      type: array
+      title: Column headers
+      items:
+        type: string
+    rows:
+      type: array
+      title: Table rows
+      description: >
+        Each row is an object with a 'cells' array. Cell values are
+        pre-rendered HTML strings (entity links, styled buttons, plain text).
+      items:
+        type: object
+        properties:
+          cells:
+            type: array
+    empty_message:
+      type: string
+      title: Empty state message
+      default: 'No items found.'
+
+libraryOverrides:
+  dependencies:
+    - hivelog/buttons
