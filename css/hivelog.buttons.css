@@ -1,0 +1,78 @@
+/**
+ * @file
+ * Button styling for HiveLog action buttons.
+ *
+ * Provides visible theming for Add, Edit, Delete, Filter, and Reset buttons
+ * so they are clearly identifiable as clickable actions regardless of the
+ * active admin theme.
+ */
+
+/* Base button styling within HiveLog contexts. */
+.hivelog-list-heading .button,
+.hivelog-filter-form__actions .button,
+.hivelog-inspection-actions .button,
+.hivelog-queen-actions .button,
+.hivelog-queen-observation-actions .button,
+.hivelog-entity-form .form-actions .button {
+  display: inline-block;
+  padding: 0.45em 1em;
+  border: 1px solid #8e929c;
+  border-radius: 4px;
+  background-color: #f3f4f6;
+  color: #222;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  text-decoration: none;
+  cursor: pointer;
+  margin-right: 0.5em;
+}
+
+.hivelog-list-heading .button:hover,
+.hivelog-filter-form__actions .button:hover,
+.hivelog-inspection-actions .button:hover,
+.hivelog-queen-actions .button:hover,
+.hivelog-queen-observation-actions .button:hover,
+.hivelog-entity-form .form-actions .button:hover {
+  background-color: #e5e7eb;
+  border-color: #6b7280;
+}
+
+/* Primary buttons (Add, Filter, Save). */
+.hivelog-list-heading .button--primary,
+.hivelog-filter-form__actions .button--primary,
+.hivelog-inspection-actions .button--primary,
+.hivelog-queen-actions .button--primary,
+.hivelog-queen-observation-actions .button--primary,
+.hivelog-entity-form .form-actions .button--primary {
+  background-color: #2563eb;
+  border-color: #1d4ed8;
+  color: #fff;
+}
+
+.hivelog-list-heading .button--primary:hover,
+.hivelog-filter-form__actions .button--primary:hover,
+.hivelog-inspection-actions .button--primary:hover,
+.hivelog-queen-actions .button--primary:hover,
+.hivelog-queen-observation-actions .button--primary:hover,
+.hivelog-entity-form .form-actions .button--primary:hover {
+  background-color: #1d4ed8;
+  border-color: #1e40af;
+}
+
+/* Danger buttons (Delete). */
+.hivelog-inspection-actions .button--danger,
+.hivelog-queen-actions .button--danger,
+.hivelog-queen-observation-actions .button--danger,
+.hivelog-entity-form .form-actions .button--danger {
+  background-color: #dc2626;
+  border-color: #b91c1c;
+  color: #fff;
+}
+
+.hivelog-inspection-actions .button--danger:hover,
+.hivelog-queen-actions .button--danger:hover,
+.hivelog-queen-observation-actions .button--danger:hover,
+.hivelog-entity-form .form-actions .button--danger:hover {
+  background-color: #b91c1c;
+  border-color: #991b1b;
+}

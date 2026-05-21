@@ -7,6 +7,7 @@
 
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\Form\FormStateInterface;
 
 /**
  * Implements hook_entity_base_field_info().
@@ -40,4 +41,30 @@ function hivelog_entity_base_field_info(EntityTypeInterface $entity_type) {
     ->setDisplayConfigurable('view', TRUE);
 
   return $fields;
+}
+
+/**
+ * Implements hook_form_alter().
+ *
+ * Attaches the HiveLog button styling library to all HiveLog entity forms
+ * (add/edit) so that action buttons (Save, Delete) are visually themed.
+ */
+function hivelog_form_alter(array &$form, FormStateInterface $form_state, string $form_id): void {
+  $hivelog_form_ids = [
+    'apiary_add_form',
+    'apiary_edit_form',
+    'hive_add_form',
+    'hive_edit_form',
+    'hive_inspection_add_form',
+    'hive_inspection_edit_form',
+    'queen_add_form',
+    'queen_edit_form',
+    'queen_observation_add_form',
+    'queen_observation_edit_form',
+  ];
+
+  if (in_array($form_id, $hivelog_form_ids, TRUE)) {
+    $form['#attributes']['class'][] = 'hivelog-entity-form';
+    $form['#attached']['library'][] = 'hivelog/buttons';
+  }
 }
