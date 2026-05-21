@@ -10,14 +10,24 @@ images:
     component:
       css/hivelog.images.css: {}
 
+buttons:
+  version: 1.x
+  css:
+    component:
+      css/hivelog.buttons.css: {}
+
 tables:
   version: 1.x
   css:
     component:
       css/hivelog.tables.css: {}
+  dependencies:
+    - hivelog/buttons
 
 filter_form:
   version: 1.x
   css:
     component:
       css/hivelog.filter-form.css: {}
+  dependencies:
+    - hivelog/buttons

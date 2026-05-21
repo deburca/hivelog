@@ -87,6 +87,10 @@ class ApiaryListBuilder extends EntityListBuilder {
   public function render() {
     $build = parent::render();
 
+    // Apply the shared table styling (full-width, solid dropdown background).
+    $build['table']['#attributes']['class'][] = 'hivelog-table';
+    $build['table']['#attached']['library'][] = 'hivelog/tables';
+
     /** @var \Drupal\user\UserInterface|null $current */
     $current = $this->userStorage->load($this->currentUser->id());
     $cbr = $this->extractCbr($current);
