@@ -198,6 +198,18 @@ hivelog/
 ├── hivelog.links.action.yml      # Action links (Add buttons)
 ├── hivelog.links.task.yml        # Local task tabs (View/Edit/Delete)
 ├── README.md
+├── components/                       # Single Directory Components (SDC)
+│   ├── button/
+│   │   ├── button.component.yml
+│   │   └── button.twig
+│   ├── button-group/
+│   │   ├── button-group.component.yml
+│   │   ├── button-group.css
+│   │   └── button-group.twig
+│   └── entity-table/
+│       ├── entity-table.component.yml
+│       ├── entity-table.css
+│       └── entity-table.twig
 ├── src/
 │   ├── Entity/
 │   │   ├── Apiary.php            # Apiary content entity
@@ -212,6 +224,8 @@ hivelog/
 │   │   ├── HiveDeleteForm.php
 │   │   ├── HiveInspectionForm.php    # Inspection add/edit form
 │   │   ├── HiveInspectionDeleteForm.php
+│   │   ├── HivelogHiveFilterForm.php         # Hive list filter form
+│   │   ├── HivelogInspectionFilterForm.php   # Inspection list filter form
 │   │   ├── QueenForm.php         # Queen add/edit form
 │   │   ├── QueenDeleteForm.php
 │   │   ├── QueenObservationForm.php  # Queen observation add/edit form
@@ -224,24 +238,33 @@ hivelog/
 │   │   └── QueenObservationController.php  # Observation view + queen-scoped add
 │   ├── Breadcrumb/
 │   │   └── HivelogBreadcrumbBuilder.php  # Breadcrumb builder service
-│   ├── ApiaryListBuilder.php
-│   ├── HiveListBuilder.php
-│   ├── HiveInspectionListBuilder.php
-│   ├── QueenListBuilder.php
-│   ├── QueenObservationListBuilder.php
 │   ├── ApiaryAccessControlHandler.php
+│   ├── ApiaryAccessTrait.php         # Shared apiary-scoped access logic
+│   ├── ApiaryListBuilder.php
 │   ├── HiveAccessControlHandler.php
 │   ├── HiveInspectionAccessControlHandler.php
+│   ├── HiveInspectionListBuilder.php
+│   ├── HiveListBuilder.php
 │   ├── QueenAccessControlHandler.php
-│   └── QueenObservationAccessControlHandler.php
+│   ├── QueenListBuilder.php
+│   ├── QueenObservationAccessControlHandler.php
+│   └── QueenObservationListBuilder.php
 └── tests/
     └── src/
+        ├── Functional/
+        │   ├── EntityCrudJourneyTest.php          # Full add/edit/delete browser journeys
+        │   └── PermissionMatrixTest.php           # Route access per permission
         ├── Kernel/
-        │   ├── ApiaryTest.php            # Apiary entity tests
-        │   ├── HiveTest.php              # Hive entity + queen section tests
-        │   ├── HiveInspectionTest.php    # Inspection entity tests
-        │   ├── QueenTest.php             # Queen CRUD + colour + invariant tests
-        │   └── QueenObservationTest.php  # Queen observation CRUD + view tests
+        │   ├── ApiaryScopedAccessTest.php          # Apiary-scoped access checks
+        │   ├── ApiaryTest.php                      # Apiary entity tests
+        │   ├── CbrFieldTest.php                    # CBR user field tests
+        │   ├── ControllerCacheMetadataTest.php     # Controller cache metadata tests
+        │   ├── EmbeddedTableFilterPaginationTest.php # Embedded table filter + pagination
+        │   ├── HiveInspectionTest.php              # Inspection entity tests
+        │   ├── HiveTest.php                        # Hive entity + queen section tests
+        │   ├── ModuleDependencyAuditTest.php       # Module dependency audit
+        │   ├── QueenObservationTest.php            # Queen observation CRUD + view tests
+        │   └── QueenTest.php                       # Queen CRUD + colour + invariant tests
         └── Unit/
             └── Breadcrumb/
                 └── HivelogBreadcrumbBuilderTest.php  # Breadcrumb unit tests
@@ -320,4 +343,5 @@ ddev drush cr
   `src/Entity/HiveInspection.php`, then uninstall and reinstall the module (or
   write an update hook) to apply schema changes.
 - **Views integration** — All entities are available as Views base tables
-  (`hivelog_apiary`, `hivelog_hive`, `hivelog_hive_inspection`).
+  (`hivelog_apiary`, `hivelog_hive`, `hivelog_hive_inspection`,
+  `hivelog_queen`, `hivelog_queen_observation`).
