@@ -1,5 +1,10 @@
-<div class="hivelog-button-group">
+<div class="hivelog-button-group flex [&>:not(:first-child)]:rounded-l-none [&>:not(:last-child)]:rounded-r-none gap-px inline-flex flex-wrap items-center gap-1.5">
   {% for button in buttons %}
-    {{ button|raw }}
+    {% include 'hivelog:button' with {
+      label: button.label,
+      url: button.url,
+      variant: button.variant|default('default'),
+      extra_classes: "text-sm !px-1 !py-0",
+    } only %}
   {% endfor %}
 </div>

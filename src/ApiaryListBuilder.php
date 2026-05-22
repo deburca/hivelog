@@ -96,28 +96,18 @@ class ApiaryListBuilder extends EntityListBuilder {
 
     // Build operations as plain button links instead of the default
     // dropbutton widget returned by parent::buildRow().
-    $links = [];
+    $buttons = [];
     if ($entity->access('update') && $entity->hasLinkTemplate('edit-form')) {
-      $links['edit'] = [
-        '#type' => 'link',
-        '#title' => $this->t('Edit'),
-        '#url' => $entity->toUrl('edit-form'),
-        '#attributes' => ['class' => ['button']],
-      ];
+      $buttons[] = ['label' => (string) $this->t('Edit'), 'url' => $entity->toUrl('edit-form')->toString()];
     }
     if ($entity->access('delete') && $entity->hasLinkTemplate('delete-form')) {
-      $links['delete'] = [
-        '#type' => 'link',
-        '#title' => $this->t('Delete'),
-        '#url' => $entity->toUrl('delete-form'),
-        '#attributes' => ['class' => ['button', 'button--danger']],
-      ];
+      $buttons[] = ['label' => (string) $this->t('Delete'), 'url' => $entity->toUrl('delete-form')->toString(), 'variant' => 'danger'];
     }
     $row['operations']['data'] = [
       '#type' => 'component',
       '#component' => 'hivelog:button-group',
       '#props' => [
-        'buttons' => $this->renderButtons($links),
+        'buttons' => $buttons,
       ],
     ];
 
@@ -165,11 +155,13 @@ class ApiaryListBuilder extends EntityListBuilder {
         '#attributes' => ['class' => ['hivelog-list-heading__title']],
       ],
       'add' => [
-        '#type' => 'link',
-        '#title' => $this->t('Add Apiary'),
-        '#url' => Url::fromRoute('entity.apiary.add_form'),
-        '#attributes' => [
-          'class' => ['button', 'button--primary', 'hivelog-list-heading__action'],
+        '#type' => 'component',
+        '#component' => 'hivelog:button',
+        '#props' => [
+          'label' => (string) $this->t('Add Apiary'),
+          'url' => Url::fromRoute('entity.apiary.add_form')->toString(),
+          'variant' => 'primary',
+          'extra_classes' => 'hivelog-list-heading__action',
         ],
       ],
       '#attached' => ['library' => ['hivelog/buttons']],
@@ -246,22 +238,6 @@ class ApiaryListBuilder extends EntityListBuilder {
       return '';
     }
     return trim((string) $user->get('cbr_number')->value);
-  }
-
-  /**
-   * Pre-renders an array of link render elements to HTML strings.
-   *
-   * @param array $links
-   *   Associative array of link render elements keyed by name.
-   *
-   * @return string[]
-   */
-  protected function renderButtons(array $links): array {
-    $buttons = [];
-    foreach ($links as $link) {
-      $buttons[] = (string) $this->renderer->renderInIsolation($link);
-    }
-    return $buttons;
   }
 
 }

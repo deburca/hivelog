@@ -134,11 +134,13 @@ class HiveController extends ControllerBase {
         '#attributes' => ['class' => ['hivelog-list-heading__title']],
       ],
       'add' => [
-        '#type' => 'link',
-        '#title' => $this->t('Add Inspection'),
-        '#url' => Url::fromRoute('hivelog.inspection.add', ['hive' => $hive->id()]),
-        '#attributes' => [
-          'class' => ['button', 'button--primary', 'hivelog-list-heading__action'],
+        '#type' => 'component',
+        '#component' => 'hivelog:button',
+        '#props' => [
+          'label' => (string) $this->t('Add Inspection'),
+          'url' => Url::fromRoute('hivelog.inspection.add', ['hive' => $hive->id()])->toString(),
+          'variant' => 'primary',
+          'extra_classes' => 'hivelog-list-heading__action',
         ],
       ],
     ];
@@ -183,11 +185,11 @@ class HiveController extends ControllerBase {
         '#type' => 'component',
         '#component' => 'hivelog:button-group',
         '#props' => [
-          'buttons' => $this->renderButtons([
-            ['title' => $this->t('View'), 'url' => $inspection->toUrl('canonical'), 'class' => ['button']],
-            ['title' => $this->t('Edit'), 'url' => $inspection->toUrl('edit-form'), 'class' => ['button']],
-            ['title' => $this->t('Delete'), 'url' => $inspection->toUrl('delete-form'), 'class' => ['button', 'button--danger']],
-          ]),
+          'buttons' => [
+            ['label' => (string) $this->t('View'), 'url' => $inspection->toUrl('canonical')->toString()],
+            ['label' => (string) $this->t('Edit'), 'url' => $inspection->toUrl('edit-form')->toString()],
+            ['label' => (string) $this->t('Delete'), 'url' => $inspection->toUrl('delete-form')->toString(), 'variant' => 'danger'],
+          ],
         ],
       ];
       $rows[] = [
@@ -307,19 +309,21 @@ class HiveController extends ControllerBase {
         ],
       ];
       $section['edit'] = [
-        '#type' => 'link',
-        '#title' => $this->t('Edit Queen'),
-        '#url' => $queen->toUrl('edit-form'),
-        '#attributes' => [
-          'class' => ['button', 'hivelog-list-heading__action'],
+        '#type' => 'component',
+        '#component' => 'hivelog:button',
+        '#props' => [
+          'label' => (string) $this->t('Edit Queen'),
+          'url' => $queen->toUrl('edit-form')->toString(),
+          'extra_classes' => 'hivelog-list-heading__action',
         ],
       ];
       $section['add_observation'] = [
-        '#type' => 'link',
-        '#title' => $this->t('Add Observation'),
-        '#url' => Url::fromRoute('hivelog.queen_observation.add', ['queen' => $queen->id()]),
-        '#attributes' => [
-          'class' => ['button', 'hivelog-list-heading__action'],
+        '#type' => 'component',
+        '#component' => 'hivelog:button',
+        '#props' => [
+          'label' => (string) $this->t('Add Observation'),
+          'url' => Url::fromRoute('hivelog.queen_observation.add', ['queen' => $queen->id()])->toString(),
+          'extra_classes' => 'hivelog-list-heading__action',
         ],
       ];
     }
@@ -328,11 +332,13 @@ class HiveController extends ControllerBase {
         '#markup' => '<p>' . $this->t('No active queen is recorded for this hive.') . '</p>',
       ];
       $section['add'] = [
-        '#type' => 'link',
-        '#title' => $this->t('Add Queen'),
-        '#url' => Url::fromRoute('hivelog.queen.add', ['hive' => $hive->id()]),
-        '#attributes' => [
-          'class' => ['button', 'button--primary', 'hivelog-list-heading__action'],
+        '#type' => 'component',
+        '#component' => 'hivelog:button',
+        '#props' => [
+          'label' => (string) $this->t('Add Queen'),
+          'url' => Url::fromRoute('hivelog.queen.add', ['hive' => $hive->id()])->toString(),
+          'variant' => 'primary',
+          'extra_classes' => 'hivelog-list-heading__action',
         ],
       ];
     }
@@ -681,27 +687,6 @@ class HiveController extends ControllerBase {
       return 0;
     }
     return (int) $dt->format('z');
-  }
-
-  /**
-   * Pre-renders an array of button definitions to HTML strings.
-   *
-   * @param array<int, array{title: mixed, url: \Drupal\Core\Url, class: string[]}> $definitions
-   *
-   * @return string[]
-   */
-  protected function renderButtons(array $definitions): array {
-    $buttons = [];
-    foreach ($definitions as $def) {
-      $link = [
-        '#type' => 'link',
-        '#title' => $def['title'],
-        '#url' => $def['url'],
-        '#attributes' => ['class' => $def['class']],
-      ];
-      $buttons[] = (string) $this->renderer->renderInIsolation($link);
-    }
-    return $buttons;
   }
 
 }

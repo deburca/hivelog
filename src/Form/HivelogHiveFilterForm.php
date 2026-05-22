@@ -113,10 +113,12 @@ class HivelogHiveFilterForm extends FormBase {
     ];
     if ($apiary) {
       $form['filter_actions']['reset'] = [
-        '#type' => 'link',
-        '#title' => $this->t('Reset'),
-        '#url' => Url::fromRoute('entity.apiary.canonical', ['apiary' => $apiary->id()]),
-        '#attributes' => ['class' => ['button']],
+        '#type' => 'component',
+        '#component' => 'hivelog:button',
+        '#props' => [
+          'label' => (string) $this->t('Reset'),
+          'url' => Url::fromRoute('entity.apiary.canonical', ['apiary' => $apiary->id()])->toString(),
+        ],
       ];
     }
 

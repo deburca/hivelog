@@ -404,9 +404,10 @@ class EmbeddedTableFilterPaginationTest extends KernelTestBase {
     // The Add Hive action lives in the heading row (top-right of the list
     // section), not inline with the filter form.
     $this->assertArrayHasKey('add', $build['hives_heading']);
-    $this->assertContains(
+    $this->assertEquals('hivelog:button', $build['hives_heading']['add']['#component']);
+    $this->assertStringContainsString(
       'hivelog-list-heading__action',
-      $build['hives_heading']['add']['#attributes']['class']
+      $build['hives_heading']['add']['#props']['extra_classes']
     );
     $this->assertContains(
       'hivelog-list-heading',

@@ -1,24 +1,26 @@
-<table class="hivelog-table">
-  <thead>
-    <tr>
-      {% for header in headers %}
-        <th>{{ header }}</th>
-      {% endfor %}
-    </tr>
-  </thead>
-  <tbody>
-    {% if rows is empty %}
-      <tr class="hivelog-table__empty">
-        <td colspan="{{ headers|length }}">{{ empty_message }}</td>
+<div class="overflow-x-auto">
+  <table class="table w-full">
+    <thead>
+      <tr>
+        {% for header in headers %}
+          <th class="text-left">{{ header }}</th>
+        {% endfor %}
       </tr>
-    {% else %}
-      {% for row in rows %}
+    </thead>
+    <tbody>
+      {% if rows is empty %}
         <tr>
-          {% for cell in row.cells %}
-            <td>{{ cell|raw }}</td>
-          {% endfor %}
+          <td colspan="{{ headers|length }}" class="text-center opacity-60">{{ empty_message }}</td>
         </tr>
-      {% endfor %}
-    {% endif %}
-  </tbody>
-</table>
+      {% else %}
+        {% for row in rows %}
+          <tr>
+            {% for cell in row.cells %}
+              <td>{{ cell|raw }}</td>
+            {% endfor %}
+          </tr>
+        {% endfor %}
+      {% endif %}
+    </tbody>
+  </table>
+</div>

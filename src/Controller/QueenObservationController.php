@@ -124,10 +124,10 @@ class QueenObservationController extends ControllerBase {
   protected function buildActions(QueenObservation $queen_observation): array {
     $buttons = [];
     if ($queen_observation->access('update')) {
-      $buttons[] = ['title' => $this->t('Edit'), 'url' => $queen_observation->toUrl('edit-form'), 'class' => ['button', 'button--primary']];
+      $buttons[] = ['label' => (string) $this->t('Edit'), 'url' => $queen_observation->toUrl('edit-form')->toString(), 'variant' => 'primary'];
     }
     if ($queen_observation->access('delete')) {
-      $buttons[] = ['title' => $this->t('Delete'), 'url' => $queen_observation->toUrl('delete-form'), 'class' => ['button', 'button--danger']];
+      $buttons[] = ['label' => (string) $this->t('Delete'), 'url' => $queen_observation->toUrl('delete-form')->toString(), 'variant' => 'danger'];
     }
     if (empty($buttons)) {
       return [];
@@ -135,30 +135,9 @@ class QueenObservationController extends ControllerBase {
     return [
       '#type' => 'component',
       '#component' => 'hivelog:button-group',
-      '#props' => ['buttons' => $this->renderButtons($buttons)],
+      '#props' => ['buttons' => $buttons],
       '#weight' => -10,
     ];
-  }
-
-  /**
-   * Pre-renders an array of button definitions to HTML strings.
-   *
-   * @param array<int, array{title: mixed, url: \Drupal\Core\Url, class: string[]}> $definitions
-   *
-   * @return string[]
-   */
-  protected function renderButtons(array $definitions): array {
-    $buttons = [];
-    foreach ($definitions as $def) {
-      $link = [
-        '#type' => 'link',
-        '#title' => $def['title'],
-        '#url' => $def['url'],
-        '#attributes' => ['class' => $def['class']],
-      ];
-      $buttons[] = (string) $this->renderer->renderInIsolation($link);
-    }
-    return $buttons;
   }
 
   /**
