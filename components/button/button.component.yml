@@ -1,0 +1,38 @@
+$schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schemas/v1/metadata.schema.json
+
+name: Button
+status: stable
+description: >
+  A single action button that emits Drupal, Bootstrap, and Tailwind CSS
+  classes so the module renders correctly regardless of the active theme's
+  CSS framework.
+
+props:
+  type: object
+  required:
+    - label
+    - url
+  properties:
+    label:
+      type: string
+      title: Label
+      examples:
+        - Edit
+    url:
+      type: string
+      title: URL
+    variant:
+      type: string
+      title: Variant
+      default: default
+      examples:
+        - primary
+    extra_classes:
+      type: string
+      title: Extra CSS classes
+      description: Additional classes appended after the variant classes.
+      default: ''
+
+libraryOverrides:
+  dependencies:
+    - hivelog/buttons

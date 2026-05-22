@@ -2,16 +2,7 @@
  * @file
  * Styling for the hivelog:button-group SDC component.
  *
- * Inline flex container for adjacent action buttons with consistent spacing.
+ * Layout is driven by Tailwind utility classes declared in
+ * button-group.twig. The theme build scans this component directory and
+ * includes the relevant definitions in its compiled output.
  */
-
-.hivelog-button-group {
-  display: inline-flex;
-  gap: 0.4em;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.hivelog-button-group .button {
-  margin-right: 0;
-}

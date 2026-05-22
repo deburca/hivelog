@@ -115,10 +115,12 @@ class HivelogInspectionFilterForm extends FormBase {
     ];
     if ($hive) {
       $form['filter_actions']['reset'] = [
-        '#type' => 'link',
-        '#title' => $this->t('Reset'),
-        '#url' => Url::fromRoute('entity.hive.canonical', ['hive' => $hive->id()]),
-        '#attributes' => ['class' => ['button']],
+        '#type' => 'component',
+        '#component' => 'hivelog:button',
+        '#props' => [
+          'label' => (string) $this->t('Reset'),
+          'url' => Url::fromRoute('entity.hive.canonical', ['hive' => $hive->id()])->toString(),
+        ],
       ];
     }
 

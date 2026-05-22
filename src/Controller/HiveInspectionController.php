@@ -204,10 +204,10 @@ class HiveInspectionController extends ControllerBase {
   protected function buildActions(HiveInspection $hive_inspection): array {
     $buttons = [];
     if ($hive_inspection->access('update')) {
-      $buttons[] = ['title' => $this->t('Edit'), 'url' => $hive_inspection->toUrl('edit-form'), 'class' => ['button', 'button--primary']];
+      $buttons[] = ['label' => (string) $this->t('Edit'), 'url' => $hive_inspection->toUrl('edit-form')->toString(), 'variant' => 'primary'];
     }
     if ($hive_inspection->access('delete')) {
-      $buttons[] = ['title' => $this->t('Delete'), 'url' => $hive_inspection->toUrl('delete-form'), 'class' => ['button', 'button--danger']];
+      $buttons[] = ['label' => (string) $this->t('Delete'), 'url' => $hive_inspection->toUrl('delete-form')->toString(), 'variant' => 'danger'];
     }
     if (empty($buttons)) {
       return [];
@@ -215,30 +215,9 @@ class HiveInspectionController extends ControllerBase {
     return [
       '#type' => 'component',
       '#component' => 'hivelog:button-group',
-      '#props' => ['buttons' => $this->renderButtons($buttons)],
+      '#props' => ['buttons' => $buttons],
       '#weight' => -10,
     ];
-  }
-
-  /**
-   * Pre-renders an array of button definitions to HTML strings.
-   *
-   * @param array<int, array{title: mixed, url: \Drupal\Core\Url, class: string[]}> $definitions
-   *
-   * @return string[]
-   */
-  protected function renderButtons(array $definitions): array {
-    $buttons = [];
-    foreach ($definitions as $def) {
-      $link = [
-        '#type' => 'link',
-        '#title' => $def['title'],
-        '#url' => $def['url'],
-        '#attributes' => ['class' => $def['class']],
-      ];
-      $buttons[] = (string) $this->renderer->renderInIsolation($link);
-    }
-    return $buttons;
   }
 
   /**

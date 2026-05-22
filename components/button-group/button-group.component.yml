@@ -13,9 +13,19 @@ props:
       type: array
       title: Buttons
       description: >
-        Pre-rendered HTML strings for each button in the group.
+        Structured button definitions rendered via the hivelog:button component.
       items:
-        type: string
+        type: object
+        required:
+          - label
+          - url
+        properties:
+          label:
+            type: string
+          url:
+            type: string
+          variant:
+            type: string
 
 libraryOverrides:
   dependencies:

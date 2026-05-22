@@ -1,0 +1,10 @@
+{%- set variant = variant|default('default') -%}
+{%- set base = 'button btn join-item inline-flex items-center px-3 py-1.5 rounded text-sm font-medium no-underline cursor-pointer transition-colors' -%}
+{%- if variant == 'primary' -%}
+  {%- set modifier = 'button--primary btn-primary bg-blue-600 text-white border border-blue-700 hover:bg-blue-700' -%}
+{%- elseif variant == 'danger' -%}
+  {%- set modifier = 'button--danger btn-danger bg-red-600 text-white border border-red-700 hover:bg-red-700' -%}
+{%- else -%}
+  {%- set modifier = 'btn-default bg-gray-100 text-gray-800 border border-gray-300 hover:bg-gray-200' -%}
+{%- endif -%}
+<a href="{{ url }}" class="{{ base }} {{ modifier }}{% if extra_classes %} {{ extra_classes }}{% endif %}">{{ label }}</a>
