@@ -6,6 +6,62 @@
  */
 
 /**
+ * Implements hook_uninstall().
+ *
+ * Deletes all hivelog entities and cleans up the entity type definitions.
+ * Each entity type is processed in dependency order (children first) and
+ * wrapped in a try/catch so that the uninstall succeeds even when the
+ * underlying database tables have already been removed (e.g. after a
+ * database restore or manual cleanup).
+ */
+function hivelog_uninstall() {
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+
+  // Delete entities in child-first order so foreign key constraints (if any)
+  // are respected.
+  $entity_type_ids = [
+    'queen_observation',
+    'hive_inspection',
+    'queen',
+    'hive',
+    'apiary',
+  ];
+
+  foreach ($entity_type_ids as $entity_type_id) {
+    try {
+      $storage = $entity_type_manager->getStorage($entity_type_id);
+      // Delete entities in batches to avoid memory issues on large datasets.
+      while ($ids = $storage->getQuery()->accessCheck(FALSE)->range(0, 50)->execute()) {
+        $entities = $storage->loadMultiple($ids);
+        $storage->delete($entities);
+      }
+    }
+    catch (\Exception $e) {
+      // The table may already be gone — log and continue.
+      \Drupal::logger('hivelog')->notice(
+        'Could not delete @type entities during uninstall: @message',
+        ['@type' => $entity_type_id, '@message' => $e->getMessage()]
+      );
+    }
+  }
+
+  // Remove the CBR field that hivelog adds to the user entity.
+  // Drupal's post-hook cleanup calls countFieldData() on any field it still
+  // finds in the tracking stores, which queries the column. If the column is
+  // already gone (e.g. after a database restore) this throws. We therefore
+  // proactively scrub ALL tracking stores so the cleanup has nothing to find.
+  // The static flag also tells hivelog_entity_base_field_info() to stop
+  // declaring the field so the post-hook code cannot rediscover it.
+  $suppressed = &drupal_static('hivelog_cbr_suppressed', FALSE);
+  $suppressed = TRUE;
+  _hivelog_cleanup_cbr_field($entity_definition_update_manager);
+  // Clear the cached field definitions so the suppression takes effect
+  // for any subsequent EntityFieldManager calls within this request.
+  \Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
+}
+
+/**
  * Replace latitude/longitude fields with geolocation field on apiaries.
  */
 function hivelog_update_10001(&$sandbox) {
@@ -456,4 +512,60 @@ function hivelog_update_10013(&$sandbox) {
   }
 
   return t('Installed beekeepers and visibility fields on the Apiary entity.');
+}
+
+/**
+ * Removes all traces of the cbr_number field from Drupal's tracking stores.
+ *
+ * The normal EntityDefinitionUpdateManager::uninstallFieldStorageDefinition()
+ * path internally calls countFieldData(), which queries the column. If the
+ * column has already been removed (e.g. after a database restore), the query
+ * throws a fatal PDO exception. To avoid this, we bypass the update manager
+ * entirely and directly scrub every key-value store that references the field.
+ *
+ * When the column DOES exist we still try the clean uninstall path first so
+ * that Drupal can drop the column itself.
+ */
+function _hivelog_cleanup_cbr_field($entity_definition_update_manager) {
+  $schema = \Drupal::database()->schema();
+  $column_exists = $schema->fieldExists('users_field_data', 'cbr_number');
+
+  // Happy path: column exists, use the proper API to drop it.
+  if ($column_exists) {
+    try {
+      $cbr_definition = $entity_definition_update_manager
+        ->getFieldStorageDefinition('cbr_number', 'user');
+      if ($cbr_definition) {
+        $entity_definition_update_manager->uninstallFieldStorageDefinition($cbr_definition);
+        return;
+      }
+    }
+    catch (\Exception $e) {
+      // Fall through to manual cleanup below.
+    }
+  }
+
+  // Manual cleanup: use the EntityLastInstalledSchemaRepository service so
+  // that BOTH the in-memory cache AND the key-value store are updated in
+  // one step. Writing to the key-value store directly does not clear the
+  // service's PHP-level cache, which is why earlier attempts still failed.
+  /** @var \Drupal\Core\Entity\EntityLastInstalledSchemaRepositoryInterface $schema_repo */
+  $schema_repo = \Drupal::service('entity.last_installed_schema.repository');
+  $installed = $schema_repo->getLastInstalledFieldStorageDefinitions('user');
+  if (isset($installed['cbr_number'])) {
+    $schema_repo->deleteLastInstalledFieldStorageDefinition($installed['cbr_number']);
+  }
+
+  // Remove the SQL schema tracking for the field.
+  $schema_kv = \Drupal::keyValue('entity.storage_schema.sql');
+  $schema_kv->delete('user.field_schema_data.cbr_number');
+
+  // Drop the column directly if it somehow still exists.
+  foreach (['users_field_data', 'users'] as $table) {
+    if ($schema->fieldExists($table, 'cbr_number')) {
+      $schema->dropField($table, 'cbr_number');
+    }
+  }
+
+  \Drupal::logger('hivelog')->notice('Cleaned up cbr_number field tracking directly during uninstall.');
 }
