@@ -15,6 +15,7 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\hivelog\ApiaryAccessControlHandler;
 use Drupal\hivelog\ApiaryListBuilder;
+use Drupal\hivelog\HivelogEntityStorage;
 use Drupal\hivelog\Form\ApiaryDeleteForm;
 use Drupal\hivelog\Form\ApiaryForm;
 use Drupal\user\EntityOwnerInterface;
@@ -30,6 +31,7 @@ use Drupal\user\EntityOwnerTrait;
   label_singular: new TranslatableMarkup('apiary'),
   label_plural: new TranslatableMarkup('apiaries'),
   handlers: [
+    'storage' => HivelogEntityStorage::class,
     'list_builder' => ApiaryListBuilder::class,
     'form' => [
       'default' => ApiaryForm::class,

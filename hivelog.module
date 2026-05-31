@@ -22,6 +22,30 @@ function hivelog_entity_base_field_info(EntityTypeInterface $entity_type) {
     return [];
   }
 
+  // During uninstall the cbr_number tracking has already been cleaned up,
+  // but this hook is still active. Suppress the field so Drupal's post-hook
+  // cleanup does not rediscover it via the live definitions.
+  $suppressed = &drupal_static('hivelog_cbr_suppressed', FALSE);
+  if ($suppressed) {
+    return [];
+  }
+
+  // Safety check: if the cbr_number column was lost (e.g. after a database
+  // restore) but Drupal still tracks the field as installed, do not
+  // re-declare it. This prevents the ContentUninstallValidator from
+  // querying a non-existent column during module uninstall. On fresh
+  // installs the field is not yet tracked, so we still declare it
+  // normally — the update hook handles initial column creation.
+  $schema = \Drupal::database()->schema();
+  if (!$schema->fieldExists('users_field_data', 'cbr_number')) {
+    /** @var \Drupal\Core\Entity\EntityLastInstalledSchemaRepositoryInterface $repo */
+    $repo = \Drupal::service('entity.last_installed_schema.repository');
+    $installed_defs = $repo->getLastInstalledFieldStorageDefinitions('user');
+    if (isset($installed_defs['cbr_number'])) {
+      return [];
+    }
+  }
+
   $fields = [];
   $fields['cbr_number'] = BaseFieldDefinition::create('string')
     ->setLabel(t('Central Beehive Registration (CBR) number'))
