@@ -17,6 +17,7 @@ use Drupal\hivelog\Form\HiveDeleteForm;
 use Drupal\hivelog\Form\HiveForm;
 use Drupal\hivelog\HiveAccessControlHandler;
 use Drupal\hivelog\HiveListBuilder;
+use Drupal\hivelog\HivelogEntityStorage;
 use Drupal\user\EntityOwnerInterface;
 use Drupal\user\EntityOwnerTrait;
 
@@ -30,6 +31,7 @@ use Drupal\user\EntityOwnerTrait;
   label_singular: new TranslatableMarkup('hive'),
   label_plural: new TranslatableMarkup('hives'),
   handlers: [
+    'storage' => HivelogEntityStorage::class,
     'list_builder' => HiveListBuilder::class,
     'form' => [
       'default' => HiveForm::class,
