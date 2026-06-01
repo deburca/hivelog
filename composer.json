@@ -13,12 +13,18 @@
     "require": {
         "php": ">=8.3",
         "drupal/core": "^11",
-        "drupal/geofield": "^1",
+        "drupal/geofield": "^10.3",
         "drupal/leaflet": "^10"
     },
     "extra": {
         "drupal": {
             "module-name": "hivelog"
+        },
+        "patches": {
+            "drupal/geofield": {
+                "Convert geofield plugins to PHP attributes for Drupal 11": "web/modules/contrib/hivelog/patches/geofield-drupal11-attribute-discovery.patch",
+                "Update geofield validation constraint metadata for Drupal 11": "web/modules/contrib/hivelog/patches/geofield-validator-compatibility.patch"
+            }
         }
     },
     "minimum-stability": "dev",
