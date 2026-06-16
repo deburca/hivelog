@@ -6,6 +6,11 @@
 **/.obsidian/cache/
 **/.trash/
 
-# Shareable Obsidian config (app.json, appearance.json, hotkeys, community
-# plugin settings) is intentionally tracked so the vault setup travels with the
-# repo. Add `**/.obsidian/` here if you'd rather keep all editor settings local.
+# Installed community-plugin code and Obsidian's property-type cache are
+# per-machine / regenerated, so they stay out of Git.
+**/.obsidian/plugins/
+**/.obsidian/types.json
+
+# Shareable config — the enabled-plugin list (community-plugins.json), app.json,
+# and appearance.json — stays tracked so the vault setup travels with the repo.
+# Add `**/.obsidian/` here if you'd rather keep all editor settings local.
