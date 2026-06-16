@@ -1,0 +1,11 @@
+# Obsidian per-machine / volatile state — keep out of Git.
+# The `**/` prefix matches a `.obsidian/` folder at any depth, so this works
+# whether the vault root is `docs/` or `docs/project-management/`.
+**/.obsidian/workspace.json
+**/.obsidian/workspace-mobile.json
+**/.obsidian/cache/
+**/.trash/
+
+# Shareable Obsidian config (app.json, appearance.json, hotkeys, community
+# plugin settings) is intentionally tracked so the vault setup travels with the
+# repo. Add `**/.obsidian/` here if you'd rather keep all editor settings local.
