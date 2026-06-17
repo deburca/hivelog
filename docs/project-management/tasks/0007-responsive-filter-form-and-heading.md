@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: backlog
+status: todo
 priority: high
 project: "[[mobile-ux-improvements]]"
 area: theme
