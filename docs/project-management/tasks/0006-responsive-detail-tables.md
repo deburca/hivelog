@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: todo
+status: in-progress
 priority: medium
 project: "[[mobile-ux-improvements]]"
 area: theme
@@ -22,13 +22,29 @@ two-column table) is the most common one; the inspection and observation detail
 tables carry more columns and are tighter on phones. Part of
 [[mobile-ux-improvements]].
 
+## Resolution
+**Shrink-and-wrap** at `≤768px` in `css/hivelog.tables.css` (per
+[[0011-responsive-design-strategy]]); CSS-only, desktop unchanged. All three
+detail tables are uniform 2-column Field/Value tables
+(`.hivelog-inspection-table`, `.hivelog-queen-table`,
+`.hivelog-queen-observation-table`, built by each controller's `buildSection()`):
+- `table-layout: fixed` with the Field (label) column capped at 40% so the
+  Value column keeps usable width;
+- reduced cell padding and `overflow-wrap: anywhere` so long values (notes,
+  entity links) wrap instead of forcing horizontal scroll;
+- label column emphasised (`font-weight: 600`).
+Kept the 2-col layout (shrink) rather than stacking, since these are short
+key/value pairs.
+
 ## Acceptance criteria
-- [ ] At `<=480px`, detail tables remain legible: no clipped content, sensible
-      wrapping, reduced horizontal padding.
-- [ ] Two-column Field/Value tables (e.g. the queen summary) stack or shrink
-      gracefully rather than letting the value column overflow.
-- [ ] Long values (notes, links) wrap instead of forcing horizontal scroll.
-- [ ] Desktop (`>768px`) appearance unchanged.
+- [x] At `≤480px` detail tables remain legible: reduced padding, capped label
+      column, no clipped content.
+- [x] Two-column Field/Value tables shrink gracefully (fixed 40/60 split) rather
+      than letting the value column overflow.
+- [x] Long values (notes, links) wrap (`overflow-wrap: anywhere`) instead of
+      forcing horizontal scroll.
+- [ ] Desktop (`>768px`) appearance unchanged — by construction (gated `@media`);
+      **manual visual check pending** (dev release).
 
 ## Implementation notes
 - All three selectors live in `css/hivelog.tables.css`; add `@media` rules there
@@ -45,5 +61,5 @@ tables carry more columns and are tighter on phones. Part of
 
 ## Related
 - Project:: [[mobile-ux-improvements]]
-- Decisions:: responsive-strategy ADR (from 0004)
+- Decisions:: [[0011-responsive-design-strategy]]
 - Commits:: 

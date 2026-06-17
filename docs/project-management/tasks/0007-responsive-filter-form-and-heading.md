@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: in-progress
+status: done
 priority: high
 project: "[[mobile-ux-improvements]]"
 area: theme
@@ -44,8 +44,8 @@ Tap-target sizing for the action buttons is coordinated with
       check.
 - [x] `.hivelog-list-heading` wraps cleanly: title above, Add action below;
       `__action` no longer forced `nowrap`.
-- [ ] Desktop single-row layout (`>768px`) unchanged — by construction (gated
-      `@media`); **manual visual check pending** (dev release).
+- [x] Desktop single-row layout (`>768px`) unchanged — verified on the test site
+      (resizing across the 768px breakpoint).
 
 ## Implementation notes
 - Both selectors live in `css/hivelog.filter-form.css`; the heading class is
