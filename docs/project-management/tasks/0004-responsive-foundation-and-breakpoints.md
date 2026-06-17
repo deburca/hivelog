@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: in-progress
+status: done
 priority: high
 project: "[[mobile-ux-improvements]]"
 area: theme
@@ -54,9 +54,8 @@ theme build), reserving utilities for components already built that way.
       (documented convention).
 - [x] Decision on Option A vs B captured in the ADR and reflected here
       (Option A).
-- [ ] No visual change on desktop (regression check at `>768px`) — foundation
-      adds only `:root` tokens, so unchanged **by construction**; manual visual
-      check still pending (`ddev drush cr`, then view a hive/apiary page).
+- [x] No visual change on desktop (regression check at `>768px`) — verified on
+      the test site via the dev release; foundation adds only `:root` tokens.
 
 ## Implementation notes
 - Library wiring lives in `hivelog.libraries.yml` (existing libs: `buttons`,
@@ -75,4 +74,4 @@ theme build), reserving utilities for components already built that way.
 ## Related
 - Project:: [[mobile-ux-improvements]]
 - Decisions:: [[0011-responsive-design-strategy]] (accepted)
-- Commits:: 
+- Commits:: 38c2a8e (PR #81)
