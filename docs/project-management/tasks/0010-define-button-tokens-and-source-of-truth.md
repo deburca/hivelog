@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: backlog
+status: todo
 priority: high
 project: "[[action-button-consistency]]"
 area: theme
