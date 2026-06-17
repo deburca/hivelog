@@ -1,0 +1,34 @@
+---
+type: decision
+tags: [hivelog/decision]
+status: proposed
+date: 2026-06-17
+supersedes:
+---
+# ADR-0013: Breadcrumb policy
+
+## Status
+proposed (pending approval)
+
+## Context
+`HivelogBreadcrumbBuilder` builds Home → HiveLog → ancestry trails for all
+entity routes plus a `hivelog.` prefix catch-all in `applies()`. Ancestry is
+threaded only when route parameters are upcast to entity objects
+(`is_object()` guards). Canonical pages currently omit a trailing self-link.
+There is no written policy, so future routes may render inconsistently.
+
+## Decision (recommended)
+Codify the rules: (1) trails are Home → HiveLog → Apiary → Hive → … built from
+upcast ancestor entities; (2) canonical pages omit the self crumb and rely on
+the page title; (3) `applies()` excludes non-page `hivelog.*` routes (e.g. file
+exports); (4) `applies()` must be kept in sync with `hivelog.routing.yml`
+whenever routes change (per `AGENTS.md`).
+
+## Consequences
+- Positive: predictable, correct trails on every page; clear rule for new routes.
+- Negative / trade-offs: `applies()` is a maintenance touch-point that must track
+  routing.
+- Follow-up tasks: [[0013-breadcrumb-route-audit]],
+  [[0014-implement-breadcrumb-consistency-fixes]],
+  [[0015-breadcrumb-test-coverage]]; reconciles task
+  [[0002-breadcrumb-queen-canonical]] (already implemented).
