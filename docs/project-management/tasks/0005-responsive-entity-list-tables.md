@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: in-progress
+status: done
 priority: high
 project: "[[mobile-ux-improvements]]"
 area: theme
@@ -46,8 +46,8 @@ deferred to [[0011-unify-button-group-sizing]].
       via the shared component.
 - [x] Empty-state row still renders (its cell has no `data-label`, styled
       separately).
-- [ ] Desktop (`>768px`) layout unchanged — by construction (additive class /
-      attribute + gated `@media`); **manual visual check pending** (dev release).
+- [x] Desktop (`>768px`) layout unchanged — verified on the test site by
+      resizing the hive inspection screen (including below 768px).
 
 ## Implementation notes
 - If choosing the stacked pattern, the SDC needs each `<td>` to carry its header
