@@ -1,20 +1,32 @@
+responsive:
+  version: 1.x
+  css:
+    component:
+      css/hivelog.responsive.css: {}
+
 weight_histogram:
   version: 1.x
   css:
     component:
       css/hivelog.weight-histogram.css: {}
+  dependencies:
+    - hivelog/responsive
 
 images:
   version: 1.x
   css:
     component:
       css/hivelog.images.css: {}
+  dependencies:
+    - hivelog/responsive
 
 buttons:
   version: 1.x
   css:
     component:
       css/hivelog.buttons.css: {}
+  dependencies:
+    - hivelog/responsive
 
 tables:
   version: 1.x
@@ -23,6 +35,7 @@ tables:
       css/hivelog.tables.css: {}
   dependencies:
     - hivelog/buttons
+    - hivelog/responsive
 
 filter_form:
   version: 1.x
@@ -31,3 +44,4 @@ filter_form:
       css/hivelog.filter-form.css: {}
   dependencies:
     - hivelog/buttons
+    - hivelog/responsive

@@ -23,8 +23,10 @@ responsive mechanism (framework-independent, no theme build required), with a
 shared breakpoint set: **≤480px** phone, **≤768px** small tablet, **>768px**
 desktop (optionally a 1024px wide tier). Tailwind responsive utilities
 (`sm:`/`md:`) may be used only inside components already built that way. Shared
-rules live in a new `css/hivelog.responsive.css` (library `hivelog/responsive`)
-or in per-file `@media` blocks — to be settled in the foundation task.
+rules live in a new `css/hivelog.responsive.css` (library `hivelog/responsive`),
+which the other module libraries depend on for one breakpoint vocabulary;
+component-specific rules live in per-file `@media` blocks in each component's
+CSS file. (Settled by [[0004-responsive-foundation-and-breakpoints]].)
 
 ## Consequences
 - Positive: predictable, theme-independent responsiveness; one breakpoint

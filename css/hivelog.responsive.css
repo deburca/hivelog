@@ -1,0 +1,42 @@
+/**
+ * @file
+ * Responsive foundation for HiveLog.
+ *
+ * Establishes the module's responsive strategy (ADR-0011, foundation task
+ * 0004). Module-owned layout uses plain-CSS @media queries: framework
+ * independent and requiring no theme build.
+ *
+ * BREAKPOINT CONVENTION — use these exact values in every @media query across
+ * the module's CSS files (buttons, tables, filter-form, images, …):
+ *
+ *   Phone and below:        @media (max-width: 480px)
+ *   Small tablet and below: @media (max-width: 768px)
+ *   Desktop:                default (unprefixed) rules
+ *   Wide (optional):        @media (min-width: 1024px)
+ *
+ * Where responsive rules live: component-specific rules go in that component's
+ * own CSS file (e.g. hivelog.tables.css) inside the breakpoints above — see
+ * tasks 0005 (list tables), 0006 (detail tables), 0007 (filter form/heading),
+ * 0008 (map & image grid). This file owns only the shared vocabulary below;
+ * it deliberately contains no layout rules of its own, so it cannot change the
+ * desktop appearance.
+ *
+ * Note: CSS custom properties cannot be used inside @media feature queries, so
+ * the breakpoint pixel values above are written literally wherever used. The
+ * --hivelog-bp-* tokens below are a machine-readable reference for any
+ * container/JS logic, not for @media.
+ */
+
+:root {
+  /* Shared spacing vocabulary for HiveLog responsive layouts. */
+  --hivelog-gap: 1rem;
+  --hivelog-gap-tight: 0.5rem;
+
+  /* Horizontal gutter applied on small screens by component rules. */
+  --hivelog-mobile-gutter: 0.75rem;
+
+  /* Breakpoint reference (NOT usable in @media; see note above). */
+  --hivelog-bp-phone: 480px;
+  --hivelog-bp-tablet: 768px;
+  --hivelog-bp-wide: 1024px;
+}
