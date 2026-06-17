@@ -1,14 +1,15 @@
 ---
 type: decision
-tags: [hivelog/decision]
-status: proposed
+tags:
+  - hivelog/decision
+status: accepted
 date: 2026-06-17
 supersedes:
 ---
 # ADR-0010: Semantic versioning & release process
 
 ## Status
-proposed (pending approval)
+accepted
 
 ## Context
 The repository already carries version tags (`1.2.0`, `1.3.0`) and the vault has

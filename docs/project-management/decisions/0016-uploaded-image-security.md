@@ -1,14 +1,15 @@
 ---
 type: decision
-tags: [hivelog/decision]
-status: proposed
+tags:
+  - hivelog/decision
+status: accepted
 date: 2026-06-17
 supersedes:
 ---
 # ADR-0016: Uploaded image security
 
 ## Status
-proposed (pending approval)
+accepted
 
 ## Context
 `Hive.images` is an `image` field with `file_directory: hivelog/hive` and

@@ -1,14 +1,15 @@
 ---
 type: decision
-tags: [hivelog/decision]
-status: proposed
+tags:
+  - hivelog/decision
+status: accepted
 date: 2026-06-17
 supersedes:
 ---
 # ADR-0014: Accessibility baseline (WCAG 2.1 AA)
 
 ## Status
-proposed (pending approval)
+accepted
 
 ## Context
 There is no documented accessibility target. Concrete gaps exist: grouped

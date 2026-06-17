@@ -1,14 +1,15 @@
 ---
 type: decision
-tags: [hivelog/decision]
-status: proposed
+tags:
+  - hivelog/decision
+status: accepted
 date: 2026-06-17
 supersedes:
 ---
 # ADR-0011: Responsive design strategy & breakpoints
 
 ## Status
-proposed (pending approval)
+accepted
 
 ## Context
 The module ships no responsive CSS — a repo-wide search for `@media` returns

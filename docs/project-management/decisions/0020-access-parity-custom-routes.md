@@ -1,14 +1,15 @@
 ---
 type: decision
-tags: [hivelog/decision]
-status: proposed
+tags:
+  - hivelog/decision
+status: accepted
 date: 2026-06-17
 supersedes:
 ---
 # ADR-0020: Access parity for custom routes, controllers & queries
 
 ## Status
-proposed (pending approval)
+accepted
 
 ## Context
 Custom controllers and routes can bypass the access handlers if they forget to

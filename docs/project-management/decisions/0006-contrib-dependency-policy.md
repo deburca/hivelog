@@ -1,14 +1,15 @@
 ---
 type: decision
-tags: [hivelog/decision]
-status: proposed
+tags:
+  - hivelog/decision
+status: accepted
 date: 2026-06-17
 supersedes:
 ---
 # ADR-0006: Minimal contrib dependency policy
 
 ## Status
-proposed (pending approval)
+accepted
 
 ## Context
 Required contrib dependencies are intentionally limited to `geofield` and

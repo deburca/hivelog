@@ -1,14 +1,15 @@
 ---
 type: decision
-tags: [hivelog/decision]
-status: proposed
+tags:
+  - hivelog/decision
+status: accepted
 date: 2026-06-17
 supersedes:
 ---
 # ADR-0008: Testing strategy & coverage expectations
 
 ## Status
-proposed (pending approval)
+accepted
 
 ## Context
 Today the suite is kernel + unit tests tagged `@group hivelog` (entity CRUD,

@@ -1,14 +1,15 @@
 ---
 type: decision
-tags: [hivelog/decision]
-status: proposed
+tags:
+  - hivelog/decision
+status: accepted
 date: 2026-06-17
 supersedes:
 ---
 # ADR-0017: Output sanitisation / XSS policy
 
 ## Status
-proposed (pending approval)
+accepted
 
 ## Context
 The `entity-table` SDC renders each cell with `{{ cell|raw }}`

@@ -1,14 +1,15 @@
 ---
 type: decision
-tags: [hivelog/decision]
-status: proposed
+tags:
+  - hivelog/decision
+status: accepted
 date: 2026-06-17
 supersedes:
 ---
 # ADR-0012: Action-button design system
 
 ## Status
-proposed (pending approval)
+accepted
 
 ## Context
 Button appearance has two sources of truth that can drift: hex colours + sizing

@@ -1,14 +1,15 @@
 ---
 type: decision
-tags: [hivelog/decision]
-status: proposed
+tags:
+  - hivelog/decision
+status: accepted
 date: 2026-06-17
 supersedes:
 ---
 # ADR-0021: Field-level access for sensitive fields
 
 ## Status
-proposed (pending approval)
+accepted
 
 ## Context
 Access in [[0019-authorisation-model]] is entity-level: if you may view an

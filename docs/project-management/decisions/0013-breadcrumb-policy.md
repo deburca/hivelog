@@ -1,14 +1,15 @@
 ---
 type: decision
-tags: [hivelog/decision]
-status: proposed
+tags:
+  - hivelog/decision
+status: accepted
 date: 2026-06-17
 supersedes:
 ---
 # ADR-0013: Breadcrumb policy
 
 ## Status
-proposed (pending approval)
+accepted
 
 ## Context
 `HivelogBreadcrumbBuilder` builds Home → HiveLog → ancestry trails for all

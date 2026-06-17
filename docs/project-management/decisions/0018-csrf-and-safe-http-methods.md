@@ -1,14 +1,15 @@
 ---
 type: decision
-tags: [hivelog/decision]
-status: proposed
+tags:
+  - hivelog/decision
+status: accepted
 date: 2026-06-17
 supersedes:
 ---
 # ADR-0018: CSRF protection & safe HTTP methods
 
 ## Status
-proposed (pending approval)
+accepted
 
 ## Context
 State-changing operations today go through Drupal's Form API (entity add/edit

@@ -1,14 +1,15 @@
 ---
 type: decision
-tags: [hivelog/decision]
-status: proposed
+tags:
+  - hivelog/decision
+status: accepted
 date: 2026-06-17
 supersedes:
 ---
 # ADR-0022: Authentication & membership model
 
 ## Status
-proposed (pending approval)
+accepted
 
 ## Context
 Hivelog relies on Drupal core authentication; it defines no auth mechanism of

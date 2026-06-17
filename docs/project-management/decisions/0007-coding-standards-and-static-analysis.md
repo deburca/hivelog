@@ -1,14 +1,15 @@
 ---
 type: decision
-tags: [hivelog/decision]
-status: proposed
+tags:
+  - hivelog/decision
+status: accepted
 date: 2026-06-17
 supersedes:
 ---
 # ADR-0007: Adopt Drupal coding standards & static analysis
 
 ## Status
-proposed (pending approval)
+accepted
 
 ## Context
 The code already follows Drupal conventions (`declare(strict_types=1)`, typed

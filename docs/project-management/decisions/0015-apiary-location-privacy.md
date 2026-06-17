@@ -1,14 +1,15 @@
 ---
 type: decision
-tags: [hivelog/decision]
-status: proposed
+tags:
+  - hivelog/decision
+status: accepted
 date: 2026-06-17
 supersedes:
 ---
 # ADR-0015: Apiary location privacy
 
 ## Status
-proposed (pending approval)
+accepted
 
 ## Context
 `Apiary` stores both a free-text `location` (`string_long`) and exact GPS in a
