@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: todo
+status: in-progress
 priority: high
 project: "[[mobile-ux-improvements]]"
 area: theme
@@ -31,15 +31,32 @@ Tailwind/DaisyUI utility classes inside SDC `.twig` files
 Recommendation: **Option A** for module-owned layout CSS (predictable without a
 theme build), reserving utilities for components already built that way.
 
+## Resolution
+**Option A (plain-CSS `@media`)**, per accepted ADR
+[[0011-responsive-design-strategy]]. Mechanics settled by this task:
+- Canonical breakpoints: `≤480px` phone, `≤768px` small tablet, `>768px`
+  desktop, optional `≥1024px` wide.
+- Shared vocabulary lives in `css/hivelog.responsive.css` (new
+  `hivelog/responsive` library) which the other module libraries depend on. It
+  defines `:root` tokens only — no layout rules — so desktop is unaffected.
+- Component-specific responsive rules live in each component's own CSS file as
+  per-file `@media` blocks using the breakpoints above (tasks 0005–0008), rather
+  than one monolithic file.
+
 ## Acceptance criteria
-- [ ] A documented breakpoint set (proposal: `<=480px` phone, `<=768px` small
-      tablet, `>768px` desktop) recorded in an ADR under `../decisions/`.
-- [ ] A single place for shared responsive rules — either a new
+- [x] A documented breakpoint set (`≤480px` phone, `≤768px` small tablet,
+      `>768px` desktop, optional `≥1024px` wide) — recorded in
+      [[0011-responsive-design-strategy]] and the `css/hivelog.responsive.css`
+      header.
+- [x] A single place for shared responsive rules — new
       `css/hivelog.responsive.css` + `hivelog/responsive` library in
-      `hivelog.libraries.yml`, or a documented convention for per-file
-      `@media` blocks.
-- [ ] Decision on Option A vs B captured in the ADR and reflected here.
-- [ ] No visual change on desktop (regression check at `>768px`).
+      `hivelog.libraries.yml`; component rules use per-file `@media` blocks
+      (documented convention).
+- [x] Decision on Option A vs B captured in the ADR and reflected here
+      (Option A).
+- [ ] No visual change on desktop (regression check at `>768px`) — foundation
+      adds only `:root` tokens, so unchanged **by construction**; manual visual
+      check still pending (`ddev drush cr`, then view a hive/apiary page).
 
 ## Implementation notes
 - Library wiring lives in `hivelog.libraries.yml` (existing libs: `buttons`,
@@ -57,5 +74,5 @@ theme build), reserving utilities for components already built that way.
 
 ## Related
 - Project:: [[mobile-ux-improvements]]
-- Decisions:: new responsive-strategy ADR (to be created)
+- Decisions:: [[0011-responsive-design-strategy]] (accepted)
 - Commits:: 

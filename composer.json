@@ -17,6 +17,9 @@
         "drupal/leaflet": "^10"
     },
     "extra": {
+        "branch-alias": {
+            "dev-main": "1.x-dev"
+        },
         "drupal": {
             "module-name": "hivelog"
         },
