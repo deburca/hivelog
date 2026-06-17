@@ -61,6 +61,7 @@ LIMIT 10
 ## Quick links
 - New work? Copy a template from `templates/` → [[task]], [[project]],
   [[decision]], [[release]].
+- Roadmap: [[roadmap]] — release timeline, decision gate, and critical path
 - Current focus project: [[queen-observation-enhancements]]
 - Module overview lives in the repo's `README.md` and `AGENTS.md` at the repo
   root.
