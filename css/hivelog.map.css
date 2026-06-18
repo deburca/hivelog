@@ -9,13 +9,17 @@
  *
  * Scope & specificity:
  * - This library is attached only on the apiary view (see ApiaryController),
- *   and the selector is limited to the geofield map, so it never affects other
- *   Leaflet maps.
- * - `!important` is required to override the formatter's *inline* height; the
- *   tight scoping keeps that safe.
+ *   which has a single Leaflet map, so the selectors below stay safe.
+ * - The contrib formatter renders the map div with an id from
+ *   Html::getUniqueId('leaflet_map') (=> "leaflet-map…") plus an inline height.
+ *   The field wrapper class and Leaflet's runtime `.leaflet-container` class are
+ *   not reliably present, so we match the id prefix (always in the markup) and
+ *   keep `.leaflet-container` as a post-init fallback.
+ * - `!important` is required to beat the formatter's *inline* height.
  */
 @media (max-width: 768px) {
-  .field--type-geofield .leaflet-container {
+  [id^="leaflet-map"],
+  .leaflet-container {
     height: 40vh !important;
     min-height: 200px;
   }

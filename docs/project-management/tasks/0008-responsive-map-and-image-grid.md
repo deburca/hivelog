@@ -33,10 +33,12 @@ Mostly CSS, scoped per [[0011-responsive-design-strategy]]; desktop unchanged.
   on the apiary view by `ApiaryController`, gives the Leaflet map a taller,
   viewport-relative height on small screens. At `≤768px` it overrides the
   formatter's inline 200px with `height: 40vh !important` (floored at 200px via
-  `min-height`), scoped to the geofield map
-  (`.field--type-geofield .leaflet-container`). Desktop keeps 200px. The
-  `!important` is required to beat the contrib formatter's inline style; the
-  override is tightly scoped (apiary view only, geofield map only) to stay safe.
+  `min-height`), matching the map container by id prefix (`[id^="leaflet-map"]`,
+  from `Html::getUniqueId('leaflet_map')`) plus `.leaflet-container` as a
+  runtime fallback — the field wrapper / `leaflet-container` classes are not
+  reliably in the markup. Desktop keeps 200px. The `!important` beats the
+  formatter's inline style; the override stays safe because the library loads
+  only on the apiary view (single map).
   Touch pan/zoom is Leaflet's default; marker clustering remains
   [[0003-apiary-map-marker-clustering]].
 
