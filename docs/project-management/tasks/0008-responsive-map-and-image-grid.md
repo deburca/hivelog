@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: in-progress
+status: done
 priority: medium
 project: "[[mobile-ux-improvements]]"
 area: theme
@@ -49,8 +49,8 @@ Mostly CSS, scoped per [[0011-responsive-design-strategy]]; desktop unchanged.
 - [x] `.hivelog-photos-grid` reflows: 2 columns at `≤480px`, auto-fill above;
       no overflow.
 - [x] Thumbnails keep aspect ratio (`1 / 1`) and remain tappable.
-- [ ] Desktop (`>768px`) layout unchanged — by construction (gated `@media`);
-      **manual visual check pending** (dev release).
+- [x] Desktop (`>768px`) layout unchanged — verified on the test site (incl. the
+      taller mobile map and the 2-column photo grid).
 
 ## Implementation notes
 - Image grid CSS is in `css/hivelog.images.css`; the markup is an inline
