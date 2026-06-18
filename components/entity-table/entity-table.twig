@@ -1,5 +1,5 @@
 <div class="overflow-x-auto">
-  <table class="table w-full">
+  <table class="hivelog-entity-table table w-full">
     <thead>
       <tr>
         {% for header in headers %}
@@ -16,7 +16,7 @@
         {% for row in rows %}
           <tr>
             {% for cell in row.cells %}
-              <td>{{ cell|raw }}</td>
+              <td data-label="{{ headers[loop.index0] }}">{{ cell|raw }}</td>
             {% endfor %}
           </tr>
         {% endfor %}

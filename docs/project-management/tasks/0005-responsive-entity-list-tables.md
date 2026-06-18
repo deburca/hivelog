@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: backlog
+status: done
 priority: high
 project: "[[mobile-ux-improvements]]"
 area: theme
@@ -21,16 +21,33 @@ page's **eight-column** inspection list built in
 Honey, Temperament, Population, Operations). On a phone this overflows or
 crushes columns. Part of [[mobile-ux-improvements]].
 
+## Resolution
+**Stacked "card" pattern** at `≤768px` (per [[0011-responsive-design-strategy]]),
+implemented in the shared `hivelog:entity-table` SDC so every entity list
+benefits:
+- `entity-table.twig`: the table gains a `hivelog-entity-table` class and each
+  data `<td>` gets `data-label="{{ headers[loop.index0] }}"` — reusing the
+  existing `headers` prop, so **no component-contract change**.
+- `entity-table.css`: `@media (max-width: 768px)` collapses rows into labelled
+  cards (`td[data-label]::before` shows the column name), visually hides the
+  header row, and centres the label-less empty-state cell.
+- `entity-table.component.yml`: now also depends on `hivelog/responsive` for the
+  shared spacing tokens.
+Desktop (`>768px`) is untouched. Operations-cell **tap-target** sizing is
+deferred to [[0011-unify-button-group-sizing]].
+
 ## Acceptance criteria
-- [ ] At `<=480px`, the inspection list is readable without horizontal pinching
-      — via either a stacked/"card" layout (label per cell) or an enhanced
-      horizontal scroll with a sticky first column (decision recorded).
-- [ ] The "Operations" cell (a `hivelog:button-group`) stays usable at mobile
-      widths; coordinate sizing with [[0011-unify-button-group-sizing]].
-- [ ] The same treatment covers other list builders rendered through the SDC
-      (apiary→hives, etc.), not just inspections.
-- [ ] Empty-state row (`colspan = headers|length`) still renders correctly.
-- [ ] Desktop (`>768px`) layout unchanged.
+- [x] At `≤768px` the list is readable without horizontal pinching — **stacked
+      card layout** (label per cell via `data-label`).
+- [ ] The "Operations" cell stays usable — buttons render inside the card;
+      **tap-target sizing pending [[0011-unify-button-group-sizing]]** + visual
+      check.
+- [x] Same treatment covers all SDC-rendered lists (apiary→hives, queens, etc.)
+      via the shared component.
+- [x] Empty-state row still renders (its cell has no `data-label`, styled
+      separately).
+- [x] Desktop (`>768px`) layout unchanged — verified on the test site by
+      resizing the hive inspection screen (including below 768px).
 
 ## Implementation notes
 - If choosing the stacked pattern, the SDC needs each `<td>` to carry its header
@@ -48,5 +65,5 @@ crushes columns. Part of [[mobile-ux-improvements]].
 
 ## Related
 - Project:: [[mobile-ux-improvements]]
-- Decisions:: responsive-strategy ADR (from 0004)
+- Decisions:: [[0011-responsive-design-strategy]]
 - Commits:: 

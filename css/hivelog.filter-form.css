@@ -64,3 +64,48 @@
 .hivelog-filter-form__actions .button {
   margin: 0;
 }
+
+/* Responsive: stack the heading and filter form on small screens (task 0004
+   convention, ADR-0011). Desktop (>768px) keeps the single-row layout. */
+@media (max-width: 768px) {
+  /* Heading: title above, action below at its natural width. */
+  .hivelog-list-heading {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .hivelog-list-heading__action {
+    align-self: flex-start;
+    white-space: normal;
+  }
+
+  /* Filter form: single full-width column. */
+  .hivelog-filter-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  /* Undo display:contents so the filters stack instead of sharing one row. */
+  .hivelog-filter-form__filters {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+  }
+
+  .hivelog-filter-form .form-item {
+    width: 100%;
+  }
+
+  .hivelog-filter-form .form-item input,
+  .hivelog-filter-form .form-item select {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Actions span the row instead of being pushed to the right edge. */
+  .hivelog-filter-form__actions {
+    width: 100%;
+    margin: 0;
+  }
+}

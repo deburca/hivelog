@@ -1,0 +1,26 @@
+/**
+ * @file
+ * Responsive sizing for the apiary Leaflet map (task 0008).
+ *
+ * The contrib Leaflet field formatter renders the map with a fixed inline
+ * height (200px, set in the Apiary geolocation view display). On small screens
+ * that is a little cramped, so we give the map a taller, viewport-relative
+ * height. Desktop (>768px) keeps the formatter's 200px.
+ *
+ * Scope & specificity:
+ * - This library is attached only on the apiary view (see ApiaryController),
+ *   which has a single Leaflet map, so the selectors below stay safe.
+ * - The contrib formatter renders the map div with an id from
+ *   Html::getUniqueId('leaflet_map') (=> "leaflet-map…") plus an inline height.
+ *   The field wrapper class and Leaflet's runtime `.leaflet-container` class are
+ *   not reliably present, so we match the id prefix (always in the markup) and
+ *   keep `.leaflet-container` as a post-init fallback.
+ * - `!important` is required to beat the formatter's *inline* height.
+ */
+@media (max-width: 768px) {
+  [id^="leaflet-map"],
+  .leaflet-container {
+    height: 40vh !important;
+    min-height: 200px;
+  }
+}

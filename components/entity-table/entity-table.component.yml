@@ -33,3 +33,4 @@ props:
 libraryOverrides:
   dependencies:
     - hivelog/buttons
+    - hivelog/responsive

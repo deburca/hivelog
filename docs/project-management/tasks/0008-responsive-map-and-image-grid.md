@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: backlog
+status: done
 priority: medium
 project: "[[mobile-ux-improvements]]"
 area: theme
@@ -22,14 +22,35 @@ Two media-heavy elements need mobile attention:
    The grid column count should adapt to width.
 Part of [[mobile-ux-improvements]].
 
+## Resolution
+Mostly CSS, scoped per [[0011-responsive-design-strategy]]; desktop unchanged.
+- **Image grid** (`css/hivelog.images.css`): already fluid
+  (`auto-fill, minmax(160px, 1fr)`), but very narrow phones (~320px) collapsed
+  to one column. Added `@media (max-width: 480px)` forcing
+  `grid-template-columns: repeat(2, 1fr)` for a tidy 2-up grid; thumbnails keep
+  `aspect-ratio: 1 / 1` and stay tap-through links.
+- **Apiary map**: a new `hivelog/map` library (`css/hivelog.map.css`), attached
+  on the apiary view by `ApiaryController`, gives the Leaflet map a taller,
+  viewport-relative height on small screens. At `≤768px` it overrides the
+  formatter's inline 200px with `height: 40vh !important` (floored at 200px via
+  `min-height`), matching the map container by id prefix (`[id^="leaflet-map"]`,
+  from `Html::getUniqueId('leaflet_map')`) plus `.leaflet-container` as a
+  runtime fallback — the field wrapper / `leaflet-container` classes are not
+  reliably in the markup. Desktop keeps 200px. The `!important` beats the
+  formatter's inline style; the override stays safe because the library loads
+  only on the apiary view (single map).
+  Touch pan/zoom is Leaflet's default; marker clustering remains
+  [[0003-apiary-map-marker-clustering]].
+
 ## Acceptance criteria
-- [ ] The apiary map has a sensible responsive height at `<=480px` (e.g. a
-      viewport-relative or fixed mobile height) and is pan/zoomable by touch
-      without trapping page scroll.
-- [ ] `.hivelog-photos-grid` reflows to fewer columns on narrow screens
-      (e.g. 2 columns phone, more on desktop) with no overflow.
-- [ ] Thumbnails keep aspect ratio and remain tappable (links open full image).
-- [ ] Desktop (`>768px`) layout unchanged.
+- [x] Apiary map has a sensible responsive mobile height — `40vh` (min 200px) at
+      `≤768px` via the scoped `hivelog/map` override; full-width, no overflow.
+      (Touch pan/zoom is Leaflet's default.)
+- [x] `.hivelog-photos-grid` reflows: 2 columns at `≤480px`, auto-fill above;
+      no overflow.
+- [x] Thumbnails keep aspect ratio (`1 / 1`) and remain tappable.
+- [x] Desktop (`>768px`) layout unchanged — verified on the test site (incl. the
+      taller mobile map and the 2-column photo grid).
 
 ## Implementation notes
 - Image grid CSS is in `css/hivelog.images.css`; the markup is an inline
@@ -47,5 +68,5 @@ Part of [[mobile-ux-improvements]].
 
 ## Related
 - Project:: [[mobile-ux-improvements]]
-- Decisions:: [[0001-geofield-over-geolocation]], [[0002-no-geocoder-dependency]]
+- Decisions:: [[0011-responsive-design-strategy]], [[0001-geofield-over-geolocation]], [[0002-no-geocoder-dependency]]
 - Commits:: 

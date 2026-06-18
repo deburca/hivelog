@@ -45,3 +45,11 @@ filter_form:
   dependencies:
     - hivelog/buttons
     - hivelog/responsive
+
+map:
+  version: 1.x
+  css:
+    component:
+      css/hivelog.map.css: {}
+  dependencies:
+    - hivelog/responsive

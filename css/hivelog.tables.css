@@ -32,3 +32,37 @@
   border-bottom: 2px solid #ccc;
   text-align: left;
 }
+
+/* Responsive: keep the Field/Value detail tables legible on small screens
+   (task 0004 convention, ADR-0011). The label column is capped so the value
+   column keeps usable width, and long values (notes, entity links) wrap rather
+   than forcing horizontal scroll. Desktop (>768px) is unaffected. */
+@media (max-width: 768px) {
+  .hivelog-inspection-table,
+  .hivelog-queen-table,
+  .hivelog-queen-observation-table {
+    table-layout: fixed;
+  }
+
+  .hivelog-inspection-table th,
+  .hivelog-inspection-table td,
+  .hivelog-queen-table th,
+  .hivelog-queen-table td,
+  .hivelog-queen-observation-table th,
+  .hivelog-queen-observation-table td {
+    padding: 0.4rem 0.5rem;
+    vertical-align: top;
+    overflow-wrap: anywhere;
+  }
+
+  /* Cap the Field (label) column so the Value column keeps room. */
+  .hivelog-inspection-table th:first-child,
+  .hivelog-inspection-table td:first-child,
+  .hivelog-queen-table th:first-child,
+  .hivelog-queen-table td:first-child,
+  .hivelog-queen-observation-table th:first-child,
+  .hivelog-queen-observation-table td:first-child {
+    width: 40%;
+    font-weight: 600;
+  }
+}
