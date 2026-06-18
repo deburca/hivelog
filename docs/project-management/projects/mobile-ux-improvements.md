@@ -1,7 +1,7 @@
 ---
 type: project
 tags: [hivelog/project]
-status: planning
+status: active
 target: v1.4.0
 created: 2026-06-17
 ---
@@ -13,6 +13,15 @@ module currently ships **no responsive CSS at all** — a repo-wide search for
 `@media` / breakpoint rules returns nothing — so layouts are implicitly
 desktop-only. This project introduces a deliberate responsive strategy and
 applies it across tables, forms, the apiary map, and image grids.
+
+## Progress (updated 2026-06-18)
+Foundation + all build tasks are **done** and merged: `0004` (PR #81) and
+`0005`–`0008` (PR #82), verified on the test site (stacked list tables,
+shrink-and-wrap detail tables, stacked filter form/heading, 2-column photo grid,
+taller `40vh` apiary map). The only remaining task is the
+[[0009-mobile-qa-and-tap-targets]] QA gate, which is gated on
+[[0011-unify-button-group-sizing]] (tap-target sizing) in
+[[action-button-consistency]].
 
 ## Scope
 - In scope: a shared breakpoint/responsive strategy; responsive treatment for
@@ -63,6 +72,6 @@ Static index (in suggested execution order):
   both today; [[0004-responsive-foundation-and-breakpoints]] must pick one.
 
 ## Related decisions
-- Pending ADR on responsive strategy (see [[0004-responsive-foundation-and-breakpoints]]).
+- [[0011-responsive-design-strategy]] (accepted) — implemented by [[0004-responsive-foundation-and-breakpoints]].
 - [[0001-geofield-over-geolocation]] / [[0002-no-geocoder-dependency]] constrain
   the apiary map work in [[0008-responsive-map-and-image-grid]].
