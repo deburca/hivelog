@@ -36,3 +36,13 @@
 .hivelog-photos-grid__item:focus img {
   transform: scale(1.03);
 }
+
+/* Responsive: guarantee a tidy 2-column thumbnail grid on phones (task 0004
+   convention, ADR-0011). The auto-fill track above already reflows, but very
+   narrow phones (~320px) would otherwise collapse to a single column.
+   Desktop / tablet keep the auto-fill behaviour. */
+@media (max-width: 480px) {
+  .hivelog-photos-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

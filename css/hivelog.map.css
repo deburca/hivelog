@@ -1,0 +1,22 @@
+/**
+ * @file
+ * Responsive sizing for the apiary Leaflet map (task 0008).
+ *
+ * The contrib Leaflet field formatter renders the map with a fixed inline
+ * height (200px, set in the Apiary geolocation view display). On small screens
+ * that is a little cramped, so we give the map a taller, viewport-relative
+ * height. Desktop (>768px) keeps the formatter's 200px.
+ *
+ * Scope & specificity:
+ * - This library is attached only on the apiary view (see ApiaryController),
+ *   and the selector is limited to the geofield map, so it never affects other
+ *   Leaflet maps.
+ * - `!important` is required to override the formatter's *inline* height; the
+ *   tight scoping keeps that safe.
+ */
+@media (max-width: 768px) {
+  .field--type-geofield .leaflet-container {
+    height: 40vh !important;
+    min-height: 200px;
+  }
+}

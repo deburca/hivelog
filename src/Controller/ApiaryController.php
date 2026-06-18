@@ -79,6 +79,10 @@ class ApiaryController extends ControllerBase {
     $view_builder = $this->entityTypeManager->getViewBuilder('apiary');
     $build['apiary'] = $view_builder->view($apiary);
 
+    // Load the responsive map stylesheet so the apiary's Leaflet map gets a
+    // taller, viewport-relative height on small screens (task 0008).
+    $build['#attached']['library'][] = 'hivelog/map';
+
     // Heading row: the "Hives" title on the left, the Add Hive action on
     // the right. Placing the action here (rather than inline with the
     // filter form below) keeps it at the top-right of the list section
