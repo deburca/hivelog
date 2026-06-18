@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: in-progress
+status: done
 priority: medium
 project: "[[mobile-ux-improvements]]"
 area: theme
@@ -43,8 +43,7 @@ key/value pairs.
       than letting the value column overflow.
 - [x] Long values (notes, links) wrap (`overflow-wrap: anywhere`) instead of
       forcing horizontal scroll.
-- [ ] Desktop (`>768px`) appearance unchanged — by construction (gated `@media`);
-      **manual visual check pending** (dev release).
+- [x] Desktop (`>768px`) appearance unchanged — verified on the test site.
 
 ## Implementation notes
 - All three selectors live in `css/hivelog.tables.css`; add `@media` rules there
