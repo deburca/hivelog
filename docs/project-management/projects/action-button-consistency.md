@@ -2,7 +2,7 @@
 type: project
 tags: [hivelog/project]
 status: planning
-target: v1.4.0
+target: 1.4.0
 created: 2026-06-17
 ---
 # Project: Action Button Consistency
@@ -55,13 +55,10 @@ Static index (in suggested execution order):
   surface to reconcile.
 
 ## Open questions
-- Which layer is authoritative — the plain-CSS file or the SDC utility classes?
-  (Decided in [[0010-define-button-tokens-and-source-of-truth]].)
-- Keep a deliberate "compact" size for in-table groups, or make grouped buttons
-  the same size as standalone ones? (Decided in [[0011-unify-button-group-sizing]].)
-- Variant rules: should every "Add" be primary, every "Edit" default/secondary,
-  every "Delete" danger? (Decided in [[0012-audit-action-buttons-across-pages]].)
+- No major design questions remain: [[0012-action-button-design-system]] already
+  settled the source of truth, compact sizing, and variant semantics.
+- Remaining work is implementation, audit, and regression checking.
 
 ## Related decisions
-- Pending ADR on button styling source of truth (see
-  [[0010-define-button-tokens-and-source-of-truth]]).
+- [[0012-action-button-design-system]]
+- [[0014-accessibility-baseline]]

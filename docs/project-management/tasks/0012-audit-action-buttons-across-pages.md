@@ -7,7 +7,7 @@ project: "[[action-button-consistency]]"
 area: entity
 created: 2026-06-17
 branch: feature/0012-audit-action-buttons-across-pages
-release: v1.4.0
+release: 1.4.0
 depends-on: ["[[0010-define-button-tokens-and-source-of-truth]]"]
 ---
 # Task: Audit action buttons across pages

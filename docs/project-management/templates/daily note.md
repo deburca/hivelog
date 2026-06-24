@@ -1,9 +1,6 @@
 ---
 type: notes
-tags: 
-  - [hivelog/notes]
-  - daily
-  - journal
+tags: [hivelog/notes, daily, journal]
 ---
 
 # {{date}}
@@ -46,5 +43,5 @@ SORT file.day DESC
 - [ ] Nice-to-have
 
 ## Links
-- Projects: [[ ]]
-- People: [[ ]]
+- Projects:
+- People:

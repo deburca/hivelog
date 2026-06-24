@@ -3,5 +3,6 @@
   "calendar",
   "frontmatter-alias-display",
   "obsidian-git",
-  "obsidian-tasks-plugin"
+  "obsidian-tasks-plugin",
+  "obsidian-frontmatter-tag-suggest"
 ]

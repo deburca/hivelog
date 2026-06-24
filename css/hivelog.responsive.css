@@ -39,4 +39,54 @@
   --hivelog-bp-phone: 480px;
   --hivelog-bp-tablet: 768px;
   --hivelog-bp-wide: 1024px;
+
+  /*
+   * Button design tokens (ADR-0012, task 0010).
+   *
+   * css/hivelog.buttons.css is the single source of truth for button
+   * appearance. These tokens own every colour, size, and shape value;
+   * button.twig emits only semantic/interop class names (.button,
+   * .button--primary, .button--danger, btn-*, join-item) and delegates
+   * visual styling entirely to the CSS rules that consume these tokens.
+   *
+   * Variant semantics (ADR-0012):
+   *   primary — Add / Save / primary CTA
+   *   default — Edit / View / secondary action
+   *   danger  — Delete / destructive action
+   */
+
+  /* Default variant */
+  --hivelog-btn-bg:           #f3f4f6;
+  --hivelog-btn-fg:           #222;
+  --hivelog-btn-border:       #8e929c;
+  --hivelog-btn-bg-hover:     #e5e7eb;
+  --hivelog-btn-border-hover: #6b7280;
+
+  /* Primary variant */
+  --hivelog-btn-primary-bg:           #2563eb;
+  --hivelog-btn-primary-fg:           #fff;
+  --hivelog-btn-primary-border:       #1d4ed8;
+  --hivelog-btn-primary-bg-hover:     #1d4ed8;
+  --hivelog-btn-primary-border-hover: #1e40af;
+
+  /* Danger variant */
+  --hivelog-btn-danger-bg:           #dc2626;
+  --hivelog-btn-danger-fg:           #fff;
+  --hivelog-btn-danger-border:       #b91c1c;
+  --hivelog-btn-danger-bg-hover:     #b91c1c;
+  --hivelog-btn-danger-border-hover: #991b1b;
+
+  /* Size tokens — standard (heading / form / standalone buttons) */
+  --hivelog-btn-padding:     0.45em 1em;
+  --hivelog-btn-font-size:   0.9rem;
+  --hivelog-btn-line-height: 1.4;
+  --hivelog-btn-radius:      4px;
+
+  /*
+   * Compact size — grouped buttons (View/Edit/Delete in table cells).
+   * Intentionally smaller than the standard size but large enough to
+   * remain tappable. Final tap-target sizing is reviewed in task 0011.
+   */
+  --hivelog-btn-compact-padding-x: 0.5em;
+  --hivelog-btn-compact-padding-y: 0.25em;
 }

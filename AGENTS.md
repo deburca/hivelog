@@ -1,15 +1,20 @@
 # AGENTS.md
 
-This file provides guidance to WARP (warp.dev) when working with code in this repository.
+This file provides guidance to AI coding agents working in this repository.
 
 ## Project Overview
 
-HiveLog is a custom Drupal 11 module (located at `web/modules/hivelog` inside a
-larger CMS checkout) that provides a beekeeping activity logger. It defines
-five custom content entities. Apiaries, hives and inspections form a strict
-parent–child hierarchy; queens are tracked separately and linked to the
-hive they are currently installed in (hives outlive queens); queen
-observations hang off a queen:
+HiveLog is a standalone Drupal 11 module distributed as its own repository.
+The repo root **is** the module root — there is no surrounding CMS checkout
+here. When the module is installed into a Drupal site it lands at
+`web/modules/hivelog` (or equivalent), but all paths in this repo are
+module-relative (e.g. `src/`, `css/`, `components/`, `tests/`).
+
+The module provides a beekeeping activity logger with five custom content
+entities. Apiaries, hives and inspections form a strict parent–child
+hierarchy; queens are tracked separately and linked to the hive they are
+currently installed in (hives outlive queens); queen observations hang off
+a queen:
 
 ```
 Apiary → Hive → Hive Inspection
@@ -46,8 +51,8 @@ ddev drush updb -y
 ddev drush cr
 ```
 
-Run the full PHPUnit suite for this module (kernel + unit tests, `hivelog`
-group):
+Run the full PHPUnit suite for this module (kernel + unit + functional
+tests, `hivelog` group):
 
 ```
 ddev exec "SIMPLETEST_DB=mysql://db:db@db:3306/db \
@@ -68,6 +73,12 @@ ddev exec "SIMPLETEST_DB=mysql://db:db@db:3306/db \
   /var/www/html/web/modules/hivelog/tests/src/Kernel/HiveTest.php \
   --filter testQueenColourAutoCalculation"
 ```
+
+**Functional tests** (`tests/src/Functional/`) extend `BrowserTestBase` and
+require a fully booted Drupal site with a Chrome/ChromeDriver process. They
+run under `--group hivelog` but are significantly slower than kernel tests
+and will fail if the browser driver is unavailable. Prefer targeting
+`tests/src/Kernel/` or `tests/src/Unit/` for fast feedback loops.
 
 ## Architecture
 
@@ -104,6 +115,11 @@ requires a corresponding update hook (see `hivelog.install`).
   Surfaced from the hive page via an **Add Observation** button next to
   **Edit Queen**, and listed at the end of the queen canonical page.
 
+The module also adds a `cbr_number` field to the Drupal `user` entity via
+`hook_entity_base_field_info()`. Uninstall has special handling in
+`hivelog_uninstall()` to avoid a fatal PDO exception when the column has
+already been removed — see `_hivelog_cleanup_cbr_field()`.
+
 Allowed-value lists for hive `type`, `material`, `breed`, `temperament`,
 `status`, queen `breed` / `temperament` / `status`, and the various
 inspection enums are hard-coded in the respective `baseFieldDefinitions()`.
@@ -117,54 +133,98 @@ Routes in `hivelog.routing.yml` follow two patterns:
 - Standard entity CRUD routes (`entity.<id>.canonical`, `.add_form`,
   `.edit_form`, `.delete_form`) that use Drupal's `_entity_form` / list
   builder machinery.
-- Custom "scoped add" routes (`hivelog.hive.add`,
-  `hivelog.inspection.add`, `hivelog.queen.add`) whose path includes the
-  parent entity (`/apiary/{apiary}/hive/add`,
-  `/hive/{hive}/inspection/add`, `/hive/{hive}/queen/add`). These are
-  handled by `addForm()` methods on the child's controller, which
-  pre-populates the parent reference on a new child entity before handing
-  it to the entity form. Always use these routes when adding children so
-  the parent reference is set correctly.
+- Custom "scoped add" routes whose path includes the parent entity.
+  Always use these routes when adding children so the parent reference is
+  pre-populated correctly:
+  - `hivelog.hive.add` → `/hivelog/apiary/{apiary}/hive/add`
+  - `hivelog.inspection.add` → `/hivelog/hive/{hive}/inspection/add`
+  - `hivelog.queen.add` → `/hivelog/hive/{hive}/queen/add`
+  - `hivelog.queen_observation.add` → `/hivelog/queen/{queen}/observation/add`
+
+All routes use the `/hivelog/` path prefix. New routes must follow this
+convention; the breadcrumb builder's `applies()` also relies on it (see
+Services below).
 
 Canonical view pages are rendered by custom controllers
-(`ApiaryController`, `HiveController`, `HiveInspectionController`) rather
-than the default view builder, because each parent view embeds a list
-builder of its children (apiary shows its hives; hive shows its
-inspections newest-first).
+(`ApiaryController`, `HiveController`, `HiveInspectionController`,
+`QueenController`, `QueenObservationController`) rather than the default
+view builder, because each parent view embeds a list builder of its children
+(apiary shows its hives; hive shows its inspections newest-first).
 
 Permissions use the `_permission: 'X+administer hivelog'` OR syntax so that
 users with `administer hivelog` bypass all fine-grained checks; the access
 control handlers in `src/*AccessControlHandler.php` mirror the same rule.
 
+### CSS and components
+
+CSS libraries are declared in `hivelog.libraries.yml`. All libraries depend
+on `hivelog/responsive` (which defines shared breakpoint tokens in
+`css/hivelog.responsive.css`). The dependency chain is:
+
+```
+hivelog/responsive  ←  hivelog/buttons  ←  hivelog/tables
+                    ←  hivelog/filter_form
+                    ←  hivelog/images
+                    ←  hivelog/map
+                    ←  hivelog/weight_histogram
+```
+
+When adding a new CSS library, declare `hivelog/responsive` as a dependency.
+Do not add `@media` rules without following the breakpoints defined in
+`css/hivelog.responsive.css` (`≤480px` phone, `≤768px` small tablet).
+
+SDC components live in `components/` (`button/`, `button-group/`,
+`entity-table/`). Button appearance has two sources of truth that must stay
+in sync: `css/hivelog.buttons.css` (canonical colours/tokens) and
+`components/button/button.twig` (utility classes). See ADR `0012` in
+`docs/project-management/decisions/`.
+
 ### Services
 
 Only one service is registered (`hivelog.services.yml`):
 `hivelog.breadcrumb` — a `BreadcrumbBuilder` with priority 100 that produces
-the Apiary → Hive → Inspection trail on any hivelog route. When adding new
-routes under `/hivelog/...` make sure the breadcrumb builder's
-`applies()` logic still matches.
+the Apiary → Hive → … trail on any hivelog route. `applies()` matches by
+route-name prefix (`entity.apiary.`, `entity.hive.`, `entity.hive_inspection.`,
+`entity.queen.`, `entity.queen_observation.`, `hivelog.`). When adding new
+routes under `/hivelog/...` make sure `applies()` still matches them — and
+explicitly exclude any non-page routes (e.g. file-download endpoints) so
+they do not get an incorrect breadcrumb.
 
 ### Tests
 
-- `tests/src/Kernel/*` — kernel tests (extend `KernelTestBase`) covering
-  entity CRUD, field option validation, parent/child relationships,
-  queen-colour auto-calc, and inspection logging. They install this module
-  plus its dependencies via `$modules`.
+All test classes use the PHP 8 `#[Group('hivelog')]` attribute, so
+`--group hivelog` runs exactly this module's suite.
+
+- `tests/src/Kernel/*` — kernel tests (`KernelTestBase`) covering entity
+  CRUD, field option validation, parent/child relationships, queen-colour
+  auto-calc, inspection logging, access control, and cache metadata. Install
+  the module plus its dependencies via `$modules`.
 - `tests/src/Unit/Breadcrumb/HivelogBreadcrumbBuilderTest.php` — pure unit
   test for the breadcrumb builder using mocked `EntityTypeManager`.
-
-All tests are tagged with `@group hivelog` so the `--group hivelog` filter
-above runs exactly this module's suite.
+- `tests/src/Functional/*` — functional tests (`BrowserTestBase`) for
+  permissions and end-to-end CRUD journeys. Require a running Drupal site
+  and browser driver; slow — avoid running for fast iteration.
 
 ## Entity schema changes
 
 Because all field storage is defined in code, any change to
 `baseFieldDefinitions()` (new field, changed settings, removed field) must
 be paired with an update hook in `hivelog.install` using
-`\Drupal::entityDefinitionUpdateManager()`. Existing hooks
-(`hivelog_update_10001`–`10003`) are the canonical examples: read existing
-column data, uninstall the old storage, install the new storage, then
-re-save entities through the entity API so derived columns (e.g. geofield's
-lat/lon/geohash) are recomputed. Do not rely on
+`\Drupal::entityDefinitionUpdateManager()`. The latest hook is
+`hivelog_update_10013`. Existing hooks are the canonical examples: read
+existing column data, uninstall the old storage, install the new storage,
+then re-save entities through the entity API so derived columns (e.g.
+geofield's lat/lon/geohash) are recomputed. Do not rely on
 `drush entity:updates` / `entup` — it no longer performs destructive schema
 changes in Drupal 11.
+
+## Patches
+
+Two geofield patches ship with the module in `patches/`:
+- `geofield-drupal11-attribute-discovery.patch`
+- `geofield-validator-compatibility.patch`
+
+The patch paths recorded in `composer.json` use the install-time location
+(`web/modules/contrib/hivelog/patches/...`), not the repo-relative path.
+This is correct for Composer's `cweagans/composer-patches` plugin and should
+not be changed to a repo-relative path.

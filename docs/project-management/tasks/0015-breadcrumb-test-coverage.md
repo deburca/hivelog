@@ -7,7 +7,7 @@ project: "[[breadcrumb-consistency]]"
 area: tests
 created: 2026-06-17
 branch: feature/0015-breadcrumb-test-coverage
-release: v1.4.0
+release: 1.4.0
 depends-on: ["[[0014-implement-breadcrumb-consistency-fixes]]"]
 ---
 # Task: Breadcrumb test coverage

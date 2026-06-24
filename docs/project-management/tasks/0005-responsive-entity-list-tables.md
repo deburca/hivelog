@@ -7,7 +7,7 @@ project: "[[mobile-ux-improvements]]"
 area: theme
 created: 2026-06-17
 branch: feature/0005-responsive-entity-list-tables
-release: v1.4.0
+release: 1.4.0
 depends-on: ["[[0004-responsive-foundation-and-breakpoints]]"]
 ---
 # Task: Responsive entity-list tables
@@ -66,4 +66,4 @@ deferred to [[0011-unify-button-group-sizing]].
 ## Related
 - Project:: [[mobile-ux-improvements]]
 - Decisions:: [[0011-responsive-design-strategy]]
-- Commits:: 
+- Commits:: fa6f4aa (PR #82)

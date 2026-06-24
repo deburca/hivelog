@@ -2,14 +2,14 @@
 title: Hivelog Dashboard
 type: dashboard
 tags: [hivelog/dashboard]
-updated: 2026-06-16
+updated: 2026-06-22
 ---
 # 🐝 Hivelog — Dashboard
 
 Map-of-content for the Hivelog module vault. The tables below are
 [Dataview](https://github.com/blacksmithgu/obsidian-dataview) queries; they
 populate automatically from note frontmatter. If you don't use Dataview, the
-static links in [[README]] and the folders still work fine.
+static links in [[project-management/README|README]] and the folders still work fine.
 
 ## 🔥 Active work
 ```dataview
@@ -59,9 +59,9 @@ LIMIT 10
 
 ---
 ## Quick links
-- New work? Copy a template from `templates/` → [[task]], [[project]],
-  [[decision]], [[release]].
+- New work? Copy a template from `templates/` → [[templates/task|task]], [[templates/project|project]],
+  [[templates/decision|decision]], [[templates/release|release]].
 - Roadmap: [[roadmap]] — release timeline, decision gate, and critical path
-- Current focus project: [[queen-observation-enhancements]]
+- Current focus project: [[mobile-ux-improvements]]
 - Module overview lives in the repo's `README.md` and `AGENTS.md` at the repo
   root.

@@ -2,7 +2,7 @@
 type: project
 tags: [hivelog/project]
 status: planning       # planning | active | paused | done | dropped
-target:                # target release, e.g. v1.2.0
+target:                # target release, e.g. 1.2.0
 created: 2026-06-16
 ---
 # Project: <title>
@@ -21,7 +21,7 @@ FROM #hivelog/task
 WHERE contains(string(project), this.file.name)
 SORT status asc, priority asc
 ```
-_(Set each task's `project:` frontmatter to `[[<this note>]]` to populate.)_
+_(Set each task's `project:` frontmatter to the real wikilink for this note, e.g. `"[[queen-observation-enhancements]]"`, to populate.)_
 
 ## Open questions
 - 

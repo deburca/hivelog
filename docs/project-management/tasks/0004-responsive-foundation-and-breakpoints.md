@@ -7,7 +7,7 @@ project: "[[mobile-ux-improvements]]"
 area: theme
 created: 2026-06-17
 branch: feature/0004-responsive-foundation-and-breakpoints
-release: v1.4.0
+release: 1.4.0
 ---
 # Task: Responsive foundation & breakpoints
 

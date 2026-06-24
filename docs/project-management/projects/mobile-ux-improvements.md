@@ -2,7 +2,7 @@
 type: project
 tags: [hivelog/project]
 status: active
-target: v1.4.0
+target: 1.4.0
 created: 2026-06-17
 ---
 # Project: Mobile UX Improvements

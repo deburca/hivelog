@@ -1,20 +1,21 @@
 ---
 type: release
 tags: [hivelog/release]
-version: vX.Y.Z
+version: X.Y.Z
 status: planned        # planned | in-progress | released
 date:                  # release date (ISO)
 ---
-# Release vX.Y.Z
+# Release X.Y.Z
 
 ## Highlights
 - 
 
 ## Included tasks
+_Use exact release values in task frontmatter (for example `release: 1.4.0`) so this Dataview query resolves cleanly._
 ```dataview
 LIST
 FROM #hivelog/task
-WHERE status = "done" AND contains(string(release), "vX.Y.Z")
+WHERE status = "done" AND contains(string(release), "X.Y.Z")
 ```
 
 ## Schema / update hooks
@@ -26,4 +27,4 @@ WHERE status = "done" AND contains(string(release), "vX.Y.Z")
 - [ ] `ddev drush updb -y && ddev drush cr` clean on a copy of prod data
 - [ ] `hivelog.info.yml` version bumped
 - [ ] `README.md` / `AGENTS.md` updated if behaviour changed
-- [ ] Tag created: `git tag vX.Y.Z`
+- [ ] Tag created: `git tag X.Y.Z`

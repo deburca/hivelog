@@ -7,6 +7,7 @@ project:
 area: theme
 created: 2026-06-16
 branch:
+release:
 ---
 # Task: Cluster apiary markers on the Leaflet map
 

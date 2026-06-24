@@ -32,7 +32,8 @@ docs/                          ← vault root (recommended)
     ├── projects/              ← multi-task initiatives
     ├── tasks/                 ← atomic units of work (NNNN-slug.md)
     ├── decisions/             ← Architecture Decision Records (ADRs)
-    └── releases/              ← per-version changelog + checklist notes
+    ├── releases/              ← per-version changelog + checklist notes
+    └── notes/                 ← daily / weekly review notes
 ```
 
 ## Conventions
@@ -43,16 +44,40 @@ docs/                          ← vault root (recommended)
   etc.) so [Dataview](https://github.com/blacksmithgu/obsidian-dataview) can
   build the dashboard automatically.
 - **Tags**: every note declares a `hivelog/<type>` tag in frontmatter
-  (`hivelog/task`, `hivelog/project`, `hivelog/decision`, `hivelog/release`).
+  (`hivelog/task`, `hivelog/project`, `hivelog/decision`, `hivelog/release`,
+  `hivelog/notes`, `hivelog/review`).
   The dashboard queries with `FROM #hivelog/task` etc. — tag sources are
   independent of the vault root, so the queries work whether you open `docs/`
   or `docs/project-management/`.
-- **Wikilinks**: cross-reference with `[[0001-queen-observation-csv-export]]`,
-  `[[queen-observation-enhancements]]`, etc. Backlinks give you traceability
-  from a decision → the tasks that implement it → the release that ships it.
+- **Wikilinks**: cross-reference with real note links like
+  `[[0001-queen-observation-csv-export]]` and
+  `[[queen-observation-enhancements]]`. Avoid leaving placeholder wikilinks in
+  templates, because Obsidian treats them as unresolved notes and they clutter
+  graph/backlink views.
 - **Status vocabulary**: `backlog` → `todo` → `in-progress` → `review` →
   `done` (or `blocked` / `dropped`). Keep it to these values so queries stay
   reliable.
+
+### Frontmatter formatting
+
+Keep frontmatter mechanically consistent so Obsidian, Dataview, and simple
+repo-wide searches behave predictably.
+
+- Prefer **inline YAML arrays** for short lists:
+  - `tags: [hivelog/task]`
+  - `tags: [hivelog/notes, daily, journal]`
+  - `depends-on: ["[[0004-responsive-foundation-and-breakpoints]]"]`
+- Use **exact field values** in frontmatter:
+  - `release: 1.4.0` (not `v1.4.0`)
+  - `project: "[[queen-observation-enhancements]]"`
+  - `status:` only from the vocabulary above
+- Prefer **blank values over placeholders** when something is not known yet:
+  - `target:`
+  - `release:`
+  - `blocked-by:`
+  - do **not** leave fake links like `[[project-note]]` or `[[NNNN-...]]`
+- When editing an existing note, preserve the current field order unless there
+  is a strong reason to change it.
 
 ## Recommended Obsidian plugins
 
@@ -79,8 +104,11 @@ together.
    ```
 3. **Commit the note with the code it describes.** Updating a task's `status`
    to `done` in the same commit that lands the feature keeps the vault honest.
-4. **Releases**: when tagging a version, finalize the matching
-   `releases/vX.Y.Z.md` note in the release commit.
+4. **Use the repository's actual tag format.** HiveLog tags releases as
+   `1.2.0`, `1.3.0`, etc. (no `v` prefix), and the vault mirrors that in
+   `releases/`.
+5. **Releases**: when tagging a version, finalize the matching
+   `releases/X.Y.Z.md` note in the release commit.
 
 ## .gitignore
 

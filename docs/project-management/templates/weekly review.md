@@ -1,8 +1,6 @@
 ---
-type: review
-  - hivelog/review
-  - weekly-review
-  - review
+type: notes
+tags: [hivelog/review, weekly-review, review]
 ---
 
 # Weekly review ({{date}})
@@ -49,5 +47,5 @@ SORT file.day DESC
 - What would make next week a win?
 
 ## Links
-- Projects: [[ ]]
-- People: [[ ]]
+- Projects:
+- People:

@@ -7,7 +7,7 @@ project: "[[action-button-consistency]]"
 area: theme
 created: 2026-06-17
 branch: feature/0011-unify-button-group-sizing
-release: v1.4.0
+release: 1.4.0
 depends-on: ["[[0010-define-button-tokens-and-source-of-truth]]"]
 ---
 # Task: Unify button-group sizing

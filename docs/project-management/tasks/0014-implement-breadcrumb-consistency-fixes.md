@@ -7,7 +7,7 @@ project: "[[breadcrumb-consistency]]"
 area: routing
 created: 2026-06-17
 branch: feature/0014-implement-breadcrumb-consistency-fixes
-release: v1.4.0
+release: 1.4.0
 depends-on: ["[[0013-breadcrumb-route-audit]]"]
 ---
 # Task: Implement breadcrumb consistency fixes

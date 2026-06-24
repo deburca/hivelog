@@ -7,7 +7,7 @@ project: "[[mobile-ux-improvements]]"
 area: theme
 created: 2026-06-17
 branch: feature/0008-responsive-map-and-image-grid
-release: v1.4.0
+release: 1.4.0
 depends-on: ["[[0004-responsive-foundation-and-breakpoints]]"]
 ---
 # Task: Responsive apiary map & hive image grid
@@ -69,4 +69,4 @@ Mostly CSS, scoped per [[0011-responsive-design-strategy]]; desktop unchanged.
 ## Related
 - Project:: [[mobile-ux-improvements]]
 - Decisions:: [[0011-responsive-design-strategy]], [[0001-geofield-over-geolocation]], [[0002-no-geocoder-dependency]]
-- Commits:: 
+- Commits:: fa6f4aa (PR #82)

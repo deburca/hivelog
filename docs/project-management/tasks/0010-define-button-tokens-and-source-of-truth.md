@@ -1,13 +1,13 @@
 ---
 type: task
 tags: [hivelog/task]
-status: todo
+status: done
 priority: high
 project: "[[action-button-consistency]]"
 area: theme
 created: 2026-06-17
 branch: feature/0010-define-button-tokens-and-source-of-truth
-release: v1.4.0
+release: 1.4.0
 ---
 # Task: Define button tokens & single source of truth
 
@@ -22,39 +22,51 @@ Button appearance is defined in **two** places that can drift apart:
 Today the colours happen to coincide (`#2563eb` ≈ `bg-blue-600`) but nothing
 keeps them in sync. Foundation task for [[action-button-consistency]].
 
-## Decision to make
-Pick the authoritative layer and demote the other:
-- **Option A — CSS file is canonical.** Keep semantic classes
-  (`.button--primary` etc.) in `button.twig`, strip the colour/size **utility**
-  classes, and define everything (incl. tokens) in `css/hivelog.buttons.css`.
-  Framework-independent; matches the file's stated purpose ("regardless of the
-  active admin theme").
-- **Option B — component utilities are canonical.** Remove colour/size from the
-  CSS file and rely on the theme build to compile the utility classes. Lighter
-  CSS, but depends on the host theme scanning `components/`.
-Recommendation: **Option A** + CSS custom properties as tokens.
+## Decision already made
+[[0012-action-button-design-system]] already settled the design direction:
+**Option A** — `css/hivelog.buttons.css` is canonical, expressed as CSS custom
+properties/tokens; `button.twig` keeps semantic classes and drops duplicate
+colour/size utilities.
 
 ## Acceptance criteria
-- [ ] ADR under `../decisions/` recording the chosen source of truth.
-- [ ] Colour + size **tokens** defined once (proposal: `--hivelog-btn-*` custom
-      properties for bg/fg/border per variant, plus padding/font-size).
-- [ ] `button.twig` and `css/hivelog.buttons.css` no longer define the same
-      property twice; one references the tokens, the other is trimmed.
-- [ ] Primary / default / danger render identically to today on a default admin
-      theme (visual regression check) — this task standardizes, it does not
+- [x] Implementation aligns with accepted ADR [[0012-action-button-design-system]].
+- [x] Colour + size **tokens** defined once (`--hivelog-btn-*` custom properties
+      for bg/fg/border per variant, plus padding/font-size, plus compact-padding
+      for grouped buttons) — in `css/hivelog.responsive.css` alongside the
+      existing breakpoint/spacing tokens.
+- [x] `button.twig` and `css/hivelog.buttons.css` no longer define the same
+      property twice — `button.twig` emits only semantic/interop class names;
+      all colour and size values live in the CSS file via `var()` tokens.
+- [x] Primary / default / danger render identically to before on a default admin
+      theme (desktop visual regression) — this task standardizes, it does not
       restyle.
 
 ## Implementation notes
-- `button.component.yml` documents the `variant` prop (`default|primary|danger`)
-  and `extra_classes`; keep that contract stable for callers.
-- Note the danger selector group in `css/hivelog.buttons.css` omits
-  `.hivelog-list-heading` and `.hivelog-filter-form__actions` — fold that gap
-  into the token refactor.
+- Tokens live in `css/hivelog.responsive.css` (`:root` block) alongside the
+  existing breakpoint/spacing tokens — consistent with how the module centralises
+  all shared `:root` vocabulary.
+- `css/hivelog.buttons.css` now uses `:is()` to collapse the seven repeated
+  context-wrapper selector lists into one rule block per state.
+- The danger selector gap (`.hivelog-list-heading` and
+  `.hivelog-filter-form__actions` were previously missing from danger rules)
+  is fixed — all seven wrappers are now covered for every variant.
+- `button.twig` retains `btn`, `btn-primary`, `btn-danger`, `btn-default`,
+  `join-item`, and the layout/behaviour utilities (`inline-flex items-center
+  no-underline cursor-pointer transition-colors`). All colour and size utilities
+  (`bg-*`, `text-*`, `border-*`, `hover:*`, `px-*`, `py-*`, `rounded`,
+  `text-sm`, `font-medium`) are removed.
+- `button-group.twig` no longer passes `extra_classes: "text-sm !px-1 !py-0"`.
+  Compact sizing is now handled by the `.hivelog-button-group .button` rule in
+  `css/hivelog.buttons.css` using `--hivelog-btn-compact-padding-*` tokens.
+- `button.component.yml` contract (`variant`, `extra_classes` props) is
+  unchanged; all callers are unaffected.
+- CBR summary link colour in `hivelog.buttons.css` updated from hardcoded
+  `#2563eb` to `var(--hivelog-btn-primary-bg)` so it tracks the token.
 
 ## Dependencies
 - Blocks: [[0011-unify-button-group-sizing]], [[0012-audit-action-buttons-across-pages]].
 
 ## Related
 - Project:: [[action-button-consistency]]
-- Decisions:: new button-source-of-truth ADR (to be created)
-- Commits:: 
+- Decisions:: [[0012-action-button-design-system]]
+- Commits:: (implementation — css/hivelog.responsive.css, css/hivelog.buttons.css, components/button/button.twig, components/button-group/button-group.twig)

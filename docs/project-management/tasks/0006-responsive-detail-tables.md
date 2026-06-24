@@ -7,7 +7,7 @@ project: "[[mobile-ux-improvements]]"
 area: theme
 created: 2026-06-17
 branch: feature/0006-responsive-detail-tables
-release: v1.4.0
+release: 1.4.0
 depends-on: ["[[0004-responsive-foundation-and-breakpoints]]"]
 ---
 # Task: Responsive detail tables
@@ -61,4 +61,4 @@ key/value pairs.
 ## Related
 - Project:: [[mobile-ux-improvements]]
 - Decisions:: [[0011-responsive-design-strategy]]
-- Commits:: 
+- Commits:: fa6f4aa (PR #82)

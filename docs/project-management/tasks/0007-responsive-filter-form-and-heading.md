@@ -7,7 +7,7 @@ project: "[[mobile-ux-improvements]]"
 area: theme
 created: 2026-06-17
 branch: feature/0007-responsive-filter-form-and-heading
-release: v1.4.0
+release: 1.4.0
 depends-on: ["[[0004-responsive-foundation-and-breakpoints]]"]
 ---
 # Task: Responsive filter form & list heading
@@ -62,4 +62,4 @@ Tap-target sizing for the action buttons is coordinated with
 ## Related
 - Project:: [[mobile-ux-improvements]]
 - Decisions:: [[0011-responsive-design-strategy]]
-- Commits:: 
+- Commits:: fa6f4aa (PR #82)

@@ -7,7 +7,7 @@ project: "[[mobile-ux-improvements]]"
 area: tests
 created: 2026-06-17
 branch: feature/0009-mobile-qa-and-tap-targets
-release: v1.4.0
+release: 1.4.0
 depends-on: ["[[0005-responsive-entity-list-tables]]", "[[0006-responsive-detail-tables]]", "[[0007-responsive-filter-form-and-heading]]", "[[0008-responsive-map-and-image-grid]]"]
 ---
 # Task: Mobile QA & tap targets
