@@ -32,3 +32,10 @@ Nightwatch coverage only where behaviour is genuinely JS/visual. All tests carry
 - Follow-up tasks: [[0015-breadcrumb-test-coverage]]; mobile verification is
   manual in [[0009-mobile-qa-and-tap-targets]] (this ADR explains why it is not
   automated).
+
+## Amendment — 2026-06-25
+The manual "suite must pass before tagging" requirement is now backed by an
+automated CI gate. See [[0023-github-actions-ci-pipeline]] for the pipeline
+design and [[0016-implement-github-actions-ci]] for the implementation task.
+Kernel + unit tests are hard gates in CI; functional tests are initially
+`continue-on-error: true` pending ChromeDriver stability confirmation.

@@ -2,12 +2,12 @@
 type: roadmap
 tags: [hivelog/roadmap]
 status: living
-updated: 2026-06-22
+updated: 2026-06-25
 ---
 # 🐝 Hivelog Roadmap
 A living roadmap derived from the projects, tasks, decisions, and releases in
 this vault. Sequencing is driven by dependencies and completed work rather than
-fixed dates. Last refreshed **2026-06-22**.
+fixed dates. Last refreshed **2026-06-25**.
 
 ## Release timeline
 ### ✅ Released
@@ -24,9 +24,10 @@ Release note: [[1.4.0]]
 ### 📋 Unassigned release
 - [[queen-observation-enhancements]] — [[0001-queen-observation-csv-export]] remains `in-progress`; [[0002-breadcrumb-queen-canonical]] is already satisfied in code and has been closed in the vault.
 - [[0003-apiary-map-marker-clustering]] — `backlog` (low); revisit as a future map-UX initiative.
+- **GitHub Actions CI** — [[0016-implement-github-actions-ci]] (`todo`, high priority); decision [[0023-github-actions-ci-pipeline]] accepted. No schema changes; candidate for inclusion in 1.4.0 or as a standalone infrastructure release.
 
 ## Decision gate
-**Decision gate cleared: 22 accepted · 0 proposed.**
+**Decision gate cleared: 23 accepted · 0 proposed.**
 
 The foundation ADRs for the current work are already accepted and no longer
 block execution:

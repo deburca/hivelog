@@ -31,3 +31,10 @@ the `--group hivelog` suite is green and `drush updb` is clean, and bumps
 - Follow-up tasks: drives the `releases/` notes; gated by
   [[0008-testing-strategy]] (green suite) and [[0003-code-defined-entity-schema]]
   (update hooks).
+
+## Amendment — 2026-06-25
+The "green suite before tagging" gate is now automated: the GitHub Actions CI
+pipeline (see [[0023-github-actions-ci-pipeline]]) runs on every push and on
+`release` publication events, so a failed suite is visible before the tag is
+promoted. The manual checklist in `releases/X.Y.Z.md` retains its "suite green"
+item; CI provides the automated evidence for it.
