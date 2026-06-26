@@ -236,7 +236,7 @@ class QueenController extends ControllerBase {
   protected function buildActions(Queen $queen): array {
     $buttons = [];
     if ($queen->access('update')) {
-      $buttons[] = ['label' => (string) $this->t('Edit'), 'url' => $queen->toUrl('edit-form')->toString(), 'variant' => 'primary'];
+      $buttons[] = ['label' => (string) $this->t('Edit'), 'url' => $queen->toUrl('edit-form')->toString()];
     }
     if ($queen->access('delete')) {
       $buttons[] = ['label' => (string) $this->t('Delete'), 'url' => $queen->toUrl('delete-form')->toString(), 'variant' => 'danger'];

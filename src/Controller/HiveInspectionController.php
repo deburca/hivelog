@@ -204,7 +204,7 @@ class HiveInspectionController extends ControllerBase {
   protected function buildActions(HiveInspection $hive_inspection): array {
     $buttons = [];
     if ($hive_inspection->access('update')) {
-      $buttons[] = ['label' => (string) $this->t('Edit'), 'url' => $hive_inspection->toUrl('edit-form')->toString(), 'variant' => 'primary'];
+      $buttons[] = ['label' => (string) $this->t('Edit'), 'url' => $hive_inspection->toUrl('edit-form')->toString()];
     }
     if ($hive_inspection->access('delete')) {
       $buttons[] = ['label' => (string) $this->t('Delete'), 'url' => $hive_inspection->toUrl('delete-form')->toString(), 'variant' => 'danger'];
