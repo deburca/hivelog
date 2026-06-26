@@ -52,6 +52,20 @@
   line-height: var(--hivelog-btn-line-height);
   text-decoration: none;
   cursor: pointer;
+}
+
+/* Standalone buttons (not inside a group) get a right margin so
+   adjacent siblings are spaced apart. Button groups manage their own
+   spacing via margin-left: -1px (border collapse) and need no margin. */
+:is(
+  .hivelog-list-heading,
+  .hivelog-filter-form__actions,
+  .hivelog-inspection-actions,
+  .hivelog-queen-actions,
+  .hivelog-queen-observation-actions,
+  .hivelog-entity-form .form-actions,
+  .hivelog-table-actions
+) .button {
   margin-right: 0.5em;
 }
 
@@ -177,7 +191,6 @@
    matters less and touch accuracy matters more. */
 .hivelog-button-group .button {
   padding: var(--hivelog-btn-compact-padding-y) var(--hivelog-btn-compact-padding-x);
-  margin-right: 0;
 }
 
 @media (max-width: 768px) {
