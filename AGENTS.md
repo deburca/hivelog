@@ -174,9 +174,23 @@ Do not add `@media` rules without following the breakpoints defined in
 `css/hivelog.responsive.css` (`≤480px` phone, `≤768px` small tablet).
 
 SDC components live in `components/` (`button/`, `button-group/`,
-`entity-table/`). Button appearance has two sources of truth that must stay
-in sync: `css/hivelog.buttons.css` (canonical colours/tokens) and
-`components/button/button.twig` (utility classes). See ADR `0012` in
+`entity-table/`). `css/hivelog.buttons.css` is the **sole source of truth**
+for button appearance (ADR-0012, task 0010). Rules are scoped to eight named
+context wrappers listed in the file header. Do not add theme framework classes
+(`btn`, `btn-primary`, `btn-danger`, Tailwind utilities) to `button.twig` or
+`button-group.twig` — the module has no Tailwind build step and admin-theme
+classes will conflict with the module's token rules.
+
+`button.twig` emits only semantic class names: `button` (base), plus one of
+`button--primary`, `button--danger`, or `button--default` as a variant
+modifier. No framework or utility classes.
+
+`button-group.twig` renders a `<div class="hivelog-button-group">` wrapper
+only. All layout (inline-flex), join-corner styling (`:first-child` /
+`:last-child` border-radius overrides), border collapse (`margin-left: -1px`),
+and compact sizing (`--hivelog-btn-compact-padding-*` tokens with a
+`@media (max-width: 768px)` promotion to standard size) are defined entirely
+in `css/hivelog.buttons.css`. See ADR-0012 and ADR-0024 in
 `docs/project-management/decisions/`.
 
 ### Services

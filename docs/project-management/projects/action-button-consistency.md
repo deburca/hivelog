@@ -32,27 +32,30 @@ Static index (in suggested execution order):
 - [[0011-unify-button-group-sizing]]
 - [[0012-audit-action-buttons-across-pages]]
 
-## Key findings (from code scan, 2026-06-17)
-- **Two sources of truth** for button appearance:
-  1. `css/hivelog.buttons.css` — hex colours (`#2563eb` primary, `#dc2626`
-     danger, `#f3f4f6` default), `padding: 0.45em 1em`, `font-size: 0.9rem`,
-     scoped to context wrappers (`.hivelog-list-heading`,
-     `.hivelog-filter-form__actions`, `.hivelog-*-actions`, `.form-actions`).
-  2. `components/button/button.twig` — framework utility classes
-     (`px-3 py-1.5 rounded text-sm`, `bg-blue-600` / `bg-red-600`) emitted
-     alongside Drupal's `.button`, `.button--primary`, `.button--danger`.
-  These can drift independently (e.g. CSS `0.45em 1em` vs utility `px-3 py-1.5`).
-- **Grouped buttons differ from standalone**: `button-group.twig` injects
-  `text-sm !px-1 !py-0`, so View/Edit/Delete in tables are smaller than the
-  Add/Edit buttons in headings.
+## Key findings (from code scan, 2026-06-17; updated 2026-06-26)
+
+### Resolved by task 0010 and task 0011
+- **Two sources of truth** — resolved. `css/hivelog.buttons.css` is now the
+  sole styling authority (ADR-0012). All theme framework classes (`btn`,
+  `btn-primary`, `btn-danger`, `btn-default`, `join-item`, Tailwind utilities)
+  have been removed from `button.twig`; it emits only semantic class names
+  (`button`, `button--primary`, `button--danger`, `button--default`).
+- **Grouped buttons differing from standalone** — resolved. The `!important`
+  overrides are gone. Compact sizing is now documented and token-driven
+  (ADR-0024). Join-corner styling (segmented control appearance) is implemented
+  in plain CSS using `:first-child`/`:last-child` selectors and `margin-left:
+  -1px` border collapse.
+- **`.hivelog-button-group` not a context wrapper** — resolved. Added as the
+  eighth context wrapper in all `:is()` rule blocks so grouped buttons receive
+  correct token-based colour styling.
+
+### Still outstanding (for task 0012)
 - **Variant usage is inconsistent**: in `src/Controller/HiveController.php`,
   "Add Inspection" and "Add Queen" use `variant: primary`, but "Edit Queen" and
   "Add Observation" use the default variant — so not all "Add" actions look
-  alike. The danger variant selector list in `hivelog.buttons.css` also omits
-  `.hivelog-list-heading` and `.hivelog-filter-form__actions`.
-- Action links also originate from `hivelog.links.action.yml` (Add Apiary, Add
-  Queen), which render via Drupal's local-action theming, not the SDC — another
-  surface to reconcile.
+  alike.
+- Action links from `hivelog.links.action.yml` (Add Apiary, Add Queen) render
+  via Drupal's local-action theming, not the SDC — another surface to reconcile.
 
 ## Open questions
 - No major design questions remain: [[0012-action-button-design-system]] already

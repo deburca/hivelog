@@ -87,5 +87,31 @@ ADR-0014 (tap-target baseline), and ADR-0011 (plain-CSS `@media` breakpoints).
 - Negative / trade-offs: compact and standard sizing now behave differently
   across breakpoints — a developer adding a new button group must be aware of
   the responsive promotion rule.
-- Follow-up tasks: [[0011-unify-button-group-sizing]] (implementation),
-  [[0009-mobile-qa-and-tap-targets]] (QA verification of final rendered sizes).
+- Follow-up tasks: [[0009-mobile-qa-and-tap-targets]] (QA verification of
+  final rendered sizes).
+
+## Implementation record
+During delivery of [[0011-unify-button-group-sizing]] three additional defects
+were identified and resolved alongside the sizing work:
+
+1. **Join-corner styling not rendering** (PR #86, released 1.3.1) — the Tailwind
+   arbitrary-variant classes on the button-group wrapper
+   (`[&>:not(:first-child)]:rounded-l-none` etc.) were never compiled. Replaced
+   with plain CSS `:first-child`/`:last-child` selectors and `margin-left: -1px`
+   border collapse in `hivelog.buttons.css`. The wrapper was simplified to
+   `<div class="hivelog-button-group">` only.
+
+2. **All buttons rendering red regardless of variant** (PR #88, released 1.3.2)
+   — two compounding causes: (a) theme framework classes (`btn`, `btn-danger`
+   etc.) in `button.twig` gave the active admin theme authority to colour
+   buttons; (b) `.hivelog-button-group` was not a registered context wrapper in
+   `hivelog.buttons.css` so the module's own token rules never fired. Fixed by
+   removing all theme framework classes from `button.twig` (semantic modifiers
+   `button--primary`, `button--danger`, `button--default` only) and adding
+   `.hivelog-button-group` as the eighth context wrapper in all `:is()` blocks.
+
+3. **Margin spacing between adjacent grouped buttons** (PR #90, released 1.3.3)
+   — `margin-right: 0.5em` from the shared base rule fought the `margin-left:
+   -1px` border-collapse, creating gaps between buttons. Scoped `margin-right`
+   to the seven standalone contexts only; `.hivelog-button-group` is explicitly
+   excluded.
