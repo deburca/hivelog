@@ -1,10 +1,10 @@
 {%- set variant = variant|default('default') -%}
-{%- set base = 'button btn join-item inline-flex items-center no-underline cursor-pointer transition-colors' -%}
+{%- set base = 'button inline-flex items-center no-underline cursor-pointer transition-colors' -%}
 {%- if variant == 'primary' -%}
-  {%- set modifier = 'button--primary btn-primary' -%}
+  {%- set modifier = 'button--primary' -%}
 {%- elseif variant == 'danger' -%}
-  {%- set modifier = 'button--danger btn-danger' -%}
+  {%- set modifier = 'button--danger' -%}
 {%- else -%}
-  {%- set modifier = 'btn-default' -%}
+  {%- set modifier = 'button--default' -%}
 {%- endif -%}
 <a href="{{ url }}" class="{{ base }} {{ modifier }}{% if extra_classes %} {{ extra_classes }}{% endif %}">{{ label }}</a>

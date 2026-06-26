@@ -12,13 +12,14 @@
  * emits only semantic class names; it does not duplicate any value from here.
  *
  * Context wrappers that trigger HiveLog button styling:
- *   .hivelog-list-heading          heading rows (Add X actions)
- *   .hivelog-filter-form__actions  filter form Filter / Reset buttons
- *   .hivelog-inspection-actions    inspection canonical page actions
- *   .hivelog-queen-actions         queen canonical page actions
+ *   .hivelog-list-heading               heading rows (Add X actions)
+ *   .hivelog-filter-form__actions       filter form Filter / Reset buttons
+ *   .hivelog-inspection-actions         inspection canonical page actions
+ *   .hivelog-queen-actions              queen canonical page actions
  *   .hivelog-queen-observation-actions  observation canonical page actions
  *   .hivelog-entity-form .form-actions  add / edit entity forms
- *   .hivelog-table-actions         table row operations cells
+ *   .hivelog-table-actions              table row operations cells
+ *   .hivelog-button-group               grouped button clusters (View/Edit/Delete)
  */
 
 /* ------------------------------------------------------------------
@@ -27,7 +28,10 @@
    the seven context wrappers into one rule block per state.
 ------------------------------------------------------------------ */
 
-/* Base — default variant */
+/* Base — default variant.
+   .hivelog-button-group is included as the eighth context so grouped
+   buttons (View/Edit/Delete clusters) receive module token styling
+   without needing an additional outer wrapper. */
 :is(
   .hivelog-list-heading,
   .hivelog-filter-form__actions,
@@ -35,7 +39,8 @@
   .hivelog-queen-actions,
   .hivelog-queen-observation-actions,
   .hivelog-entity-form .form-actions,
-  .hivelog-table-actions
+  .hivelog-table-actions,
+  .hivelog-button-group
 ) .button {
   display: inline-block;
   padding: var(--hivelog-btn-padding);
@@ -57,7 +62,8 @@
   .hivelog-queen-actions,
   .hivelog-queen-observation-actions,
   .hivelog-entity-form .form-actions,
-  .hivelog-table-actions
+  .hivelog-table-actions,
+  .hivelog-button-group
 ) .button:hover {
   background-color: var(--hivelog-btn-bg-hover);
   border-color: var(--hivelog-btn-border-hover);
@@ -71,7 +77,8 @@
   .hivelog-queen-actions,
   .hivelog-queen-observation-actions,
   .hivelog-entity-form .form-actions,
-  .hivelog-table-actions
+  .hivelog-table-actions,
+  .hivelog-button-group
 ) .button--primary {
   background-color: var(--hivelog-btn-primary-bg);
   border-color: var(--hivelog-btn-primary-border);
@@ -85,15 +92,14 @@
   .hivelog-queen-actions,
   .hivelog-queen-observation-actions,
   .hivelog-entity-form .form-actions,
-  .hivelog-table-actions
+  .hivelog-table-actions,
+  .hivelog-button-group
 ) .button--primary:hover {
   background-color: var(--hivelog-btn-primary-bg-hover);
   border-color: var(--hivelog-btn-primary-border-hover);
 }
 
-/* Danger variant (Delete).
-   All seven context wrappers are included so any future danger button
-   added to a heading or filter form picks up the correct colour. */
+/* Danger variant (Delete). */
 :is(
   .hivelog-list-heading,
   .hivelog-filter-form__actions,
@@ -101,7 +107,8 @@
   .hivelog-queen-actions,
   .hivelog-queen-observation-actions,
   .hivelog-entity-form .form-actions,
-  .hivelog-table-actions
+  .hivelog-table-actions,
+  .hivelog-button-group
 ) .button--danger {
   background-color: var(--hivelog-btn-danger-bg);
   border-color: var(--hivelog-btn-danger-border);
@@ -115,7 +122,8 @@
   .hivelog-queen-actions,
   .hivelog-queen-observation-actions,
   .hivelog-entity-form .form-actions,
-  .hivelog-table-actions
+  .hivelog-table-actions,
+  .hivelog-button-group
 ) .button--danger:hover {
   background-color: var(--hivelog-btn-danger-bg-hover);
   border-color: var(--hivelog-btn-danger-border-hover);
