@@ -84,9 +84,12 @@
 
   /*
    * Compact size — grouped buttons (View/Edit/Delete in table cells).
-   * Intentionally smaller than the standard size but large enough to
-   * remain tappable. Final tap-target sizing is reviewed in task 0011.
+   * Intentionally smaller than standard size on desktop to keep the
+   * Operations column narrow, but large enough to satisfy the WCAG 2.5.8
+   * 24×24px absolute tap-target floor (~27–28px rendered height at 0.9rem).
+   * On small screens (≤768px) hivelog.buttons.css promotes these buttons to
+   * full standard padding via a @media override — see ADR-0024.
    */
   --hivelog-btn-compact-padding-x: 0.5em;
-  --hivelog-btn-compact-padding-y: 0.25em;
+  --hivelog-btn-compact-padding-y: 0.4em;
 }

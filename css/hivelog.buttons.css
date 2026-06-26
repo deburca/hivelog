@@ -125,10 +125,23 @@
    Compact grouped buttons (View / Edit / Delete in table cells).
    button-group.twig no longer passes extra_classes with !important
    overrides; sizing comes from this rule instead, using the documented
-   compact tokens. Tap-target sizing reviewed in task 0011.
+   compact tokens (ADR-0024).
+
+   Desktop: compact padding keeps the Operations column narrow while
+   still meeting the WCAG 2.5.8 24×24px tap-target floor.
+
+   Small screens (≤768px): buttons are promoted to full standard padding
+   so tap targets meet the recommended 44×44px guideline where density
+   matters less and touch accuracy matters more.
 ------------------------------------------------------------------ */
 .hivelog-button-group .button {
   padding: var(--hivelog-btn-compact-padding-y) var(--hivelog-btn-compact-padding-x);
+}
+
+@media (max-width: 768px) {
+  .hivelog-button-group .button {
+    padding: var(--hivelog-btn-padding);
+  }
 }
 
 /* ------------------------------------------------------------------
