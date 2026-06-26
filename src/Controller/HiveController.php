@@ -323,6 +323,7 @@ class HiveController extends ControllerBase {
         '#props' => [
           'label' => (string) $this->t('Add Observation'),
           'url' => Url::fromRoute('hivelog.queen_observation.add', ['queen' => $queen->id()])->toString(),
+          'variant' => 'primary',
           'extra_classes' => 'hivelog-list-heading__action',
         ],
       ];

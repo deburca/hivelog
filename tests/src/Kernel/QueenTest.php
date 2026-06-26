@@ -357,8 +357,8 @@ class QueenTest extends KernelTestBase {
     // Notes preserve line breaks as <br />.
     $this->assertStringContainsString('Line 1.<br', $html);
 
-    // Action buttons.
-    $this->assertStringContainsString('button--primary', $html);
+    // Action buttons: Edit is default variant, Delete is danger.
+    $this->assertStringContainsString('button--default', $html);
     $this->assertStringContainsString('button--danger', $html);
     // Edit button appears before the Delete button.
     $edit_pos = strpos($html, '>Edit<');

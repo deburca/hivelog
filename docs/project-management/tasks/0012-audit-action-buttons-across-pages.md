@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: backlog
+status: done
 priority: medium
 project: "[[action-button-consistency]]"
 area: entity
@@ -21,35 +21,73 @@ use the default variant — so "Add" actions don't look alike. This task defines
 and applies variant/label rules everywhere buttons are emitted. Part of
 [[action-button-consistency]].
 
-## Proposed variant rules (to ratify)
+## Variant rules (ratified)
 - **Add / Save / primary CTA** → `primary`
-- **Edit / View / secondary** → `default`
+- **Edit / View / secondary** → `default` (omit `variant` key — default is the fallback)
 - **Delete / destructive** → `danger`
 
 ## Acceptance criteria
-- [ ] Inventory of every action-button render site (controllers, list builders,
+- [x] Inventory of every action-button render site (controllers, list builders,
       form actions, action links) with current vs intended variant/label.
-- [ ] Variant rules above ratified (or amended) and applied across the module.
-- [ ] "Add Observation" / "Edit Queen" reconciled with the ratified rules.
-- [ ] Action links from `hivelog.links.action.yml` (Add Apiary, Add Queen)
-      visually match SDC buttons, or the divergence is documented as acceptable.
-- [ ] Labels follow one convention (e.g. "Add X" / "Edit X" / "Delete X").
+- [x] Variant rules above ratified and applied across the module.
+- [x] "Add Observation" / "Edit Queen" reconciled with the ratified rules.
+- [x] Action links from `hivelog.links.action.yml` divergence documented as
+      acceptable (see below).
+- [x] Labels follow "Add X" / "Edit X" / "Delete X" / "View" convention — confirmed
+      consistent across all render sites.
 
-## Implementation notes
-- Render sites to audit:
-  - Controllers: `ApiaryController`, `HiveController`, `HiveInspectionController`,
-    `QueenController`, `QueenObservationController` (`#component =>
-    'hivelog:button'` / `'hivelog:button-group'`).
-  - List builders: `*ListBuilder.php` operations links.
-  - Form actions: `*Form.php` (`.form-actions .button` styled in
-    `css/hivelog.buttons.css`).
-  - `hivelog.links.action.yml` local actions.
-- Pure consistency pass — avoid adding/removing actions; only normalize
-  variant + label.
+## Render-site inventory
 
-## Dependencies
-- Depends on: [[0010-define-button-tokens-and-source-of-truth]].
+| Render site | Button | Was | Correct | Fixed? |
+|---|---|---|---|---|
+| `ApiaryController` — apiary page | Add Hive | `primary` | `primary` | ✓ no change |
+| `ApiaryController` — hive row ops | Edit | `default` (omitted) | `default` | ✓ no change |
+| `ApiaryController` — hive row ops | Delete | `danger` | `danger` | ✓ no change |
+| `HiveController` — hive page | Add Inspection | `primary` | `primary` | ✓ no change |
+| `HiveController` — inspection row ops | View | `default` (omitted) | `default` | ✓ no change |
+| `HiveController` — inspection row ops | Edit | `default` (omitted) | `default` | ✓ no change |
+| `HiveController` — inspection row ops | Delete | `danger` | `danger` | ✓ no change |
+| `HiveController` — queen section | Edit Queen | `default` (omitted) | `default` | ✓ no change |
+| `HiveController` — queen section | Add Observation | `default` (omitted) | `primary` | **fixed** |
+| `HiveController` — no queen | Add Queen | `primary` | `primary` | ✓ no change |
+| `QueenController` — queen page | Add Observation | `primary` | `primary` | ✓ no change |
+| `QueenController` — observation row ops | View | `default` (omitted) | `default` | ✓ no change |
+| `QueenController` — observation row ops | Edit | `default` (omitted) | `default` | ✓ no change |
+| `QueenController` — observation row ops | Delete | `danger` | `danger` | ✓ no change |
+| `QueenController` — queen page actions | Edit | `primary` | `default` | **fixed** |
+| `QueenController` — queen page actions | Delete | `danger` | `danger` | ✓ no change |
+| `HiveInspectionController` — inspection page | Edit | `primary` | `default` | **fixed** |
+| `HiveInspectionController` — inspection page | Delete | `danger` | `danger` | ✓ no change |
+| `QueenObservationController` — observation page | Edit | `primary` | `default` | **fixed** |
+| `QueenObservationController` — observation page | Delete | `danger` | `danger` | ✓ no change |
+| `ApiaryListBuilder` — apiary list row ops | Edit | `default` (omitted) | `default` | ✓ no change |
+| `ApiaryListBuilder` — apiary list row ops | Delete | `danger` | `danger` | ✓ no change |
+| `ApiaryListBuilder` — heading | Add Apiary | `primary` | `primary` | ✓ no change |
+| `HivelogHiveFilterForm` | Reset | `default` (omitted) | `default` | ✓ no change |
+| `HivelogInspectionFilterForm` | Reset | `default` (omitted) | `default` | ✓ no change |
+
+## Action links divergence (`hivelog.links.action.yml`)
+
+`hivelog.links.action.yml` defines two local actions — **Add Apiary** and **Add
+Queen** — that render via Drupal's local-action theming, not the `hivelog:button`
+SDC. These are styled by the active admin theme and do not pass through
+`hivelog.buttons.css`.
+
+**Decision: document as acceptable.** The local-action links appear in Drupal's
+standard local-action region (above page content), not inline with module-owned
+button groups. Replacing them with SDC buttons would require custom controller
+rendering that duplicates Drupal's access/route machinery for no material gain.
+The divergence is visible but not disruptive — both the local-action links and
+the SDC buttons lead to the correct forms.
+
+## Test fixes
+Two kernel test assertions were updated to match the corrected variants:
+- `QueenObservationTest::testObservationViewRendersSectionedLayout` — `button--primary` → `button--default`
+- `QueenTest::testQueenViewRendersSectionedLayout` — `button--primary` → `button--default`
+
+All 169 tests green after fixes.
 
 ## Related
 - Project:: [[action-button-consistency]]
-- Commits:: 
+- PRs:: #91
+- Released:: 1.4.0

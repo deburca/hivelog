@@ -221,8 +221,8 @@ class QueenObservationTest extends KernelTestBase {
     $this->assertStringContainsString('Yes', $html);
     // Notes preserve newlines.
     $this->assertStringContainsString('Line 1.<br', $html);
-    // Action buttons.
-    $this->assertStringContainsString('button--primary', $html);
+    // Action buttons: Edit is default variant, Delete is danger.
+    $this->assertStringContainsString('button--default', $html);
     $this->assertStringContainsString('button--danger', $html);
   }
 
