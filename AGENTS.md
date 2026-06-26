@@ -196,13 +196,20 @@ in `css/hivelog.buttons.css`. See ADR-0012 and ADR-0024 in
 ### Services
 
 Only one service is registered (`hivelog.services.yml`):
-`hivelog.breadcrumb` — a `BreadcrumbBuilder` with priority 100 that produces
+`hivelog.breadcrumb` — a `BreadcrumbBuilder` with priority **1004** that produces
 the Apiary → Hive → … trail on any hivelog route. `applies()` matches by
 route-name prefix (`entity.apiary.`, `entity.hive.`, `entity.hive_inspection.`,
 `entity.queen.`, `entity.queen_observation.`, `hivelog.`). When adding new
 routes under `/hivelog/...` make sure `applies()` still matches them — and
 explicitly exclude any non-page routes (e.g. file-download endpoints) so
 they do not get an incorrect breadcrumb.
+
+The priority of 1004 is intentional — it must exceed the `easy_breadcrumb`
+module's priority of 1003, which is commonly installed on Drupal sites and
+uses a catch-all `applies()`. If the hivelog builder does not outrank it,
+`easy_breadcrumb` intercepts all hivelog routes and produces path-based trails
+instead of the correct entity-hierarchy trails. Do not lower this priority
+below 1004 without confirming `easy_breadcrumb` is not installed.
 
 ### Tests
 
