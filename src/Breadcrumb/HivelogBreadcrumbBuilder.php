@@ -40,6 +40,20 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
   // phpcs:ignore Drupal.Commenting.FunctionComment.ParamNameNoMatch
   public function applies(RouteMatchInterface $route_match, ?CacheableMetadata $cacheable_metadata = NULL): bool {
     $route_name = $route_match->getRouteName();
+
+    // Explicitly exclude non-page hivelog.* routes that must not receive a
+    // breadcrumb (e.g. file-download endpoints). Add new exclusions here
+    // whenever a non-page hivelog.* route is introduced, and keep this list
+    // in sync with hivelog.routing.yml (see AGENTS.md).
+    // Task 0001 (queen observation CSV export) will add:
+    //   'hivelog.queen.observations_csv'
+    $non_page_routes = [
+      'hivelog.queen.observations_csv',
+    ];
+    if (in_array($route_name, $non_page_routes, TRUE)) {
+      return FALSE;
+    }
+
     return str_starts_with($route_name, 'entity.apiary.')
       || str_starts_with($route_name, 'entity.hive.')
       || str_starts_with($route_name, 'entity.hive_inspection.')
