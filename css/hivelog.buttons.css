@@ -122,20 +122,54 @@
 }
 
 /* ------------------------------------------------------------------
-   Compact grouped buttons (View / Edit / Delete in table cells).
-   button-group.twig no longer passes extra_classes with !important
-   overrides; sizing comes from this rule instead, using the documented
-   compact tokens (ADR-0024).
+   Button group — layout and joined-corner styling.
+
+   Renders buttons as an inline segmented control: borders collapse
+   between adjacent buttons and inner corners are squared off so the
+   group reads as a single connected unit.
+
+   Corner rules use plain CSS :first-child / :last-child so they work
+   without a Tailwind build. The Tailwind arbitrary-variant classes
+   previously used in button-group.twig ([&>:not(:first-child)]:rounded-l-none
+   etc.) are removed — they were never compiled by the module's plain-CSS
+   build and had no effect (ADR-0012, ADR-0024).
+------------------------------------------------------------------ */
+.hivelog-button-group {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0;
+}
+
+/* Collapse the double border between adjacent buttons. */
+.hivelog-button-group .button + .button {
+  margin-left: -1px;
+}
+
+/* Square off the right-hand corners of every button except the last. */
+.hivelog-button-group .button:not(:last-child) {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+/* Square off the left-hand corners of every button except the first. */
+.hivelog-button-group .button:not(:first-child) {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+/* Compact grouped buttons (View / Edit / Delete in table cells).
+   Sizing comes from the documented compact tokens (ADR-0024).
 
    Desktop: compact padding keeps the Operations column narrow while
    still meeting the WCAG 2.5.8 24×24px tap-target floor.
 
    Small screens (≤768px): buttons are promoted to full standard padding
    so tap targets meet the recommended 44×44px guideline where density
-   matters less and touch accuracy matters more.
------------------------------------------------------------------- */
+   matters less and touch accuracy matters more. */
 .hivelog-button-group .button {
   padding: var(--hivelog-btn-compact-padding-y) var(--hivelog-btn-compact-padding-x);
+  margin-right: 0;
 }
 
 @media (max-width: 768px) {
