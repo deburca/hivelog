@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: backlog
+status: in-progress
 priority: medium
 project: "[[mobile-ux-improvements]]"
 area: tests
@@ -46,12 +46,36 @@ risk. This task is the gate that confirms the project goal is met.
 - Cross-project: [[action-button-consistency]] (tap-target sizing overlaps
   [[0011-unify-button-group-sizing]]).
 
-## QA matrix (fill in during QA)
-- Apiary canonical — 360 / 414 / 768: 
-- Hive canonical — 360 / 414 / 768: 
-- Inspection list — 360 / 414 / 768: 
-- Queen canonical — 360 / 414 / 768: 
+## Defects found during QA
+
+### Defect 1 — Breadcrumbs incorrect on all entity hierarchy routes (FIXED)
+**Root cause:** `hivelog.breadcrumb` was registered at priority 100 in
+`hivelog.services.yml`. The `easy_breadcrumb` contrib module (priority 1003)
+was installed on the test site and its catch-all `applies()` was intercepting
+all hivelog routes first, producing path-based trails instead of the correct
+entity-hierarchy trails.
+
+**Fix:** Raised `hivelog.breadcrumb` priority to 1004 in `hivelog.services.yml`.
+AGENTS.md updated to document the intentional priority and the reason it must
+remain above 1003.
+
+**Pages affected:** Hive canonical, Hive edit form, Inspection canonical,
+Queen canonical, Queen observation canonical, Queen observation edit form.
+
+## QA matrix (first pass — 360px, all pages)
+
+| Page | Scroll | Buttons joined/coloured | Tap targets | Breadcrumb | Notes |
+|---|---|---|---|---|---|
+| Apiary list | ✓ | ✓ | ✓ | ✓ | Pass |
+| Apiary canonical | ✓ | ✓ | ✓ | ✓ | Pass — breadcrumb: Home › HiveLog › Meadow Apiary |
+| Hive canonical | pending re-test | pending | pending | fixed | Re-test required after breadcrumb fix |
+| Hive canonical (no queen) | ✓ | ✓ | ✓ | pending | Pass for layout/buttons |
+| Inspection canonical | pending re-test | pending | pending | fixed | Re-test required |
+| Hive edit form | pending re-test | pending | pending | fixed | Re-test required |
+| Queen canonical | pending re-test | pending | pending | fixed | Re-test required |
+| Queen observation canonical | pending re-test | pending | pending | fixed | Re-test required |
+| Queen observation edit | pending re-test | pending | pending | fixed | Re-test required |
 
 ## Related
 - Project:: [[mobile-ux-improvements]]
-- Commits:: 
+- Defect fix:: hivelog.services.yml priority 100 → 1004 (PR #97)
