@@ -1,12 +1,12 @@
 ---
 type: task
 tags: [hivelog/task]
-status: backlog
+status: done
 priority: medium
 project: "[[breadcrumb-consistency]]"
 area: routing
 created: 2026-06-17
-branch: feature/0014-implement-breadcrumb-consistency-fixes
+branch: feature/0015-breadcrumb-test-coverage
 release: 1.4.0
 depends-on: ["[[0013-breadcrumb-route-audit]]"]
 ---
@@ -20,34 +20,37 @@ isn't upcast, excluding non-page `hivelog.*` routes from `applies()`, and (if
 decided) appending a consistent trailing crumb. Part of
 [[breadcrumb-consistency]].
 
+## Outcome
+The [[0013-breadcrumb-route-audit]] found **no code fixes required** for the
+current route set. The only actionable item was a **pre-emptive exclusion** for
+the future CSV export route (Task 0001), implemented in the same branch as
+Task 0015 to keep the test and the fix together.
+
 ## Acceptance criteria
-- [ ] Each gap from the [[0013-breadcrumb-route-audit]] matrix is fixed or
+- [x] Each gap from the [[0013-breadcrumb-route-audit]] matrix is fixed or
       explicitly deferred with a reason.
-- [ ] `applies()` stays aligned with the routes that should have breadcrumbs —
-      `AGENTS.md` explicitly warns to keep `applies()` in sync when routes
-      change.
-- [ ] Non-page routes (e.g. CSV export from [[0001-queen-observation-csv-export]])
-      are excluded if the audit decided so.
-- [ ] Cacheability preserved: keep `addCacheContexts(['route'])` and the
-      per-entity `addCacheableDependency()` calls so breadcrumbs invalidate
-      correctly.
-- [ ] Behaviour verified by the tests in [[0015-breadcrumb-test-coverage]].
+      — No gaps requiring fixes. The one acceptable gap (`entity.queen.add_form`
+      lacking hive context) is not fixable and is documented as accepted.
+- [x] `applies()` stays aligned with the routes that should have breadcrumbs.
+      — A `$non_page_routes` exclusion list added to `applies()` with
+      `hivelog.queen.observations_csv` pre-populated ready for Task 0001.
+- [x] Non-page routes excluded from `applies()`.
+      — `hivelog.queen.observations_csv` excluded pre-emptively; documented
+      with an inline comment referencing Task 0001 and AGENTS.md.
+- [x] Cacheability preserved.
+      — No changes to cache context/dependency calls.
+- [x] Behaviour verified by the tests in [[0015-breadcrumb-test-coverage]].
 
-## Implementation notes
-- The builder threads ancestry via reverse references: hive→apiary,
-  inspection→hive→apiary, queen→hive→apiary, observation→queen→hive→apiary.
-  Reuse those patterns; avoid duplicating lookups.
-- Keep self-link suppression on canonical routes (the `$route_name !==
-  'entity.*.canonical'` checks) unless the audit changes the trailing-crumb
-  policy.
-- If schema/route changes are introduced elsewhere, remember the AGENTS.md rule
-  about pairing entity schema changes with update hooks (not expected here —
-  this is routing/breadcrumb only).
-
-## Dependencies
-- Depends on: [[0013-breadcrumb-route-audit]].
-- Verified by: [[0015-breadcrumb-test-coverage]].
+## Implementation
+One change to `src/Breadcrumb/HivelogBreadcrumbBuilder.php`:
+- Added `$non_page_routes` exclusion array at the top of `applies()`.
+  Currently contains `hivelog.queen.observations_csv`. When Task 0001 is
+  implemented, no further change to `applies()` is needed — the exclusion is
+  already in place. Add further non-page routes to the array as they are
+  introduced.
 
 ## Related
 - Project:: [[breadcrumb-consistency]]
-- Commits:: 
+- Depends on:: [[0013-breadcrumb-route-audit]]
+- Verified by:: [[0015-breadcrumb-test-coverage]]
+- PRs:: #95

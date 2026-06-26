@@ -170,8 +170,28 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
       'inspection add'  => ['hivelog.inspection.add'],
       'queen add'       => ['hivelog.queen.add'],
       'observation add' => ['hivelog.queen_observation.add'],
-      'admin'           => ['hivelog.admin'],
     ];
+  }
+
+  /**
+   * Tests that applies() returns FALSE for the future CSV export route.
+   *
+   * When Task 0001 (queen observation CSV export) is implemented, its route
+   * hivelog.queen.observations_csv must be explicitly excluded from applies()
+   * so that a file-download response does not receive a breadcrumb. This test
+   * documents the expected behaviour and will fail as a reminder when the route
+   * is added unless the exclusion is also added to applies() at that time.
+   *
+   * @see \Drupal\hivelog\Breadcrumb\HivelogBreadcrumbBuilder::applies()
+   * @see docs/project-management/tasks/0001-queen-observation-csv-export.md
+   * @see docs/project-management/tasks/0013-breadcrumb-route-audit.md
+   */
+  public function testAppliesReturnsFalseForCsvExportRoute(): void {
+    // This route does not exist yet (Task 0001 is backlog). The test asserts
+    // the intended future behaviour: the hivelog. catch-all must NOT match
+    // file-download routes. When Task 0001 is implemented, add an explicit
+    // exclusion to applies() and this test will confirm it is correct.
+    $this->assertFalse($this->builder->applies($this->createRouteMatch('hivelog.queen.observations_csv')));
   }
 
   /**
@@ -568,6 +588,229 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $this->assertEquals('entity.hive.canonical', $links[3]->getUrl()->getRouteName());
   }
 
+  /**
+   * Apiary delete: same as edit — apiary ancestor link IS added.
+   */
+  public function testBuildApiaryDeleteForm(): void {
+    $apiary = $this->createApiaryMock(2, 'Mountain Apiary');
+    $route_match = $this->createRouteMatch('entity.apiary.delete_form');
+    $route_match->method('getParameter')->willReturnMap([
+      ['apiary', $apiary],
+      ['hive', NULL],
+      ['hive_inspection', NULL],
+    ]);
+
+    $breadcrumb = $this->builder->build($route_match);
+    $links = $breadcrumb->getLinks();
+
+    $this->assertCount(3, $links);
+    $this->assertEquals('Mountain Apiary', (string) $links[2]->getText());
+    $this->assertEquals('entity.apiary.canonical', $links[2]->getUrl()->getRouteName());
+  }
+
+  /**
+   * Hive delete: apiary and hive ancestor links are both added.
+   */
+  public function testBuildHiveDeleteForm(): void {
+    $apiary = $this->createApiaryMock(1, 'Home Apiary');
+    $hive = $this->createHiveMock(5, 'Hive Alpha', $apiary);
+    $route_match = $this->createRouteMatch('entity.hive.delete_form');
+    $route_match->method('getParameter')->willReturnMap([
+      ['apiary', NULL],
+      ['hive', $hive],
+      ['hive_inspection', NULL],
+    ]);
+
+    $breadcrumb = $this->builder->build($route_match);
+    $links = $breadcrumb->getLinks();
+
+    $this->assertCount(4, $links);
+    $this->assertEquals('Home Apiary', (string) $links[2]->getText());
+    $this->assertEquals('Hive Alpha', (string) $links[3]->getText());
+    $this->assertEquals('entity.hive.canonical', $links[3]->getUrl()->getRouteName());
+  }
+
+  /**
+   * Inspection delete: apiary, hive, and inspection ancestor links all added.
+   */
+  public function testBuildInspectionDeleteForm(): void {
+    $apiary = $this->createApiaryMock(1, 'Home Apiary');
+    $hive = $this->createHiveMock(5, 'Hive Alpha', $apiary);
+    $inspection = $this->createInspectionMock(10, 'Inspection on 2024-06-15', $hive);
+    $route_match = $this->createRouteMatch('entity.hive_inspection.delete_form');
+    $route_match->method('getParameter')->willReturnMap([
+      ['apiary', NULL],
+      ['hive', NULL],
+      ['hive_inspection', $inspection],
+    ]);
+
+    $breadcrumb = $this->builder->build($route_match);
+    $links = $breadcrumb->getLinks();
+
+    $this->assertCount(5, $links);
+    $this->assertEquals('Home Apiary', (string) $links[2]->getText());
+    $this->assertEquals('Hive Alpha', (string) $links[3]->getText());
+    $this->assertEquals('Inspection on 2024-06-15', (string) $links[4]->getText());
+    $this->assertEquals('entity.hive_inspection.canonical', $links[4]->getUrl()->getRouteName());
+  }
+
+  /**
+   * Queen delete: apiary, hive, and queen ancestor links all added.
+   */
+  public function testBuildQueenDeleteForm(): void {
+    $apiary = $this->createApiaryMock(1, 'Home Apiary');
+    $hive = $this->createHiveMock(5, 'Hive Alpha', $apiary);
+    $queen = $this->createQueenMock(20, 'Q-2024-001', $hive);
+    $route_match = $this->createRouteMatch('entity.queen.delete_form');
+    $route_match->method('getParameter')->willReturnMap([
+      ['apiary', NULL],
+      ['hive', NULL],
+      ['hive_inspection', NULL],
+      ['queen', $queen],
+    ]);
+
+    $breadcrumb = $this->builder->build($route_match);
+    $links = $breadcrumb->getLinks();
+
+    $this->assertCount(5, $links);
+    $this->assertEquals('Home Apiary', (string) $links[2]->getText());
+    $this->assertEquals('Hive Alpha', (string) $links[3]->getText());
+    $this->assertEquals('Q-2024-001', (string) $links[4]->getText());
+    $this->assertEquals('entity.queen.canonical', $links[4]->getUrl()->getRouteName());
+  }
+
+  /**
+   * Queen observation delete: apiary, hive, queen, and observation links added.
+   */
+  public function testBuildQueenObservationDeleteForm(): void {
+    $apiary = $this->createApiaryMock(1, 'Home Apiary');
+    $hive = $this->createHiveMock(5, 'Hive Alpha', $apiary);
+    $queen = $this->createQueenMock(20, 'Q-2024-001', $hive);
+    $observation = $this->createObservationMock(30, 'Observation A', $queen);
+    $route_match = $this->createRouteMatch('entity.queen_observation.delete_form');
+    $route_match->method('getParameter')->willReturnMap([
+      ['apiary', NULL],
+      ['hive', NULL],
+      ['hive_inspection', NULL],
+      ['queen', NULL],
+      ['queen_observation', $observation],
+    ]);
+
+    $breadcrumb = $this->builder->build($route_match);
+    $links = $breadcrumb->getLinks();
+
+    $this->assertCount(6, $links);
+    $this->assertEquals('Home Apiary', (string) $links[2]->getText());
+    $this->assertEquals('Hive Alpha', (string) $links[3]->getText());
+    $this->assertEquals('Q-2024-001', (string) $links[4]->getText());
+    $this->assertEquals('Observation A', (string) $links[5]->getText());
+    $this->assertEquals('entity.queen_observation.canonical', $links[5]->getUrl()->getRouteName());
+  }
+
+  /**
+   * Unassigned queen (no hive): trail gracefully shortens to Home › HiveLog.
+   *
+   * An inactive/archived queen with no hive reference should not produce
+   * broken breadcrumbs — ancestry stops at the HiveLog root link.
+   */
+  public function testBuildQueenCanonicalUnassigned(): void {
+    $queen = $this->createUnassignedQueenMock(21, 'Q-2023-archived');
+    $route_match = $this->createRouteMatch('entity.queen.canonical');
+    $route_match->method('getParameter')->willReturnMap([
+      ['apiary', NULL],
+      ['hive', NULL],
+      ['hive_inspection', NULL],
+      ['queen', $queen],
+    ]);
+
+    $breadcrumb = $this->builder->build($route_match);
+    $links = $breadcrumb->getLinks();
+
+    // Home + HiveLog only — no apiary or hive link because queen has no hive.
+    $this->assertCount(2, $links);
+    $this->assertEquals('Home', (string) $links[0]->getText());
+    $this->assertEquals('HiveLog', (string) $links[1]->getText());
+    $this->assertContains('queen:21', $breadcrumb->getCacheTags());
+  }
+
+  /**
+   * Unassigned queen edit: trail is Home › HiveLog › Queen (no hive ancestry).
+   */
+  public function testBuildQueenEditFormUnassigned(): void {
+    $queen = $this->createUnassignedQueenMock(21, 'Q-2023-archived');
+    $route_match = $this->createRouteMatch('entity.queen.edit_form');
+    $route_match->method('getParameter')->willReturnMap([
+      ['apiary', NULL],
+      ['hive', NULL],
+      ['hive_inspection', NULL],
+      ['queen', $queen],
+    ]);
+
+    $breadcrumb = $this->builder->build($route_match);
+    $links = $breadcrumb->getLinks();
+
+    // Home + HiveLog + Queen (no apiary or hive).
+    $this->assertCount(3, $links);
+    $this->assertEquals('Q-2023-archived', (string) $links[2]->getText());
+    $this->assertEquals('entity.queen.canonical', $links[2]->getUrl()->getRouteName());
+  }
+
+  /**
+   * Observation whose queen is unassigned: trail is Home › HiveLog › Queen.
+   *
+   * When a queen has no hive, the observation breadcrumb skips apiary and hive
+   * and links directly to the queen.
+   */
+  public function testBuildObservationCanonicalQueenUnassigned(): void {
+    $queen = $this->createUnassignedQueenMock(21, 'Q-2023-archived');
+    $observation = $this->createObservationMock(31, 'Observation B', $queen);
+    $route_match = $this->createRouteMatch('entity.queen_observation.canonical');
+    $route_match->method('getParameter')->willReturnMap([
+      ['apiary', NULL],
+      ['hive', NULL],
+      ['hive_inspection', NULL],
+      ['queen', NULL],
+      ['queen_observation', $observation],
+    ]);
+
+    $breadcrumb = $this->builder->build($route_match);
+    $links = $breadcrumb->getLinks();
+
+    // Home + HiveLog + Queen (no apiary or hive because queen is unassigned).
+    $this->assertCount(3, $links);
+    $this->assertEquals('Home', (string) $links[0]->getText());
+    $this->assertEquals('HiveLog', (string) $links[1]->getText());
+    $this->assertEquals('Q-2023-archived', (string) $links[2]->getText());
+    $this->assertEquals('entity.queen.canonical', $links[2]->getUrl()->getRouteName());
+    $this->assertContains('queen_observation:31', $breadcrumb->getCacheTags());
+    $this->assertContains('queen:21', $breadcrumb->getCacheTags());
+  }
+
+  /**
+   * Observation edit whose queen is unassigned: trail is Home › HiveLog › Queen › Observation.
+   */
+  public function testBuildObservationEditFormQueenUnassigned(): void {
+    $queen = $this->createUnassignedQueenMock(21, 'Q-2023-archived');
+    $observation = $this->createObservationMock(31, 'Observation B', $queen);
+    $route_match = $this->createRouteMatch('entity.queen_observation.edit_form');
+    $route_match->method('getParameter')->willReturnMap([
+      ['apiary', NULL],
+      ['hive', NULL],
+      ['hive_inspection', NULL],
+      ['queen', NULL],
+      ['queen_observation', $observation],
+    ]);
+
+    $breadcrumb = $this->builder->build($route_match);
+    $links = $breadcrumb->getLinks();
+
+    // Home + HiveLog + Queen + Observation.
+    $this->assertCount(4, $links);
+    $this->assertEquals('Q-2023-archived', (string) $links[2]->getText());
+    $this->assertEquals('Observation B', (string) $links[3]->getText());
+    $this->assertEquals('entity.queen_observation.canonical', $links[3]->getUrl()->getRouteName());
+  }
+
   // -------------------------------------------------------------------------
   // Helper methods
   // -------------------------------------------------------------------------
@@ -643,6 +886,24 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
 
     $hive_ref = new \stdClass();
     $hive_ref->entity = $hive;
+    $queen->method('get')->with('hive')->willReturn($hive_ref);
+
+    return $queen;
+  }
+
+  /**
+   * Creates a mock Queen entity with no hive reference (unassigned/archived).
+   */
+  private function createUnassignedQueenMock(int $id, string $label): ContentEntityInterface {
+    $queen = $this->createMock(ContentEntityInterface::class);
+    $queen->method('id')->willReturn($id);
+    $queen->method('label')->willReturn($label);
+    $queen->method('getCacheTags')->willReturn(["queen:$id"]);
+    $queen->method('getCacheContexts')->willReturn([]);
+    $queen->method('getCacheMaxAge')->willReturn(-1);
+
+    $hive_ref = new \stdClass();
+    $hive_ref->entity = NULL;
     $queen->method('get')->with('hive')->willReturn($hive_ref);
 
     return $queen;

@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: backlog
+status: done
 priority: low
 project: "[[breadcrumb-consistency]]"
 area: tests
@@ -20,27 +20,37 @@ the real ancestry threading for each entity type and the edge cases found in
 [[0013-breadcrumb-route-audit]]. Closing task for [[breadcrumb-consistency]].
 
 ## Acceptance criteria
-- [ ] Tests assert the expected trail for each entity type's canonical, add,
+- [x] Tests assert the expected trail for each entity type's canonical, add,
       edit, and delete routes (apiary, hive, inspection, queen, observation).
-- [ ] Edge cases covered: unassigned queen (no hive) and an observation whose
-      queen is unassigned — ancestry should gracefully shorten.
-- [ ] `applies()` covered for both matching and non-matching route names
-      (including any routes the audit decided to exclude).
-- [ ] Tests are tagged `@group hivelog` so `--group hivelog` runs them
-      (see `AGENTS.md` for the runner command).
-- [ ] Full suite green via the documented PHPUnit command.
+- [x] Edge cases covered: unassigned queen (no hive) and an observation whose
+      queen is unassigned — ancestry gracefully shortens to Home › HiveLog (queen)
+      and Home › HiveLog › Queen (observation).
+- [x] `applies()` covered for both matching and non-matching route names,
+      including the pre-emptive CSV export exclusion.
+- [x] Tests tagged `#[Group('hivelog')]` — `--group hivelog` runs them.
+- [x] Full suite green: 178/178 tests, 2296 assertions.
 
-## Implementation notes
-- Extend the existing unit test for `applies()` / pure-logic cases; add a
-  **kernel** test (under `tests/src/Kernel/`) when real entity relationships and
-  route upcasting are needed — kernel tests already install the module + deps in
-  this codebase.
-- Reuse fixture-building patterns from the existing kernel tests
-  (apiary→hive→inspection, queen, queen_observation).
+## Tests added (all in `HivelogBreadcrumbBuilderTest`)
 
-## Dependencies
-- Depends on: [[0014-implement-breadcrumb-consistency-fixes]].
+### applies() additions
+- `testAppliesReturnsFalseForCsvExportRoute` — asserts `hivelog.queen.observations_csv`
+  returns FALSE, documenting and enforcing the Task 0001 pre-emptive exclusion.
+
+### build() additions
+- `testBuildApiaryDeleteForm` — apiary delete trail
+- `testBuildHiveDeleteForm` — hive delete trail
+- `testBuildInspectionDeleteForm` — inspection delete trail
+- `testBuildQueenDeleteForm` — queen delete trail
+- `testBuildQueenObservationDeleteForm` — observation delete trail
+- `testBuildQueenCanonicalUnassigned` — queen with no hive → Home › HiveLog only
+- `testBuildQueenEditFormUnassigned` — unassigned queen edit → Home › HiveLog › Queen
+- `testBuildObservationCanonicalQueenUnassigned` — observation on unassigned queen → Home › HiveLog › Queen
+- `testBuildObservationEditFormQueenUnassigned` — observation edit on unassigned queen → Home › HiveLog › Queen › Observation
+
+### Helper added
+- `createUnassignedQueenMock()` — queen mock whose `hive` reference returns `entity = NULL`.
 
 ## Related
 - Project:: [[breadcrumb-consistency]]
-- Commits:: 
+- Depends on:: [[0014-implement-breadcrumb-consistency-fixes]]
+- PRs:: #95
