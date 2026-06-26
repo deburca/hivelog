@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: in-progress
+status: backlog
 priority: high
 project: "[[queen-observation-enhancements]]"
 area: routing
