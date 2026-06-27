@@ -68,15 +68,17 @@ jobs:
             src/ tests/ hivelog.module hivelog.install
 
       - name: phpstan — static analysis
-        # Run without the mglaman/phpstan-drupal extension because it requires
-        # drupal/core to be installed in the same vendor tree. The extension is
-        # useful locally (where core is available) but cannot bootstrap in the
-        # standalone module lint environment. Level 2 still catches type errors
-        # and deprecation rules via phpstan/phpstan-deprecation-rules.
+        # phpstan-drupal requires drupal/core in the same vendor tree and cannot
+        # bootstrap in the standalone module lint environment. We run bare
+        # phpstan at level 2 with a baseline that suppresses the unavoidable
+        # "unknown class Drupal\*" / "unknown class Symfony\*" false positives
+        # that arise from missing core stubs. Real logic errors in module code
+        # are still caught.
         run: |
           phpstan analyse src/ tests/ \
             --level=2 \
             --no-progress \
+            --memory-limit=512M \
             --error-format=github
 
   # -----------------------------------------------------------------------

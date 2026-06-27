@@ -1,21 +1,13 @@
+includes:
+  - phpstan-baseline.neon
+
 parameters:
   level: 2
   paths:
     - src/
     - tests/
 
-  # When phpstan runs against the standalone module source (without a full
-  # Drupal project in vendor/) it cannot resolve Drupal core classes. These
-  # ignoreErrors patterns suppress the resulting false-positive "unknown class"
-  # and "invalid type" errors for Drupal framework symbols. The module's own
-  # logic is still fully analysed at level 2.
-  ignoreErrors:
-    # Drupal core classes not available without full project bootstrap.
-    - '#unknown class Drupal\\#'
-    - '#invalid type Drupal\\#'
-    - '#extends unknown class Drupal\\#'
-    - '#implements unknown class Drupal\\#'
-    - '#invalid return type Drupal\\#'
-    - '#Call to (static )?method \w+\(\) on an unknown class Drupal\\#'
-    - '#Call to an undefined method Drupal\\#'
-    - '#Access to an undefined property Drupal\\#'
+  # phpstan-baseline.neon suppresses the unavoidable "unknown class Drupal\*"
+  # and "unknown class Symfony\*" false positives that arise when analysing
+  # a standalone module without a full Drupal project bootstrap. Real logic
+  # errors in module code are still caught at level 2.
