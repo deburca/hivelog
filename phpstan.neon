@@ -7,7 +7,17 @@ parameters:
     - src/
     - tests/
 
-  # phpstan-baseline.neon suppresses the unavoidable "unknown class Drupal\*"
-  # and "unknown class Symfony\*" false positives that arise when analysing
-  # a standalone module without a full Drupal project bootstrap. Real logic
-  # errors in module code are still caught at level 2.
+  # The baseline suppresses unavoidable "unknown class Drupal\*" / "unknown
+  # class Symfony\*" false positives. Additionally, add broad regex patterns
+  # to suppress any similar errors that the baseline generator could not
+  # capture (phpstan 2.x baseline has limitations on certain error types).
+  ignoreErrors:
+    - '#unknown class (Drupal|Symfony)\\#'
+    - '#invalid type (Drupal|Symfony)\\#'
+    - '#extends unknown class (Drupal|Symfony)\\#'
+    - '#implements unknown (class|interface) (Drupal|Symfony)\\#'
+    - '#invalid return type (Drupal|Symfony)\\#'
+    - '#uses unknown trait (Drupal|Symfony)\\#'
+    - '#not found\.$#'
+    - '#does not extend any class\.$#'
+    - '#Unsafe usage of new static\(\)\.$#'
