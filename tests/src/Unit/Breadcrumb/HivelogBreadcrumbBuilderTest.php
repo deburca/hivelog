@@ -238,8 +238,8 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
-   * Apiary canonical: apiary is the current page so it is NOT appended to the
-   * trail, but its cache tags are still added.
+   * Apiary canonical: apiary label is the terminal crumb (rendered as plain
+   * text by the theme via loop.last). Home and HiveLog are navigable ancestors.
    */
   public function testBuildApiaryCanonical(): void {
     $apiary = $this->createApiaryMock(1, 'Home Apiary');
@@ -253,7 +253,9 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $breadcrumb = $this->builder->build($route_match);
     $links = $breadcrumb->getLinks();
 
-    $this->assertCount(2, $links);
+    $this->assertCount(3, $links);
+    $this->assertEquals('Home Apiary', (string) $links[2]->getText());
+    $this->assertEquals('entity.apiary.canonical', $links[2]->getUrl()->getRouteName());
     $this->assertContains('apiary:1', $breadcrumb->getCacheTags());
   }
 
@@ -280,8 +282,8 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
-   * Hive canonical: hive is the current page; apiary ancestor link is added,
-   * hive link is NOT.
+   * Hive canonical: apiary is a navigable ancestor; hive label is the terminal
+   * crumb rendered as plain text by the theme.
    */
   public function testBuildHiveCanonical(): void {
     $apiary = $this->createApiaryMock(1, 'Home Apiary');
@@ -296,9 +298,11 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $breadcrumb = $this->builder->build($route_match);
     $links = $breadcrumb->getLinks();
 
-    $this->assertCount(3, $links);
+    $this->assertCount(4, $links);
     $this->assertEquals('Home Apiary', (string) $links[2]->getText());
     $this->assertEquals('entity.apiary.canonical', $links[2]->getUrl()->getRouteName());
+    $this->assertEquals('Hive Alpha', (string) $links[3]->getText());
+    $this->assertEquals('entity.hive.canonical', $links[3]->getUrl()->getRouteName());
     $this->assertContains('apiary:1', $breadcrumb->getCacheTags());
     $this->assertContains('hive:5', $breadcrumb->getCacheTags());
   }
@@ -327,8 +331,8 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
-   * Inspection canonical: inspection is the current page; apiary and hive
-   * ancestor links are added, inspection link is NOT.
+   * Inspection canonical: apiary and hive are navigable ancestors; inspection
+   * label is the terminal crumb rendered as plain text by the theme.
    */
   public function testBuildInspectionCanonical(): void {
     $apiary = $this->createApiaryMock(1, 'Home Apiary');
@@ -344,9 +348,11 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $breadcrumb = $this->builder->build($route_match);
     $links = $breadcrumb->getLinks();
 
-    $this->assertCount(4, $links);
+    $this->assertCount(5, $links);
     $this->assertEquals('Home Apiary', (string) $links[2]->getText());
     $this->assertEquals('Hive Alpha', (string) $links[3]->getText());
+    $this->assertEquals('Inspection on 2024-06-15', (string) $links[4]->getText());
+    $this->assertEquals('entity.hive_inspection.canonical', $links[4]->getUrl()->getRouteName());
     $this->assertContains('hive_inspection:10', $breadcrumb->getCacheTags());
     $this->assertContains('hive:5', $breadcrumb->getCacheTags());
     $this->assertContains('apiary:1', $breadcrumb->getCacheTags());
@@ -423,8 +429,8 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
-   * Queen canonical: queen is the current page; apiary and hive ancestor
-   * links are added when the queen has a hive, queen link itself is NOT.
+   * Queen canonical: apiary and hive are navigable ancestors; queen label is
+   * the terminal crumb rendered as plain text by the theme.
    */
   public function testBuildQueenCanonical(): void {
     $apiary = $this->createApiaryMock(1, 'Home Apiary');
@@ -441,9 +447,11 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $breadcrumb = $this->builder->build($route_match);
     $links = $breadcrumb->getLinks();
 
-    $this->assertCount(4, $links);
+    $this->assertCount(5, $links);
     $this->assertEquals('Home Apiary', (string) $links[2]->getText());
     $this->assertEquals('Hive Alpha', (string) $links[3]->getText());
+    $this->assertEquals('Q-2024-001', (string) $links[4]->getText());
+    $this->assertEquals('entity.queen.canonical', $links[4]->getUrl()->getRouteName());
     $this->assertContains('queen:20', $breadcrumb->getCacheTags());
     $this->assertContains('hive:5', $breadcrumb->getCacheTags());
     $this->assertContains('apiary:1', $breadcrumb->getCacheTags());
@@ -477,9 +485,8 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
-   * Queen observation canonical: observation is the current page; apiary,
-   * hive, and queen ancestor links are added when the queen has a hive;
-   * the observation link itself is NOT.
+   * Queen observation canonical: apiary, hive, and queen are navigable
+   * ancestors; observation label is the terminal crumb rendered as plain text.
    */
   public function testBuildQueenObservationCanonical(): void {
     $apiary = $this->createApiaryMock(1, 'Home Apiary');
@@ -498,10 +505,12 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $breadcrumb = $this->builder->build($route_match);
     $links = $breadcrumb->getLinks();
 
-    $this->assertCount(5, $links);
+    $this->assertCount(6, $links);
     $this->assertEquals('Home Apiary', (string) $links[2]->getText());
     $this->assertEquals('Hive Alpha', (string) $links[3]->getText());
     $this->assertEquals('Q-2024-001', (string) $links[4]->getText());
+    $this->assertEquals('Observation A', (string) $links[5]->getText());
+    $this->assertEquals('entity.queen_observation.canonical', $links[5]->getUrl()->getRouteName());
     $this->assertContains('queen_observation:30', $breadcrumb->getCacheTags());
     $this->assertContains('queen:20', $breadcrumb->getCacheTags());
     $this->assertContains('hive:5', $breadcrumb->getCacheTags());
@@ -708,10 +717,8 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
-   * Unassigned queen (no hive): trail gracefully shortens to Home › HiveLog.
-   *
-   * An inactive/archived queen with no hive reference should not produce
-   * broken breadcrumbs — ancestry stops at the HiveLog root link.
+   * Unassigned queen canonical: no hive ancestry; trail is Home › HiveLog ›
+   * Queen (queen label is the terminal crumb rendered as plain text).
    */
   public function testBuildQueenCanonicalUnassigned(): void {
     $queen = $this->createUnassignedQueenMock(21, 'Q-2023-archived');
@@ -726,10 +733,12 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $breadcrumb = $this->builder->build($route_match);
     $links = $breadcrumb->getLinks();
 
-    // Home + HiveLog only — no apiary or hive link because queen has no hive.
-    $this->assertCount(2, $links);
+    // Home + HiveLog + Queen (no apiary or hive because queen has no hive).
+    $this->assertCount(3, $links);
     $this->assertEquals('Home', (string) $links[0]->getText());
     $this->assertEquals('HiveLog', (string) $links[1]->getText());
+    $this->assertEquals('Q-2023-archived', (string) $links[2]->getText());
+    $this->assertEquals('entity.queen.canonical', $links[2]->getUrl()->getRouteName());
     $this->assertContains('queen:21', $breadcrumb->getCacheTags());
   }
 
@@ -756,10 +765,9 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
-   * Observation whose queen is unassigned: trail is Home › HiveLog › Queen.
-   *
-   * When a queen has no hive, the observation breadcrumb skips apiary and hive
-   * and links directly to the queen.
+   * Observation canonical whose queen is unassigned: queen is a navigable
+   * ancestor; observation label is the terminal crumb rendered as plain text.
+   * Apiary and hive are skipped because the queen has no hive.
    */
   public function testBuildObservationCanonicalQueenUnassigned(): void {
     $queen = $this->createUnassignedQueenMock(21, 'Q-2023-archived');
@@ -776,12 +784,14 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $breadcrumb = $this->builder->build($route_match);
     $links = $breadcrumb->getLinks();
 
-    // Home + HiveLog + Queen (no apiary or hive because queen is unassigned).
-    $this->assertCount(3, $links);
+    // Home + HiveLog + Queen + Observation.
+    $this->assertCount(4, $links);
     $this->assertEquals('Home', (string) $links[0]->getText());
     $this->assertEquals('HiveLog', (string) $links[1]->getText());
     $this->assertEquals('Q-2023-archived', (string) $links[2]->getText());
     $this->assertEquals('entity.queen.canonical', $links[2]->getUrl()->getRouteName());
+    $this->assertEquals('Observation B', (string) $links[3]->getText());
+    $this->assertEquals('entity.queen_observation.canonical', $links[3]->getUrl()->getRouteName());
     $this->assertContains('queen_observation:31', $breadcrumb->getCacheTags());
     $this->assertContains('queen:21', $breadcrumb->getCacheTags());
   }

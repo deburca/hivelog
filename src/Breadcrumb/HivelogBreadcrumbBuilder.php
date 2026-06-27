@@ -75,16 +75,16 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
 
     $route_name = $route_match->getRouteName();
 
-    // Apiary-level routes: add the apiary link for edit/delete pages.
+    // Apiary-level routes: add the apiary crumb. On canonical pages the apiary
+    // label becomes the terminal crumb (rendered as plain text by the theme);
+    // on edit/delete pages it is a navigable ancestor link.
     $apiary = $route_match->getParameter('apiary');
     if ($apiary && is_object($apiary)) {
       $breadcrumb->addCacheableDependency($apiary);
-      if ($route_name !== 'entity.apiary.canonical') {
-        $breadcrumb->addLink(Link::createFromRoute($apiary->label(), 'entity.apiary.canonical', ['apiary' => $apiary->id()]));
-      }
+      $breadcrumb->addLink(Link::createFromRoute($apiary->label(), 'entity.apiary.canonical', ['apiary' => $apiary->id()]));
     }
 
-    // Hive-level routes: add apiary and hive links.
+    // Hive-level routes: add apiary ancestor link then hive crumb.
     $hive = $route_match->getParameter('hive');
     if ($hive && is_object($hive)) {
       $breadcrumb->addCacheableDependency($hive);
@@ -93,12 +93,11 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
         $breadcrumb->addCacheableDependency($hive_apiary);
         $breadcrumb->addLink(Link::createFromRoute($hive_apiary->label(), 'entity.apiary.canonical', ['apiary' => $hive_apiary->id()]));
       }
-      if ($route_name !== 'entity.hive.canonical') {
-        $breadcrumb->addLink(Link::createFromRoute($hive->label(), 'entity.hive.canonical', ['hive' => $hive->id()]));
-      }
+      $breadcrumb->addLink(Link::createFromRoute($hive->label(), 'entity.hive.canonical', ['hive' => $hive->id()]));
     }
 
-    // Inspection-level routes: add apiary, hive, and inspection links.
+    // Inspection-level routes: add apiary and hive ancestor links then
+    // inspection crumb.
     $inspection = $route_match->getParameter('hive_inspection');
     if ($inspection && is_object($inspection)) {
       $breadcrumb->addCacheableDependency($inspection);
@@ -112,14 +111,11 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
         }
         $breadcrumb->addLink(Link::createFromRoute($inspection_hive->label(), 'entity.hive.canonical', ['hive' => $inspection_hive->id()]));
       }
-      if ($route_name !== 'entity.hive_inspection.canonical') {
-        $breadcrumb->addLink(Link::createFromRoute($inspection->label(), 'entity.hive_inspection.canonical', ['hive_inspection' => $inspection->id()]));
-      }
+      $breadcrumb->addLink(Link::createFromRoute($inspection->label(), 'entity.hive_inspection.canonical', ['hive_inspection' => $inspection->id()]));
     }
 
-    // Queen-level routes: when a queen has a hive, thread Apiary → Hive
-    // ancestry. Queens that are unassigned (archived with no hive) just
-    // render the base HiveLog breadcrumb with a trailing queen link.
+    // Queen-level routes: thread Apiary → Hive ancestry when the queen has a
+    // hive; unassigned queens get just the base trail plus queen crumb.
     $queen = $route_match->getParameter('queen');
     if ($queen && is_object($queen)) {
       $breadcrumb->addCacheableDependency($queen);
@@ -133,13 +129,11 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
         }
         $breadcrumb->addLink(Link::createFromRoute($queen_hive->label(), 'entity.hive.canonical', ['hive' => $queen_hive->id()]));
       }
-      if ($route_name !== 'entity.queen.canonical') {
-        $breadcrumb->addLink(Link::createFromRoute($queen->label(), 'entity.queen.canonical', ['queen' => $queen->id()]));
-      }
+      $breadcrumb->addLink(Link::createFromRoute($queen->label(), 'entity.queen.canonical', ['queen' => $queen->id()]));
     }
 
-    // Queen observation routes: thread Apiary → Hive → Queen ancestry for
-    // observations, skipping hive/apiary if the queen is unassigned.
+    // Queen observation routes: thread Apiary → Hive → Queen ancestry then
+    // observation crumb.
     $observation = $route_match->getParameter('queen_observation');
     if ($observation && is_object($observation)) {
       $breadcrumb->addCacheableDependency($observation);
@@ -158,9 +152,7 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
         }
         $breadcrumb->addLink(Link::createFromRoute($observation_queen->label(), 'entity.queen.canonical', ['queen' => $observation_queen->id()]));
       }
-      if ($route_name !== 'entity.queen_observation.canonical') {
-        $breadcrumb->addLink(Link::createFromRoute($observation->label(), 'entity.queen_observation.canonical', ['queen_observation' => $observation->id()]));
-      }
+      $breadcrumb->addLink(Link::createFromRoute($observation->label(), 'entity.queen_observation.canonical', ['queen_observation' => $observation->id()]));
     }
 
     return $breadcrumb;

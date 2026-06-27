@@ -62,6 +62,22 @@ remain above 1003.
 **Pages affected:** Hive canonical, Hive edit form, Inspection canonical,
 Queen canonical, Queen observation canonical, Queen observation edit form.
 
+### Defect 2 — Ancestor breadcrumb items rendered as plain text, not links (FIXED)
+**Root cause:** The breadcrumb builder previously suppressed the current
+entity's own label on canonical pages (e.g. on `entity.hive.canonical`, the
+hive self-link was omitted). This left the parent entity (Apiary) as the last
+item in the trail. The active theme's `breadcrumb.html.twig` unconditionally
+renders the `loop.last` item as plain text with `aria-current="page"`,
+regardless of whether it has a URL — so the apiary label appeared as
+non-clickable plain text.
+
+**Fix:** Removed all five canonical self-link suppression guards from
+`HivelogBreadcrumbBuilder::build()`. The current entity label is now always
+appended as the terminal crumb. The theme's `loop.last` rendering correctly
+makes it plain text (the current page indicator), pushing all ancestor links
+into navigable `loop.last != true` positions. ADR-0013 updated to reflect the
+corrected policy.
+
 ## QA matrix (first pass — 360px, all pages)
 
 | Page | Scroll | Buttons joined/coloured | Tap targets | Breadcrumb | Notes |

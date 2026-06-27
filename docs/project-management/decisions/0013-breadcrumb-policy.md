@@ -19,8 +19,11 @@ There is no written policy, so future routes may render inconsistently.
 
 ## Decision (recommended)
 Codify the rules: (1) trails are Home → HiveLog → Apiary → Hive → … built from
-upcast ancestor entities; (2) canonical pages omit the self crumb and rely on
-the page title; (3) `applies()` excludes non-page `hivelog.*` routes (e.g. file
+upcast ancestor entities; (2) the current entity's label is always appended as
+the terminal crumb on every route — the theme renders the last link as plain
+text (`aria-current="page"`), so ancestors are naturally clickable and the
+current page label is non-linked without any special suppression logic in the
+builder; (3) `applies()` excludes non-page `hivelog.*` routes (e.g. file
 exports); (4) `applies()` must be kept in sync with `hivelog.routing.yml`
 whenever routes change (per `AGENTS.md`).
 
