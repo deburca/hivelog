@@ -1,25 +1,11 @@
 includes:
-  - phpstan-baseline.neon
+  - vendor/mglaman/phpstan-drupal/extension.neon
+  - vendor/phpstan/phpstan-deprecation-rules/rules.neon
 
 parameters:
   level: 2
   paths:
     - src/
     - tests/
-
-  # All ignoreErrors patterns below suppress false positives that arise from
-  # analysing a standalone Drupal module without a full project bootstrap.
-  # Drupal core / Symfony classes, interfaces, and traits are not available
-  # to phpstan without the Drupal autoloader. Real errors in module-owned
-  # logic are still reported at level 2.
-  ignoreErrors:
-    - '#unknown class#'
-    - '#unknown interface#'
-    - '#unknown trait#'
-    - '#invalid type#'
-    - '#invalid return type#'
-    - '#does not extend any class#'
-    - '#Unsafe usage of new static\(\)#'
-    - '#Access to an undefined property#'
-    - '#Call to an undefined method#'
-    - '#not found#'
+  drupal:
+    drupal_root: .

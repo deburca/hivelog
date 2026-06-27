@@ -68,18 +68,14 @@ jobs:
             src/ tests/ hivelog.module hivelog.install
 
       - name: phpstan — static analysis
-        # phpstan-drupal requires drupal/core in the same vendor tree and cannot
-        # bootstrap in the standalone module lint environment. We run bare
-        # phpstan at level 2 with a baseline that suppresses the unavoidable
-        # "unknown class Drupal\*" / "unknown class Symfony\*" false positives
-        # that arise from missing core stubs. Real logic errors in module code
-        # are still caught.
-        run: |
-          phpstan analyse src/ tests/ \
-            --level=2 \
-            --no-progress \
-            --memory-limit=512M \
-            --error-format=github
+        # phpstan requires drupal/core to be present in the same vendor tree —
+        # Drupal base classes, interfaces, and traits are non-ignorable
+        # "class.notFound" / "trait.notFound" errors in phpstan 2.x when core is
+        # absent. We therefore run phpstan inside the test job (PHP 8.3 cell)
+        # after the full Drupal project has been built, where core is available.
+        # This step is a no-op placeholder so the lint job still passes; see the
+        # "PHPStan (in project context)" step in the test job.
+        run: echo "phpstan runs in the test job where drupal/core is available."
 
   # -----------------------------------------------------------------------
   # test — PHPUnit across PHP 8.3 / 8.4 / 8.5.
@@ -194,6 +190,26 @@ jobs:
             web/modules/hivelog/tests/src/Unit \
             --group hivelog \
             --testdox
+
+      - name: phpstan — static analysis (PHP 8.3 only, in project context)
+        # Run phpstan only once (PHP 8.3) — static analysis is not
+        # PHP-version-sensitive. Drupal core is now available in vendor/ so
+        # phpstan can resolve all Drupal/Symfony class references.
+        if: matrix.php-version == '8.3'
+        working-directory: drupal-project
+        run: |
+          composer require --dev \
+            mglaman/phpstan-drupal \
+            phpstan/phpstan-deprecation-rules \
+            --no-interaction --no-progress -q
+          vendor/bin/phpstan analyse \
+            web/modules/hivelog/src \
+            web/modules/hivelog/tests \
+            --level=2 \
+            --no-progress \
+            --memory-limit=512M \
+            --error-format=github \
+            -c web/modules/hivelog/phpstan.neon
 
       - name: PHPUnit — functional (allowed to fail until ChromeDriver stable)
         working-directory: drupal-project
