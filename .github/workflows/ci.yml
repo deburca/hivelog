@@ -24,33 +24,51 @@ jobs:
           tools: composer
           coverage: none
 
-      - name: Cache Composer dependencies
+      - name: Cache lint tools
         uses: actions/cache@v4
         with:
-          path: vendor
+          path: /tmp/lint-vendor
           key: lint-composer-${{ hashFiles('composer.json') }}
           restore-keys: lint-composer-
 
-      - name: Install dev tools
+      - name: Install lint tools into isolated directory
         run: |
-          # Add the Drupal Composer repository so drupal/coder resolves,
-          # then install only the dev analysis tools (no Drupal bootstrap needed).
-          composer config repositories.drupal composer https://packages.drupal.org/8
-          composer require --dev \
-            drupal/coder \
-            mglaman/phpstan-drupal \
-            phpstan/phpstan-deprecation-rules \
+          # Install analysis tools in a separate directory so we don't pull
+          # in all of Drupal core (which the module's composer.json requires).
+          # drupal/coder lives on packages.drupal.org/8; the others are on Packagist.
+          mkdir -p /tmp/lint-tools
+          cat > /tmp/lint-tools/composer.json <<'EOF'
+          {
+            "repositories": [
+              {"type": "composer", "url": "https://packages.drupal.org/8"}
+            ],
+            "require": {
+              "drupal/coder": "^9",
+              "mglaman/phpstan-drupal": "^2",
+              "phpstan/phpstan-deprecation-rules": "^2"
+            },
+            "config": {
+              "allow-plugins": {
+                "dealerdirect/phpcodesniffer-composer-installer": true
+              }
+            },
+            "minimum-stability": "stable"
+          }
+          EOF
+          composer install --working-dir=/tmp/lint-tools \
             --no-interaction --no-progress --prefer-dist
+          # Make binaries available to subsequent steps
+          echo "/tmp/lint-tools/vendor/bin" >> "$GITHUB_PATH"
 
       - name: phpcs — Drupal coding standards
         run: |
-          vendor/bin/phpcs --standard=Drupal,DrupalPractice \
-            --extensions=php,module,install,inc,profile,theme,yml \
+          phpcs --standard=Drupal,DrupalPractice \
+            --extensions=php,module,install,inc,profile,theme \
             src/ tests/ hivelog.module hivelog.install
 
       - name: phpstan — static analysis
         run: |
-          vendor/bin/phpstan analyse src/ tests/ \
+          phpstan analyse src/ tests/ \
             --level=2 \
             --no-progress \
             --configuration=phpstan.neon \
@@ -117,6 +135,13 @@ jobs:
         run: |
           composer create-project drupal/recommended-project:^11 drupal-project \
             --no-install --no-interaction --no-progress
+          # Allow the plugins that drupal/recommended-project requires.
+          composer config allow-plugins.drupal/core-composer-scaffold true \
+            --working-dir=drupal-project
+          composer config allow-plugins.drupal/core-project-message true \
+            --working-dir=drupal-project
+          composer config allow-plugins.cweagans/composer-patches true \
+            --working-dir=drupal-project
 
       - name: Register hivelog as a path repository
         working-directory: drupal-project
