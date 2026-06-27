@@ -33,6 +33,9 @@ jobs:
 
       - name: Install dev tools
         run: |
+          # Add the Drupal Composer repository so drupal/coder resolves,
+          # then install only the dev analysis tools (no Drupal bootstrap needed).
+          composer config repositories.drupal composer https://packages.drupal.org/8
           composer require --dev \
             drupal/coder \
             mglaman/phpstan-drupal \
