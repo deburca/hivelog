@@ -21,3 +21,6 @@ parameters:
     - '#not found\.$#'
     - '#does not extend any class\.$#'
     - '#Unsafe usage of new static\(\)\.$#'
+    # Methods from Drupal core traits (e.g. EntityOwnerTrait, StringTranslationTrait)
+    # are invisible to phpstan without the Drupal autoloader.
+    - '#Call to an undefined method Drupal\\hivelog\\#'
