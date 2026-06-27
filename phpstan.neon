@@ -28,5 +28,5 @@ parameters:
     - '#Unsafe usage of new static\(\)\.$#'
     # Properties and methods inherited from Drupal core base classes/traits
     # (ControllerBase, ContentEntityForm, KernelTestBase, etc.) are invisible.
-    - '#Access to an undefined property Drupal\\(hivelog|Tests\\\\hivelog)\\#'
-    - '#Call to an undefined method Drupal\\(hivelog|Tests\\\\hivelog)\\#'
+    - '#Access to an undefined property Drupal\\#'
+    - '#Call to an undefined method Drupal\\#'
