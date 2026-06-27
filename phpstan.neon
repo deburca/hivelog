@@ -11,6 +11,11 @@ parameters:
   # class Symfony\*" false positives. Additionally, add broad regex patterns
   # to suppress any similar errors that the baseline generator could not
   # capture (phpstan 2.x baseline has limitations on certain error types).
+  # All ignoreErrors patterns below suppress false positives that arise from
+  # analysing a standalone Drupal module without a full project bootstrap.
+  # Drupal core classes, interfaces, traits, and inherited properties/methods
+  # are not available to phpstan without the Drupal autoloader. Real errors in
+  # module-owned logic are still reported at level 2.
   ignoreErrors:
     - '#unknown class (Drupal|Symfony)\\#'
     - '#invalid type (Drupal|Symfony)\\#'
@@ -21,6 +26,7 @@ parameters:
     - '#not found\.$#'
     - '#does not extend any class\.$#'
     - '#Unsafe usage of new static\(\)\.$#'
-    # Methods from Drupal core traits (e.g. EntityOwnerTrait, StringTranslationTrait)
-    # are invisible to phpstan without the Drupal autoloader.
-    - '#Call to an undefined method Drupal\\hivelog\\#'
+    # Properties and methods inherited from Drupal core base classes/traits
+    # (ControllerBase, ContentEntityForm, KernelTestBase, etc.) are invisible.
+    - '#Access to an undefined property Drupal\\(hivelog|Tests\\\\hivelog)\\#'
+    - '#Call to an undefined method Drupal\\(hivelog|Tests\\\\hivelog)\\#'
