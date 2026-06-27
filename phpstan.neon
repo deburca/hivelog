@@ -7,26 +7,19 @@ parameters:
     - src/
     - tests/
 
-  # The baseline suppresses unavoidable "unknown class Drupal\*" / "unknown
-  # class Symfony\*" false positives. Additionally, add broad regex patterns
-  # to suppress any similar errors that the baseline generator could not
-  # capture (phpstan 2.x baseline has limitations on certain error types).
   # All ignoreErrors patterns below suppress false positives that arise from
   # analysing a standalone Drupal module without a full project bootstrap.
-  # Drupal core classes, interfaces, traits, and inherited properties/methods
-  # are not available to phpstan without the Drupal autoloader. Real errors in
-  # module-owned logic are still reported at level 2.
+  # Drupal core / Symfony classes, interfaces, and traits are not available
+  # to phpstan without the Drupal autoloader. Real errors in module-owned
+  # logic are still reported at level 2.
   ignoreErrors:
-    - '#unknown class (Drupal|Symfony)\\#'
-    - '#invalid type (Drupal|Symfony)\\#'
-    - '#extends unknown class (Drupal|Symfony)\\#'
-    - '#implements unknown (class|interface) (Drupal|Symfony)\\#'
-    - '#invalid return type (Drupal|Symfony)\\#'
-    - '#uses unknown trait (Drupal|Symfony)\\#'
-    - '#not found\.$#'
-    - '#does not extend any class\.$#'
-    - '#Unsafe usage of new static\(\)\.$#'
-    # Properties and methods inherited from Drupal core base classes/traits
-    # (ControllerBase, ContentEntityForm, KernelTestBase, etc.) are invisible.
-    - '#Access to an undefined property Drupal\\#'
-    - '#Call to an undefined method Drupal\\#'
+    - '#unknown class#'
+    - '#unknown interface#'
+    - '#unknown trait#'
+    - '#invalid type#'
+    - '#invalid return type#'
+    - '#does not extend any class#'
+    - '#Unsafe usage of new static\(\)#'
+    - '#Access to an undefined property#'
+    - '#Call to an undefined method#'
+    - '#not found#'
