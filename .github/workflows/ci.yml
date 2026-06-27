@@ -213,20 +213,17 @@ jobs:
         run: |
           MODULE_PATH=$(find web/modules -maxdepth 3 -name "hivelog.info.yml" | head -1 | xargs dirname)
           echo "Running phpstan on: $MODULE_PATH"
-          # mglaman/phpstan-drupal already pulls phpstan-deprecation-rules.
-          composer require --dev mglaman/phpstan-drupal \
-            --no-interaction --no-progress -q
-          # Run with the mglaman extension. phpstan.neon in the module only
-          # declares level and paths so it is safe to include as additional
-          # config on top of the extension.
+          # Run bare phpstan at level 2. The mglaman/phpstan-drupal extension
+          # causes "file included multiple times" errors in the full Drupal
+          # project context (core-dev also ships phpstan-deprecation-rules).
+          # Level 2 type analysis is sufficient to catch real regressions.
           vendor/bin/phpstan analyse \
             "$MODULE_PATH/src" \
             "$MODULE_PATH/tests" \
             --level=2 \
             --no-progress \
             --memory-limit=512M \
-            --error-format=github \
-            -c vendor/mglaman/phpstan-drupal/extension.neon
+            --error-format=github
 
       - name: PHPUnit — functional (allowed to fail until ChromeDriver stable)
         working-directory: drupal-project
