@@ -38,15 +38,65 @@ class ApiaryScopedAccessTest extends KernelTestBase {
     'hivelog',
   ];
 
+  /**
+   * The apiary owner user.
+   *
+   * @var \Drupal\user\Entity\User
+   */
   protected User $owner;
+
+  /**
+   * A beekeeper member of the apiary.
+   *
+   * @var \Drupal\user\Entity\User
+   */
   protected User $beekeeper;
+
+  /**
+   * A user with no access to the apiary.
+   *
+   * @var \Drupal\user\Entity\User
+   */
   protected User $outsider;
+
+  /**
+   * The test apiary.
+   *
+   * @var \Drupal\hivelog\Entity\Apiary
+   */
   protected Apiary $apiary;
+
+  /**
+   * A hive inside the test apiary.
+   *
+   * @var \Drupal\hivelog\Entity\Hive
+   */
   protected Hive $hive;
+
+  /**
+   * An inspection on the test hive.
+   *
+   * @var \Drupal\hivelog\Entity\HiveInspection
+   */
   protected HiveInspection $inspection;
+
+  /**
+   * A queen on the test hive.
+   *
+   * @var \Drupal\hivelog\Entity\Queen
+   */
   protected Queen $queen;
+
+  /**
+   * An observation on the test queen.
+   *
+   * @var \Drupal\hivelog\Entity\QueenObservation
+   */
   protected QueenObservation $observation;
 
+  /**
+   * {@inheritdoc}
+   */
   protected function setUp(): void {
     parent::setUp();
     $this->installEntitySchema('user');
@@ -142,18 +192,22 @@ class ApiaryScopedAccessTest extends KernelTestBase {
   // Apiary::isApiaryMember()
   // -----------------------------------------------------------------------
 
+  /** Tests that the owner is an apiary member. */
   public function testIsApiaryMemberOwner(): void {
     $this->assertTrue($this->apiary->isApiaryMember($this->owner));
   }
 
+  /** Tests that a beekeeper is an apiary member. */
   public function testIsApiaryMemberBeekeeper(): void {
     $this->assertTrue($this->apiary->isApiaryMember($this->beekeeper));
   }
 
+  /** Tests that an outsider is not an apiary member. */
   public function testIsApiaryMemberOutsider(): void {
     $this->assertFalse($this->apiary->isApiaryMember($this->outsider));
   }
 
+  /** Tests that the apiary is not public by default. */
   public function testIsPublicDefault(): void {
     $this->assertFalse($this->apiary->isPublic());
   }
@@ -162,38 +216,47 @@ class ApiaryScopedAccessTest extends KernelTestBase {
   // Private apiary: owner access
   // -----------------------------------------------------------------------
 
+  /** Tests that the owner can view a private apiary. */
   public function testOwnerCanViewPrivateApiary(): void {
     $this->assertTrue($this->apiary->access('view', $this->owner));
   }
 
+  /** Tests that the owner can edit a private apiary. */
   public function testOwnerCanEditPrivateApiary(): void {
     $this->assertTrue($this->apiary->access('update', $this->owner));
   }
 
+  /** Tests that the owner can delete a private apiary. */
   public function testOwnerCanDeletePrivateApiary(): void {
     $this->assertTrue($this->apiary->access('delete', $this->owner));
   }
 
+  /** Tests that the owner can view a hive. */
   public function testOwnerCanViewHive(): void {
     $this->assertTrue($this->hive->access('view', $this->owner));
   }
 
+  /** Tests that the owner can edit a hive. */
   public function testOwnerCanEditHive(): void {
     $this->assertTrue($this->hive->access('update', $this->owner));
   }
 
+  /** Tests that the owner can delete a hive. */
   public function testOwnerCanDeleteHive(): void {
     $this->assertTrue($this->hive->access('delete', $this->owner));
   }
 
+  /** Tests that the owner can view an inspection. */
   public function testOwnerCanViewInspection(): void {
     $this->assertTrue($this->inspection->access('view', $this->owner));
   }
 
+  /** Tests that the owner can edit an inspection. */
   public function testOwnerCanEditInspection(): void {
     $this->assertTrue($this->inspection->access('update', $this->owner));
   }
 
+  /** Tests that the owner can delete an inspection. */
   public function testOwnerCanDeleteInspection(): void {
     $this->assertTrue($this->inspection->access('delete', $this->owner));
   }
@@ -202,44 +265,54 @@ class ApiaryScopedAccessTest extends KernelTestBase {
   // Private apiary: beekeeper access
   // -----------------------------------------------------------------------
 
+  /** Tests that a beekeeper can view a private apiary. */
   public function testBeekeeperCanViewPrivateApiary(): void {
     $this->assertTrue($this->apiary->access('view', $this->beekeeper));
   }
 
+  /** Tests that a beekeeper cannot edit an apiary. */
   public function testBeekeeperCannotEditApiary(): void {
     $this->assertFalse($this->apiary->access('update', $this->beekeeper));
   }
 
+  /** Tests that a beekeeper cannot delete an apiary. */
   public function testBeekeeperCannotDeleteApiary(): void {
     $this->assertFalse($this->apiary->access('delete', $this->beekeeper));
   }
 
+  /** Tests that a beekeeper can view a hive. */
   public function testBeekeeperCanViewHive(): void {
     $this->assertTrue($this->hive->access('view', $this->beekeeper));
   }
 
+  /** Tests that a beekeeper can edit a hive. */
   public function testBeekeeperCanEditHive(): void {
     $this->assertTrue($this->hive->access('update', $this->beekeeper));
   }
 
+  /** Tests that a beekeeper cannot delete a hive. */
   public function testBeekeeperCannotDeleteHive(): void {
     // Only apiary owner can delete hives.
     $this->assertFalse($this->hive->access('delete', $this->beekeeper));
   }
 
+  /** Tests that a beekeeper can view an inspection. */
   public function testBeekeeperCanViewInspection(): void {
     $this->assertTrue($this->inspection->access('view', $this->beekeeper));
   }
 
+  /** Tests that a beekeeper can edit an inspection. */
   public function testBeekeeperCanEditInspection(): void {
     $this->assertTrue($this->inspection->access('update', $this->beekeeper));
   }
 
+  /** Tests that a beekeeper can delete their own inspection. */
   public function testBeekeeperCanDeleteOwnInspection(): void {
     // Beekeeper created this inspection, so they can delete it.
     $this->assertTrue($this->inspection->access('delete', $this->beekeeper));
   }
 
+  /** Tests that a beekeeper cannot delete another user's inspection. */
   public function testBeekeeperCannotDeleteOthersInspection(): void {
     // Create an inspection owned by the apiary owner.
     $owner_inspection = HiveInspection::create([
@@ -256,18 +329,22 @@ class ApiaryScopedAccessTest extends KernelTestBase {
   // Private apiary: outsider access (denied)
   // -----------------------------------------------------------------------
 
+  /** Tests that an outsider cannot view a private apiary. */
   public function testOutsiderCannotViewPrivateApiary(): void {
     $this->assertFalse($this->apiary->access('view', $this->outsider));
   }
 
+  /** Tests that an outsider cannot view a private hive. */
   public function testOutsiderCannotViewPrivateHive(): void {
     $this->assertFalse($this->hive->access('view', $this->outsider));
   }
 
+  /** Tests that an outsider cannot edit a private hive. */
   public function testOutsiderCannotEditPrivateHive(): void {
     $this->assertFalse($this->hive->access('update', $this->outsider));
   }
 
+  /** Tests that an outsider cannot view a private inspection. */
   public function testOutsiderCannotViewPrivateInspection(): void {
     $this->assertFalse($this->inspection->access('view', $this->outsider));
   }
@@ -276,30 +353,35 @@ class ApiaryScopedAccessTest extends KernelTestBase {
   // Public apiary: outsider can view but not edit
   // -----------------------------------------------------------------------
 
+  /** Tests that an outsider can view a public apiary. */
   public function testOutsiderCanViewPublicApiary(): void {
     $this->apiary->set('visibility', 'public');
     $this->apiary->save();
     $this->assertTrue($this->apiary->access('view', $this->outsider));
   }
 
+  /** Tests that an outsider can view a public hive. */
   public function testOutsiderCanViewPublicHive(): void {
     $this->apiary->set('visibility', 'public');
     $this->apiary->save();
     $this->assertTrue($this->hive->access('view', $this->outsider));
   }
 
+  /** Tests that an outsider cannot edit a public hive. */
   public function testOutsiderCannotEditPublicHive(): void {
     $this->apiary->set('visibility', 'public');
     $this->apiary->save();
     $this->assertFalse($this->hive->access('update', $this->outsider));
   }
 
+  /** Tests that an outsider can view a public inspection. */
   public function testOutsiderCanViewPublicInspection(): void {
     $this->apiary->set('visibility', 'public');
     $this->apiary->save();
     $this->assertTrue($this->inspection->access('view', $this->outsider));
   }
 
+  /** Tests that an outsider cannot edit a public inspection. */
   public function testOutsiderCannotEditPublicInspection(): void {
     $this->apiary->set('visibility', 'public');
     $this->apiary->save();
@@ -310,30 +392,37 @@ class ApiaryScopedAccessTest extends KernelTestBase {
   // Queen and observation access follows apiary scope
   // -----------------------------------------------------------------------
 
+  /** Tests that a beekeeper can view a queen. */
   public function testBeekeeperCanViewQueen(): void {
     $this->assertTrue($this->queen->access('view', $this->beekeeper));
   }
 
+  /** Tests that a beekeeper can edit a queen. */
   public function testBeekeeperCanEditQueen(): void {
     $this->assertTrue($this->queen->access('update', $this->beekeeper));
   }
 
+  /** Tests that an outsider cannot view a private queen. */
   public function testOutsiderCannotViewPrivateQueen(): void {
     $this->assertFalse($this->queen->access('view', $this->outsider));
   }
 
+  /** Tests that a beekeeper can view an observation. */
   public function testBeekeeperCanViewObservation(): void {
     $this->assertTrue($this->observation->access('view', $this->beekeeper));
   }
 
+  /** Tests that a beekeeper can edit an observation. */
   public function testBeekeeperCanEditObservation(): void {
     $this->assertTrue($this->observation->access('update', $this->beekeeper));
   }
 
+  /** Tests that a beekeeper can delete their own observation. */
   public function testBeekeeperCanDeleteOwnObservation(): void {
     $this->assertTrue($this->observation->access('delete', $this->beekeeper));
   }
 
+  /** Tests that an outsider cannot view a private observation. */
   public function testOutsiderCannotViewPrivateObservation(): void {
     $this->assertFalse($this->observation->access('view', $this->outsider));
   }
@@ -342,6 +431,7 @@ class ApiaryScopedAccessTest extends KernelTestBase {
   // Site-wide "any" permissions bypass apiary membership
   // -----------------------------------------------------------------------
 
+  /** Tests that a site-wide any permission bypasses apiary membership. */
   public function testAnyPermissionBypassesMembership(): void {
     $any_role = Role::create(['id' => 'site_viewer', 'label' => 'Site viewer']);
     $any_role->grantPermission('view any hive');
@@ -364,6 +454,7 @@ class ApiaryScopedAccessTest extends KernelTestBase {
   // apiary itself.
   // -----------------------------------------------------------------------
 
+  /** Tests a cross-user edit scenario where membership changes grant access. */
   public function testCrossUserEditScenario(): void {
     // Setup: userA creates everything, userB is a stranger.
     $userA = User::create(['name' => 'userA', 'mail' => 'a@example.com']);

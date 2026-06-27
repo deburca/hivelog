@@ -117,8 +117,7 @@ class EntityCrudJourneyTest extends BrowserTestBase {
   }
 
   /**
-   * Tests adding, editing and deleting an inspection through the scoped add
-   * route.
+   * Tests adding, editing and deleting an inspection via the scoped add route.
    */
   public function testInspectionCrudJourney(): void {
     $apiary = Apiary::create(['name' => 'CRUD Apiary']);

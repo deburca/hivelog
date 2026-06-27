@@ -389,7 +389,7 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
-   * hivelog.hive.add carries an {apiary} route parameter; the apiary link should be added as an ancestor (4 links total).
+   * hivelog.hive.add carries an {apiary} parameter; the apiary link is added.
    */
   public function testBuildHiveAddRoute(): void {
     $apiary = $this->createApiaryMock(3, 'Garden Apiary');
@@ -409,7 +409,7 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
-   * hivelog.inspection.add carries a {hive} route parameter; apiary and hive ancestor links should both be added (5 links total).
+   * hivelog.inspection.add carries a {hive} parameter; apiary and hive added.
    */
   public function testBuildInspectionAddRoute(): void {
     $apiary = $this->createApiaryMock(1, 'Home Apiary');
@@ -431,7 +431,7 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
-   * Queen canonical: apiary and hive are navigable ancestors; queen label is the terminal crumb rendered as plain text by the theme.
+   * Queen canonical: apiary and hive are navigable ancestors; queen is terminal.
    */
   public function testBuildQueenCanonical(): void {
     $apiary = $this->createApiaryMock(1, 'Home Apiary');
@@ -486,7 +486,7 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
-   * Queen observation canonical: apiary, hive, and queen are navigable ancestors; observation label is the terminal crumb rendered as plain text.
+   * Queen observation canonical: apiary/hive/queen are ancestors; obs terminal.
    */
   public function testBuildQueenObservationCanonical(): void {
     $apiary = $this->createApiaryMock(1, 'Home Apiary');
@@ -547,7 +547,7 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
-   * hivelog.queen_observation.add carries a {queen} route parameter; apiary, hive and queen ancestor links should be added (6 links total).
+   * hivelog.queen_observation.add: apiary, hive, and queen links added.
    */
   public function testBuildQueenObservationAddRoute(): void {
     $apiary = $this->createApiaryMock(1, 'Home Apiary');
@@ -573,7 +573,7 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
-   * hivelog.queen.add carries a {hive} route parameter; apiary and hive ancestor links should both be added (5 links total).
+   * hivelog.queen.add carries a {hive} parameter; apiary and hive are added.
    */
   public function testBuildQueenAddRoute(): void {
     $apiary = $this->createApiaryMock(1, 'Home Apiary');
