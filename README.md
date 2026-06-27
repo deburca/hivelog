@@ -135,10 +135,15 @@ marking colour is calculated automatically on save:
 Each entity view page provides drill-down navigation:
 
 - **Apiary list** → Click apiary → Shows apiary details + hives table
-- **Hive view** → Shows hive details + inspections table (newest first)
+- **Hive view** → Shows hive details + queen section + inspections table (newest first)
 - **Inspection view** → Shows full inspection details
+- **Queen view** → Shows queen details + observations list
+- **Queen observation view** → Shows observation details
 
-View, Edit, and Delete tabs are available on each entity page.
+Breadcrumbs reflect the full entity hierarchy on every page
+(Home › HiveLog › Apiary › Hive › …). All ancestor crumbs are navigable links.
+
+View, Edit, and Delete actions are available on each entity page.
 
 ## Permissions
 
@@ -195,9 +200,19 @@ hivelog/
 ├── hivelog.routing.yml           # Route definitions
 ├── hivelog.services.yml          # Service definitions
 ├── hivelog.links.menu.yml        # Admin menu link
+├── hivelog.libraries.yml         # CSS library definitions
 ├── hivelog.links.action.yml      # Action links (Add buttons)
 ├── hivelog.links.task.yml        # Local task tabs (View/Edit/Delete)
 ├── README.md
+├── css/
+│   ├── hivelog.responsive.css    # Breakpoint tokens and shared CSS custom properties
+│   ├── hivelog.buttons.css       # Button appearance (sole source of truth, ADR-0012)
+│   ├── hivelog.forms.css         # Entity form spacing and vertical-tab layout
+│   ├── hivelog.tables.css        # Responsive entity-list and detail tables
+│   ├── hivelog.filter-form.css   # Filter form layout
+│   ├── hivelog.images.css        # Image grid
+│   ├── hivelog.map.css           # Leaflet map responsive sizing
+│   └── hivelog.weight-histogram.css  # Weight histogram SVG
 ├── components/                       # Single Directory Components (SDC)
 │   ├── button/
 │   │   ├── button.component.yml
@@ -272,22 +287,27 @@ hivelog/
 
 ## Testing
 
-Run the kernel test suite:
+Run the kernel and unit test suite (fast — no browser required):
 
 ```
 ddev exec "SIMPLETEST_DB=mysql://db:db@db:3306/db \
   SIMPLETEST_BASE_URL=http://web \
   php /var/www/html/vendor/bin/phpunit \
   -c /var/www/html/web/core \
-  /var/www/html/web/modules/hivelog/tests/ \
+  /var/www/html/web/modules/contrib/hivelog/tests/src/Kernel/ \
+  /var/www/html/web/modules/contrib/hivelog/tests/src/Unit/ \
   --group hivelog"
 ```
 
-The suite includes kernel, unit, and functional tests covering entity CRUD,
-relationships, queen colour auto-calculation, field option validation,
-inspection logging, breadcrumb building, controller cache metadata,
-permission-matrix route access, tab visibility, and full add/edit/delete
-browser journeys for every entity type.
+The suite covers entity CRUD, parent–child relationships, queen colour
+auto-calculation, field option validation, inspection logging, access control,
+breadcrumb ancestry threading and `applies()` coverage, controller cache
+metadata, filter/pagination, and button variant rendering (178 tests, 2310
+assertions).
+
+Functional tests (full browser journeys) are in `tests/src/Functional/` and
+require a running ChromeDriver. Run them with the same command but include the
+`Functional/` path; they are slower and are `continue-on-error` candidates in CI.
 
 ## Deployment
 
