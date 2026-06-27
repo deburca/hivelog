@@ -1,16 +1,9 @@
-includes:
-  - vendor/mglaman/phpstan-drupal/extension.neon
-  - vendor/phpstan/phpstan-deprecation-rules/rules.neon
-
 parameters:
   level: 2
   paths:
     - src/
     - tests/
-  # Drupal bootstrap stubs — provided by mglaman/phpstan-drupal
-  drupal:
-    drupal_root: drupal-root
-  # Ignore known false-positive patterns from Drupal's dynamic service container
+  # Ignore known false-positive patterns from Drupal's dynamic service container.
   ignoreErrors:
     - '#Call to an undefined method Drupal\\Core\\Entity\\EntityInterface::#'
     - '#Access to an undefined property Drupal\\Core\\Field\\FieldItemInterface::\$#'
