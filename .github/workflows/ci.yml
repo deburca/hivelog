@@ -72,8 +72,8 @@ jobs:
           phpstan analyse src/ tests/ \
             --level=2 \
             --no-progress \
-            --configuration=phpstan.neon \
-            --error-format=github
+            --error-format=github \
+            -c /tmp/lint-tools/vendor/mglaman/phpstan-drupal/extension.neon
 
   # -----------------------------------------------------------------------
   # test — PHPUnit across PHP 8.3 / 8.4 / 8.5.
