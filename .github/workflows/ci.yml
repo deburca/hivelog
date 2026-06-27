@@ -168,8 +168,10 @@ jobs:
           composer require hivelog/hivelog:@dev drush/drush \
             --no-interaction --no-progress --prefer-dist
           # drupal/core-dev brings PHPUnit and the testing framework.
-          # Pin to ^11 to match the installed core and avoid Symfony version conflicts.
+          # --update-with-all-dependencies allows Composer to update locked
+          # transitive deps (e.g. sebastian/diff) to satisfy core-dev's requirements.
           composer require --dev "drupal/core-dev:^11" \
+            --update-with-all-dependencies \
             --no-interaction --no-progress --prefer-dist
 
       - name: Install Drupal site
