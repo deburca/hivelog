@@ -165,7 +165,7 @@ jobs:
       - name: Install Drupal project (with hivelog + geofield + leaflet)
         working-directory: drupal-project
         run: |
-          composer require hivelog/hivelog:@dev \
+          composer require hivelog/hivelog:@dev drush/drush \
             --no-interaction --no-progress --prefer-dist
 
       - name: Install Drupal site
