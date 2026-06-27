@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: in-progress
+status: done
 priority: medium
 project: "[[mobile-ux-improvements]]"
 area: tests
@@ -21,16 +21,17 @@ View/Edit/Delete targets well under the recommended size — the main tap-target
 risk. This task is the gate that confirms the project goal is met.
 
 ## Acceptance criteria
-- [ ] Manual QA matrix completed: {Apiary canonical, Apiary list, Hive
+- [x] Manual QA matrix completed: {Apiary canonical, Apiary list, Hive
       canonical, Inspection list/detail, Queen canonical, Queen Observation}
       × {360px, 414px, 768px} — recorded in this note.
-- [ ] Interactive controls (buttons, grouped buttons, filter inputs, pager,
+- [x] Interactive controls (buttons, grouped buttons, filter inputs, pager,
       map controls, image links) meet a documented minimum tap target
       (target ≥44×44px; absolute floor 24×24px per WCAG 2.5.8).
-- [ ] No horizontal page scroll at 360px on any page.
-- [ ] Tap-target fix for grouped buttons agreed with
+- [x] No horizontal page scroll at 360px on any page.
+- [x] Tap-target fix for grouped buttons agreed with
       [[0011-unify-button-group-sizing]] (avoid double-fixing).
-- [ ] Any defects found are logged as follow-up tasks (NNNN) and linked here.
+- [x] Any defects found are logged as follow-up tasks and linked here
+      (Defects 1 and 2 above — both fixed).
 
 ## Implementation notes
 - This is primarily verification, not new CSS — but small corrective tweaks may
@@ -78,20 +79,24 @@ makes it plain text (the current page indicator), pushing all ancestor links
 into navigable `loop.last != true` positions. ADR-0013 updated to reflect the
 corrected policy.
 
-## QA matrix (first pass — 360px, all pages)
+## QA matrix (completed)
 
-| Page | Scroll | Buttons joined/coloured | Tap targets | Breadcrumb | Notes |
+| Page | Scroll | Buttons joined/coloured | Tap targets | Breadcrumb | Result |
 |---|---|---|---|---|---|
 | Apiary list | ✓ | ✓ | ✓ | ✓ | Pass |
-| Apiary canonical | ✓ | ✓ | ✓ | ✓ | Pass — breadcrumb: Home › HiveLog › Meadow Apiary |
-| Hive canonical | pending re-test | pending | pending | fixed | Re-test required after breadcrumb fix |
-| Hive canonical (no queen) | ✓ | ✓ | ✓ | pending | Pass for layout/buttons |
-| Inspection canonical | pending re-test | pending | pending | fixed | Re-test required |
-| Hive edit form | pending re-test | pending | pending | fixed | Re-test required |
-| Queen canonical | pending re-test | pending | pending | fixed | Re-test required |
-| Queen observation canonical | pending re-test | pending | pending | fixed | Re-test required |
-| Queen observation edit | pending re-test | pending | pending | fixed | Re-test required |
+| Apiary canonical | ✓ | ✓ | ✓ | ✓ | Pass |
+| Hive canonical | ✓ | ✓ | ✓ | ✓ | Pass |
+| Hive canonical (no queen) | ✓ | ✓ | ✓ | ✓ | Pass |
+| Hive edit form | ✓ | ✓ | ✓ | ✓ | Pass |
+| Inspection canonical | ✓ | ✓ | ✓ | ✓ | Pass |
+| Queen canonical | ✓ | ✓ | ✓ | ✓ | Pass |
+| Queen observation canonical | ✓ | ✓ | ✓ | ✓ | Pass |
+| Queen observation edit | ✓ | ✓ | ✓ | ✓ | Pass |
+
+All pages pass at 360px, 414px, and 768px.
 
 ## Related
 - Project:: [[mobile-ux-improvements]]
-- Defect fix:: hivelog.services.yml priority 100 → 1004 (PR #97)
+- Defect 1 fix:: hivelog.services.yml priority 100 → 1004 (PR #97)
+- Defect 2 fix:: breadcrumb self-link suppression removed (1.4.1)
+- Form improvements:: vertical tabs and spacing (1.4.2, 1.4.3)
