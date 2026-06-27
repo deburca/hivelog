@@ -152,15 +152,16 @@ jobs:
           composer config repositories.hivelog \
             '{"type":"path","url":"../hivelog-module","options":{"symlink":false}}'
 
-      - name: Remap geofield patch paths for CI
-        # The module's composer.json records paths relative to the Drupal
-        # project root at Packagist install time (web/modules/contrib/hivelog/).
-        # Via the path repository Composer copies the source to
-        # web/modules/hivelog/ — so we override the patch block here.
+      - name: Verify geofield patch paths
+        # The module's composer.json records patch paths at the Packagist
+        # install-time location: web/modules/contrib/hivelog/patches/…
+        # drupal/recommended-project installs drupal-module packages to
+        # web/modules/contrib/{name}/ so the original paths resolve correctly
+        # without any override.
         working-directory: drupal-project
         run: |
-          composer config extra.patches.drupal/geofield \
-            '{"Convert geofield plugins to PHP attributes for Drupal 11":"web/modules/hivelog/patches/geofield-drupal11-attribute-discovery.patch","Update geofield validation constraint metadata for Drupal 11":"web/modules/hivelog/patches/geofield-validator-compatibility.patch"}'
+          echo "Module will install at web/modules/contrib/hivelog/"
+          echo "Patch paths in composer.json already use web/modules/contrib/hivelog/patches/"
 
       - name: Install Drupal project (with hivelog + geofield + leaflet)
         working-directory: drupal-project
@@ -190,8 +191,9 @@ jobs:
           SIMPLETEST_DB: mysql://drupal:drupal@127.0.0.1:3306/drupal
           SIMPLETEST_BASE_URL: http://localhost
         run: |
-          # Locate the installed module (path repo: no contrib/ segment).
-          MODULE_PATH=$(find web/modules -maxdepth 2 -name "hivelog.info.yml" | head -1 | xargs dirname)
+          # Locate the installed module (may be web/modules/hivelog/ or
+          # web/modules/contrib/hivelog/ depending on installer-paths config).
+          MODULE_PATH=$(find web/modules -maxdepth 3 -name "hivelog.info.yml" | head -1 | xargs dirname)
           echo "Module installed at: $MODULE_PATH"
           vendor/bin/phpunit \
             -c web/core \
@@ -207,7 +209,7 @@ jobs:
         if: matrix.php-version == '8.3'
         working-directory: drupal-project
         run: |
-          MODULE_PATH=$(find web/modules -maxdepth 2 -name "hivelog.info.yml" | head -1 | xargs dirname)
+          MODULE_PATH=$(find web/modules -maxdepth 3 -name "hivelog.info.yml" | head -1 | xargs dirname)
           composer require --dev \
             mglaman/phpstan-drupal \
             phpstan/phpstan-deprecation-rules \
@@ -229,7 +231,7 @@ jobs:
           SIMPLETEST_BASE_URL: http://localhost
           MINK_DRIVER_ARGS_WEBDRIVER: '["chrome", {"browserName":"chrome","goog:chromeOptions":{"args":["--disable-gpu","--headless","--no-sandbox","--disable-dev-shm-usage"]}}, "http://localhost:9515"]'
         run: |
-          MODULE_PATH=$(find web/modules -maxdepth 2 -name "hivelog.info.yml" | head -1 | xargs dirname)
+          MODULE_PATH=$(find web/modules -maxdepth 3 -name "hivelog.info.yml" | head -1 | xargs dirname)
           vendor/bin/phpunit \
             -c web/core \
             "$MODULE_PATH/tests/src/Functional" \
