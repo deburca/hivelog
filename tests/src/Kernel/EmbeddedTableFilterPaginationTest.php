@@ -376,8 +376,7 @@ class EmbeddedTableFilterPaginationTest extends KernelTestBase {
   }
 
   /**
-   * Tests that the filter form is rendered with a GET method and preserves
-   * submitted values as defaults.
+   * Tests that the filter form uses GET and preserves submitted values.
    */
   public function testFilterFormIsGetAndPreservesDefaults(): void {
     $apiary = Apiary::create(['name' => 'Form Apiary']);

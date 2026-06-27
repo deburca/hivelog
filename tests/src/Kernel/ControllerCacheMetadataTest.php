@@ -188,8 +188,7 @@ class ControllerCacheMetadataTest extends KernelTestBase {
   }
 
   /**
-   * Tests that each controller can be instantiated from the class resolver,
-   * which exercises the full service-container dependency injection path.
+   * Tests that each controller can be instantiated via the class resolver.
    */
   public function testControllersUseDependencyInjection(): void {
     $class_resolver = \Drupal::service('class_resolver');

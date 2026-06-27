@@ -275,8 +275,7 @@ class QueenTest extends KernelTestBase {
   }
 
   /**
-   * Renders the queen canonical view and asserts the sectioned layout,
-   * formatted values, and Edit / Delete action buttons are present.
+   * Renders the queen canonical view and asserts sectioned layout and buttons.
    */
   public function testQueenViewRendersSectionedLayout(): void {
     $this->installConfig(['system']);
@@ -369,9 +368,7 @@ class QueenTest extends KernelTestBase {
   }
 
   /**
-   * The queen page embeds an observations list with an Add Observation
-   * action and renders each recorded observation with health/temperament
-   * labels.
+   * The queen page embeds an observations list and renders each observation.
    */
   public function testQueenViewRendersObservationsList(): void {
     $this->installConfig(['system']);
@@ -462,8 +459,7 @@ class QueenTest extends KernelTestBase {
   }
 
   /**
-   * Empty fields render as an em-dash rather than being hidden or echoing
-   * raw empty values.
+   * Empty fields render as an em-dash rather than being hidden.
    */
   public function testQueenViewShowsEmDashForEmptyFields(): void {
     $this->installConfig(['system']);

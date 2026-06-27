@@ -408,7 +408,7 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
-   * hivelog.inspection.add carries a {hive} parameter; apiary and hive added.
+   * Route hivelog.inspection.add: apiary and hive ancestor links are added.
    */
   public function testBuildInspectionAddRoute(): void {
     $apiary = $this->createApiaryMock(1, 'Home Apiary');

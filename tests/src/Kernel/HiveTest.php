@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\hivelog\Kernel;
 
+use Drupal\Core\File\FileSystemInterface;
+use Drupal\file\Entity\File;
+use Drupal\file\FileInterface;
 use Drupal\hivelog\Controller\HiveController;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\Hive;
@@ -71,14 +74,14 @@ class HiveTest extends KernelTestBase {
   /**
    * Creates and saves a managed image file for tests.
    */
-  protected function createTestImageFile(string $filename): \Drupal\file\FileInterface {
+  protected function createTestImageFile(string $filename): FileInterface {
     $directory = 'public://hivelog-test';
-    \Drupal::service('file_system')->prepareDirectory($directory, \Drupal\Core\File\FileSystemInterface::CREATE_DIRECTORY);
+    \Drupal::service('file_system')->prepareDirectory($directory, FileSystemInterface::CREATE_DIRECTORY);
     $uri = $directory . '/' . $filename;
     // A tiny valid 1x1 PNG.
     $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGNgYGD4DwABBAEAfbLI3wAAAABJRU5ErkJggg==');
     file_put_contents($uri, $png);
-    $file = \Drupal\file\Entity\File::create([
+    $file = File::create([
       'uri' => $uri,
       'filename' => $filename,
       'status' => 1,
@@ -451,8 +454,7 @@ class HiveTest extends KernelTestBase {
   }
 
   /**
-   * Tests that the hive view renders an empty queen section with an add
-   * action when no active queen exists.
+   * Tests that the hive view renders an empty queen section when no queen exists.
    */
   public function testHiveViewShowsAddQueenWhenNoActiveQueen(): void {
     $this->installConfig(['system']);
@@ -484,8 +486,7 @@ class HiveTest extends KernelTestBase {
   }
 
   /**
-   * Tests that the hive view renders the active queen summary, positioned
-   * between the weight histogram and the inspection table.
+   * Tests that the hive view renders the active queen summary.
    */
   public function testHiveViewShowsActiveQueenDetails(): void {
     $this->installConfig(['system']);
