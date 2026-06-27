@@ -45,8 +45,7 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
     // breadcrumb (e.g. file-download endpoints). Add new exclusions here
     // whenever a non-page hivelog.* route is introduced, and keep this list
     // in sync with hivelog.routing.yml (see AGENTS.md).
-    // Task 0001 (queen observation CSV export) will add:
-    //   'hivelog.queen.observations_csv'
+    // Task 0001 (queen observation CSV export) will add 'hivelog.queen.observations_csv'.
     $non_page_routes = [
       'hivelog.queen.observations_csv',
     ];

@@ -40,6 +40,9 @@ class ApiaryController extends ControllerBase {
    */
   protected RendererInterface $renderer;
 
+  /**
+   * Constructs an ApiaryController.
+   */
   public function __construct(
     EntityTypeManagerInterface $entity_type_manager,
     FormBuilderInterface $form_builder,
@@ -151,7 +154,11 @@ class ApiaryController extends ControllerBase {
         '#props' => [
           'buttons' => [
             ['label' => (string) $this->t('Edit'), 'url' => $hive->toUrl('edit-form')->toString()],
-            ['label' => (string) $this->t('Delete'), 'url' => $hive->toUrl('delete-form')->toString(), 'variant' => 'danger'],
+            [
+              'label' => (string) $this->t('Delete'),
+              'url' => $hive->toUrl('delete-form')->toString(),
+              'variant' => 'danger',
+            ],
           ],
         ],
       ];

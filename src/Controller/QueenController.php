@@ -39,6 +39,9 @@ class QueenController extends ControllerBase {
    */
   protected RendererInterface $renderer;
 
+  /**
+   * Constructs a QueenController.
+   */
   public function __construct(
     EntityTypeManagerInterface $entity_type_manager,
     EntityFormBuilderInterface $entity_form_builder,
@@ -172,7 +175,11 @@ class QueenController extends ControllerBase {
           'buttons' => [
             ['label' => (string) $this->t('View'), 'url' => $observation->toUrl('canonical')->toString()],
             ['label' => (string) $this->t('Edit'), 'url' => $observation->toUrl('edit-form')->toString()],
-            ['label' => (string) $this->t('Delete'), 'url' => $observation->toUrl('delete-form')->toString(), 'variant' => 'danger'],
+            [
+              'label' => (string) $this->t('Delete'),
+              'url' => $observation->toUrl('delete-form')->toString(),
+              'variant' => 'danger',
+            ],
           ],
         ],
       ];
@@ -239,7 +246,11 @@ class QueenController extends ControllerBase {
       $buttons[] = ['label' => (string) $this->t('Edit'), 'url' => $queen->toUrl('edit-form')->toString()];
     }
     if ($queen->access('delete')) {
-      $buttons[] = ['label' => (string) $this->t('Delete'), 'url' => $queen->toUrl('delete-form')->toString(), 'variant' => 'danger'];
+      $buttons[] = [
+        'label' => (string) $this->t('Delete'),
+        'url' => $queen->toUrl('delete-form')->toString(),
+        'variant' => 'danger',
+      ];
     }
     if (empty($buttons)) {
       return [];

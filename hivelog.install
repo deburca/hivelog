@@ -5,6 +5,11 @@
  * Install, update and uninstall functions for the HiveLog module.
  */
 
+use Drupal\hivelog\Entity\Apiary;
+use Drupal\hivelog\Entity\Hive;
+use Drupal\hivelog\Entity\HiveInspection;
+use Drupal\user\Entity\Role;
+
 /**
  * Implements hook_uninstall().
  *
@@ -102,7 +107,7 @@ function hivelog_update_10001(&$sandbox) {
   // Step 3: Install the new geolocation field (if not already present).
   $geolocation_definition = $entity_definition_update_manager->getFieldStorageDefinition('geolocation', 'apiary');
   if (!$geolocation_definition) {
-    $field_definitions = \Drupal\hivelog\Entity\Apiary::baseFieldDefinitions(
+    $field_definitions = Apiary::baseFieldDefinitions(
       $entity_type_manager->getDefinition('apiary')
     );
     if (isset($field_definitions['geolocation'])) {
@@ -168,7 +173,7 @@ function hivelog_update_10002(&$sandbox) {
   }
 
   // Step 3: Install the new geofield field storage.
-  $field_definitions = \Drupal\hivelog\Entity\Apiary::baseFieldDefinitions(
+  $field_definitions = Apiary::baseFieldDefinitions(
     $entity_type_manager->getDefinition('apiary')
   );
   if (isset($field_definitions['geolocation'])) {
@@ -205,7 +210,7 @@ function hivelog_update_10003(&$sandbox) {
   $entity_type_manager = \Drupal::entityTypeManager();
   $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
 
-  $field_definitions = \Drupal\hivelog\Entity\HiveInspection::baseFieldDefinitions(
+  $field_definitions = HiveInspection::baseFieldDefinitions(
     $entity_type_manager->getDefinition('hive_inspection')
   );
 
@@ -228,7 +233,7 @@ function hivelog_update_10004(&$sandbox) {
   $entity_type_manager = \Drupal::entityTypeManager();
   $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
 
-  $field_definitions = \Drupal\hivelog\Entity\HiveInspection::baseFieldDefinitions(
+  $field_definitions = HiveInspection::baseFieldDefinitions(
     $entity_type_manager->getDefinition('hive_inspection')
   );
 
@@ -251,7 +256,7 @@ function hivelog_update_10005(&$sandbox) {
   $entity_type_manager = \Drupal::entityTypeManager();
   $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
 
-  $field_definitions = \Drupal\hivelog\Entity\Hive::baseFieldDefinitions(
+  $field_definitions = Hive::baseFieldDefinitions(
     $entity_type_manager->getDefinition('hive')
   );
 
@@ -274,7 +279,7 @@ function hivelog_update_10006(&$sandbox) {
   $entity_type_manager = \Drupal::entityTypeManager();
   $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
 
-  $field_definitions = \Drupal\hivelog\Entity\HiveInspection::baseFieldDefinitions(
+  $field_definitions = HiveInspection::baseFieldDefinitions(
     $entity_type_manager->getDefinition('hive_inspection')
   );
 
@@ -454,7 +459,7 @@ function hivelog_update_10012(&$sandbox) {
     'delete queen observation' => 'delete any queen observation',
   ];
 
-  $roles = \Drupal\user\Entity\Role::loadMultiple();
+  $roles = Role::loadMultiple();
   $updated = [];
   foreach ($roles as $role) {
     $changed = FALSE;
@@ -492,7 +497,7 @@ function hivelog_update_10013(&$sandbox) {
   $entity_type_manager = \Drupal::entityTypeManager();
   $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
 
-  $field_definitions = \Drupal\hivelog\Entity\Apiary::baseFieldDefinitions(
+  $field_definitions = Apiary::baseFieldDefinitions(
     $entity_type_manager->getDefinition('apiary')
   );
 

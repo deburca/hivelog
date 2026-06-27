@@ -126,8 +126,7 @@ class QueenObservationTest extends KernelTestBase {
   }
 
   /**
-   * Tests the queen-scoped add form pre-populates the queen reference on
-   * the new observation entity.
+   * Tests the queen-scoped add form pre-populates the queen reference on the new observation entity.
    */
   public function testAddFormPrePopulatesQueenReference(): void {
     $this->installConfig(['system']);
@@ -164,8 +163,7 @@ class QueenObservationTest extends KernelTestBase {
   }
 
   /**
-   * Renders the queen observation canonical view and asserts the sectioned
-   * layout, formatted values and Edit/Delete action buttons.
+   * Renders the queen observation canonical view and asserts the sectioned layout, formatted values and Edit/Delete action buttons.
    */
   public function testObservationViewRendersSectionedLayout(): void {
     $this->installConfig(['system']);

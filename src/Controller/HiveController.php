@@ -47,6 +47,9 @@ class HiveController extends ControllerBase {
    */
   protected RendererInterface $renderer;
 
+  /**
+   * Constructs a HiveController.
+   */
   public function __construct(
     EntityTypeManagerInterface $entity_type_manager,
     EntityFormBuilderInterface $entity_form_builder,
@@ -188,7 +191,11 @@ class HiveController extends ControllerBase {
           'buttons' => [
             ['label' => (string) $this->t('View'), 'url' => $inspection->toUrl('canonical')->toString()],
             ['label' => (string) $this->t('Edit'), 'url' => $inspection->toUrl('edit-form')->toString()],
-            ['label' => (string) $this->t('Delete'), 'url' => $inspection->toUrl('delete-form')->toString(), 'variant' => 'danger'],
+            [
+              'label' => (string) $this->t('Delete'),
+              'url' => $inspection->toUrl('delete-form')->toString(),
+              'variant' => 'danger',
+            ],
           ],
         ],
       ];

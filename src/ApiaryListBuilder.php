@@ -23,6 +23,8 @@ class ApiaryListBuilder extends EntityListBuilder {
 
   /**
    * Number of apiaries shown per page.
+   *
+   * @var int
    */
   protected $limit = 20;
 
@@ -101,7 +103,11 @@ class ApiaryListBuilder extends EntityListBuilder {
       $buttons[] = ['label' => (string) $this->t('Edit'), 'url' => $entity->toUrl('edit-form')->toString()];
     }
     if ($entity->access('delete') && $entity->hasLinkTemplate('delete-form')) {
-      $buttons[] = ['label' => (string) $this->t('Delete'), 'url' => $entity->toUrl('delete-form')->toString(), 'variant' => 'danger'];
+      $buttons[] = [
+        'label' => (string) $this->t('Delete'),
+        'url' => $entity->toUrl('delete-form')->toString(),
+        'variant' => 'danger',
+      ];
     }
     $row['operations']['data'] = [
       '#type' => 'component',

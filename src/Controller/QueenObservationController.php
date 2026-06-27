@@ -34,6 +34,9 @@ class QueenObservationController extends ControllerBase {
    */
   protected RendererInterface $renderer;
 
+  /**
+   * Constructs a QueenObservationController.
+   */
   public function __construct(
     EntityTypeManagerInterface $entity_type_manager,
     EntityFormBuilderInterface $entity_form_builder,
@@ -127,7 +130,11 @@ class QueenObservationController extends ControllerBase {
       $buttons[] = ['label' => (string) $this->t('Edit'), 'url' => $queen_observation->toUrl('edit-form')->toString()];
     }
     if ($queen_observation->access('delete')) {
-      $buttons[] = ['label' => (string) $this->t('Delete'), 'url' => $queen_observation->toUrl('delete-form')->toString(), 'variant' => 'danger'];
+      $buttons[] = [
+        'label' => (string) $this->t('Delete'),
+        'url' => $queen_observation->toUrl('delete-form')->toString(),
+        'variant' => 'danger',
+      ];
     }
     if (empty($buttons)) {
       return [];

@@ -36,9 +36,14 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     // inside an assert() statement. Provide a minimal stub so unit tests do
     // not require a fully-bootstrapped Drupal container.
     $cache_contexts_manager = new class {
+
+      /**
+       * Stub for assertValidTokens().
+       */
       public function assertValidTokens(array $tokens): bool {
         return TRUE;
       }
+
     };
     $container = new ContainerBuilder();
     $container->set('cache_contexts_manager', $cache_contexts_manager);
@@ -238,8 +243,9 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
-   * Apiary canonical: apiary label is the terminal crumb (rendered as plain
-   * text by the theme via loop.last). Home and HiveLog are navigable ancestors.
+   * Apiary canonical: apiary label is the terminal crumb (rendered as plain text by the theme via loop.last).
+   *
+   * Home and HiveLog are navigable ancestors.
    */
   public function testBuildApiaryCanonical(): void {
     $apiary = $this->createApiaryMock(1, 'Home Apiary');
@@ -282,8 +288,7 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
-   * Hive canonical: apiary is a navigable ancestor; hive label is the terminal
-   * crumb rendered as plain text by the theme.
+   * Hive canonical: apiary is a navigable ancestor; hive label is the terminal crumb rendered as plain text by the theme.
    */
   public function testBuildHiveCanonical(): void {
     $apiary = $this->createApiaryMock(1, 'Home Apiary');
@@ -331,8 +336,7 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
-   * Inspection canonical: apiary and hive are navigable ancestors; inspection
-   * label is the terminal crumb rendered as plain text by the theme.
+   * Inspection canonical: apiary and hive are navigable ancestors; inspection label is the terminal crumb rendered as plain text by the theme.
    */
   public function testBuildInspectionCanonical(): void {
     $apiary = $this->createApiaryMock(1, 'Home Apiary');
@@ -385,8 +389,7 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
-   * hivelog.hive.add carries an {apiary} route parameter; the apiary link
-   * should be added as an ancestor (4 links total).
+   * hivelog.hive.add carries an {apiary} route parameter; the apiary link should be added as an ancestor (4 links total).
    */
   public function testBuildHiveAddRoute(): void {
     $apiary = $this->createApiaryMock(3, 'Garden Apiary');
@@ -406,8 +409,7 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
-   * hivelog.inspection.add carries a {hive} route parameter; apiary and hive
-   * ancestor links should both be added (5 links total).
+   * hivelog.inspection.add carries a {hive} route parameter; apiary and hive ancestor links should both be added (5 links total).
    */
   public function testBuildInspectionAddRoute(): void {
     $apiary = $this->createApiaryMock(1, 'Home Apiary');
@@ -429,8 +431,7 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
-   * Queen canonical: apiary and hive are navigable ancestors; queen label is
-   * the terminal crumb rendered as plain text by the theme.
+   * Queen canonical: apiary and hive are navigable ancestors; queen label is the terminal crumb rendered as plain text by the theme.
    */
   public function testBuildQueenCanonical(): void {
     $apiary = $this->createApiaryMock(1, 'Home Apiary');
@@ -485,8 +486,7 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
-   * Queen observation canonical: apiary, hive, and queen are navigable
-   * ancestors; observation label is the terminal crumb rendered as plain text.
+   * Queen observation canonical: apiary, hive, and queen are navigable ancestors; observation label is the terminal crumb rendered as plain text.
    */
   public function testBuildQueenObservationCanonical(): void {
     $apiary = $this->createApiaryMock(1, 'Home Apiary');
@@ -547,8 +547,7 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
-   * hivelog.queen_observation.add carries a {queen} route parameter;
-   * apiary, hive and queen ancestor links should be added (6 links total).
+   * hivelog.queen_observation.add carries a {queen} route parameter; apiary, hive and queen ancestor links should be added (6 links total).
    */
   public function testBuildQueenObservationAddRoute(): void {
     $apiary = $this->createApiaryMock(1, 'Home Apiary');
@@ -574,8 +573,7 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
-   * hivelog.queen.add carries a {hive} route parameter; apiary and hive
-   * ancestor links should both be added (5 links total).
+   * hivelog.queen.add carries a {hive} route parameter; apiary and hive ancestor links should both be added (5 links total).
    */
   public function testBuildQueenAddRoute(): void {
     $apiary = $this->createApiaryMock(1, 'Home Apiary');
@@ -717,8 +715,7 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
-   * Unassigned queen canonical: no hive ancestry; trail is Home › HiveLog ›
-   * Queen (queen label is the terminal crumb rendered as plain text).
+   * Unassigned queen canonical: no hive ancestry; trail is Home › HiveLog › Queen (queen label is the terminal crumb rendered as plain text).
    */
   public function testBuildQueenCanonicalUnassigned(): void {
     $queen = $this->createUnassignedQueenMock(21, 'Q-2023-archived');
@@ -765,8 +762,8 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
-   * Observation canonical whose queen is unassigned: queen is a navigable
-   * ancestor; observation label is the terminal crumb rendered as plain text.
+   * Observation canonical whose queen is unassigned: queen is a navigable ancestor; observation label is the terminal crumb rendered as plain text.
+   *
    * Apiary and hive are skipped because the queen has no hive.
    */
   public function testBuildObservationCanonicalQueenUnassigned(): void {

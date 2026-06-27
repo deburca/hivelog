@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\hivelog\Kernel;
 
+use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Form\FormState;
+use Drupal\file\Entity\File;
 use Drupal\hivelog\Controller\HiveInspectionController;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\Hive;
@@ -492,14 +494,14 @@ class HiveInspectionTest extends KernelTestBase {
    */
   public function testInspectionViewRendersPhotosGrid(): void {
     $directory = 'public://hivelog-test-inspection';
-    \Drupal::service('file_system')->prepareDirectory($directory, \Drupal\Core\File\FileSystemInterface::CREATE_DIRECTORY);
+    \Drupal::service('file_system')->prepareDirectory($directory, FileSystemInterface::CREATE_DIRECTORY);
     $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGNgYGD4DwABBAEAfbLI3wAAAABJRU5ErkJggg==');
 
     $files = [];
     foreach (['photo-1.png', 'photo-2.png'] as $filename) {
       $uri = $directory . '/' . $filename;
       file_put_contents($uri, $png);
-      $file = \Drupal\file\Entity\File::create([
+      $file = File::create([
         'uri' => $uri,
         'filename' => $filename,
         'status' => 1,
@@ -647,8 +649,7 @@ class HiveInspectionTest extends KernelTestBase {
   }
 
   /**
-   * Tests that dependent fields declare #states visibility tied to their
-   * controlling boolean.
+   * Tests that dependent fields declare #states visibility tied to their controlling boolean.
    */
   public function testInspectionFormHasConditionalStatesOnDependentFields(): void {
     $inspection = HiveInspection::create([

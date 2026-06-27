@@ -34,6 +34,9 @@ class HiveInspectionController extends ControllerBase {
    */
   protected RendererInterface $renderer;
 
+  /**
+   * Constructs a HiveInspectionController.
+   */
   public function __construct(
     EntityTypeManagerInterface $entity_type_manager,
     EntityFormBuilderInterface $entity_form_builder,
@@ -207,7 +210,11 @@ class HiveInspectionController extends ControllerBase {
       $buttons[] = ['label' => (string) $this->t('Edit'), 'url' => $hive_inspection->toUrl('edit-form')->toString()];
     }
     if ($hive_inspection->access('delete')) {
-      $buttons[] = ['label' => (string) $this->t('Delete'), 'url' => $hive_inspection->toUrl('delete-form')->toString(), 'variant' => 'danger'];
+      $buttons[] = [
+        'label' => (string) $this->t('Delete'),
+        'url' => $hive_inspection->toUrl('delete-form')->toString(),
+        'variant' => 'danger',
+      ];
     }
     if (empty($buttons)) {
       return [];

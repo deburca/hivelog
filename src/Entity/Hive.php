@@ -12,7 +12,6 @@ use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\hivelog\Entity\Queen;
 use Drupal\hivelog\Form\HiveDeleteForm;
 use Drupal\hivelog\Form\HiveForm;
 use Drupal\hivelog\HiveAccessControlHandler;
