@@ -136,6 +136,8 @@ jobs:
 
       - name: Create Drupal project scaffold
         run: |
+          # Remove any leftover directory from a restored Composer cache.
+          rm -rf drupal-project
           composer create-project drupal/recommended-project:^11 drupal-project \
             --no-install --no-interaction --no-progress
           # Allow the plugins that drupal/recommended-project requires.
@@ -211,14 +213,12 @@ jobs:
         run: |
           MODULE_PATH=$(find web/modules -maxdepth 3 -name "hivelog.info.yml" | head -1 | xargs dirname)
           echo "Running phpstan on: $MODULE_PATH"
-          composer require --dev \
-            mglaman/phpstan-drupal \
-            phpstan/phpstan-deprecation-rules \
+          # mglaman/phpstan-drupal already pulls phpstan-deprecation-rules.
+          composer require --dev mglaman/phpstan-drupal \
             --no-interaction --no-progress -q
-          # Pass the extension configs explicitly — phpstan.neon includes use
-          # paths relative to the module root which phpstan cannot resolve when
-          # run from the project root. The -c flag adds the module's parameter
-          # config (level, paths) on top of the extensions below.
+          # Run with the mglaman extension. phpstan.neon in the module only
+          # declares level and paths so it is safe to include as additional
+          # config on top of the extension.
           vendor/bin/phpstan analyse \
             "$MODULE_PATH/src" \
             "$MODULE_PATH/tests" \
