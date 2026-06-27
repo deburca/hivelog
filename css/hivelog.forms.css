@@ -1,0 +1,111 @@
+/**
+ * @file
+ * Entity form layout and spacing for HiveLog add/edit forms.
+ *
+ * Provides consistent internal spacing for .form-item elements inside the
+ * .hivelog-entity-form wrapper, which is applied to every HiveLog entity
+ * add/edit form. Works alongside Drupal's vertical_tabs + details grouping
+ * used by HiveInspectionForm, QueenForm, and QueenObservationForm.
+ *
+ * Depends on hivelog/responsive for breakpoint tokens.
+ */
+
+/* ------------------------------------------------------------------
+   Form-item spacing inside entity forms.
+   Drupal's admin themes often provide no vertical rhythm between
+   consecutive .form-item widgets inside a details/vertical-tab panel.
+   These rules restore consistent breathing room.
+------------------------------------------------------------------ */
+
+.hivelog-entity-form .form-item {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.hivelog-entity-form .form-item:first-child {
+  margin-top: 0;
+}
+
+.hivelog-entity-form .form-item label {
+  display: block;
+  margin-bottom: 0.3rem;
+  font-weight: 600;
+}
+
+.hivelog-entity-form .form-item input,
+.hivelog-entity-form .form-item select,
+.hivelog-entity-form .form-item textarea {
+  width: 100%;
+  max-width: 40rem;
+  box-sizing: border-box;
+}
+
+.hivelog-entity-form .form-item textarea {
+  min-height: 6rem;
+}
+
+/* Description text below a widget. */
+.hivelog-entity-form .form-item .description {
+  margin-top: 0.25rem;
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+/* ------------------------------------------------------------------
+   Vertical-tab panel padding.
+   The details element that wraps each tab's content gets internal
+   padding so widgets don't sit flush against the panel border.
+------------------------------------------------------------------ */
+
+.hivelog-entity-form details {
+  padding: 1rem 1.25rem;
+}
+
+/* ------------------------------------------------------------------
+   Checkbox / boolean widget alignment.
+   Inline-flex keeps the checkbox and its label on one line and
+   prevents the label from stretching to full width.
+------------------------------------------------------------------ */
+
+.hivelog-entity-form .form-type--checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.hivelog-entity-form .form-type--checkbox input[type="checkbox"] {
+  width: auto;
+  flex-shrink: 0;
+}
+
+.hivelog-entity-form .form-type--checkbox label {
+  margin-bottom: 0;
+  font-weight: normal;
+}
+
+/* ------------------------------------------------------------------
+   Form actions bar.
+   Matches the .hivelog-entity-form .form-actions context in
+   hivelog.buttons.css; adds top margin so the Save/Delete buttons
+   breathe away from the last field.
+------------------------------------------------------------------ */
+
+.hivelog-entity-form .form-actions {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* ------------------------------------------------------------------
+   Responsive — stack inputs full-width on small screens.
+   max-width constraint is lifted on phone so inputs use the full
+   available width.
+------------------------------------------------------------------ */
+
+@media (max-width: 480px) {
+  .hivelog-entity-form .form-item input,
+  .hivelog-entity-form .form-item select,
+  .hivelog-entity-form .form-item textarea {
+    max-width: 100%;
+  }
+}

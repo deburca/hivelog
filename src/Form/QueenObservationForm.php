@@ -19,7 +19,56 @@ class QueenObservationForm extends ContentEntityForm {
     if ($this->entity->isNew() && $this->entity->get('observation_date')->isEmpty()) {
       $this->entity->set('observation_date', date('Y-m-d'));
     }
-    return parent::form($form, $form_state);
+
+    $form = parent::form($form, $form_state);
+
+    $form['#prefix'] = '<div class="hivelog-entity-form">';
+    $form['#suffix'] = '</div>';
+    $form['#attached']['library'][] = 'hivelog/forms';
+
+    $form['observation_sections'] = [
+      '#type' => 'vertical_tabs',
+      '#title' => $this->t('Observation details'),
+      '#weight' => 10,
+    ];
+
+    $sections = [
+      'observation_overview' => [
+        'title' => $this->t('Overview'),
+        'weight' => 0,
+        'open' => TRUE,
+        'fields' => ['queen', 'observation_date', 'uid'],
+      ],
+      'observation_assessments' => [
+        'title' => $this->t('Assessments'),
+        'weight' => 1,
+        'open' => FALSE,
+        'fields' => ['health', 'temperament', 'active'],
+      ],
+      'observation_notes' => [
+        'title' => $this->t('Notes & photos'),
+        'weight' => 2,
+        'open' => FALSE,
+        'fields' => ['notes', 'images'],
+      ],
+    ];
+
+    foreach ($sections as $section_key => $section) {
+      $form[$section_key] = [
+        '#type' => 'details',
+        '#title' => $section['title'],
+        '#group' => 'observation_sections',
+        '#weight' => $section['weight'],
+        '#open' => $section['open'],
+      ];
+      foreach ($section['fields'] as $field_name) {
+        if (isset($form[$field_name])) {
+          $form[$field_name]['#group'] = $section_key;
+        }
+      }
+    }
+
+    return $form;
   }
 
   /**

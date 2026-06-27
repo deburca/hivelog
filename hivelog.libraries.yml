@@ -53,3 +53,12 @@ map:
       css/hivelog.map.css: {}
   dependencies:
     - hivelog/responsive
+
+forms:
+  version: 1.x
+  css:
+    component:
+      css/hivelog.forms.css: {}
+  dependencies:
+    - hivelog/buttons
+    - hivelog/responsive
