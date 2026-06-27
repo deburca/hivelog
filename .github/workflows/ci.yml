@@ -167,6 +167,9 @@ jobs:
         run: |
           composer require hivelog/hivelog:@dev drush/drush \
             --no-interaction --no-progress --prefer-dist
+          # drupal/core-dev brings PHPUnit and the testing framework.
+          composer require --dev drupal/core-dev \
+            --no-interaction --no-progress --prefer-dist
 
       - name: Install Drupal site
         working-directory: drupal-project
