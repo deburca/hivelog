@@ -363,8 +363,7 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
-   * Inspection edit: apiary, hive, and inspection ancestor links all added
-   * (6 links total).
+   * Inspection edit: apiary, hive, and inspection ancestor links all added.
    */
   public function testBuildInspectionEditForm(): void {
     $apiary = $this->createApiaryMock(1, 'Home Apiary');
@@ -389,7 +388,7 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
-   * hivelog.hive.add carries an {apiary} parameter; the apiary link is added.
+   * Route hivelog.hive.add carries an {apiary} param; the apiary link is added.
    */
   public function testBuildHiveAddRoute(): void {
     $apiary = $this->createApiaryMock(3, 'Garden Apiary');
@@ -459,8 +458,7 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
-   * Queen edit: apiary, hive, and queen ancestor links are all added
-   * (6 links total).
+   * Queen edit: apiary, hive, and queen ancestor links are all added.
    */
   public function testBuildQueenEditForm(): void {
     $apiary = $this->createApiaryMock(1, 'Home Apiary');
@@ -518,8 +516,7 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
-   * Queen observation edit: apiary, hive, queen, and observation ancestor
-   * links are added (7 links total).
+   * Queen observation edit: apiary, hive, queen, and observation links added.
    */
   public function testBuildQueenObservationEditForm(): void {
     $apiary = $this->createApiaryMock(1, 'Home Apiary');
@@ -547,7 +544,7 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
-   * hivelog.queen_observation.add: apiary, hive, and queen links added.
+   * Route hivelog.queen_observation.add: apiary, hive, and queen links added.
    */
   public function testBuildQueenObservationAddRoute(): void {
     $apiary = $this->createApiaryMock(1, 'Home Apiary');
@@ -573,7 +570,7 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
-   * hivelog.queen.add carries a {hive} parameter; apiary and hive are added.
+   * Route hivelog.queen.add carries a {hive} param; apiary and hive are added.
    */
   public function testBuildQueenAddRoute(): void {
     $apiary = $this->createApiaryMock(1, 'Home Apiary');
