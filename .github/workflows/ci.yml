@@ -68,12 +68,16 @@ jobs:
             src/ tests/ hivelog.module hivelog.install
 
       - name: phpstan — static analysis
+        # Run without the mglaman/phpstan-drupal extension because it requires
+        # drupal/core to be installed in the same vendor tree. The extension is
+        # useful locally (where core is available) but cannot bootstrap in the
+        # standalone module lint environment. Level 2 still catches type errors
+        # and deprecation rules via phpstan/phpstan-deprecation-rules.
         run: |
           phpstan analyse src/ tests/ \
             --level=2 \
             --no-progress \
-            --error-format=github \
-            -c /tmp/lint-tools/vendor/mglaman/phpstan-drupal/extension.neon
+            --error-format=github
 
   # -----------------------------------------------------------------------
   # test — PHPUnit across PHP 8.3 / 8.4 / 8.5.
