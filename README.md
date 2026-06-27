@@ -1,5 +1,7 @@
 # HiveLog — Beekeeping Activity Logger
 
+[![CI](https://github.com/deburca/hivelog/actions/workflows/ci.yml/badge.svg)](https://github.com/deburca/hivelog/actions/workflows/ci.yml)
+
 A Drupal 11 module for managing apiaries, bee hives, and recording regular
 inspection activities.
 

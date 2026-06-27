@@ -1,0 +1,175 @@
+name: CI
+
+on:
+  push:
+  release:
+    types: [published]
+
+jobs:
+  # -----------------------------------------------------------------------
+  # lint — phpcs + phpstan, PHP 8.3 only (style/deprecation analysis is not
+  # PHP-version-sensitive; running once avoids tripling lint minutes).
+  # -----------------------------------------------------------------------
+  lint:
+    name: Lint (PHP 8.3)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer
+          coverage: none
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: lint-composer-${{ hashFiles('composer.json') }}
+          restore-keys: lint-composer-
+
+      - name: Install dev tools
+        run: |
+          composer require --dev \
+            drupal/coder \
+            mglaman/phpstan-drupal \
+            phpstan/phpstan-deprecation-rules \
+            --no-interaction --no-progress --prefer-dist
+
+      - name: phpcs — Drupal coding standards
+        run: |
+          vendor/bin/phpcs --standard=Drupal,DrupalPractice \
+            --extensions=php,module,install,inc,profile,theme,yml \
+            src/ tests/ hivelog.module hivelog.install
+
+      - name: phpstan — static analysis
+        run: |
+          vendor/bin/phpstan analyse src/ tests/ \
+            --level=2 \
+            --no-progress \
+            --configuration=phpstan.neon \
+            --error-format=github
+
+  # -----------------------------------------------------------------------
+  # test — PHPUnit across PHP 8.3 / 8.4 / 8.5.
+  #
+  # Patch-path strategy (ADR-0023): the module's composer.json records patch
+  # paths relative to the Drupal project root at install time
+  # (web/modules/contrib/hivelog/patches/…). In CI we install via a Composer
+  # path repository with symlink:false so Composer copies the source to
+  # web/modules/hivelog/. We override the patch paths in the scaffold
+  # project's composer.json before running composer install.
+  # -----------------------------------------------------------------------
+  test:
+    name: Test (PHP ${{ matrix.php-version }})
+    runs-on: ubuntu-latest
+    needs: lint
+
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version: ['8.3', '8.4', '8.5']
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: drupal
+          MYSQL_USER: drupal
+          MYSQL_PASSWORD: drupal
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - name: Check out module source
+        uses: actions/checkout@v4
+        with:
+          path: hivelog-module
+
+      - name: Set up PHP ${{ matrix.php-version }}
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          extensions: mbstring, xml, pdo_mysql, gd
+          tools: composer
+          coverage: none
+
+      - name: Cache Drupal project Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: drupal-project/vendor
+          key: test-${{ matrix.php-version }}-composer-${{ hashFiles('hivelog-module/composer.json') }}
+          restore-keys: test-${{ matrix.php-version }}-composer-
+
+      - name: Create Drupal project scaffold
+        run: |
+          composer create-project drupal/recommended-project:^11 drupal-project \
+            --no-install --no-interaction --no-progress
+
+      - name: Register hivelog as a path repository
+        working-directory: drupal-project
+        run: |
+          composer config repositories.hivelog \
+            '{"type":"path","url":"../hivelog-module","options":{"symlink":false}}'
+
+      - name: Remap geofield patch paths for CI
+        # The module's composer.json records paths relative to the Drupal
+        # project root at Packagist install time (web/modules/contrib/hivelog/).
+        # Via the path repository Composer copies the source to
+        # web/modules/hivelog/ — so we override the patch block here.
+        working-directory: drupal-project
+        run: |
+          composer config extra.patches.drupal/geofield \
+            '{"Convert geofield plugins to PHP attributes for Drupal 11":"web/modules/hivelog/patches/geofield-drupal11-attribute-discovery.patch","Update geofield validation constraint metadata for Drupal 11":"web/modules/hivelog/patches/geofield-validator-compatibility.patch"}'
+
+      - name: Install Drupal project (with hivelog + geofield + leaflet)
+        working-directory: drupal-project
+        run: |
+          composer require hivelog/hivelog:@dev \
+            --no-interaction --no-progress --prefer-dist
+
+      - name: Install Drupal site
+        working-directory: drupal-project
+        run: |
+          vendor/bin/drush si standard \
+            --db-url=mysql://drupal:drupal@127.0.0.1:3306/drupal \
+            --account-pass=admin \
+            --no-interaction -y
+          vendor/bin/drush en hivelog -y
+          vendor/bin/drush cr
+
+      - name: PHPUnit — kernel + unit (hard gate)
+        working-directory: drupal-project
+        env:
+          SIMPLETEST_DB: mysql://drupal:drupal@127.0.0.1:3306/drupal
+          SIMPLETEST_BASE_URL: http://localhost
+        run: |
+          vendor/bin/phpunit \
+            -c web/core \
+            web/modules/hivelog/tests/src/Kernel \
+            web/modules/hivelog/tests/src/Unit \
+            --group hivelog \
+            --testdox
+
+      - name: PHPUnit — functional (allowed to fail until ChromeDriver stable)
+        working-directory: drupal-project
+        continue-on-error: true
+        env:
+          SIMPLETEST_DB: mysql://drupal:drupal@127.0.0.1:3306/drupal
+          SIMPLETEST_BASE_URL: http://localhost
+          MINK_DRIVER_ARGS_WEBDRIVER: '["chrome", {"browserName":"chrome","goog:chromeOptions":{"args":["--disable-gpu","--headless","--no-sandbox","--disable-dev-shm-usage"]}}, "http://localhost:9515"]'
+        run: |
+          vendor/bin/phpunit \
+            -c web/core \
+            web/modules/hivelog/tests/src/Functional \
+            --group hivelog \
+            --testdox

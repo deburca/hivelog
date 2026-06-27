@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ruleset name="HiveLog">
+  <description>Drupal coding standards for the HiveLog module.</description>
+
+  <!-- Files to check -->
+  <file>src/</file>
+  <file>tests/</file>
+
+  <!-- Module root PHP files -->
+  <file>hivelog.module</file>
+  <file>hivelog.install</file>
+
+  <!-- Standards -->
+  <rule ref="Drupal"/>
+  <rule ref="DrupalPractice"/>
+
+  <!-- Exclude generated / third-party paths -->
+  <exclude-pattern>vendor/</exclude-pattern>
+  <exclude-pattern>node_modules/</exclude-pattern>
+
+  <!-- PHP version -->
+  <config name="php_version" value="80300"/>
+</ruleset>

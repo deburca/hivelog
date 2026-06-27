@@ -30,6 +30,35 @@ the apiary map widget is `leaflet_widget_default`, not a geocoder-backed
 widget, and nothing else in the module talks to geocoder services. Do not
 reintroduce the dependency without adding and documenting a concrete use.
 
+## CI Pipeline
+
+A GitHub Actions workflow runs on every push and on every published release:
+`.github/workflows/ci.yml`.
+
+**`lint` job (PHP 8.3 only):** runs `phpcs` (Drupal + DrupalPractice standards)
+and `phpstan` (level 2, mglaman/phpstan-drupal) against `src/` and `tests/`.
+No database required. Config files: `phpcs.xml.dist`, `phpstan.neon`.
+
+**`test` job (PHP 8.3 / 8.4 / 8.5 matrix):** builds a full `drupal/recommended-project`
+scaffold, installs the module via a Composer `path` repository (symlink:false),
+runs `phpunit --group hivelog` against kernel + unit tests (hard gate) and
+functional tests (continue-on-error: true until ChromeDriver is confirmed
+stable).
+
+**Patch-path constraint (important):** `composer.json` records geofield patch
+paths relative to the Drupal project root at Packagist install time
+(`web/modules/contrib/hivelog/patches/…`). In CI the path repository copies
+the module source to `web/modules/hivelog/` (no `contrib/` segment). The CI
+workflow overrides the patch block in the scaffold's `composer.json` before
+running `composer install`. If you change patch file names or locations, update
+both `composer.json` **and** the override step in `.github/workflows/ci.yml`.
+
+Run lint and static analysis locally with:
+```
+composer lint
+composer stan
+```
+
 ## Common Commands
 
 The surrounding project runs inside DDEV. All PHP/Drush commands must be

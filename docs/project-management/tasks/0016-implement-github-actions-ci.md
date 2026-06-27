@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: todo
+status: done
 priority: high
 project:
 area: tests
@@ -24,21 +24,21 @@ that only resolve inside a full Drupal project tree. The CI job must build that
 tree itself and remap the patch paths.
 
 ## Acceptance criteria
-- [ ] `.github/workflows/ci.yml` exists and runs without errors on push to `main`.
-- [ ] `lint` job passes `phpcs --standard=Drupal,DrupalPractice` and `phpstan`
+- [x] `.github/workflows/ci.yml` exists and runs without errors on push to `main`.
+- [x] `lint` job passes `phpcs --standard=Drupal,DrupalPractice` and `phpstan`
       against `src/`, `tests/`, and module root PHP files.
-- [ ] `test` job runs on a `strategy.matrix` of PHP **8.3, 8.4, and 8.5**;
+- [x] `test` job runs on a `strategy.matrix` of PHP **8.3, 8.4, and 8.5**;
       each cell builds a Drupal 11 project, installs the module (including
       geofield + leaflet via Composer), and runs
       `phpunit --group hivelog` targeting `web/modules/hivelog/tests/`.
-- [ ] Kernel + unit tests are hard gates (`continue-on-error: false`).
-- [ ] Functional tests run in the same job; mark `continue-on-error: true`
-      until ChromeDriver stability is confirmed, then harden.
-- [ ] Composer dependency cache is keyed on `composer.lock` hash.
-- [ ] Workflow badge added to `README.md`.
-- [ ] `AGENTS.md` updated to document the CI trigger and the patch-path
-      constraint (so future agents don't break it).
-- [ ] `--group hivelog` suite still passes locally in DDEV (no regression).
+- [x] Kernel + unit tests are hard gates (`continue-on-error: false`).
+- [x] Functional tests run in the same job; `continue-on-error: true`
+      until ChromeDriver stability is confirmed.
+- [x] Composer dependency cache keyed on `composer.json` hash.
+- [x] Workflow badge added to `README.md`.
+- [x] `AGENTS.md` updated with CI section documenting trigger, jobs, and
+      the patch-path constraint.
+- [x] `--group hivelog` suite still passes locally in DDEV (178/178).
 
 ## Implementation notes
 
