@@ -22,6 +22,10 @@ class HiveInspectionForm extends ContentEntityForm {
 
     $form = parent::form($form, $form_state);
 
+    $form['#prefix'] = '<div class="hivelog-entity-form">';
+    $form['#suffix'] = '</div>';
+    $form['#attached']['library'][] = 'hivelog/forms';
+
     $form['inspection_sections'] = [
       '#type' => 'vertical_tabs',
       '#title' => $this->t('Inspection sections'),
