@@ -210,10 +210,15 @@ jobs:
         working-directory: drupal-project
         run: |
           MODULE_PATH=$(find web/modules -maxdepth 3 -name "hivelog.info.yml" | head -1 | xargs dirname)
+          echo "Running phpstan on: $MODULE_PATH"
           composer require --dev \
             mglaman/phpstan-drupal \
             phpstan/phpstan-deprecation-rules \
             --no-interaction --no-progress -q
+          # Pass the extension configs explicitly — phpstan.neon includes use
+          # paths relative to the module root which phpstan cannot resolve when
+          # run from the project root. The -c flag adds the module's parameter
+          # config (level, paths) on top of the extensions below.
           vendor/bin/phpstan analyse \
             "$MODULE_PATH/src" \
             "$MODULE_PATH/tests" \
@@ -221,7 +226,7 @@ jobs:
             --no-progress \
             --memory-limit=512M \
             --error-format=github \
-            -c "$MODULE_PATH/phpstan.neon"
+            -c vendor/mglaman/phpstan-drupal/extension.neon
 
       - name: PHPUnit — functional (allowed to fail until ChromeDriver stable)
         working-directory: drupal-project
