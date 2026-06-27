@@ -1,1 +1,4 @@
 !patches/*
+opencode.json
+vendor/
+phpstan-baseline.neon

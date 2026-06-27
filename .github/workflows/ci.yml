@@ -190,10 +190,13 @@ jobs:
           SIMPLETEST_DB: mysql://drupal:drupal@127.0.0.1:3306/drupal
           SIMPLETEST_BASE_URL: http://localhost
         run: |
+          # Locate the installed module (path repo: no contrib/ segment).
+          MODULE_PATH=$(find web/modules -maxdepth 2 -name "hivelog.info.yml" | head -1 | xargs dirname)
+          echo "Module installed at: $MODULE_PATH"
           vendor/bin/phpunit \
             -c web/core \
-            web/modules/hivelog/tests/src/Kernel \
-            web/modules/hivelog/tests/src/Unit \
+            "$MODULE_PATH/tests/src/Kernel" \
+            "$MODULE_PATH/tests/src/Unit" \
             --group hivelog \
             --testdox
 
@@ -204,18 +207,19 @@ jobs:
         if: matrix.php-version == '8.3'
         working-directory: drupal-project
         run: |
+          MODULE_PATH=$(find web/modules -maxdepth 2 -name "hivelog.info.yml" | head -1 | xargs dirname)
           composer require --dev \
             mglaman/phpstan-drupal \
             phpstan/phpstan-deprecation-rules \
             --no-interaction --no-progress -q
           vendor/bin/phpstan analyse \
-            web/modules/hivelog/src \
-            web/modules/hivelog/tests \
+            "$MODULE_PATH/src" \
+            "$MODULE_PATH/tests" \
             --level=2 \
             --no-progress \
             --memory-limit=512M \
             --error-format=github \
-            -c web/modules/hivelog/phpstan.neon
+            -c "$MODULE_PATH/phpstan.neon"
 
       - name: PHPUnit — functional (allowed to fail until ChromeDriver stable)
         working-directory: drupal-project
@@ -225,8 +229,9 @@ jobs:
           SIMPLETEST_BASE_URL: http://localhost
           MINK_DRIVER_ARGS_WEBDRIVER: '["chrome", {"browserName":"chrome","goog:chromeOptions":{"args":["--disable-gpu","--headless","--no-sandbox","--disable-dev-shm-usage"]}}, "http://localhost:9515"]'
         run: |
+          MODULE_PATH=$(find web/modules -maxdepth 2 -name "hivelog.info.yml" | head -1 | xargs dirname)
           vendor/bin/phpunit \
             -c web/core \
-            web/modules/hivelog/tests/src/Functional \
+            "$MODULE_PATH/tests/src/Functional" \
             --group hivelog \
             --testdox
