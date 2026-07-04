@@ -269,6 +269,7 @@ class ApiaryCalendarChecklistTest extends KernelTestBase {
     ]);
     $disabled_action->save();
 
+    $this->pushRequestWithQuery([], '/hivelog/apiary/' . $this->apiary->id() . '/calendar');
     $controller = \Drupal::service('class_resolver')
       ->getInstanceFromDefinition(ApiaryController::class);
     $build = $controller->fullCalendar($this->apiary);
@@ -277,6 +278,120 @@ class ApiaryCalendarChecklistTest extends KernelTestBase {
     $this->assertStringContainsString('Full Calendar Hive Action', $html);
     $this->assertStringContainsString('Full Calendar Apiary Action', $html);
     $this->assertStringNotContainsString('Full Calendar Disabled Action', $html);
+  }
+
+  /**
+   * Tests that the Full Calendar page's filters narrow the result set.
+   *
+   * Covers scope, category, title, and the enabled/disabled toggle —
+   * including that "- Any -" surfaces a disabled action that the default
+   * "Enabled only" view hides.
+   */
+  public function testFullCalendarFiltersNarrowResults(): void {
+    CalendarAction::create([
+      'apiary' => $this->apiary->id(),
+      'title' => 'Filter Hive Action',
+      'description' => 'Desc.',
+      'week_start' => 10,
+      'scope' => 'hive',
+      'category' => 'feeding',
+    ])->save();
+
+    CalendarAction::create([
+      'apiary' => $this->apiary->id(),
+      'title' => 'Filter Apiary Action',
+      'description' => 'Desc.',
+      'week_start' => 20,
+      'scope' => 'apiary',
+      'category' => 'other',
+    ])->save();
+
+    CalendarAction::create([
+      'apiary' => $this->apiary->id(),
+      'title' => 'Filter Disabled Action',
+      'description' => 'Desc.',
+      'week_start' => 30,
+      'scope' => 'apiary',
+      'category' => 'other',
+      'enabled' => FALSE,
+    ])->save();
+
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(ApiaryController::class);
+    $path = '/hivelog/apiary/' . $this->apiary->id() . '/calendar';
+
+    // scope=hive: only the hive-scoped action.
+    $this->pushRequestWithQuery(['scope' => 'hive'], $path);
+    $build = $controller->fullCalendar($this->apiary);
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+    $this->assertStringContainsString('Filter Hive Action', $html);
+    $this->assertStringNotContainsString('Filter Apiary Action', $html);
+
+    // category=feeding: only the feeding-category action.
+    $this->pushRequestWithQuery(['category' => 'feeding'], $path);
+    $build = $controller->fullCalendar($this->apiary);
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+    $this->assertStringContainsString('Filter Hive Action', $html);
+    $this->assertStringNotContainsString('Filter Apiary Action', $html);
+
+    // title=Apiary: only the title match.
+    $this->pushRequestWithQuery(['title' => 'Apiary'], $path);
+    $build = $controller->fullCalendar($this->apiary);
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+    $this->assertStringContainsString('Filter Apiary Action', $html);
+    $this->assertStringNotContainsString('Filter Hive Action', $html);
+
+    // Default (no query at all): disabled action stays hidden.
+    $this->pushRequestWithQuery([], $path);
+    $build = $controller->fullCalendar($this->apiary);
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+    $this->assertStringNotContainsString('Filter Disabled Action', $html);
+
+    // enabled=0: only the disabled action.
+    $this->pushRequestWithQuery(['enabled' => '0'], $path);
+    $build = $controller->fullCalendar($this->apiary);
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+    $this->assertStringContainsString('Filter Disabled Action', $html);
+    $this->assertStringNotContainsString('Filter Hive Action', $html);
+
+    // enabled='' (- Any -): every action, including the disabled one.
+    // Combined with a title filter to keep the result set well under the
+    // pager's page size — the apiary's 31 auto-seeded starter items are
+    // also "any enabled" matches, and would otherwise push these three
+    // test rows across a page boundary.
+    $this->pushRequestWithQuery(['enabled' => '', 'title' => 'Filter'], $path);
+    $build = $controller->fullCalendar($this->apiary);
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+    $this->assertStringContainsString('Filter Hive Action', $html);
+    $this->assertStringContainsString('Filter Apiary Action', $html);
+    $this->assertStringContainsString('Filter Disabled Action', $html);
+  }
+
+  /**
+   * Tests that the Full Calendar page offers Edit/Delete operations.
+   *
+   * Formatted like every other embedded/collection table in the module
+   * (Edit/Delete button-group per row), rather than the plain read-only
+   * table this page originally shipped with.
+   */
+  public function testFullCalendarHasEditAndDeleteOperations(): void {
+    $action = CalendarAction::create([
+      'apiary' => $this->apiary->id(),
+      'title' => 'Editable Full Calendar Action',
+      'description' => 'Desc.',
+      'week_start' => 10,
+      'scope' => 'apiary',
+    ]);
+    $action->save();
+
+    $this->pushRequestWithQuery([], '/hivelog/apiary/' . $this->apiary->id() . '/calendar');
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(ApiaryController::class);
+    $build = $controller->fullCalendar($this->apiary);
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+
+    $this->assertStringContainsString('/hivelog/calendar-action/' . $action->id() . '/edit', $html);
+    $this->assertStringContainsString('/hivelog/calendar-action/' . $action->id() . '/delete', $html);
   }
 
   /**
