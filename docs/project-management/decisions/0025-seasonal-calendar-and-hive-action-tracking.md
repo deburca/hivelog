@@ -295,6 +295,28 @@ pending — a full forward plan.
   [[0018-csrf-and-safe-http-methods]] without introducing a new one-click
   mutation endpoint.
 
+### Current-week visibility (added post-launch, [[0026-post-testing-refinements]])
+Real hands-on testing surfaced a gap the automated test suite didn't
+catch: the tables show each item's planned week(s), but nowhere was the
+*current* week shown, so it wasn't obvious whether an item was due,
+overdue, or still upcoming without doing the comparison by hand. Fixed by:
+- Both the apiary and hive pages show "Seasonal Calendar (current week:
+  @week)" in the section heading (`(int) date('W')`).
+- The apiary's calendar table gains a `Timing` column
+  (`Upcoming`/`Due now`/`Past`), shown for every row — the apiary table
+  has no per-hive reporting status, so timing is the only relevant signal.
+- The hive checklist merges the equivalent signal into the existing
+  `Status` column for still-`pending` rows only (`Unreported (Due now)` /
+  `Unreported (Overdue)` / `Unreported (Upcoming)`) — "Overdue" rather
+  than "Past", since it only ever applies to something still actionable.
+  `done`/`ignored` rows are untouched.
+- The hive checklist's timing suffix only appears when the selected year
+  filter equals the real current year — previewing a future year would
+  otherwise trivially label every row "Upcoming".
+- Both controllers cap their render's cache `max-age` to the number of
+  seconds until the next ISO week boundary, since the timing computation
+  depends on "now" and must not be served stale across a week change.
+
 ### Routing, controllers, access
 Follow the existing scoped-add pattern exactly:
 - `hivelog.calendar_action.add` → `/hivelog/apiary/{apiary}/calendar-action/add`

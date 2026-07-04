@@ -113,3 +113,19 @@ delete own hive action log:
   title: 'Delete own hive action logs'
 delete any hive action log:
   title: 'Delete any hive action log'
+
+# Apiary action log permissions.
+view own apiary action log:
+  title: 'View own apiary action logs'
+view any apiary action log:
+  title: 'View any apiary action log'
+add apiary action log:
+  title: 'Add apiary action logs'
+edit own apiary action log:
+  title: 'Edit own apiary action logs'
+edit any apiary action log:
+  title: 'Edit any apiary action log'
+delete own apiary action log:
+  title: 'Delete own apiary action logs'
+delete any apiary action log:
+  title: 'Delete any apiary action log'

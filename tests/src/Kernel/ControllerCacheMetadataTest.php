@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\hivelog\Kernel;
 
+use Drupal\hivelog\Controller\ApiaryActionLogController;
 use Drupal\hivelog\Controller\ApiaryController;
 use Drupal\hivelog\Controller\CalendarActionController;
 use Drupal\hivelog\Controller\HiveActionLogController;
 use Drupal\hivelog\Controller\HiveController;
 use Drupal\hivelog\Controller\HiveInspectionController;
 use Drupal\hivelog\Entity\Apiary;
+use Drupal\hivelog\Entity\ApiaryActionLog;
 use Drupal\hivelog\Entity\CalendarAction;
 use Drupal\hivelog\Entity\Hive;
 use Drupal\hivelog\Entity\HiveActionLog;
@@ -59,6 +61,7 @@ class ControllerCacheMetadataTest extends KernelTestBase {
     $this->installEntitySchema('queen_observation');
     $this->installEntitySchema('calendar_action');
     $this->installEntitySchema('hive_action_log');
+    $this->installEntitySchema('apiary_action_log');
     $this->installSchema('file', ['file_usage']);
 
     $user = User::create([
@@ -89,13 +92,16 @@ class ControllerCacheMetadataTest extends KernelTestBase {
     ]);
     $hive->save();
 
-    // The apiary view now also surfaces its Seasonal Calendar table, so its
-    // list cache tag and this row's own tag must both be declared.
+    // The apiary view now also surfaces its apiary-scoped Seasonal Calendar
+    // checklist, so its list cache tag and this row's own tag must both be
+    // declared. Since task 0027, only `scope = apiary` actions are included
+    // in the apiary view's checklist/cache metadata.
     $calendarAction = CalendarAction::create([
       'apiary' => $apiary->id(),
       'title' => 'Cache Calendar Action',
       'description' => 'Desc.',
       'week_start' => 10,
+      'scope' => 'apiary',
     ]);
     $calendarAction->save();
 
@@ -333,6 +339,44 @@ class ControllerCacheMetadataTest extends KernelTestBase {
   }
 
   /**
+   * Tests that the apiary action log view declares expected cache metadata.
+   *
+   * Unlike HiveActionLogController, there is no linked inspection to check
+   * for — ApiaryActionLog deliberately has no `inspection` field (task
+   * 0027).
+   */
+  public function testApiaryActionLogViewCacheMetadata(): void {
+    $apiary = Apiary::create(['name' => 'Cache Apiary']);
+    $apiary->save();
+
+    $calendarAction = CalendarAction::create([
+      'apiary' => $apiary->id(),
+      'title' => 'Cache Calendar Action',
+      'description' => 'Desc.',
+      'week_start' => 10,
+      'scope' => 'apiary',
+    ]);
+    $calendarAction->save();
+
+    $log = ApiaryActionLog::create([
+      'apiary' => $apiary->id(),
+      'calendar_action' => $calendarAction->id(),
+      'status' => 'done',
+    ]);
+    $log->save();
+
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(ApiaryActionLogController::class);
+    $build = $controller->view($log);
+
+    $this->assertContains('user.permissions', $build['#cache']['contexts']);
+
+    foreach ($log->getCacheTags() as $tag) {
+      $this->assertContains($tag, $build['#cache']['tags']);
+    }
+  }
+
+  /**
    * Tests that each controller can be instantiated via the class resolver.
    */
   public function testControllersUseDependencyInjection(): void {
@@ -352,6 +396,9 @@ class ControllerCacheMetadataTest extends KernelTestBase {
 
     $hive_action_log_controller = $class_resolver->getInstanceFromDefinition(HiveActionLogController::class);
     $this->assertInstanceOf(HiveActionLogController::class, $hive_action_log_controller);
+
+    $apiary_action_log_controller = $class_resolver->getInstanceFromDefinition(ApiaryActionLogController::class);
+    $this->assertInstanceOf(ApiaryActionLogController::class, $apiary_action_log_controller);
   }
 
 }

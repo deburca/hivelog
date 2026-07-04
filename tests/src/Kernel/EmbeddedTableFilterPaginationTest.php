@@ -54,6 +54,7 @@ class EmbeddedTableFilterPaginationTest extends KernelTestBase {
     $this->installEntitySchema('queen_observation');
     $this->installEntitySchema('calendar_action');
     $this->installEntitySchema('hive_action_log');
+    $this->installEntitySchema('apiary_action_log');
     $this->installSchema('file', ['file_usage']);
 
     $user = User::create([

@@ -60,8 +60,11 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
       || str_starts_with($route_name, 'entity.queen_observation.')
       || str_starts_with($route_name, 'entity.calendar_action.')
       || str_starts_with($route_name, 'entity.hive_action_log.')
-      // Covers hivelog.calendar_action.add and hivelog.hive_action_log.add
-      // too — both are real pages (forms), not non-page endpoints.
+      || str_starts_with($route_name, 'entity.apiary_action_log.')
+      // Covers hivelog.calendar_action.add, hivelog.hive_action_log.add,
+      // hivelog.apiary_action_log.add, and
+      // hivelog.apiary.calendar_action.collection (the Full Calendar page)
+      // too — all are real pages (forms/views), not non-page endpoints.
       || str_starts_with($route_name, 'hivelog.');
   }
 
@@ -191,6 +194,20 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
         $breadcrumb->addLink(Link::createFromRoute($log_hive->label(), 'entity.hive.canonical', ['hive' => $log_hive->id()]));
       }
       $breadcrumb->addLink(Link::createFromRoute($hive_action_log->label(), 'entity.hive_action_log.canonical', ['hive_action_log' => $hive_action_log->id()]));
+    }
+
+    // Apiary action log routes: add apiary ancestor link then log crumb.
+    // Simpler than the hive action log block above — apiary_action_log
+    // references its apiary directly, no hive level to traverse.
+    $apiary_action_log = $route_match->getParameter('apiary_action_log');
+    if ($apiary_action_log && is_object($apiary_action_log)) {
+      $breadcrumb->addCacheableDependency($apiary_action_log);
+      $log_apiary = $apiary_action_log->get('apiary')->entity;
+      if ($log_apiary) {
+        $breadcrumb->addCacheableDependency($log_apiary);
+        $breadcrumb->addLink(Link::createFromRoute($log_apiary->label(), 'entity.apiary.canonical', ['apiary' => $log_apiary->id()]));
+      }
+      $breadcrumb->addLink(Link::createFromRoute($apiary_action_log->label(), 'entity.apiary_action_log.canonical', ['apiary_action_log' => $apiary_action_log->id()]));
     }
 
     return $breadcrumb;

@@ -7,20 +7,25 @@ namespace Drupal\hivelog\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
-use Drupal\hivelog\Entity\Hive;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
- * Filter form for the seasonal calendar checklist on the hive view page.
+ * Filter form for the seasonal calendar checklist on the hive/apiary pages.
  *
  * Submits via GET so filter state is reflected in the URL query string,
  * following the exact pattern established by
  * \Drupal\hivelog\Form\HivelogInspectionFilterForm. Defaults to
- * "Unreported" / the current year — the hive checklist's required default
- * view (see ADR-0025) — rather than an open-ended "- Any -" placeholder,
- * since there is always an effective status/year even when nothing is in
- * the query string.
+ * "Unreported" / the current year — the checklist's required default view
+ * (see ADR-0025) — rather than an open-ended "- Any -" placeholder, since
+ * there is always an effective status/year even when nothing is in the
+ * query string.
+ *
+ * Shared by HiveController (the per-hive checklist) and ApiaryController
+ * (the apiary-scoped checklist, task 0027) — the caller computes and
+ * passes the Reset button's target Url directly (rather than a typed
+ * entity), so this one form class serves both contexts without a
+ * near-duplicate form.
  */
 class HivelogCalendarFilterForm extends FormBase {
 
@@ -55,7 +60,7 @@ class HivelogCalendarFilterForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, ?Hive $hive = NULL): array {
+  public function buildForm(array $form, FormStateInterface $form_state, ?Url $reset_url = NULL): array {
     $request = $this->requestStack->getCurrentRequest();
     $query = $request ? $request->query : NULL;
     $current_year = (int) date('Y');
@@ -106,13 +111,13 @@ class HivelogCalendarFilterForm extends FormBase {
       '#button_type' => 'primary',
       '#attributes' => ['class' => ['hivelog-filter-form__submit']],
     ];
-    if ($hive) {
+    if ($reset_url) {
       $form['filter_actions']['reset'] = [
         '#type' => 'component',
         '#component' => 'hivelog:button',
         '#props' => [
           'label' => (string) $this->t('Reset'),
-          'url' => Url::fromRoute('entity.hive.canonical', ['hive' => $hive->id()])->toString(),
+          'url' => $reset_url->toString(),
         ],
       ];
     }

@@ -74,6 +74,7 @@ class CalendarActionController extends ControllerBase {
         'title',
         'category',
         'enabled',
+        'scope',
       ]),
       'schedule' => $this->buildSection($this->t('Schedule'), $calendar_action, [
         'week_start',
@@ -196,6 +197,7 @@ class CalendarActionController extends ControllerBase {
         ];
 
       case 'category':
+      case 'scope':
         $allowed_values = $field->getSetting('allowed_values');
         return [
           '#plain_text' => (string) ($allowed_values[$field->value] ?? $field->value),

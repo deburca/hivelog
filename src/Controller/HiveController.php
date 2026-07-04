@@ -248,6 +248,15 @@ class HiveController extends ControllerBase {
     // and year (previous/current/next) — switching to next year, before
     // any logs exist for it, is what makes "preview the coming year's
     // pending items" work for free.
+    //
+    // The current ISO week is surfaced in the heading, and unreported
+    // rows get a Due now/Overdue/Upcoming suffix computed against it, so
+    // it's never ambiguous whether an action needs attention right now.
+    // Only meaningful when viewing the current year — previewing a future
+    // year would trivially label everything "Upcoming", which isn't
+    // useful information, so the suffix is omitted there.
+    $current_week = (int) date('W');
+    $current_year = (int) date('Y');
     $build['calendar_heading'] = [
       '#type' => 'container',
       '#attributes' => ['class' => ['hivelog-list-heading']],
@@ -255,16 +264,20 @@ class HiveController extends ControllerBase {
       'title' => [
         '#type' => 'html_tag',
         '#tag' => 'h3',
-        '#value' => $this->t('Seasonal Calendar'),
+        '#value' => $this->t('Seasonal Calendar (current week: @week)', ['@week' => $current_week]),
         '#attributes' => ['class' => ['hivelog-list-heading__title']],
       ],
     ];
 
-    $build['calendar_filter'] = $this->formBuilder->getForm(HivelogCalendarFilterForm::class, $hive);
+    $build['calendar_filter'] = $this->formBuilder->getForm(
+      HivelogCalendarFilterForm::class,
+      Url::fromRoute('entity.hive.canonical', ['hive' => $hive->id()])
+    );
     $build['calendar_filter']['#weight'] = 26;
 
     $calendar_filters = $this->extractCalendarFilters();
     $checklist = $this->buildCalendarChecklist($hive, $calendar_filters['year'], $calendar_filters['status']);
+    $show_timing = ($calendar_filters['year'] === $current_year);
 
     $checklist_header = [
       $this->t('Title'),
@@ -298,6 +311,12 @@ class HiveController extends ControllerBase {
 
       $notes = $log ? (string) $log->get('notes')->value : '';
       $notes_display = $notes !== '' ? nl2br(Html::escape($notes)) : '';
+
+      $status_display = (string) ($status_labels[$status] ?? $status);
+      if ($status === 'pending' && $show_timing) {
+        $timing = $this->pendingActionTimingLabel((int) $week_start, $week_end, $current_week);
+        $status_display = (string) $this->t('@status (@timing)', ['@status' => $status_display, '@timing' => $timing]);
+      }
 
       if ($status === 'pending') {
         // Unreported: offer to report it, rather than a generic "Log"
@@ -357,7 +376,7 @@ class HiveController extends ControllerBase {
         'cells' => [
           $calendar_action->toLink()->toString(),
           (string) $weeks,
-          (string) ($status_labels[$status] ?? $status),
+          $status_display,
           $week_completed_display,
           $notes_display,
           $this->renderer->renderInIsolation($actions),
@@ -388,13 +407,19 @@ class HiveController extends ControllerBase {
     // - Calendar action / hive action log list cache tags + every rendered
     //   calendar action/log's own tags: invalidate on any change to either,
     //   since the checklist is computed by cross-referencing both on read.
+    // - max-age: the heading's "current week" and each unreported row's
+    //   Due now/Overdue/Upcoming suffix are computed from date('W')/date('Y')
+    //   ("now"), so the render must not be cached past the moment the ISO
+    //   week actually changes, or it would show a stale week/timing after
+    //   that boundary passes.
     $cache = CacheableMetadata::createFromRenderArray($build)
       ->addCacheContexts(['url.query_args', 'user.permissions'])
       ->addCacheableDependency($hive)
       ->addCacheTags($this->entityTypeManager->getDefinition('hive_inspection')->getListCacheTags())
       ->addCacheTags($this->entityTypeManager->getDefinition('queen')->getListCacheTags())
       ->addCacheTags($this->entityTypeManager->getDefinition('calendar_action')->getListCacheTags())
-      ->addCacheTags($this->entityTypeManager->getDefinition('hive_action_log')->getListCacheTags());
+      ->addCacheTags($this->entityTypeManager->getDefinition('hive_action_log')->getListCacheTags())
+      ->setCacheMaxAge($this->secondsUntilNextIsoWeek());
     if ($active_queen) {
       $cache->addCacheableDependency($active_queen);
     }
@@ -573,15 +598,16 @@ class HiveController extends ControllerBase {
    *   One of `pending`, `done`, `ignored`, or `all`.
    *
    * @return array
-   *   An array with two keys: `total_enabled` is the count of enabled
-   *   calendar actions on the hive's apiary *before* the status filter is
-   *   applied — used to tell "nothing pending" apart from "no calendar
-   *   actions exist at all" for the empty-state message. `rows` is an
-   *   array keyed by calendar action id, each entry an associative array
+   *   An array with two keys: `total_enabled` is the count of enabled,
+   *   hive-scoped calendar actions on the hive's apiary *before* the status
+   *   filter is applied — used to tell "nothing pending" apart from "no
+   *   calendar actions exist at all" for the empty-state message. `rows` is
+   *   an array keyed by calendar action id, each entry an associative array
    *   with `calendar_action` (the \Drupal\hivelog\Entity\CalendarAction),
    *   `log` (the matching \Drupal\hivelog\Entity\HiveActionLog, or NULL if
    *   unreported), and `status` (the effective status string used for
-   *   filtering/display).
+   *   filtering/display). Apiary-scoped calendar actions (task 0027) are
+   *   excluded entirely — they never appear on any hive's checklist.
    */
   protected function buildCalendarChecklist(Hive $hive, int $year, string $status_filter): array {
     $apiary_id = $hive->get('apiary')->target_id;
@@ -595,6 +621,7 @@ class HiveController extends ControllerBase {
       ->accessCheck(TRUE)
       ->condition('apiary', $apiary_id)
       ->condition('enabled', TRUE)
+      ->condition('scope', 'hive')
       ->sort('week_start', 'ASC')
       ->execute();
 
@@ -710,6 +737,54 @@ class HiveController extends ControllerBase {
     ];
 
     return $messages[$status_filter] ?? $this->t('No calendar actions match the current filters.');
+  }
+
+  /**
+   * Describes an unreported calendar action's timing versus the current week.
+   *
+   * `CalendarAction` never wraps across the year boundary (`week_end` must
+   * be `>= week_start`, enforced by `CalendarAction::preSave()`), so plain
+   * integer comparison is sufficient — no modulo/wraparound arithmetic is
+   * needed. Only called for `pending` (unreported) rows, so "Overdue" is
+   * always actionable — it can never apply to something already done or
+   * ignored.
+   *
+   * @param int $week_start
+   *   The calendar action's start week.
+   * @param int|string|null $week_end
+   *   The calendar action's end week, or NULL/empty for a single week.
+   * @param int $current_week
+   *   The current ISO week number to compare against.
+   *
+   * @return \Drupal\Core\StringTranslation\TranslatableMarkup
+   *   "Upcoming", "Due now", or "Overdue".
+   */
+  protected function pendingActionTimingLabel(int $week_start, $week_end, int $current_week): TranslatableMarkup {
+    $effective_end = ($week_end !== NULL && $week_end !== '') ? (int) $week_end : $week_start;
+
+    if ($current_week < $week_start) {
+      return $this->t('Upcoming');
+    }
+    if ($current_week > $effective_end) {
+      return $this->t('Overdue');
+    }
+    return $this->t('Due now');
+  }
+
+  /**
+   * Seconds remaining until the ISO week changes (next Monday, midnight).
+   *
+   * Used to bound the cache max-age for any render that surfaces the
+   * current week or a week-relative timing label, so a cached page never
+   * shows a stale week after the boundary passes.
+   *
+   * @return int
+   *   Seconds until the next ISO week boundary.
+   */
+  protected function secondsUntilNextIsoWeek(): int {
+    $now = new \DateTimeImmutable('now');
+    $next_boundary = new \DateTimeImmutable('next monday midnight');
+    return max(0, $next_boundary->getTimestamp() - $now->getTimestamp());
   }
 
   /**
@@ -946,9 +1021,18 @@ class HiveController extends ControllerBase {
     // letter month abbreviation below it.
     $ticks = [];
     $month_names = [
-      1 => 'Jan', 2 => 'Feb', 3 => 'Mar', 4 => 'Apr',
-      5 => 'May', 6 => 'Jun', 7 => 'Jul', 8 => 'Aug',
-      9 => 'Sep', 10 => 'Oct', 11 => 'Nov', 12 => 'Dec',
+      1 => 'Jan',
+      2 => 'Feb',
+      3 => 'Mar',
+      4 => 'Apr',
+      5 => 'May',
+      6 => 'Jun',
+      7 => 'Jul',
+      8 => 'Aug',
+      9 => 'Sep',
+      10 => 'Oct',
+      11 => 'Nov',
+      12 => 'Dec',
     ];
     $start_month = (int) substr($axis_start, 5, 2);
     $end_month = (int) substr($axis_end, 5, 2);

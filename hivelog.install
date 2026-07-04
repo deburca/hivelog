@@ -6,6 +6,7 @@
  */
 
 use Drupal\hivelog\Entity\Apiary;
+use Drupal\hivelog\Entity\CalendarAction;
 use Drupal\hivelog\Entity\Hive;
 use Drupal\hivelog\Entity\HiveActionLog;
 use Drupal\hivelog\Entity\HiveInspection;
@@ -27,6 +28,7 @@ function hivelog_uninstall() {
   // Delete entities in child-first order so foreign key constraints (if any)
   // are respected.
   $entity_type_ids = [
+    'apiary_action_log',
     'hive_action_log',
     'queen_observation',
     'hive_inspection',
@@ -597,6 +599,61 @@ function hivelog_update_10016(&$sandbox) {
   }
 
   return t('Installed the inspection field on the Hive Action Log entity.');
+}
+
+/**
+ * Adds the scope field to the Calendar Action entity.
+ *
+ * Task 0027 (docs/project-management/tasks/
+ * 0027-apiary-vs-hive-scoped-calendar-items.md): distinguishes apiary-wide
+ * calendar actions (e.g. CBR renewal, site maintenance) from per-hive ones.
+ * Existing rows pick up the field's default value of 'hive' automatically;
+ * no data migration beyond that default is required since the module is
+ * not yet in production.
+ */
+function hivelog_update_10017(&$sandbox) {
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+
+  $field_definitions = CalendarAction::baseFieldDefinitions(
+    $entity_type_manager->getDefinition('calendar_action')
+  );
+
+  if (isset($field_definitions['scope'])) {
+    $existing = $entity_definition_update_manager
+      ->getFieldStorageDefinition('scope', 'calendar_action');
+    if (!$existing) {
+      $entity_definition_update_manager->installFieldStorageDefinition(
+        'scope',
+        'calendar_action',
+        'hivelog',
+        $field_definitions['scope']
+      );
+    }
+  }
+
+  return t('Installed the scope field on the Calendar Action entity.');
+}
+
+/**
+ * Install the Apiary Action Log entity type.
+ *
+ * Task 0027 (docs/project-management/tasks/
+ * 0027-apiary-vs-hive-scoped-calendar-items.md): apiary-scoped sibling of
+ * HiveActionLog — the per-apiary execution record against an
+ * apiary-scoped CalendarAction, for a given year. The module is not yet in
+ * production, so no data migration is required.
+ */
+function hivelog_update_10018(&$sandbox) {
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+
+  if (!$entity_definition_update_manager->getEntityType('apiary_action_log')) {
+    $apiary_action_log_type = $entity_type_manager->getDefinition('apiary_action_log');
+    $entity_definition_update_manager->installEntityType($apiary_action_log_type);
+  }
+
+  return t('Installed the Apiary Action Log entity type.');
 }
 
 /**

@@ -33,7 +33,7 @@ class CalendarActionForm extends ContentEntityForm {
         'title' => $this->t('Overview'),
         'weight' => 0,
         'open' => TRUE,
-        'fields' => ['apiary', 'title', 'category', 'enabled'],
+        'fields' => ['apiary', 'title', 'category', 'enabled', 'scope'],
       ],
       'calendar_action_schedule' => [
         'title' => $this->t('Schedule'),

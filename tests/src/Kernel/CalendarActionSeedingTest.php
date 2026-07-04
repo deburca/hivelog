@@ -108,6 +108,58 @@ class CalendarActionSeedingTest extends KernelTestBase {
   }
 
   /**
+   * Tests that the starter calendar seeds the expected scope split.
+   *
+   * Task 0027: exactly 5 starter items are apiary-scoped (Renew CBR, Order
+   * & Prepare Equipment, Apiary Site & Hygiene Check, Set Bait Hives /
+   * Swarm Traps, Apiary Record-Keeping & Season Review); every other
+   * starter item remains hive-scoped.
+   */
+  public function testSeededRowsHaveExpectedScopeSplit(): void {
+    $apiary = Apiary::create(['name' => 'Seeding Test Apiary']);
+    $apiary->save();
+
+    $actions = $this->calendarActionsFor($apiary);
+    $by_title = [];
+    foreach ($actions as $action) {
+      $by_title[$action->label()] = $action;
+    }
+
+    $expected_apiary_scoped = [
+      'Renew Central Beehive Registration (CBR)',
+      'Order & Prepare Equipment for the Season',
+      'Apiary Site & Hygiene Check',
+      'Set Bait Hives / Swarm Traps',
+      'Apiary Record-Keeping & Season Review',
+    ];
+
+    $apiary_scoped_count = 0;
+    $hive_scoped_count = 0;
+    foreach ($actions as $action) {
+      if ($action->get('scope')->value === 'apiary') {
+        $apiary_scoped_count++;
+      }
+      else {
+        $hive_scoped_count++;
+      }
+    }
+    $this->assertEquals(5, $apiary_scoped_count);
+    $this->assertEquals(count(CalendarAction::DEFAULT_STARTER_CALENDAR) - 5, $hive_scoped_count);
+
+    foreach ($expected_apiary_scoped as $title) {
+      $this->assertArrayHasKey($title, $by_title, "Expected \"$title\" to be seeded.");
+      $this->assertEquals('apiary', $by_title[$title]->get('scope')->value, "\"$title\" should be apiary-scoped.");
+    }
+
+    // Spot-check a couple of hive-scoped titles to confirm they were not
+    // accidentally swept into the apiary-scoped set.
+    foreach (['Harvest Spring Honey', 'Harvest Summer Honey', 'Midwinter Cluster Check'] as $title) {
+      $this->assertArrayHasKey($title, $by_title, "Expected \"$title\" to be seeded.");
+      $this->assertEquals('hive', $by_title[$title]->get('scope')->value, "\"$title\" should be hive-scoped.");
+    }
+  }
+
+  /**
    * Tests that updating an existing apiary does not duplicate seeded rows.
    *
    * Seeding only ever runs on insert.

@@ -68,8 +68,16 @@ class Queen extends ContentEntityBase implements EntityChangedInterface, EntityO
   use EntityOwnerTrait;
 
   const QUEEN_COLOUR_MAP = [
-    0 => 'blue', 1 => 'white', 2 => 'yellow', 3 => 'red', 4 => 'green',
-    5 => 'blue', 6 => 'white', 7 => 'yellow', 8 => 'red', 9 => 'green',
+    0 => 'blue',
+    1 => 'white',
+    2 => 'yellow',
+    3 => 'red',
+    4 => 'green',
+    5 => 'blue',
+    6 => 'white',
+    7 => 'yellow',
+    8 => 'red',
+    9 => 'green',
   ];
 
   /**
