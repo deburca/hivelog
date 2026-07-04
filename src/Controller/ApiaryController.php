@@ -208,6 +208,12 @@ class ApiaryController extends ControllerBase {
     // timing (Due now/Overdue/Upcoming) is merged into the Status column,
     // mirroring HiveController's checklist exactly — see ADR-0025 addendum
     // on "current week" visibility (task 0026).
+    //
+    // Both actions (View Full Calendar, Add Calendar Action) share the
+    // heading's second flex child — a plain container carrying the
+    // `hivelog-list-heading__action` class — so the row still has exactly
+    // the two children `.hivelog-list-heading` is styled for, with both
+    // buttons right-aligned together rather than one per row.
     $current_week = (int) date('W');
     $current_year = (int) date('Y');
     $build['calendar_heading'] = [
@@ -220,32 +226,25 @@ class ApiaryController extends ControllerBase {
         '#value' => $this->t('Seasonal Calendar (current week: @week)', ['@week' => $current_week]),
         '#attributes' => ['class' => ['hivelog-list-heading__title']],
       ],
-      'add' => [
-        '#type' => 'component',
-        '#component' => 'hivelog:button',
-        '#props' => [
-          'label' => (string) $this->t('Add Calendar Action'),
-          'url' => Url::fromRoute('hivelog.calendar_action.add', ['apiary' => $apiary->id()])->toString(),
-          'variant' => 'primary',
-          'extra_classes' => 'hivelog-list-heading__action',
+      'actions' => [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['hivelog-list-heading__action']],
+        'full_calendar' => [
+          '#type' => 'component',
+          '#component' => 'hivelog:button',
+          '#props' => [
+            'label' => (string) $this->t('View Full Calendar'),
+            'url' => Url::fromRoute('hivelog.apiary.calendar_action.collection', ['apiary' => $apiary->id()])->toString(),
+          ],
         ],
-      ],
-    ];
-
-    // A separate row (rather than a third .hivelog-list-heading flex child,
-    // which is styled for exactly two) linking to the new Full Calendar page
-    // — every enabled calendar action for this apiary, both scopes together,
-    // as a reference/management view (task 0027).
-    $build['calendar_full_link'] = [
-      '#type' => 'container',
-      '#attributes' => ['class' => ['hivelog-list-heading']],
-      '#weight' => 21,
-      'link' => [
-        '#type' => 'component',
-        '#component' => 'hivelog:button',
-        '#props' => [
-          'label' => (string) $this->t('View Full Calendar'),
-          'url' => Url::fromRoute('hivelog.apiary.calendar_action.collection', ['apiary' => $apiary->id()])->toString(),
+        'add' => [
+          '#type' => 'component',
+          '#component' => 'hivelog:button',
+          '#props' => [
+            'label' => (string) $this->t('Add Calendar Action'),
+            'url' => Url::fromRoute('hivelog.calendar_action.add', ['apiary' => $apiary->id()])->toString(),
+            'variant' => 'primary',
+          ],
         ],
       ],
     ];
@@ -254,7 +253,7 @@ class ApiaryController extends ControllerBase {
       HivelogCalendarFilterForm::class,
       Url::fromRoute('entity.apiary.canonical', ['apiary' => $apiary->id()])
     );
-    $build['calendar_filter']['#weight'] = 22;
+    $build['calendar_filter']['#weight'] = 21;
 
     $calendar_filters = $this->extractCalendarFilters();
     $checklist = $this->buildApiaryCalendarChecklist($apiary, $calendar_filters['year'], $calendar_filters['status']);
@@ -366,7 +365,7 @@ class ApiaryController extends ControllerBase {
         'rows' => $checklist_rows,
         'empty_message' => (string) $this->calendarChecklistEmptyMessage($checklist['total_enabled'], $calendar_filters['status']),
       ],
-      '#weight' => 23,
+      '#weight' => 22,
     ];
 
     // Explicit cache metadata.
