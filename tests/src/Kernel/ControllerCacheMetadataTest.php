@@ -5,10 +5,14 @@ declare(strict_types=1);
 namespace Drupal\Tests\hivelog\Kernel;
 
 use Drupal\hivelog\Controller\ApiaryController;
+use Drupal\hivelog\Controller\CalendarActionController;
+use Drupal\hivelog\Controller\HiveActionLogController;
 use Drupal\hivelog\Controller\HiveController;
 use Drupal\hivelog\Controller\HiveInspectionController;
 use Drupal\hivelog\Entity\Apiary;
+use Drupal\hivelog\Entity\CalendarAction;
 use Drupal\hivelog\Entity\Hive;
+use Drupal\hivelog\Entity\HiveActionLog;
 use Drupal\hivelog\Entity\HiveInspection;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\user\Entity\User;
@@ -53,6 +57,8 @@ class ControllerCacheMetadataTest extends KernelTestBase {
     $this->installEntitySchema('hive_inspection');
     $this->installEntitySchema('queen');
     $this->installEntitySchema('queen_observation');
+    $this->installEntitySchema('calendar_action');
+    $this->installEntitySchema('hive_action_log');
     $this->installSchema('file', ['file_usage']);
 
     $user = User::create([
@@ -83,6 +89,16 @@ class ControllerCacheMetadataTest extends KernelTestBase {
     ]);
     $hive->save();
 
+    // The apiary view now also surfaces its Seasonal Calendar table, so its
+    // list cache tag and this row's own tag must both be declared.
+    $calendarAction = CalendarAction::create([
+      'apiary' => $apiary->id(),
+      'title' => 'Cache Calendar Action',
+      'description' => 'Desc.',
+      'week_start' => 10,
+    ]);
+    $calendarAction->save();
+
     $controller = \Drupal::service('class_resolver')
       ->getInstanceFromDefinition(ApiaryController::class);
     $build = $controller->view($apiary);
@@ -97,10 +113,20 @@ class ControllerCacheMetadataTest extends KernelTestBase {
       $this->assertContains($tag, $build['#cache']['tags']);
     }
 
+    $calendar_action_list_tags = \Drupal::entityTypeManager()
+      ->getDefinition('calendar_action')
+      ->getListCacheTags();
+    foreach ($calendar_action_list_tags as $tag) {
+      $this->assertContains($tag, $build['#cache']['tags']);
+    }
+
     foreach ($apiary->getCacheTags() as $tag) {
       $this->assertContains($tag, $build['#cache']['tags']);
     }
     foreach ($hive->getCacheTags() as $tag) {
+      $this->assertContains($tag, $build['#cache']['tags']);
+    }
+    foreach ($calendarAction->getCacheTags() as $tag) {
       $this->assertContains($tag, $build['#cache']['tags']);
     }
   }
@@ -125,6 +151,27 @@ class ControllerCacheMetadataTest extends KernelTestBase {
     ]);
     $inspection->save();
 
+    // The hive view now also surfaces the Seasonal Calendar checklist, so
+    // both entity types' list cache tags and this row's own tags must be
+    // declared.
+    $calendarAction = CalendarAction::create([
+      'apiary' => $apiary->id(),
+      'title' => 'Cache Calendar Action',
+      'description' => 'Desc.',
+      'week_start' => 10,
+    ]);
+    $calendarAction->save();
+
+    // Left at the default "pending" status deliberately, so this row
+    // appears in the hive checklist's default (unreported) view and its
+    // cache tags are genuinely exercised via that render path, rather
+    // than being silently filtered out and never actually added.
+    $log = HiveActionLog::create([
+      'hive' => $hive->id(),
+      'calendar_action' => $calendarAction->id(),
+    ]);
+    $log->save();
+
     $controller = \Drupal::service('class_resolver')
       ->getInstanceFromDefinition(HiveController::class);
     $build = $controller->view($hive);
@@ -148,10 +195,30 @@ class ControllerCacheMetadataTest extends KernelTestBase {
       $this->assertContains($tag, $build['#cache']['tags']);
     }
 
+    $calendar_action_list_tags = \Drupal::entityTypeManager()
+      ->getDefinition('calendar_action')
+      ->getListCacheTags();
+    foreach ($calendar_action_list_tags as $tag) {
+      $this->assertContains($tag, $build['#cache']['tags']);
+    }
+
+    $hive_action_log_list_tags = \Drupal::entityTypeManager()
+      ->getDefinition('hive_action_log')
+      ->getListCacheTags();
+    foreach ($hive_action_log_list_tags as $tag) {
+      $this->assertContains($tag, $build['#cache']['tags']);
+    }
+
     foreach ($hive->getCacheTags() as $tag) {
       $this->assertContains($tag, $build['#cache']['tags']);
     }
     foreach ($inspection->getCacheTags() as $tag) {
+      $this->assertContains($tag, $build['#cache']['tags']);
+    }
+    foreach ($calendarAction->getCacheTags() as $tag) {
+      $this->assertContains($tag, $build['#cache']['tags']);
+    }
+    foreach ($log->getCacheTags() as $tag) {
       $this->assertContains($tag, $build['#cache']['tags']);
     }
   }
@@ -188,6 +255,84 @@ class ControllerCacheMetadataTest extends KernelTestBase {
   }
 
   /**
+   * Tests that the calendar action view declares expected cache metadata.
+   */
+  public function testCalendarActionViewCacheMetadata(): void {
+    $apiary = Apiary::create(['name' => 'Cache Apiary']);
+    $apiary->save();
+
+    $calendarAction = CalendarAction::create([
+      'apiary' => $apiary->id(),
+      'title' => 'Cache Calendar Action',
+      'description' => 'Desc.',
+      'week_start' => 10,
+    ]);
+    $calendarAction->save();
+
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(CalendarActionController::class);
+    $build = $controller->view($calendarAction);
+
+    $this->assertContains('user.permissions', $build['#cache']['contexts']);
+
+    foreach ($calendarAction->getCacheTags() as $tag) {
+      $this->assertContains($tag, $build['#cache']['tags']);
+    }
+  }
+
+  /**
+   * Tests that the hive action log view declares expected cache metadata.
+   *
+   * Including the linked inspection's cache tags when one is set.
+   */
+  public function testHiveActionLogViewCacheMetadata(): void {
+    $apiary = Apiary::create(['name' => 'Cache Apiary']);
+    $apiary->save();
+
+    $hive = Hive::create([
+      'name' => 'Cache Hive',
+      'apiary' => $apiary->id(),
+      'status' => 'active',
+    ]);
+    $hive->save();
+
+    $calendarAction = CalendarAction::create([
+      'apiary' => $apiary->id(),
+      'title' => 'Cache Calendar Action',
+      'description' => 'Desc.',
+      'week_start' => 10,
+    ]);
+    $calendarAction->save();
+
+    $inspection = HiveInspection::create([
+      'hive' => $hive->id(),
+      'inspection_date' => '2024-06-15',
+    ]);
+    $inspection->save();
+
+    $log = HiveActionLog::create([
+      'hive' => $hive->id(),
+      'calendar_action' => $calendarAction->id(),
+      'status' => 'done',
+      'inspection' => $inspection->id(),
+    ]);
+    $log->save();
+
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(HiveActionLogController::class);
+    $build = $controller->view($log);
+
+    $this->assertContains('user.permissions', $build['#cache']['contexts']);
+
+    foreach ($log->getCacheTags() as $tag) {
+      $this->assertContains($tag, $build['#cache']['tags']);
+    }
+    foreach ($inspection->getCacheTags() as $tag) {
+      $this->assertContains($tag, $build['#cache']['tags']);
+    }
+  }
+
+  /**
    * Tests that each controller can be instantiated via the class resolver.
    */
   public function testControllersUseDependencyInjection(): void {
@@ -201,6 +346,12 @@ class ControllerCacheMetadataTest extends KernelTestBase {
 
     $inspection_controller = $class_resolver->getInstanceFromDefinition(HiveInspectionController::class);
     $this->assertInstanceOf(HiveInspectionController::class, $inspection_controller);
+
+    $calendar_action_controller = $class_resolver->getInstanceFromDefinition(CalendarActionController::class);
+    $this->assertInstanceOf(CalendarActionController::class, $calendar_action_controller);
+
+    $hive_action_log_controller = $class_resolver->getInstanceFromDefinition(HiveActionLogController::class);
+    $this->assertInstanceOf(HiveActionLogController::class, $hive_action_log_controller);
   }
 
 }

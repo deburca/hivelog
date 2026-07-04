@@ -65,6 +65,8 @@ class HiveTest extends KernelTestBase {
     $this->installEntitySchema('hive');
     $this->installEntitySchema('hive_inspection');
     $this->installQueenEntitySchema();
+    $this->installEntitySchema('calendar_action');
+    $this->installEntitySchema('hive_action_log');
     $this->installSchema('file', ['file_usage']);
 
     $this->apiary = Apiary::create(['name' => 'Test Apiary']);

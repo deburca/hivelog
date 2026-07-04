@@ -58,6 +58,10 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
       || str_starts_with($route_name, 'entity.hive_inspection.')
       || str_starts_with($route_name, 'entity.queen.')
       || str_starts_with($route_name, 'entity.queen_observation.')
+      || str_starts_with($route_name, 'entity.calendar_action.')
+      || str_starts_with($route_name, 'entity.hive_action_log.')
+      // Covers hivelog.calendar_action.add and hivelog.hive_action_log.add
+      // too — both are real pages (forms), not non-page endpoints.
       || str_starts_with($route_name, 'hivelog.');
   }
 
@@ -152,6 +156,41 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
         $breadcrumb->addLink(Link::createFromRoute($observation_queen->label(), 'entity.queen.canonical', ['queen' => $observation_queen->id()]));
       }
       $breadcrumb->addLink(Link::createFromRoute($observation->label(), 'entity.queen_observation.canonical', ['queen_observation' => $observation->id()]));
+    }
+
+    // Calendar action routes: add apiary ancestor link then calendar action
+    // crumb. Guarded to the entity's own CRUD routes (rather than just
+    // checking the parameter is present) because
+    // hivelog.hive_action_log.add also carries a `calendar_action` route
+    // parameter — identifying which action is being logged, not "this page
+    // is about a calendar action" — and must not gain a duplicate/incorrect
+    // crumb from this block; the hive block below handles that route.
+    $calendar_action = $route_match->getParameter('calendar_action');
+    if ($calendar_action && is_object($calendar_action) && str_starts_with($route_name, 'entity.calendar_action.')) {
+      $breadcrumb->addCacheableDependency($calendar_action);
+      $calendar_action_apiary = $calendar_action->get('apiary')->entity;
+      if ($calendar_action_apiary) {
+        $breadcrumb->addCacheableDependency($calendar_action_apiary);
+        $breadcrumb->addLink(Link::createFromRoute($calendar_action_apiary->label(), 'entity.apiary.canonical', ['apiary' => $calendar_action_apiary->id()]));
+      }
+      $breadcrumb->addLink(Link::createFromRoute($calendar_action->label(), 'entity.calendar_action.canonical', ['calendar_action' => $calendar_action->id()]));
+    }
+
+    // Hive action log routes: thread Apiary → Hive ancestry then log crumb.
+    $hive_action_log = $route_match->getParameter('hive_action_log');
+    if ($hive_action_log && is_object($hive_action_log)) {
+      $breadcrumb->addCacheableDependency($hive_action_log);
+      $log_hive = $hive_action_log->get('hive')->entity;
+      if ($log_hive) {
+        $breadcrumb->addCacheableDependency($log_hive);
+        $log_apiary = $log_hive->get('apiary')->entity;
+        if ($log_apiary) {
+          $breadcrumb->addCacheableDependency($log_apiary);
+          $breadcrumb->addLink(Link::createFromRoute($log_apiary->label(), 'entity.apiary.canonical', ['apiary' => $log_apiary->id()]));
+        }
+        $breadcrumb->addLink(Link::createFromRoute($log_hive->label(), 'entity.hive.canonical', ['hive' => $log_hive->id()]));
+      }
+      $breadcrumb->addLink(Link::createFromRoute($hive_action_log->label(), 'entity.hive_action_log.canonical', ['hive_action_log' => $hive_action_log->id()]));
     }
 
     return $breadcrumb;

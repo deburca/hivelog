@@ -2,12 +2,12 @@
 type: roadmap
 tags: [hivelog/roadmap]
 status: living
-updated: 2026-06-25
+updated: 2026-07-03
 ---
 # 🐝 Hivelog Roadmap
 A living roadmap derived from the projects, tasks, decisions, and releases in
 this vault. Sequencing is driven by dependencies and completed work rather than
-fixed dates. Last refreshed **2026-06-25**.
+fixed dates. Last refreshed **2026-07-03**.
 
 ## Release timeline
 ### ✅ Released
@@ -25,9 +25,10 @@ Release note: [[1.4.0]]
 - [[queen-observation-enhancements]] — [[0001-queen-observation-csv-export]] remains `in-progress`; [[0002-breadcrumb-queen-canonical]] is already satisfied in code and has been closed in the vault.
 - [[0003-apiary-map-marker-clustering]] — `backlog` (low); revisit as a future map-UX initiative.
 - **GitHub Actions CI** — [[0016-implement-github-actions-ci]] (`todo`, high priority); decision [[0023-github-actions-ci-pipeline]] accepted. No schema changes; candidate for inclusion in 1.4.0 or as a standalone infrastructure release.
+- **[[seasonal-calendar-and-hive-action-tracking]] — `done`, all 8 tasks complete, ready to be assigned a release.** An apiary-wide seasonal calendar of beekeeping duties (varroa treatment, harvests, winter prep, etc., a 31-entry starter set seeded automatically on apiary creation) with per-hive completion tracking that defaults to unreported items, a year filter for previewing the coming year's plan, and an optional "Report Done" → linked `HiveInspection` record. Architecture in [[0025-seasonal-calendar-and-hive-action-tracking]] (accepted). Every task ([[0017-calendar-action-entity-and-schema]] through [[0024-calendar-test-coverage]]) was verified end-to-end against a real Drupal site rather than by code inspection alone; three real regressions were caught and fixed along the way (missing entity schemas in 4 existing kernel tests, a typed-property redeclaration fataling the hive page, and a by-reference `renderInIsolation()` notice in a new test). Final test suite: 178 kernel + 70 unit tests, up from a 124/54 baseline. Given its size (2 new entities, ~10 new routes, new permissions, 3 update hooks), this warrants its **own release** rather than folding into 1.4.0's consistency/mobile theme — candidate name/version not yet decided.
 
 ## Decision gate
-**Decision gate cleared: 23 accepted · 0 proposed.**
+**25 accepted · 0 proposed.**
 
 The foundation ADRs for the current work are already accepted and no longer
 block execution:

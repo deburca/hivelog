@@ -286,3 +286,119 @@ entity.queen_observation.delete_form:
     parameters:
       queen_observation:
         type: entity:queen_observation
+
+# Calendar action routes.
+entity.calendar_action.collection:
+  path: '/hivelog/calendar-actions'
+  defaults:
+    _entity_list: 'calendar_action'
+    _title: 'HiveLog - Calendar Actions'
+  requirements:
+    _permission: 'view own calendar action+view any calendar action+administer hivelog'
+
+hivelog.calendar_action.add:
+  path: '/hivelog/apiary/{apiary}/calendar-action/add'
+  defaults:
+    _controller: '\Drupal\hivelog\Controller\CalendarActionController::addForm'
+    _title: 'Add Calendar Action'
+  requirements:
+    _permission: 'add calendar action+administer hivelog'
+  options:
+    parameters:
+      apiary:
+        type: entity:apiary
+
+entity.calendar_action.canonical:
+  path: '/hivelog/calendar-action/{calendar_action}'
+  defaults:
+    _controller: '\Drupal\hivelog\Controller\CalendarActionController::view'
+    _title_callback: '\Drupal\hivelog\Controller\CalendarActionController::title'
+  requirements:
+    _permission: 'view own calendar action+view any calendar action+administer hivelog'
+  options:
+    parameters:
+      calendar_action:
+        type: entity:calendar_action
+
+entity.calendar_action.edit_form:
+  path: '/hivelog/calendar-action/{calendar_action}/edit'
+  defaults:
+    _entity_form: 'calendar_action.edit'
+    _title: 'Edit Calendar Action'
+  requirements:
+    _permission: 'edit own calendar action+edit any calendar action+administer hivelog'
+  options:
+    parameters:
+      calendar_action:
+        type: entity:calendar_action
+
+entity.calendar_action.delete_form:
+  path: '/hivelog/calendar-action/{calendar_action}/delete'
+  defaults:
+    _entity_form: 'calendar_action.delete'
+    _title: 'Delete Calendar Action'
+  requirements:
+    _permission: 'delete own calendar action+delete any calendar action+administer hivelog'
+  options:
+    parameters:
+      calendar_action:
+        type: entity:calendar_action
+
+# Hive action log routes.
+entity.hive_action_log.collection:
+  path: '/hivelog/hive-action-logs'
+  defaults:
+    _entity_list: 'hive_action_log'
+    _title: 'HiveLog - Hive Action Logs'
+  requirements:
+    _permission: 'view own hive action log+view any hive action log+administer hivelog'
+
+hivelog.hive_action_log.add:
+  path: '/hivelog/hive/{hive}/calendar-action/{calendar_action}/log/add'
+  defaults:
+    _controller: '\Drupal\hivelog\Controller\HiveActionLogController::addForm'
+    _title: 'Add Hive Action Log'
+  requirements:
+    _permission: 'add hive action log+administer hivelog'
+  options:
+    parameters:
+      hive:
+        type: entity:hive
+      calendar_action:
+        type: entity:calendar_action
+
+entity.hive_action_log.canonical:
+  path: '/hivelog/hive-action-log/{hive_action_log}'
+  defaults:
+    _controller: '\Drupal\hivelog\Controller\HiveActionLogController::view'
+    _title_callback: '\Drupal\hivelog\Controller\HiveActionLogController::title'
+  requirements:
+    _permission: 'view own hive action log+view any hive action log+administer hivelog'
+  options:
+    parameters:
+      hive_action_log:
+        type: entity:hive_action_log
+
+entity.hive_action_log.edit_form:
+  path: '/hivelog/hive-action-log/{hive_action_log}/edit'
+  defaults:
+    _entity_form: 'hive_action_log.edit'
+    _title: 'Edit Hive Action Log'
+  requirements:
+    _permission: 'edit own hive action log+edit any hive action log+administer hivelog'
+  options:
+    parameters:
+      hive_action_log:
+        type: entity:hive_action_log
+
+entity.hive_action_log.delete_form:
+  path: '/hivelog/hive-action-log/{hive_action_log}/delete'
+  defaults:
+    _entity_form: 'hive_action_log.delete'
+    _title: 'Delete Hive Action Log'
+  requirements:
+    _permission: 'delete own hive action log+delete any hive action log+administer hivelog'
+  options:
+    parameters:
+      hive_action_log:
+        type: entity:hive_action_log

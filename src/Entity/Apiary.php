@@ -8,6 +8,7 @@ use Drupal\Core\Entity\Attribute\ContentEntityType;
 use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityChangedInterface;
 use Drupal\Core\Entity\EntityChangedTrait;
+use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
@@ -94,6 +95,34 @@ class Apiary extends ContentEntityBase implements EntityChangedInterface, Entity
    */
   public function isPublic(): bool {
     return $this->get('visibility')->value === 'public';
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * Seeds a default starter calendar (see
+   * CalendarAction::DEFAULT_STARTER_CALENDAR) the first time an apiary is
+   * created, so a new apiary starts with a usable, fully-editable seasonal
+   * plan instead of an empty one — see ADR-0025. Only runs on insert
+   * (`!$update`); re-saving an existing apiary never re-seeds or
+   * duplicates it. A seeding failure is logged and swallowed rather than
+   * propagated, so it can never block the apiary itself from being
+   * created.
+   */
+  public function postSave(EntityStorageInterface $storage, $update = TRUE) {
+    parent::postSave($storage, $update);
+
+    if (!$update) {
+      try {
+        CalendarAction::seedDefaultsForApiary($this);
+      }
+      catch (\Exception $e) {
+        \Drupal::logger('hivelog')->error(
+          'Failed to seed the default starter calendar for apiary @id: @message',
+          ['@id' => $this->id(), '@message' => $e->getMessage()]
+        );
+      }
+    }
   }
 
   /**

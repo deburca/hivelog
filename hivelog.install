@@ -7,6 +7,7 @@
 
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\Hive;
+use Drupal\hivelog\Entity\HiveActionLog;
 use Drupal\hivelog\Entity\HiveInspection;
 use Drupal\user\Entity\Role;
 
@@ -26,9 +27,11 @@ function hivelog_uninstall() {
   // Delete entities in child-first order so foreign key constraints (if any)
   // are respected.
   $entity_type_ids = [
+    'hive_action_log',
     'queen_observation',
     'hive_inspection',
     'queen',
+    'calendar_action',
     'hive',
     'apiary',
   ];
@@ -517,6 +520,83 @@ function hivelog_update_10013(&$sandbox) {
   }
 
   return t('Installed beekeepers and visibility fields on the Apiary entity.');
+}
+
+/**
+ * Install the Calendar Action entity type.
+ *
+ * First half of the seasonal calendar (docs/project-management/decisions/
+ * 0025-seasonal-calendar-and-hive-action-tracking.md): a CalendarAction is
+ * one recurring seasonal duty (varroa treatment, harvest, winter prep,
+ * etc.) belonging to a single apiary, shared by every hive in it. The
+ * module is not yet in production, so no data migration is required.
+ */
+function hivelog_update_10014(&$sandbox) {
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+
+  if (!$entity_definition_update_manager->getEntityType('calendar_action')) {
+    $calendar_action_type = $entity_type_manager->getDefinition('calendar_action');
+    $entity_definition_update_manager->installEntityType($calendar_action_type);
+  }
+
+  return t('Installed the Calendar Action entity type.');
+}
+
+/**
+ * Install the Hive Action Log entity type.
+ *
+ * Second half of the seasonal calendar (docs/project-management/decisions/
+ * 0025-seasonal-calendar-and-hive-action-tracking.md): a HiveActionLog is
+ * the per-hive execution record against a CalendarAction, for a given
+ * year. Depends on the calendar_action entity type installed by
+ * hivelog_update_10014(). The module is not yet in production, so no data
+ * migration is required.
+ */
+function hivelog_update_10015(&$sandbox) {
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+
+  if (!$entity_definition_update_manager->getEntityType('hive_action_log')) {
+    $hive_action_log_type = $entity_type_manager->getDefinition('hive_action_log');
+    $entity_definition_update_manager->installEntityType($hive_action_log_type);
+  }
+
+  return t('Installed the Hive Action Log entity type.');
+}
+
+/**
+ * Add the inspection field to the Hive Action Log entity.
+ *
+ * Task 0023 (docs/project-management/decisions/
+ * 0025-seasonal-calendar-and-hive-action-tracking.md): optionally links a
+ * "done" report to a hive inspection record created at the same time. This
+ * hook lands after hivelog_update_10015() shipped separately (rather than
+ * being folded into it), since the Hive Action Log entity type was already
+ * released without this field.
+ */
+function hivelog_update_10016(&$sandbox) {
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+
+  $field_definitions = HiveActionLog::baseFieldDefinitions(
+    $entity_type_manager->getDefinition('hive_action_log')
+  );
+
+  if (isset($field_definitions['inspection'])) {
+    $existing = $entity_definition_update_manager
+      ->getFieldStorageDefinition('inspection', 'hive_action_log');
+    if (!$existing) {
+      $entity_definition_update_manager->installFieldStorageDefinition(
+        'inspection',
+        'hive_action_log',
+        'hivelog',
+        $field_definitions['inspection']
+      );
+    }
+  }
+
+  return t('Installed the inspection field on the Hive Action Log entity.');
 }
 
 /**

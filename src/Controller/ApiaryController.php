@@ -192,19 +192,127 @@ class ApiaryController extends ControllerBase {
       '#weight' => 13,
     ];
 
+    // Seasonal Calendar: the apiary-wide plan of seasonal duties, shared by
+    // every hive in it (see ADR-0025). Placed after the hives list since
+    // hives are the primary thing an apiary page is about; the calendar is
+    // secondary, supporting information.
+    $build['calendar_heading'] = [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['hivelog-list-heading']],
+      '#weight' => 20,
+      'title' => [
+        '#type' => 'html_tag',
+        '#tag' => 'h3',
+        '#value' => $this->t('Seasonal Calendar'),
+        '#attributes' => ['class' => ['hivelog-list-heading__title']],
+      ],
+      'add' => [
+        '#type' => 'component',
+        '#component' => 'hivelog:button',
+        '#props' => [
+          'label' => (string) $this->t('Add Calendar Action'),
+          'url' => Url::fromRoute('hivelog.calendar_action.add', ['apiary' => $apiary->id()])->toString(),
+          'variant' => 'primary',
+          'extra_classes' => 'hivelog-list-heading__action',
+        ],
+      ],
+    ];
+
+    $calendar_action_ids = $this->entityTypeManager
+      ->getStorage('calendar_action')
+      ->getQuery()
+      ->accessCheck(TRUE)
+      ->condition('apiary', $apiary->id())
+      ->condition('enabled', TRUE)
+      ->sort('week_start', 'ASC')
+      ->execute();
+
+    $calendar_actions = $calendar_action_ids
+      ? $this->entityTypeManager->getStorage('calendar_action')->loadMultiple($calendar_action_ids)
+      : [];
+    $calendar_actions = array_filter(
+      $calendar_actions,
+      fn($calendar_action) => $calendar_action->access('view', $this->currentUser)
+    );
+
+    $calendar_header = [
+      $this->t('Title'),
+      $this->t('Week(s)'),
+      $this->t('Category'),
+      $this->t('Operations'),
+    ];
+
+    $calendar_rows = [];
+    foreach ($calendar_actions as $calendar_action) {
+      $week_start = $calendar_action->get('week_start')->value;
+      $week_end = $calendar_action->get('week_end')->value;
+      $weeks = ($week_end !== NULL && $week_end !== '' && (int) $week_end !== (int) $week_start)
+        ? $this->t('@start–@end', ['@start' => $week_start, '@end' => $week_end])
+        : (string) $week_start;
+
+      $category = $calendar_action->get('category')->value;
+      $category_label = $category
+        ? ($calendar_action->get('category')->getSetting('allowed_values')[$category] ?? $category)
+        : '';
+
+      $buttons = [];
+      if ($calendar_action->access('update')) {
+        $buttons[] = ['label' => (string) $this->t('Edit'), 'url' => $calendar_action->toUrl('edit-form')->toString()];
+      }
+      if ($calendar_action->access('delete')) {
+        $buttons[] = [
+          'label' => (string) $this->t('Delete'),
+          'url' => $calendar_action->toUrl('delete-form')->toString(),
+          'variant' => 'danger',
+        ];
+      }
+      $actions = [
+        '#type' => 'component',
+        '#component' => 'hivelog:button-group',
+        '#props' => ['buttons' => $buttons],
+      ];
+
+      $calendar_rows[] = [
+        'cells' => [
+          $calendar_action->toLink()->toString(),
+          (string) $weeks,
+          (string) $category_label,
+          $this->renderer->renderInIsolation($actions),
+        ],
+      ];
+    }
+
+    $build['calendar_table'] = [
+      '#type' => 'component',
+      '#component' => 'hivelog:entity-table',
+      '#props' => [
+        'headers' => array_map('strval', $calendar_header),
+        'rows' => $calendar_rows,
+        'empty_message' => (string) $this->t('No calendar actions have been added to this apiary yet.'),
+      ],
+      '#weight' => 21,
+    ];
+
     // Explicit cache metadata.
     // - url.query_args: pager + filter state travels in the query string.
-    // - user.permissions: hive rows are post-filtered by per-entity access,
-    //   so two users with different permissions must not share a cache entry.
+    // - user.permissions: hive/calendar-action rows are post-filtered by
+    //   per-entity access, so two users with different permissions must not
+    //   share a cache entry.
     // - Apiary entity tags: invalidate on apiary update/delete.
     // - Hive list cache tag + each rendered hive's own tags: invalidate on
     //   any hive change so the embedded table is never stale.
+    // - Calendar action list cache tag + each rendered calendar action's own
+    //   tags: invalidate on any calendar action change.
     $cache = CacheableMetadata::createFromRenderArray($build)
       ->addCacheContexts(['url.query_args', 'user.permissions'])
       ->addCacheableDependency($apiary)
-      ->addCacheTags($this->entityTypeManager->getDefinition('hive')->getListCacheTags());
+      ->addCacheTags($this->entityTypeManager->getDefinition('hive')->getListCacheTags())
+      ->addCacheTags($this->entityTypeManager->getDefinition('calendar_action')->getListCacheTags());
     foreach ($hives as $hive) {
       $cache->addCacheableDependency($hive);
+    }
+    foreach ($calendar_actions as $calendar_action) {
+      $cache->addCacheableDependency($calendar_action);
     }
     $cache->applyTo($build);
 

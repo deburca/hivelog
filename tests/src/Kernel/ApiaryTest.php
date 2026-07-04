@@ -54,6 +54,8 @@ class ApiaryTest extends KernelTestBase {
     $this->installEntitySchema('hive_inspection');
     $this->installEntitySchema('queen');
     $this->installEntitySchema('queen_observation');
+    $this->installEntitySchema('calendar_action');
+    $this->installEntitySchema('hive_action_log');
     $this->installSchema('file', ['file_usage']);
 
     $this->user = User::create([

@@ -171,10 +171,52 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
    */
   public static function hivelogCustomRouteProvider(): array {
     return [
-      'hive add'        => ['hivelog.hive.add'],
-      'inspection add'  => ['hivelog.inspection.add'],
-      'queen add'       => ['hivelog.queen.add'],
-      'observation add' => ['hivelog.queen_observation.add'],
+      'hive add'              => ['hivelog.hive.add'],
+      'inspection add'        => ['hivelog.inspection.add'],
+      'queen add'             => ['hivelog.queen.add'],
+      'observation add'       => ['hivelog.queen_observation.add'],
+      'calendar action add'  => ['hivelog.calendar_action.add'],
+      'hive action log add'  => ['hivelog.hive_action_log.add'],
+    ];
+  }
+
+  /**
+   * Tests that applies() returns TRUE for calendar_action entity routes.
+   */
+  #[DataProvider('calendarActionRouteProvider')]
+  public function testAppliesReturnsTrueForCalendarActionRoutes(string $route_name): void {
+    $this->assertTrue($this->builder->applies($this->createRouteMatch($route_name)));
+  }
+
+  /**
+   * Data provider for calendar_action entity routes.
+   */
+  public static function calendarActionRouteProvider(): array {
+    return [
+      'collection' => ['entity.calendar_action.collection'],
+      'canonical'  => ['entity.calendar_action.canonical'],
+      'edit_form'  => ['entity.calendar_action.edit_form'],
+      'delete_form' => ['entity.calendar_action.delete_form'],
+    ];
+  }
+
+  /**
+   * Tests that applies() returns TRUE for hive_action_log entity routes.
+   */
+  #[DataProvider('hiveActionLogRouteProvider')]
+  public function testAppliesReturnsTrueForHiveActionLogRoutes(string $route_name): void {
+    $this->assertTrue($this->builder->applies($this->createRouteMatch($route_name)));
+  }
+
+  /**
+   * Data provider for hive_action_log entity routes.
+   */
+  public static function hiveActionLogRouteProvider(): array {
+    return [
+      'collection' => ['entity.hive_action_log.collection'],
+      'canonical'  => ['entity.hive_action_log.canonical'],
+      'edit_form'  => ['entity.hive_action_log.edit_form'],
+      'delete_form' => ['entity.hive_action_log.delete_form'],
     ];
   }
 
@@ -815,6 +857,175 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $this->assertEquals('entity.queen_observation.canonical', $links[3]->getUrl()->getRouteName());
   }
 
+  /**
+   * Calendar action canonical: apiary is a navigable ancestor; calendar action label is the terminal crumb.
+   */
+  public function testBuildCalendarActionCanonical(): void {
+    $apiary = $this->createApiaryMock(1, 'Home Apiary');
+    $calendarAction = $this->createCalendarActionMock(40, 'Harvest Spring Honey', $apiary);
+    $route_match = $this->createRouteMatch('entity.calendar_action.canonical');
+    $route_match->method('getParameter')->willReturnMap([
+      ['apiary', NULL],
+      ['hive', NULL],
+      ['hive_inspection', NULL],
+      ['calendar_action', $calendarAction],
+    ]);
+
+    $breadcrumb = $this->builder->build($route_match);
+    $links = $breadcrumb->getLinks();
+
+    // Home + HiveLog + Apiary + CalendarAction (no Hive — a calendar
+    // action belongs to the apiary directly, not to any one hive).
+    $this->assertCount(4, $links);
+    $this->assertEquals('Home Apiary', (string) $links[2]->getText());
+    $this->assertEquals('Harvest Spring Honey', (string) $links[3]->getText());
+    $this->assertEquals('entity.calendar_action.canonical', $links[3]->getUrl()->getRouteName());
+    $this->assertContains('calendar_action:40', $breadcrumb->getCacheTags());
+    $this->assertContains('apiary:1', $breadcrumb->getCacheTags());
+  }
+
+  /**
+   * Calendar action edit: apiary and calendar action ancestor links are both added.
+   */
+  public function testBuildCalendarActionEditForm(): void {
+    $apiary = $this->createApiaryMock(1, 'Home Apiary');
+    $calendarAction = $this->createCalendarActionMock(40, 'Harvest Spring Honey', $apiary);
+    $route_match = $this->createRouteMatch('entity.calendar_action.edit_form');
+    $route_match->method('getParameter')->willReturnMap([
+      ['apiary', NULL],
+      ['hive', NULL],
+      ['hive_inspection', NULL],
+      ['calendar_action', $calendarAction],
+    ]);
+
+    $breadcrumb = $this->builder->build($route_match);
+    $links = $breadcrumb->getLinks();
+
+    $this->assertCount(4, $links);
+    $this->assertEquals('Home Apiary', (string) $links[2]->getText());
+    $this->assertEquals('Harvest Spring Honey', (string) $links[3]->getText());
+    $this->assertEquals('entity.calendar_action.canonical', $links[3]->getUrl()->getRouteName());
+    $this->assertEquals(['calendar_action' => 40], $links[3]->getUrl()->getRouteParameters());
+  }
+
+  /**
+   * Route hivelog.calendar_action.add carries an {apiary} param; the apiary link is added.
+   */
+  public function testBuildCalendarActionAddRoute(): void {
+    $apiary = $this->createApiaryMock(3, 'Garden Apiary');
+    $route_match = $this->createRouteMatch('hivelog.calendar_action.add');
+    $route_match->method('getParameter')->willReturnMap([
+      ['apiary', $apiary],
+      ['hive', NULL],
+      ['hive_inspection', NULL],
+      ['calendar_action', NULL],
+    ]);
+
+    $breadcrumb = $this->builder->build($route_match);
+    $links = $breadcrumb->getLinks();
+
+    $this->assertCount(3, $links);
+    $this->assertEquals('Garden Apiary', (string) $links[2]->getText());
+    $this->assertEquals('entity.apiary.canonical', $links[2]->getUrl()->getRouteName());
+  }
+
+  /**
+   * Hive action log canonical: apiary and hive are navigable ancestors; log label is the terminal crumb.
+   */
+  public function testBuildHiveActionLogCanonical(): void {
+    $apiary = $this->createApiaryMock(1, 'Home Apiary');
+    $hive = $this->createHiveMock(5, 'Hive Alpha', $apiary);
+    $log = $this->createHiveActionLogMock(50, 'Varroa Treatment for Hive Alpha (2026)', $hive);
+    $route_match = $this->createRouteMatch('entity.hive_action_log.canonical');
+    $route_match->method('getParameter')->willReturnMap([
+      ['apiary', NULL],
+      ['hive', NULL],
+      ['hive_inspection', NULL],
+      ['calendar_action', NULL],
+      ['hive_action_log', $log],
+    ]);
+
+    $breadcrumb = $this->builder->build($route_match);
+    $links = $breadcrumb->getLinks();
+
+    $this->assertCount(5, $links);
+    $this->assertEquals('Home Apiary', (string) $links[2]->getText());
+    $this->assertEquals('Hive Alpha', (string) $links[3]->getText());
+    $this->assertEquals('Varroa Treatment for Hive Alpha (2026)', (string) $links[4]->getText());
+    $this->assertEquals('entity.hive_action_log.canonical', $links[4]->getUrl()->getRouteName());
+    $this->assertContains('hive_action_log:50', $breadcrumb->getCacheTags());
+    $this->assertContains('hive:5', $breadcrumb->getCacheTags());
+    $this->assertContains('apiary:1', $breadcrumb->getCacheTags());
+  }
+
+  /**
+   * Hive action log edit: apiary, hive, and log ancestor links all added.
+   */
+  public function testBuildHiveActionLogEditForm(): void {
+    $apiary = $this->createApiaryMock(1, 'Home Apiary');
+    $hive = $this->createHiveMock(5, 'Hive Alpha', $apiary);
+    $log = $this->createHiveActionLogMock(50, 'Varroa Treatment for Hive Alpha (2026)', $hive);
+    $route_match = $this->createRouteMatch('entity.hive_action_log.edit_form');
+    $route_match->method('getParameter')->willReturnMap([
+      ['apiary', NULL],
+      ['hive', NULL],
+      ['hive_inspection', NULL],
+      ['calendar_action', NULL],
+      ['hive_action_log', $log],
+    ]);
+
+    $breadcrumb = $this->builder->build($route_match);
+    $links = $breadcrumb->getLinks();
+
+    $this->assertCount(5, $links);
+    $this->assertEquals('Home Apiary', (string) $links[2]->getText());
+    $this->assertEquals('Hive Alpha', (string) $links[3]->getText());
+    $this->assertEquals('Varroa Treatment for Hive Alpha (2026)', (string) $links[4]->getText());
+    $this->assertEquals('entity.hive_action_log.canonical', $links[4]->getUrl()->getRouteName());
+    $this->assertEquals(['hive_action_log' => 50], $links[4]->getUrl()->getRouteParameters());
+  }
+
+  /**
+   * Route hivelog.hive_action_log.add carries a dual {hive}/{calendar_action} route parameter combination.
+   *
+   * This is the module's first route with TWO entity route parameters at
+   * once. The calendar_action breadcrumb block must NOT fire here — it is
+   * guarded to only apply on the calendar action's own
+   * entity.calendar_action.* CRUD routes — otherwise this route would gain
+   * a duplicate/incorrect crumb. Only the hive's own ancestry
+   * (Apiary → Hive) should appear.
+   */
+  public function testBuildHiveActionLogAddRouteDoesNotAddCalendarActionCrumb(): void {
+    $apiary = $this->createApiaryMock(1, 'Home Apiary');
+    $hive = $this->createHiveMock(5, 'Hive Alpha', $apiary);
+    $calendarAction = $this->createCalendarActionMock(40, 'Harvest Spring Honey', $apiary);
+    $route_match = $this->createRouteMatch('hivelog.hive_action_log.add');
+    $route_match->method('getParameter')->willReturnMap([
+      ['apiary', NULL],
+      ['hive', $hive],
+      ['hive_inspection', NULL],
+      ['calendar_action', $calendarAction],
+      ['hive_action_log', NULL],
+    ]);
+
+    $breadcrumb = $this->builder->build($route_match);
+    $links = $breadcrumb->getLinks();
+
+    // Home + HiveLog + Apiary + Hive — no CalendarAction crumb, and no
+    // duplicate Apiary crumb from the calendar_action block.
+    $this->assertCount(4, $links);
+    $this->assertEquals('Home', (string) $links[0]->getText());
+    $this->assertEquals('HiveLog', (string) $links[1]->getText());
+    $this->assertEquals('Home Apiary', (string) $links[2]->getText());
+    $this->assertEquals('entity.apiary.canonical', $links[2]->getUrl()->getRouteName());
+    $this->assertEquals('Hive Alpha', (string) $links[3]->getText());
+    $this->assertEquals('entity.hive.canonical', $links[3]->getUrl()->getRouteName());
+    $this->assertStringNotContainsString('Harvest Spring Honey', implode(' ', array_map(
+      fn($link) => (string) $link->getText(),
+      $links
+    )));
+  }
+
   // -------------------------------------------------------------------------
   // Helper methods
   // -------------------------------------------------------------------------
@@ -929,6 +1140,42 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $observation->method('get')->with('queen')->willReturn($queen_ref);
 
     return $observation;
+  }
+
+  /**
+   * Creates a mock CalendarAction entity referencing the given apiary.
+   */
+  private function createCalendarActionMock(int $id, string $label, ContentEntityInterface $apiary): ContentEntityInterface {
+    $calendar_action = $this->createMock(ContentEntityInterface::class);
+    $calendar_action->method('id')->willReturn($id);
+    $calendar_action->method('label')->willReturn($label);
+    $calendar_action->method('getCacheTags')->willReturn(["calendar_action:$id"]);
+    $calendar_action->method('getCacheContexts')->willReturn([]);
+    $calendar_action->method('getCacheMaxAge')->willReturn(-1);
+
+    $apiary_ref = new \stdClass();
+    $apiary_ref->entity = $apiary;
+    $calendar_action->method('get')->with('apiary')->willReturn($apiary_ref);
+
+    return $calendar_action;
+  }
+
+  /**
+   * Creates a mock HiveActionLog entity referencing the given hive.
+   */
+  private function createHiveActionLogMock(int $id, string $label, ContentEntityInterface $hive): ContentEntityInterface {
+    $log = $this->createMock(ContentEntityInterface::class);
+    $log->method('id')->willReturn($id);
+    $log->method('label')->willReturn($label);
+    $log->method('getCacheTags')->willReturn(["hive_action_log:$id"]);
+    $log->method('getCacheContexts')->willReturn([]);
+    $log->method('getCacheMaxAge')->willReturn(-1);
+
+    $hive_ref = new \stdClass();
+    $hive_ref->entity = $hive;
+    $log->method('get')->with('hive')->willReturn($hive_ref);
+
+    return $log;
   }
 
 }

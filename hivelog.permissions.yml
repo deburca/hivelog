@@ -81,3 +81,35 @@ delete own queen observation:
   title: 'Delete own queen observations'
 delete any queen observation:
   title: 'Delete any queen observation'
+
+# Calendar action permissions.
+view own calendar action:
+  title: 'View own calendar actions'
+view any calendar action:
+  title: 'View any calendar action'
+add calendar action:
+  title: 'Add calendar actions'
+edit own calendar action:
+  title: 'Edit own calendar actions'
+edit any calendar action:
+  title: 'Edit any calendar action'
+delete own calendar action:
+  title: 'Delete own calendar actions'
+delete any calendar action:
+  title: 'Delete any calendar action'
+
+# Hive action log permissions.
+view own hive action log:
+  title: 'View own hive action logs'
+view any hive action log:
+  title: 'View any hive action log'
+add hive action log:
+  title: 'Add hive action logs'
+edit own hive action log:
+  title: 'Edit own hive action logs'
+edit any hive action log:
+  title: 'Edit any hive action log'
+delete own hive action log:
+  title: 'Delete own hive action logs'
+delete any hive action log:
+  title: 'Delete any hive action log'

@@ -2,6 +2,7 @@
 
 namespace Drupal\hivelog\Controller;
 
+use Drupal\Component\Utility\Html;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityFormBuilderInterface;
@@ -10,9 +11,11 @@ use Drupal\Core\Entity\Query\QueryInterface;
 use Drupal\Core\File\FileUrlGeneratorInterface;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Render\RendererInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\Hive;
+use Drupal\hivelog\Form\HivelogCalendarFilterForm;
 use Drupal\hivelog\Form\HivelogInspectionFilterForm;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -238,18 +241,160 @@ class HiveController extends ControllerBase {
       $build['images'] = $images + ['#weight' => 20];
     }
 
+    // Seasonal Calendar checklist: cross-references the apiary's enabled
+    // CalendarAction rows against this hive's own logs for a selected
+    // year, defaulting to unreported items only (see ADR-0025). The filter
+    // form lets a beekeeper switch status (Unreported/Done/Ignored/All)
+    // and year (previous/current/next) — switching to next year, before
+    // any logs exist for it, is what makes "preview the coming year's
+    // pending items" work for free.
+    $build['calendar_heading'] = [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['hivelog-list-heading']],
+      '#weight' => 25,
+      'title' => [
+        '#type' => 'html_tag',
+        '#tag' => 'h3',
+        '#value' => $this->t('Seasonal Calendar'),
+        '#attributes' => ['class' => ['hivelog-list-heading__title']],
+      ],
+    ];
+
+    $build['calendar_filter'] = $this->formBuilder->getForm(HivelogCalendarFilterForm::class, $hive);
+    $build['calendar_filter']['#weight'] = 26;
+
+    $calendar_filters = $this->extractCalendarFilters();
+    $checklist = $this->buildCalendarChecklist($hive, $calendar_filters['year'], $calendar_filters['status']);
+
+    $checklist_header = [
+      $this->t('Title'),
+      $this->t('Week(s)'),
+      $this->t('Status'),
+      $this->t('Week Completed'),
+      $this->t('Notes'),
+      $this->t('Operations'),
+    ];
+
+    $status_labels = [
+      'pending' => $this->t('Unreported'),
+      'done' => $this->t('Done'),
+      'ignored' => $this->t('Ignored'),
+    ];
+
+    $checklist_rows = [];
+    foreach ($checklist['rows'] as $entry) {
+      $calendar_action = $entry['calendar_action'];
+      $log = $entry['log'];
+      $status = $entry['status'];
+
+      $week_start = $calendar_action->get('week_start')->value;
+      $week_end = $calendar_action->get('week_end')->value;
+      $weeks = ($week_end !== NULL && $week_end !== '' && (int) $week_end !== (int) $week_start)
+        ? $this->t('@start–@end', ['@start' => $week_start, '@end' => $week_end])
+        : (string) $week_start;
+
+      $week_completed = $log ? $log->get('week_completed')->value : NULL;
+      $week_completed_display = ($week_completed !== NULL && $week_completed !== '') ? (string) $week_completed : '';
+
+      $notes = $log ? (string) $log->get('notes')->value : '';
+      $notes_display = $notes !== '' ? nl2br(Html::escape($notes)) : '';
+
+      if ($status === 'pending') {
+        // Unreported: offer to report it, rather than a generic "Log"
+        // action — these are safe GET navigations to the add-form with a
+        // ?status= query default; the actual write only happens through
+        // that form's own CSRF-protected POST submission (ADR-0018).
+        $actions = [
+          '#type' => 'component',
+          '#component' => 'hivelog:button-group',
+          '#props' => [
+            'buttons' => [
+              [
+                'label' => (string) $this->t('Report Done'),
+                'url' => Url::fromRoute('hivelog.hive_action_log.add', [
+                  'hive' => $hive->id(),
+                  'calendar_action' => $calendar_action->id(),
+                ], ['query' => ['status' => 'done']])->toString(),
+                'variant' => 'primary',
+              ],
+              [
+                'label' => (string) $this->t('Report Ignored'),
+                'url' => Url::fromRoute('hivelog.hive_action_log.add', [
+                  'hive' => $hive->id(),
+                  'calendar_action' => $calendar_action->id(),
+                ], ['query' => ['status' => 'ignored']])->toString(),
+              ],
+            ],
+          ],
+        ];
+      }
+      else {
+        // Already reported: offer to view (and, if permitted, edit) the
+        // log that reported it, plus a direct link to a linked inspection
+        // if reporting "done" created one (task 0023).
+        $buttons = [];
+        if ($log) {
+          $buttons[] = ['label' => (string) $this->t('View Log'), 'url' => $log->toUrl('canonical')->toString()];
+          if ($log->access('update')) {
+            $buttons[] = ['label' => (string) $this->t('Edit'), 'url' => $log->toUrl('edit-form')->toString()];
+          }
+          $linked_inspection = $log->get('inspection')->entity;
+          if ($linked_inspection && $linked_inspection->access('view')) {
+            $buttons[] = [
+              'label' => (string) $this->t('View Inspection'),
+              'url' => $linked_inspection->toUrl('canonical')->toString(),
+            ];
+          }
+        }
+        $actions = [
+          '#type' => 'component',
+          '#component' => 'hivelog:button-group',
+          '#props' => ['buttons' => $buttons],
+        ];
+      }
+
+      $checklist_rows[] = [
+        'cells' => [
+          $calendar_action->toLink()->toString(),
+          (string) $weeks,
+          (string) ($status_labels[$status] ?? $status),
+          $week_completed_display,
+          $notes_display,
+          $this->renderer->renderInIsolation($actions),
+        ],
+      ];
+    }
+
+    $build['calendar_table'] = [
+      '#type' => 'component',
+      '#component' => 'hivelog:entity-table',
+      '#props' => [
+        'headers' => array_map('strval', $checklist_header),
+        'rows' => $checklist_rows,
+        'empty_message' => (string) $this->calendarChecklistEmptyMessage($checklist['total_enabled'], $calendar_filters['status']),
+      ],
+      '#weight' => 27,
+    ];
+
     // Explicit cache metadata.
-    // - url.query_args: filter + pager state is encoded in the query string.
+    // - url.query_args: inspection filter + pager state, and now the
+    //   calendar checklist's status/year filter, are all encoded in the
+    //   query string.
     // - user.permissions: the inspection list respects per-entity access
     //   checks, so cache entries must vary by effective permissions.
     // - Hive entity tags: invalidate on hive update/delete.
     // - Inspection list cache tag + every rendered inspection's tags:
     //   invalidate on any inspection change.
+    // - Calendar action / hive action log list cache tags + every rendered
+    //   calendar action/log's own tags: invalidate on any change to either,
+    //   since the checklist is computed by cross-referencing both on read.
     $cache = CacheableMetadata::createFromRenderArray($build)
       ->addCacheContexts(['url.query_args', 'user.permissions'])
       ->addCacheableDependency($hive)
       ->addCacheTags($this->entityTypeManager->getDefinition('hive_inspection')->getListCacheTags())
-      ->addCacheTags($this->entityTypeManager->getDefinition('queen')->getListCacheTags());
+      ->addCacheTags($this->entityTypeManager->getDefinition('queen')->getListCacheTags())
+      ->addCacheTags($this->entityTypeManager->getDefinition('calendar_action')->getListCacheTags())
+      ->addCacheTags($this->entityTypeManager->getDefinition('hive_action_log')->getListCacheTags());
     if ($active_queen) {
       $cache->addCacheableDependency($active_queen);
     }
@@ -260,6 +405,16 @@ class HiveController extends ControllerBase {
     // those inspections' cache tags too.
     foreach ($histogram_inspections as $inspection) {
       $cache->addCacheableDependency($inspection);
+    }
+    foreach ($checklist['rows'] as $entry) {
+      $cache->addCacheableDependency($entry['calendar_action']);
+      if ($entry['log']) {
+        $cache->addCacheableDependency($entry['log']);
+        $linked_inspection = $entry['log']->get('inspection')->entity;
+        if ($linked_inspection) {
+          $cache->addCacheableDependency($linked_inspection);
+        }
+      }
     }
     $cache->applyTo($build);
 
@@ -392,6 +547,169 @@ class HiveController extends ControllerBase {
     if (isset($filters['brood_pattern'])) {
       $query->condition('brood_pattern', $filters['brood_pattern']);
     }
+  }
+
+  /**
+   * Builds the seasonal calendar checklist rows for a hive.
+   *
+   * Cross-references every `enabled` `CalendarAction` belonging to the
+   * hive's apiary against the hive's own `HiveActionLog` rows for the
+   * given year — no rows are ever pre-materialised (see ADR-0025). Absence
+   * of a log, or one with `status = pending`, means "unreported". When
+   * multiple logs exist for the same `(hive, calendar_action, year)` (this
+   * is allowed by design), the most recently changed one wins for display
+   * purposes.
+   *
+   * This task hard-codes the `$status_filter` caller argument to `pending`
+   * and `$year` to the current year; task 0021 adds a real filter form
+   * that overrides both from the query string, and "all" as a
+   * `$status_filter` value to show every row regardless of status.
+   *
+   * @param \Drupal\hivelog\Entity\Hive $hive
+   *   The hive to build a checklist for.
+   * @param int $year
+   *   Which annual occurrence of each calendar action to check against.
+   * @param string $status_filter
+   *   One of `pending`, `done`, `ignored`, or `all`.
+   *
+   * @return array
+   *   An array with two keys: `total_enabled` is the count of enabled
+   *   calendar actions on the hive's apiary *before* the status filter is
+   *   applied — used to tell "nothing pending" apart from "no calendar
+   *   actions exist at all" for the empty-state message. `rows` is an
+   *   array keyed by calendar action id, each entry an associative array
+   *   with `calendar_action` (the \Drupal\hivelog\Entity\CalendarAction),
+   *   `log` (the matching \Drupal\hivelog\Entity\HiveActionLog, or NULL if
+   *   unreported), and `status` (the effective status string used for
+   *   filtering/display).
+   */
+  protected function buildCalendarChecklist(Hive $hive, int $year, string $status_filter): array {
+    $apiary_id = $hive->get('apiary')->target_id;
+    if (!$apiary_id) {
+      return ['total_enabled' => 0, 'rows' => []];
+    }
+
+    $calendar_action_ids = $this->entityTypeManager
+      ->getStorage('calendar_action')
+      ->getQuery()
+      ->accessCheck(TRUE)
+      ->condition('apiary', $apiary_id)
+      ->condition('enabled', TRUE)
+      ->sort('week_start', 'ASC')
+      ->execute();
+
+    if (!$calendar_action_ids) {
+      return ['total_enabled' => 0, 'rows' => []];
+    }
+
+    $calendar_actions = $this->entityTypeManager
+      ->getStorage('calendar_action')
+      ->loadMultiple($calendar_action_ids);
+    $calendar_actions = array_filter(
+      $calendar_actions,
+      fn($calendar_action) => $calendar_action->access('view')
+    );
+    $total_enabled = count($calendar_actions);
+    if (!$calendar_actions) {
+      return ['total_enabled' => $total_enabled, 'rows' => []];
+    }
+
+    // Load every log for this hive + year against these calendar actions in
+    // one query, then index by calendar_action id — last-changed wins if
+    // more than one log exists for the same calendar action.
+    $log_ids = $this->entityTypeManager
+      ->getStorage('hive_action_log')
+      ->getQuery()
+      ->accessCheck(TRUE)
+      ->condition('hive', $hive->id())
+      ->condition('calendar_action', array_keys($calendar_actions), 'IN')
+      ->condition('year', $year)
+      ->sort('changed', 'ASC')
+      ->execute();
+
+    $logs_by_action = [];
+    if ($log_ids) {
+      foreach ($this->entityTypeManager->getStorage('hive_action_log')->loadMultiple($log_ids) as $log) {
+        // Later iterations (sorted ascending by `changed`) overwrite
+        // earlier ones, so the most recently changed log wins.
+        $logs_by_action[$log->get('calendar_action')->target_id] = $log;
+      }
+    }
+
+    $rows = [];
+    foreach ($calendar_actions as $calendar_action) {
+      $log = $logs_by_action[$calendar_action->id()] ?? NULL;
+      $effective_status = $log ? $log->get('status')->value : 'pending';
+      if ($status_filter !== 'all' && $effective_status !== $status_filter) {
+        continue;
+      }
+      $rows[$calendar_action->id()] = [
+        'calendar_action' => $calendar_action,
+        'log' => $log,
+        'status' => $effective_status,
+      ];
+    }
+
+    return ['total_enabled' => $total_enabled, 'rows' => $rows];
+  }
+
+  /**
+   * Extracts and validates the calendar checklist's status/year filters.
+   *
+   * Defaults to the "unreported, current year" view when the query string
+   * is absent or holds an invalid value — this is what makes that the
+   * checklist's default view rather than an optional refinement, per
+   * ADR-0025. Unlike `extractInspectionFilters()`, this always returns an
+   * effective value for both keys (there is no "no filter applied" state
+   * to fall back to).
+   *
+   * @return array{status: string, year: int}
+   *   `status` is one of `pending`/`done`/`ignored`/`all`; `year` is one of
+   *   the current year, the previous year, or the next year.
+   */
+  protected function extractCalendarFilters(): array {
+    $request = $this->requestStack->getCurrentRequest();
+    $query = $request ? $request->query : NULL;
+    $current_year = (int) date('Y');
+
+    $status = $query ? (string) $query->get('status', 'pending') : 'pending';
+    if (!in_array($status, ['pending', 'done', 'ignored', 'all'], TRUE)) {
+      $status = 'pending';
+    }
+
+    $year = $query ? (int) $query->get('year', (string) $current_year) : $current_year;
+    if (!in_array($year, [$current_year - 1, $current_year, $current_year + 1], TRUE)) {
+      $year = $current_year;
+    }
+
+    return ['status' => $status, 'year' => $year];
+  }
+
+  /**
+   * Builds the empty-state message for the calendar checklist table.
+   *
+   * Distinguishes "no calendar actions exist at all" from "none match the
+   * current status filter", per the task's explicit requirement to tell
+   * the two apart.
+   *
+   * @param int $total_enabled
+   *   Count of enabled calendar actions on the hive's apiary, before the
+   *   status filter is applied (from `buildCalendarChecklist()`).
+   * @param string $status_filter
+   *   The active status filter (`pending`/`done`/`ignored`/`all`).
+   */
+  protected function calendarChecklistEmptyMessage(int $total_enabled, string $status_filter): TranslatableMarkup {
+    if ($total_enabled === 0) {
+      return $this->t('This apiary has no calendar actions set up yet.');
+    }
+
+    $messages = [
+      'pending' => $this->t('No pending seasonal actions for this hive.'),
+      'done' => $this->t('No actions have been reported as done for this hive.'),
+      'ignored' => $this->t('No actions have been reported as ignored for this hive.'),
+    ];
+
+    return $messages[$status_filter] ?? $this->t('No calendar actions match the current filters.');
   }
 
   /**

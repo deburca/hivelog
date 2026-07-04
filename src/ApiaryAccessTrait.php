@@ -24,6 +24,8 @@ trait ApiaryAccessTrait {
    * - HiveInspection: inspection → hive → apiary.
    * - Queen: queen → hive → apiary (hive may be NULL).
    * - QueenObservation: observation → queen → hive → apiary.
+   * - CalendarAction: calendar_action → apiary directly.
+   * - HiveActionLog: hive_action_log → hive → apiary.
    *
    * @param \Drupal\Core\Entity\EntityInterface $entity
    *   The entity to resolve the apiary from.
@@ -72,6 +74,20 @@ trait ApiaryAccessTrait {
         return $hive ? $hive->get('apiary')->entity : NULL;
       }
       return NULL;
+    }
+
+    // CalendarAction → apiary directly.
+    if ($entity_type === 'calendar_action') {
+      // @phpstan-ignore-next-line
+      return $entity->get('apiary')->entity;
+    }
+
+    // HiveActionLog → hive → apiary.
+    if ($entity_type === 'hive_action_log') {
+      // @phpstan-ignore-next-line
+      $hive = $entity->get('hive')->entity;
+      // @phpstan-ignore-next-line
+      return $hive ? $hive->get('apiary')->entity : NULL;
     }
 
     return NULL;

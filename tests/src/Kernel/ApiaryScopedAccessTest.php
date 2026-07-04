@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Drupal\Tests\hivelog\Kernel;
 
 use Drupal\hivelog\Entity\Apiary;
+use Drupal\hivelog\Entity\CalendarAction;
 use Drupal\hivelog\Entity\Hive;
+use Drupal\hivelog\Entity\HiveActionLog;
 use Drupal\hivelog\Entity\HiveInspection;
 use Drupal\hivelog\Entity\Queen;
 use Drupal\hivelog\Entity\QueenObservation;
@@ -18,9 +20,10 @@ use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 /**
  * Tests apiary-scoped access control for all hivelog entity types.
  *
- * Verifies that access to apiaries, hives, inspections, queens and
- * queen observations is gated by apiary membership (owner + beekeepers)
- * and the apiary's visibility setting (public / private).
+ * Verifies that access to apiaries, hives, inspections, queens, queen
+ * observations, calendar actions, and hive action logs is gated by apiary
+ * membership (owner + beekeepers) and the apiary's visibility setting
+ * (public / private).
  */
 #[Group('hivelog')]
 #[RunTestsInSeparateProcesses]
@@ -98,6 +101,20 @@ class ApiaryScopedAccessTest extends KernelTestBase {
   protected QueenObservation $observation;
 
   /**
+   * A calendar action on the test apiary.
+   *
+   * @var \Drupal\hivelog\Entity\CalendarAction
+   */
+  protected CalendarAction $calendarAction;
+
+  /**
+   * A hive action log against the test calendar action.
+   *
+   * @var \Drupal\hivelog\Entity\HiveActionLog
+   */
+  protected HiveActionLog $hiveActionLog;
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp(): void {
@@ -109,6 +126,8 @@ class ApiaryScopedAccessTest extends KernelTestBase {
     $this->installEntitySchema('hive_inspection');
     $this->installEntitySchema('queen');
     $this->installEntitySchema('queen_observation');
+    $this->installEntitySchema('calendar_action');
+    $this->installEntitySchema('hive_action_log');
     $this->installSchema('file', ['file_usage']);
 
     // Create a role with all "own" permissions (apiary-member scoped).
@@ -131,10 +150,18 @@ class ApiaryScopedAccessTest extends KernelTestBase {
     $role->grantPermission('view own queen observation');
     $role->grantPermission('edit own queen observation');
     $role->grantPermission('delete own queen observation');
+    $role->grantPermission('view own calendar action');
+    $role->grantPermission('edit own calendar action');
+    $role->grantPermission('delete own calendar action');
+    $role->grantPermission('view own hive action log');
+    $role->grantPermission('edit own hive action log');
+    $role->grantPermission('delete own hive action log');
     $role->grantPermission('add hive');
     $role->grantPermission('add hive inspection');
     $role->grantPermission('add queen');
     $role->grantPermission('add queen observation');
+    $role->grantPermission('add calendar action');
+    $role->grantPermission('add hive action log');
     $role->save();
 
     $this->owner = User::create(['name' => 'owner', 'mail' => 'owner@example.com']);
@@ -189,6 +216,22 @@ class ApiaryScopedAccessTest extends KernelTestBase {
       'uid' => $this->beekeeper->id(),
     ]);
     $this->observation->save();
+
+    $this->calendarAction = CalendarAction::create([
+      'apiary' => $this->apiary->id(),
+      'title' => 'Test Calendar Action',
+      'description' => 'Desc.',
+      'week_start' => 15,
+      'uid' => $this->owner->id(),
+    ]);
+    $this->calendarAction->save();
+
+    $this->hiveActionLog = HiveActionLog::create([
+      'hive' => $this->hive->id(),
+      'calendar_action' => $this->calendarAction->id(),
+      'uid' => $this->beekeeper->id(),
+    ]);
+    $this->hiveActionLog->save();
   }
 
   // -----------------------------------------------------------------------
@@ -509,6 +552,156 @@ class ApiaryScopedAccessTest extends KernelTestBase {
   }
 
   // -----------------------------------------------------------------------
+  // Calendar action access follows apiary scope (calendar_action → apiary
+  // directly). Delete is owner-only, mirroring Hive — a calendar action is
+  // foundational apiary structure, not a per-visit log.
+  // -----------------------------------------------------------------------
+
+  /**
+   * Tests that the owner can view a calendar action.
+   */
+  public function testOwnerCanViewCalendarAction(): void {
+    $this->assertTrue($this->calendarAction->access('view', $this->owner));
+  }
+
+  /**
+   * Tests that the owner can edit a calendar action.
+   */
+  public function testOwnerCanEditCalendarAction(): void {
+    $this->assertTrue($this->calendarAction->access('update', $this->owner));
+  }
+
+  /**
+   * Tests that the owner can delete a calendar action.
+   */
+  public function testOwnerCanDeleteCalendarAction(): void {
+    $this->assertTrue($this->calendarAction->access('delete', $this->owner));
+  }
+
+  /**
+   * Tests that a beekeeper can view a calendar action.
+   */
+  public function testBeekeeperCanViewCalendarAction(): void {
+    $this->assertTrue($this->calendarAction->access('view', $this->beekeeper));
+  }
+
+  /**
+   * Tests that a beekeeper can edit a calendar action.
+   */
+  public function testBeekeeperCanEditCalendarAction(): void {
+    $this->assertTrue($this->calendarAction->access('update', $this->beekeeper));
+  }
+
+  /**
+   * Tests that a beekeeper cannot delete a calendar action (owner-only).
+   */
+  public function testBeekeeperCannotDeleteCalendarAction(): void {
+    $this->assertFalse($this->calendarAction->access('delete', $this->beekeeper));
+  }
+
+  /**
+   * Tests that an outsider cannot view a private apiary's calendar action.
+   */
+  public function testOutsiderCannotViewPrivateCalendarAction(): void {
+    $this->assertFalse($this->calendarAction->access('view', $this->outsider));
+  }
+
+  /**
+   * Tests that an outsider can view a public apiary's calendar action.
+   */
+  public function testOutsiderCanViewPublicCalendarAction(): void {
+    $this->apiary->set('visibility', 'public');
+    $this->apiary->save();
+    $this->assertTrue($this->calendarAction->access('view', $this->outsider));
+  }
+
+  /**
+   * Tests that an outsider cannot edit a public apiary's calendar action.
+   */
+  public function testOutsiderCannotEditPublicCalendarAction(): void {
+    $this->apiary->set('visibility', 'public');
+    $this->apiary->save();
+    $this->assertFalse($this->calendarAction->access('update', $this->outsider));
+  }
+
+  // -----------------------------------------------------------------------
+  // Hive action log access follows apiary scope (hive_action_log → hive →
+  // apiary). Delete is owner-or-creator, mirroring HiveInspection — a log
+  // is a per-visit record.
+  // -----------------------------------------------------------------------
+
+  /**
+   * Tests that the owner can view a hive action log.
+   */
+  public function testOwnerCanViewHiveActionLog(): void {
+    $this->assertTrue($this->hiveActionLog->access('view', $this->owner));
+  }
+
+  /**
+   * Tests that a beekeeper can view a hive action log.
+   */
+  public function testBeekeeperCanViewHiveActionLog(): void {
+    $this->assertTrue($this->hiveActionLog->access('view', $this->beekeeper));
+  }
+
+  /**
+   * Tests that a beekeeper can edit a hive action log.
+   */
+  public function testBeekeeperCanEditHiveActionLog(): void {
+    $this->assertTrue($this->hiveActionLog->access('update', $this->beekeeper));
+  }
+
+  /**
+   * Tests that a beekeeper can delete their own hive action log.
+   */
+  public function testBeekeeperCanDeleteOwnHiveActionLog(): void {
+    // $this->hiveActionLog was created with uid = beekeeper.
+    $this->assertTrue($this->hiveActionLog->access('delete', $this->beekeeper));
+  }
+
+  /**
+   * Tests that a beekeeper cannot delete another user's hive action log.
+   */
+  public function testBeekeeperCannotDeleteOthersHiveActionLog(): void {
+    $owner_log = HiveActionLog::create([
+      'hive' => $this->hive->id(),
+      'calendar_action' => $this->calendarAction->id(),
+      'uid' => $this->owner->id(),
+    ]);
+    $owner_log->save();
+    $this->assertFalse($owner_log->access('delete', $this->beekeeper));
+  }
+
+  /**
+   * Tests that the apiary owner can delete any hive action log.
+   */
+  public function testOwnerCanDeleteAnyHiveActionLog(): void {
+    $beekeeper_log = HiveActionLog::create([
+      'hive' => $this->hive->id(),
+      'calendar_action' => $this->calendarAction->id(),
+      'uid' => $this->beekeeper->id(),
+    ]);
+    $beekeeper_log->save();
+    $this->assertTrue($beekeeper_log->access('delete', $this->owner));
+  }
+
+  /**
+   * Tests that an outsider cannot view a private apiary's hive action log.
+   */
+  public function testOutsiderCannotViewPrivateHiveActionLog(): void {
+    $this->assertFalse($this->hiveActionLog->access('view', $this->outsider));
+  }
+
+  /**
+   * Tests that an outsider can view a public apiary's hive action log.
+   */
+  public function testOutsiderCanViewPublicHiveActionLog(): void {
+    $this->apiary->set('visibility', 'public');
+    $this->apiary->save();
+    $this->assertTrue($this->hiveActionLog->access('view', $this->outsider));
+  }
+
+  // -----------------------------------------------------------------------
   // Site-wide "any" permissions bypass apiary membership
   // -----------------------------------------------------------------------
 
@@ -525,6 +718,25 @@ class ApiaryScopedAccessTest extends KernelTestBase {
     $viewer->save();
 
     $this->assertTrue($this->hive->access('view', $viewer));
+  }
+
+  /**
+   * Tests that a site-wide any permission bypasses membership.
+   *
+   * Covers calendar actions and hive action logs too.
+   */
+  public function testAnyPermissionBypassesMembershipForCalendarEntities(): void {
+    $any_role = Role::create(['id' => 'site_calendar_viewer', 'label' => 'Site calendar viewer']);
+    $any_role->grantPermission('view any calendar action');
+    $any_role->grantPermission('view any hive action log');
+    $any_role->save();
+
+    $viewer = User::create(['name' => 'site-calendar-viewer', 'mail' => 'calendar-viewer@example.com']);
+    $viewer->addRole('site_calendar_viewer');
+    $viewer->save();
+
+    $this->assertTrue($this->calendarAction->access('view', $viewer));
+    $this->assertTrue($this->hiveActionLog->access('view', $viewer));
   }
 
   // -----------------------------------------------------------------------
@@ -589,6 +801,22 @@ class ApiaryScopedAccessTest extends KernelTestBase {
     ]);
     $observationA->save();
 
+    $calendarActionA = CalendarAction::create([
+      'apiary' => $apiaryA->id(),
+      'title' => 'UserA Calendar Action',
+      'description' => 'Desc.',
+      'week_start' => 15,
+      'uid' => $userA->id(),
+    ]);
+    $calendarActionA->save();
+
+    $hiveActionLogA = HiveActionLog::create([
+      'hive' => $hiveA->id(),
+      'calendar_action' => $calendarActionA->id(),
+      'uid' => $userA->id(),
+    ]);
+    $hiveActionLogA->save();
+
     // --- Phase 1: userB is NOT a member → all access denied. ---
     $this->assertFalse($apiaryA->access('view', $userB), 'Non-member userB cannot view private apiary.');
     $this->assertFalse($apiaryA->access('update', $userB), 'Non-member userB cannot edit apiary.');
@@ -600,6 +828,10 @@ class ApiaryScopedAccessTest extends KernelTestBase {
     $this->assertFalse($queenA->access('update', $userB), 'Non-member userB cannot edit queen.');
     $this->assertFalse($observationA->access('view', $userB), 'Non-member userB cannot view observation.');
     $this->assertFalse($observationA->access('update', $userB), 'Non-member userB cannot edit observation.');
+    $this->assertFalse($calendarActionA->access('view', $userB), 'Non-member userB cannot view calendar action.');
+    $this->assertFalse($calendarActionA->access('update', $userB), 'Non-member userB cannot edit calendar action.');
+    $this->assertFalse($hiveActionLogA->access('view', $userB), 'Non-member userB cannot view hive action log.');
+    $this->assertFalse($hiveActionLogA->access('update', $userB), 'Non-member userB cannot edit hive action log.');
 
     // --- Phase 2: add userB as a beekeeper on the apiary. ---
     $apiaryA->set('beekeepers', [$userB->id()]);
@@ -608,7 +840,7 @@ class ApiaryScopedAccessTest extends KernelTestBase {
     // Reset entity storage and access static caches so Phase 1 results
     // are not reused and entity references resolve the updated apiary.
     $etm = \Drupal::entityTypeManager();
-    foreach (['apiary', 'hive', 'hive_inspection', 'queen', 'queen_observation'] as $type) {
+    foreach (['apiary', 'hive', 'hive_inspection', 'queen', 'queen_observation', 'calendar_action', 'hive_action_log'] as $type) {
       $etm->getStorage($type)->resetCache();
       $etm->getAccessControlHandler($type)->resetCache();
     }
@@ -619,6 +851,8 @@ class ApiaryScopedAccessTest extends KernelTestBase {
     $inspectionA = HiveInspection::load($inspectionA->id());
     $queenA = Queen::load($queenA->id());
     $observationA = QueenObservation::load($observationA->id());
+    $calendarActionA = CalendarAction::load($calendarActionA->id());
+    $hiveActionLogA = HiveActionLog::load($hiveActionLogA->id());
 
     // userB can now VIEW all entities in the apiary.
     $this->assertTrue($apiaryA->access('view', $userB), 'Beekeeper userB can view apiary.');
@@ -626,26 +860,34 @@ class ApiaryScopedAccessTest extends KernelTestBase {
     $this->assertTrue($inspectionA->access('view', $userB), 'Beekeeper userB can view inspection.');
     $this->assertTrue($queenA->access('view', $userB), 'Beekeeper userB can view queen.');
     $this->assertTrue($observationA->access('view', $userB), 'Beekeeper userB can view observation.');
+    $this->assertTrue($calendarActionA->access('view', $userB), 'Beekeeper userB can view calendar action.');
+    $this->assertTrue($hiveActionLogA->access('view', $userB), 'Beekeeper userB can view hive action log.');
 
-    // userB can EDIT hives, inspections, queens, and observations.
+    // userB can EDIT hives, inspections, queens, observations, calendar
+    // actions, and hive action logs.
     $this->assertTrue($hiveA->access('update', $userB), 'Beekeeper userB can edit hive created by userA.');
     $this->assertTrue($inspectionA->access('update', $userB), 'Beekeeper userB can edit inspection created by userA.');
     $this->assertTrue($queenA->access('update', $userB), 'Beekeeper userB can edit queen created by userA.');
     $this->assertTrue($observationA->access('update', $userB), 'Beekeeper userB can edit observation created by userA.');
+    $this->assertTrue($calendarActionA->access('update', $userB), 'Beekeeper userB can edit calendar action created by userA.');
+    $this->assertTrue($hiveActionLogA->access('update', $userB), 'Beekeeper userB can edit hive action log created by userA.');
 
     // userB CANNOT edit or delete the apiary itself (owner-only).
     $this->assertFalse($apiaryA->access('update', $userB), 'Beekeeper userB cannot edit apiary (owner-only).');
     $this->assertFalse($apiaryA->access('delete', $userB), 'Beekeeper userB cannot delete apiary (owner-only).');
 
-    // userB CANNOT delete hives or queens (owner-only).
+    // userB CANNOT delete hives, queens, or calendar actions (owner-only).
     $this->assertFalse($hiveA->access('delete', $userB), 'Beekeeper userB cannot delete hive (owner-only).');
     $this->assertFalse($queenA->access('delete', $userB), 'Beekeeper userB cannot delete queen (owner-only).');
+    $this->assertFalse($calendarActionA->access('delete', $userB), 'Beekeeper userB cannot delete calendar action created by userA (owner-only).');
 
-    // userB CANNOT delete inspections/observations created by userA.
+    // userB CANNOT delete inspections/observations/hive action logs created
+    // by userA (owner-or-creator).
     $this->assertFalse($inspectionA->access('delete', $userB), 'Beekeeper userB cannot delete inspection created by userA.');
     $this->assertFalse($observationA->access('delete', $userB), 'Beekeeper userB cannot delete observation created by userA.');
+    $this->assertFalse($hiveActionLogA->access('delete', $userB), 'Beekeeper userB cannot delete hive action log created by userA.');
 
-    // --- Phase 3: userB creates their own inspection → can delete it. ---
+    // --- Phase 3: userB creates their own inspection/log → can delete it. ---
     $inspectionB = HiveInspection::create([
       'hive' => $hiveA->id(),
       'inspection_date' => '2025-08-10',
@@ -654,8 +896,17 @@ class ApiaryScopedAccessTest extends KernelTestBase {
     $inspectionB->save();
     $this->assertTrue($inspectionB->access('delete', $userB), 'Beekeeper userB can delete their own inspection.');
 
-    // userA (owner) can also delete userB's inspection.
+    $hiveActionLogB = HiveActionLog::create([
+      'hive' => $hiveA->id(),
+      'calendar_action' => $calendarActionA->id(),
+      'uid' => $userB->id(),
+    ]);
+    $hiveActionLogB->save();
+    $this->assertTrue($hiveActionLogB->access('delete', $userB), 'Beekeeper userB can delete their own hive action log.');
+
+    // userA (owner) can also delete userB's inspection and hive action log.
     $this->assertTrue($inspectionB->access('delete', $userA), 'Apiary owner userA can delete inspection created by userB.');
+    $this->assertTrue($hiveActionLogB->access('delete', $userA), 'Apiary owner userA can delete hive action log created by userB.');
   }
 
 }
