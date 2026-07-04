@@ -395,6 +395,49 @@ class ApiaryCalendarChecklistTest extends KernelTestBase {
   }
 
   /**
+   * Tests that Edit/Delete on the Full Calendar page return to that page.
+   *
+   * CalendarActionForm/CalendarActionDeleteForm always redirect to the
+   * apiary's canonical page on save/delete. Without a `destination` query
+   * parameter on the Edit/Delete links, saving or deleting from the Full
+   * Calendar page would incorrectly bounce the beekeeper back to
+   * /hivelog/apiary/{apiary} instead of back to this page — Drupal core's
+   * RedirectResponseSubscriber overrides the form's redirect with
+   * `destination` whenever it's present on the request that submitted the
+   * form, so the links here must carry it (and preserve any applied
+   * filters/pager state) to work correctly.
+   */
+  public function testFullCalendarEditDeleteLinksPreserveDestination(): void {
+    $action = CalendarAction::create([
+      'apiary' => $this->apiary->id(),
+      'title' => 'Destination Test Action',
+      'description' => 'Desc.',
+      'week_start' => 10,
+      'scope' => 'apiary',
+    ]);
+    $action->save();
+
+    // With a filter applied, the destination must round-trip that filter
+    // too, not just the bare page path.
+    $this->pushRequestWithQuery(['scope' => 'apiary'], '/hivelog/apiary/' . $this->apiary->id() . '/calendar');
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(ApiaryController::class);
+    $build = $controller->fullCalendar($this->apiary);
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+
+    // Drupal's query-string assembly percent-encodes reserved characters
+    // like `?` and `=` within the destination value, but leaves `/`
+    // unescaped — match that encoding exactly rather than over-encoding
+    // with rawurlencode() (which would also escape the slashes).
+    $expected_destination = '/hivelog/apiary/' . $this->apiary->id() . '/calendar%3Fscope%3Dapiary';
+    $edit_href = '/hivelog/calendar-action/' . $action->id() . '/edit?destination=' . $expected_destination;
+    $delete_href = '/hivelog/calendar-action/' . $action->id() . '/delete?destination=' . $expected_destination;
+
+    $this->assertStringContainsString($edit_href, $html);
+    $this->assertStringContainsString($delete_href, $html);
+  }
+
+  /**
    * Tests that the apiary view links to the Full Calendar page.
    */
   public function testApiaryViewLinksToFullCalendar(): void {

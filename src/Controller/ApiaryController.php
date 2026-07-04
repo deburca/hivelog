@@ -497,6 +497,17 @@ class ApiaryController extends ControllerBase {
       $this->t('Operations'),
     ];
 
+    // The current page's own URL (including any applied filters/pager
+    // state), passed as a `destination` query parameter on the Edit/
+    // Delete links below. CalendarActionForm/CalendarActionDeleteForm
+    // otherwise always redirect back to the apiary's canonical page on
+    // save/delete — Drupal core's RedirectResponseSubscriber overrides
+    // that with `destination` whenever it's present, which is what sends
+    // the beekeeper back to this page (rather than the apiary page)
+    // without any changes needed to those two shared form classes.
+    $request = $this->requestStack->getCurrentRequest();
+    $destination = $request ? $request->getRequestUri() : Url::fromRoute('hivelog.apiary.calendar_action.collection', ['apiary' => $apiary->id()])->toString();
+
     $rows = [];
     foreach ($calendar_actions as $calendar_action) {
       $week_start = $calendar_action->get('week_start')->value;
@@ -517,12 +528,15 @@ class ApiaryController extends ControllerBase {
 
       $buttons = [];
       if ($calendar_action->access('update')) {
-        $buttons[] = ['label' => (string) $this->t('Edit'), 'url' => $calendar_action->toUrl('edit-form')->toString()];
+        $buttons[] = [
+          'label' => (string) $this->t('Edit'),
+          'url' => $calendar_action->toUrl('edit-form', ['query' => ['destination' => $destination]])->toString(),
+        ];
       }
       if ($calendar_action->access('delete')) {
         $buttons[] = [
           'label' => (string) $this->t('Delete'),
-          'url' => $calendar_action->toUrl('delete-form')->toString(),
+          'url' => $calendar_action->toUrl('delete-form', ['query' => ['destination' => $destination]])->toString(),
           'variant' => 'danger',
         ];
       }
