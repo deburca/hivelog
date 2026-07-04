@@ -1,7 +1,7 @@
 ---
 type: project
 tags: [hivelog/project]
-status: done
+status: active
 target:
 created: 2026-07-03
 ---
@@ -118,16 +118,32 @@ Currently:
   written, 2 existing test files extended, 178 kernel + 70 unit tests
   passing with zero errors/notices — up from a 124/54 baseline; found and
   fixed one genuine new bug of its own along the way)
+- [[0026-post-testing-refinements]] — in-progress (umbrella task for
+  small usability refinements surfaced by the user's own hands-on
+  testing; item 1, current-week/timing visibility, done)
+- [[0027-apiary-vs-hive-scoped-calendar-items]] — backlog, **fully
+  designed but not started** (session ran out of budget partway through
+  planning it — see the task file for the complete, confirmed
+  implementation plan: a new `scope` field on `CalendarAction`, a new
+  `ApiaryActionLog` entity mirroring `HiveActionLog` one level up the
+  hierarchy, a filtered apiary-level checklist, and a new "Full
+  Calendar" page showing both scopes together)
 
-**All tasks complete.** Every requirement from the original brief has
-shipped and been verified end-to-end against a real Drupal site:
-a global-per-apiary, week-number-based seasonal calendar; per-hive
-tracking that defaults to unreported items; a year selector that makes
-"preview next year's pending items" work for free; a 31-entry starter
-calendar seeded on apiary creation; and an optional link from a "done"
-report to a full hive inspection record. No target release has been
-assigned yet — see the open question below and [[roadmap]] for
-sequencing into an upcoming version.
+**Core feature set complete** and all 8 original tasks done. Every
+requirement from the original brief has shipped and been verified
+end-to-end against a real Drupal site: a global-per-apiary,
+week-number-based seasonal calendar; per-hive tracking that defaults to
+unreported items; a year selector that makes "preview next year's pending
+items" work for free; a 31-entry starter calendar seeded on apiary
+creation; and an optional link from a "done" report to a full hive
+inspection record. No target release has been assigned yet — see the open
+question below and [[roadmap]] for sequencing into an upcoming version.
+
+The project has been reopened at `active` for a round of post-testing
+refinements — see [[0026-post-testing-refinements]] — after the user did
+their own extensive hands-on testing of the shipped feature and found a
+few small usability gaps not caught by the automated test suite (which
+verifies *behaviour*, not necessarily *at-a-glance usability*).
 
 ## Open questions
 - ~~Should the "Also create a hive inspection record" checkbox default to

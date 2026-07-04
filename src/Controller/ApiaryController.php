@@ -9,6 +9,7 @@ use Drupal\Core\Entity\Query\QueryInterface;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Form\HivelogHiveFilterForm;
@@ -196,6 +197,14 @@ class ApiaryController extends ControllerBase {
     // every hive in it (see ADR-0025). Placed after the hives list since
     // hives are the primary thing an apiary page is about; the calendar is
     // secondary, supporting information.
+    //
+    // The current ISO week is surfaced in the heading (rather than a new
+    // flex child in .hivelog-list-heading, which is styled for exactly two
+    // children via justify-content: space-between) and each row's Timing
+    // column is computed against it, so it's never ambiguous whether an
+    // action is due, upcoming, or past — see ADR-0025 addendum on "current
+    // week" visibility.
+    $current_week = (int) date('W');
     $build['calendar_heading'] = [
       '#type' => 'container',
       '#attributes' => ['class' => ['hivelog-list-heading']],
@@ -203,7 +212,7 @@ class ApiaryController extends ControllerBase {
       'title' => [
         '#type' => 'html_tag',
         '#tag' => 'h3',
-        '#value' => $this->t('Seasonal Calendar'),
+        '#value' => $this->t('Seasonal Calendar (current week: @week)', ['@week' => $current_week]),
         '#attributes' => ['class' => ['hivelog-list-heading__title']],
       ],
       'add' => [
@@ -238,6 +247,7 @@ class ApiaryController extends ControllerBase {
     $calendar_header = [
       $this->t('Title'),
       $this->t('Week(s)'),
+      $this->t('Timing'),
       $this->t('Category'),
       $this->t('Operations'),
     ];
@@ -249,6 +259,8 @@ class ApiaryController extends ControllerBase {
       $weeks = ($week_end !== NULL && $week_end !== '' && (int) $week_end !== (int) $week_start)
         ? $this->t('@start–@end', ['@start' => $week_start, '@end' => $week_end])
         : (string) $week_start;
+
+      $timing = $this->weekTimingLabel((int) $week_start, $week_end, $current_week);
 
       $category = $calendar_action->get('category')->value;
       $category_label = $category
@@ -276,6 +288,7 @@ class ApiaryController extends ControllerBase {
         'cells' => [
           $calendar_action->toLink()->toString(),
           (string) $weeks,
+          (string) $timing,
           (string) $category_label,
           $this->renderer->renderInIsolation($actions),
         ],
@@ -303,11 +316,16 @@ class ApiaryController extends ControllerBase {
     //   any hive change so the embedded table is never stale.
     // - Calendar action list cache tag + each rendered calendar action's own
     //   tags: invalidate on any calendar action change.
+    // - max-age: the heading's "current week" and every row's Timing column
+    //   are computed from date('W') ("now"), so the render must not be
+    //   cached past the moment the ISO week actually changes, or it would
+    //   show a stale week/timing after that boundary passes.
     $cache = CacheableMetadata::createFromRenderArray($build)
       ->addCacheContexts(['url.query_args', 'user.permissions'])
       ->addCacheableDependency($apiary)
       ->addCacheTags($this->entityTypeManager->getDefinition('hive')->getListCacheTags())
-      ->addCacheTags($this->entityTypeManager->getDefinition('calendar_action')->getListCacheTags());
+      ->addCacheTags($this->entityTypeManager->getDefinition('calendar_action')->getListCacheTags())
+      ->setCacheMaxAge($this->secondsUntilNextIsoWeek());
     foreach ($hives as $hive) {
       $cache->addCacheableDependency($hive);
     }
@@ -371,6 +389,52 @@ class ApiaryController extends ControllerBase {
    */
   protected function escapeLike(string $value): string {
     return addcslashes($value, '\\%_');
+  }
+
+  /**
+   * Describes a calendar action's timing relative to the current ISO week.
+   *
+   * `CalendarAction` never wraps across the year boundary (`week_end` must
+   * be `>= week_start`, enforced by `CalendarAction::preSave()`), so plain
+   * integer comparison is sufficient — no modulo/wraparound arithmetic is
+   * needed.
+   *
+   * @param int $week_start
+   *   The calendar action's start week.
+   * @param int|string|null $week_end
+   *   The calendar action's end week, or NULL/empty for a single week.
+   * @param int $current_week
+   *   The current ISO week number to compare against.
+   *
+   * @return \Drupal\Core\StringTranslation\TranslatableMarkup
+   *   "Upcoming", "Due now", or "Past".
+   */
+  protected function weekTimingLabel(int $week_start, $week_end, int $current_week): TranslatableMarkup {
+    $effective_end = ($week_end !== NULL && $week_end !== '') ? (int) $week_end : $week_start;
+
+    if ($current_week < $week_start) {
+      return $this->t('Upcoming');
+    }
+    if ($current_week > $effective_end) {
+      return $this->t('Past');
+    }
+    return $this->t('Due now');
+  }
+
+  /**
+   * Seconds remaining until the ISO week changes (next Monday, midnight).
+   *
+   * Used to bound the cache max-age for any render that surfaces the
+   * current week or a week-relative timing label, so a cached page never
+   * shows a stale week after the boundary passes.
+   *
+   * @return int
+   *   Seconds until the next ISO week boundary.
+   */
+  protected function secondsUntilNextIsoWeek(): int {
+    $now = new \DateTimeImmutable('now');
+    $next_boundary = new \DateTimeImmutable('next monday midnight');
+    return max(0, $next_boundary->getTimestamp() - $now->getTimestamp());
   }
 
 }
