@@ -105,6 +105,47 @@ class CalendarActionTest extends KernelTestBase {
   }
 
   /**
+   * Tests that `scope` defaults to `hive`.
+   *
+   * Task 0027: existing calendar actions and any newly created ones with
+   * no explicit `scope` must default to `hive` — the more common case, and
+   * the value every pre-0027 row picks up via the update hook's default.
+   */
+  public function testScopeDefaultsToHive(): void {
+    $action = CalendarAction::create([
+      'apiary' => $this->apiary->id(),
+      'title' => 'Scope Defaults Test',
+      'description' => 'Desc.',
+      'week_start' => 10,
+    ]);
+    $this->assertEquals('hive', $action->get('scope')->value);
+    $action->save();
+    $loaded = CalendarAction::load($action->id());
+    $this->assertEquals('hive', $loaded->get('scope')->value);
+  }
+
+  /**
+   * Tests that `scope` only accepts hive/apiary.
+   */
+  public function testScopeAllowedValues(): void {
+    $action = CalendarAction::create([
+      'apiary' => $this->apiary->id(),
+      'title' => 'Scope Allowed Values Test',
+      'description' => 'Desc.',
+      'week_start' => 10,
+      'scope' => 'not_a_real_scope',
+    ]);
+    $violations = $action->validate();
+    $this->assertGreaterThan(0, count($violations));
+    $this->assertViolationOnProperty($violations, 'scope');
+
+    foreach (['hive', 'apiary'] as $valid_scope) {
+      $action->set('scope', $valid_scope);
+      $this->assertCount(0, $action->validate(), "\"$valid_scope\" should be a valid scope.");
+    }
+  }
+
+  /**
    * Tests that `apiary` is required.
    */
   public function testApiaryRequired(): void {

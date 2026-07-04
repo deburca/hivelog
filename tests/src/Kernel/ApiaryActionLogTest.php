@@ -5,19 +5,23 @@ declare(strict_types=1);
 namespace Drupal\Tests\hivelog\Kernel;
 
 use Drupal\hivelog\Entity\Apiary;
+use Drupal\hivelog\Entity\ApiaryActionLog;
 use Drupal\hivelog\Entity\CalendarAction;
-use Drupal\hivelog\Entity\Hive;
-use Drupal\hivelog\Entity\HiveActionLog;
 use Drupal\KernelTests\KernelTestBase;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * Tests the Hive Action Log entity.
+ * Tests the Apiary Action Log entity.
+ *
+ * Mirrors HiveActionLogTest — see task 0027
+ * (docs/project-management/tasks/0027-apiary-vs-hive-scoped-calendar-items.md)
+ * for why ApiaryActionLog exists as the apiary-scoped sibling of
+ * HiveActionLog, and why it deliberately has no `inspection` field.
  */
 #[Group('hivelog')]
 #[RunTestsInSeparateProcesses]
-class HiveActionLogTest extends KernelTestBase {
+class ApiaryActionLogTest extends KernelTestBase {
 
   /**
    * {@inheritdoc}
@@ -40,12 +44,7 @@ class HiveActionLogTest extends KernelTestBase {
   protected Apiary $apiary;
 
   /**
-   * A test hive.
-   */
-  protected Hive $hive;
-
-  /**
-   * A test calendar action.
+   * A test calendar action, scoped to the apiary.
    */
   protected CalendarAction $calendarAction;
 
@@ -66,64 +65,58 @@ class HiveActionLogTest extends KernelTestBase {
     $this->apiary = Apiary::create(['name' => 'Test Apiary']);
     $this->apiary->save();
 
-    $this->hive = Hive::create([
-      'name' => 'Test Hive',
-      'apiary' => $this->apiary->id(),
-      'status' => 'active',
-    ]);
-    $this->hive->save();
-
     $this->calendarAction = CalendarAction::create([
       'apiary' => $this->apiary->id(),
-      'title' => 'Varroa Treatment (Spring)',
+      'title' => 'Renew Central Beehive Registration (CBR)',
       'description' => 'Desc.',
-      'week_start' => 15,
+      'week_start' => 2,
+      'scope' => 'apiary',
     ]);
     $this->calendarAction->save();
   }
 
   /**
-   * Tests creating, updating and deleting a hive action log.
+   * Tests creating, updating and deleting an apiary action log.
    */
   public function testCrud(): void {
-    $log = HiveActionLog::create([
-      'hive' => $this->hive->id(),
+    $log = ApiaryActionLog::create([
+      'apiary' => $this->apiary->id(),
       'calendar_action' => $this->calendarAction->id(),
       'status' => 'done',
-      'week_completed' => 16,
-      'notes' => 'Treated with thymol.',
+      'week_completed' => 3,
+      'notes' => 'Renewed online.',
     ]);
     $log->save();
 
-    $loaded = HiveActionLog::load($log->id());
-    $this->assertEquals($this->hive->id(), $loaded->get('hive')->target_id);
+    $loaded = ApiaryActionLog::load($log->id());
+    $this->assertEquals($this->apiary->id(), $loaded->get('apiary')->target_id);
     $this->assertEquals($this->calendarAction->id(), $loaded->get('calendar_action')->target_id);
     $this->assertEquals('done', $loaded->get('status')->value);
-    $this->assertEquals(16, $loaded->get('week_completed')->value);
-    $this->assertEquals('Treated with thymol.', $loaded->get('notes')->value);
+    $this->assertEquals(3, $loaded->get('week_completed')->value);
+    $this->assertEquals('Renewed online.', $loaded->get('notes')->value);
 
-    // Label combines the calendar action title, hive name, and year.
-    $this->assertStringContainsString('Varroa Treatment (Spring)', (string) $loaded->label());
-    $this->assertStringContainsString('Test Hive', (string) $loaded->label());
+    // Label combines the calendar action title, apiary name, and year.
+    $this->assertStringContainsString('Renew Central Beehive Registration (CBR)', (string) $loaded->label());
+    $this->assertStringContainsString('Test Apiary', (string) $loaded->label());
 
     // Update.
     $log->set('status', 'ignored');
     $log->save();
-    $reloaded = HiveActionLog::load($log->id());
+    $reloaded = ApiaryActionLog::load($log->id());
     $this->assertEquals('ignored', $reloaded->get('status')->value);
 
     // Delete.
     $id = $log->id();
     $log->delete();
-    $this->assertNull(HiveActionLog::load($id));
+    $this->assertNull(ApiaryActionLog::load($id));
   }
 
   /**
    * Tests that `status` defaults to `pending`.
    */
   public function testStatusDefaultsToPending(): void {
-    $log = HiveActionLog::create([
-      'hive' => $this->hive->id(),
+    $log = ApiaryActionLog::create([
+      'apiary' => $this->apiary->id(),
       'calendar_action' => $this->calendarAction->id(),
     ]);
     $this->assertEquals('pending', $log->get('status')->value);
@@ -133,31 +126,31 @@ class HiveActionLogTest extends KernelTestBase {
    * Tests that `year` defaults to the current calendar year.
    */
   public function testYearDefaultsToCurrentYear(): void {
-    $log = HiveActionLog::create([
-      'hive' => $this->hive->id(),
+    $log = ApiaryActionLog::create([
+      'apiary' => $this->apiary->id(),
       'calendar_action' => $this->calendarAction->id(),
     ]);
     $this->assertEquals((int) date('Y'), $log->get('year')->value);
   }
 
   /**
-   * Tests that `hive` is required.
+   * Tests that `apiary` is required.
    */
-  public function testHiveRequired(): void {
-    $log = HiveActionLog::create([
+  public function testApiaryRequired(): void {
+    $log = ApiaryActionLog::create([
       'calendar_action' => $this->calendarAction->id(),
     ]);
     $violations = $log->validate();
     $this->assertGreaterThan(0, count($violations));
-    $this->assertViolationOnProperty($violations, 'hive');
+    $this->assertViolationOnProperty($violations, 'apiary');
   }
 
   /**
    * Tests that `calendar_action` is required.
    */
   public function testCalendarActionRequired(): void {
-    $log = HiveActionLog::create([
-      'hive' => $this->hive->id(),
+    $log = ApiaryActionLog::create([
+      'apiary' => $this->apiary->id(),
     ]);
     $violations = $log->validate();
     $this->assertGreaterThan(0, count($violations));
@@ -168,8 +161,8 @@ class HiveActionLogTest extends KernelTestBase {
    * Tests that a fully valid entity has zero violations.
    */
   public function testValidEntityHasNoViolations(): void {
-    $log = HiveActionLog::create([
-      'hive' => $this->hive->id(),
+    $log = ApiaryActionLog::create([
+      'apiary' => $this->apiary->id(),
       'calendar_action' => $this->calendarAction->id(),
       'status' => 'pending',
     ]);
@@ -180,8 +173,8 @@ class HiveActionLogTest extends KernelTestBase {
    * Tests that `status` only accepts pending/done/ignored.
    */
   public function testStatusAllowedValues(): void {
-    $log = HiveActionLog::create([
-      'hive' => $this->hive->id(),
+    $log = ApiaryActionLog::create([
+      'apiary' => $this->apiary->id(),
       'calendar_action' => $this->calendarAction->id(),
       'status' => 'not_a_real_status',
     ]);
@@ -199,8 +192,8 @@ class HiveActionLogTest extends KernelTestBase {
    * Tests that `week_completed` rejects values outside 1-53.
    */
   public function testWeekCompletedRangeConstraint(): void {
-    $log = HiveActionLog::create([
-      'hive' => $this->hive->id(),
+    $log = ApiaryActionLog::create([
+      'apiary' => $this->apiary->id(),
       'calendar_action' => $this->calendarAction->id(),
       'week_completed' => 99,
     ]);
@@ -211,41 +204,57 @@ class HiveActionLogTest extends KernelTestBase {
   }
 
   /**
-   * Tests that multiple logs per (hive, calendar_action, year) are permitted.
+   * Tests that ApiaryActionLog has no `inspection` field.
    *
-   * This is a deliberate design decision (see ADR-0025 Consequences), not an
-   * oversight — assert it explicitly so a future change doesn't
-   * accidentally add a uniqueness invariant without updating the ADR.
+   * Deliberate design decision (see ApiaryActionLog's docblock and task
+   * 0027) — there is no apiary-level equivalent of a hive inspection, so
+   * unlike HiveActionLog, this entity must never gain one by accident.
    */
-  public function testMultipleLogsPerHiveCalendarActionYearAreAllowed(): void {
+  public function testHasNoInspectionField(): void {
+    $log = ApiaryActionLog::create([
+      'apiary' => $this->apiary->id(),
+      'calendar_action' => $this->calendarAction->id(),
+    ]);
+    $this->assertFalse($log->hasField('inspection'));
+  }
+
+  /**
+   * Tests that multiple logs per (apiary, calendar_action, year) are allowed.
+   *
+   * This is a deliberate design decision, mirroring HiveActionLog (see
+   * ADR-0025 Consequences) — assert it explicitly so a future change
+   * doesn't accidentally add a uniqueness invariant without updating the
+   * ADR.
+   */
+  public function testMultipleLogsPerApiaryCalendarActionYearAreAllowed(): void {
     $year = (int) date('Y');
 
-    $first = HiveActionLog::create([
-      'hive' => $this->hive->id(),
+    $first = ApiaryActionLog::create([
+      'apiary' => $this->apiary->id(),
       'calendar_action' => $this->calendarAction->id(),
       'year' => $year,
       'status' => 'done',
-      'week_completed' => 15,
+      'week_completed' => 2,
     ]);
     $first->save();
 
-    $second = HiveActionLog::create([
-      'hive' => $this->hive->id(),
+    $second = ApiaryActionLog::create([
+      'apiary' => $this->apiary->id(),
       'calendar_action' => $this->calendarAction->id(),
       'year' => $year,
       'status' => 'done',
-      'week_completed' => 18,
-      'notes' => 'Second treatment round.',
+      'week_completed' => 3,
+      'notes' => 'Second attempt.',
     ]);
     $second->save();
 
     $this->assertNotEquals($first->id(), $second->id());
 
     $count = \Drupal::entityTypeManager()
-      ->getStorage('hive_action_log')
+      ->getStorage('apiary_action_log')
       ->getQuery()
       ->accessCheck(FALSE)
-      ->condition('hive', $this->hive->id())
+      ->condition('apiary', $this->apiary->id())
       ->condition('calendar_action', $this->calendarAction->id())
       ->condition('year', $year)
       ->count()

@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: backlog
+status: done
 priority: high
 project: "[[seasonal-calendar-and-hive-action-tracking]]"
 area: entity
@@ -37,10 +37,10 @@ started:
    - Set Bait Hives / Swarm Traps
    - Apiary Record-Keeping & Season Review
 
-**No code has been written for this task yet** — it was fully designed
-(see below) but not started, because the session ran out of budget
-partway through planning. This file is the complete implementation plan;
-follow it in order.
+This file was written as a complete implementation plan before any code
+was started; see "Implementation summary (as built)" below for the small
+number of places the actual implementation diverged from or clarified
+the original design.
 
 ## Design
 
@@ -229,22 +229,40 @@ Mirror the existing calendar test suite's structure and depth
   exactly 5 of the 31 seeded rows have `scope = apiary` and the rest
   `scope = hive`.
 
-### Verification checklist (once implemented)
-Follow the same rigor as every other task in this project — this is not
-optional given how much this session's verification caught real bugs
-elsewhere:
-- Full existing suite re-run (currently 178 kernel + 70 unit) with **no
-  regressions**, plus whatever new tests this task adds.
-- Manual `drush php:eval` smoke test against a real DDEV site (see
-  AGENTS.md for the exact command), covering: scope filtering on both
-  pages, the new Full Calendar page, Report Done/Ignored on an apiary
-  item, access control for a non-admin apiary member, breadcrumbs on the
-  new dual-parameter route, and cache max-age bounding.
-- `composer lint` clean on every new/changed file (check against `git
-  show HEAD` for any file you modify, to distinguish genuinely new
-  errors from the pre-existing `Queen.php`/`HiveController.php`
-  weight-histogram ones already documented in
-  [[0024-calendar-test-coverage]]).
+### Verification checklist (completed)
+- [x] Full existing suite re-run with **no regressions**, plus new tests
+      this task added: started at 248 kernel + unit tests, ended at 285
+      (248 pre-existing + 6 `ApiaryActionLogTest` + 2 `CalendarActionTest`
+      + 1 `CalendarActionSeedingTest` + 8 `ApiaryScopedAccessTest` (plus
+      extending 3 existing tests in that file) + 1
+      `ControllerCacheMetadataTest` + 6 `ApiaryCalendarChecklistTest` (new
+      file) + 6 `HivelogBreadcrumbBuilderTest` (route providers + build
+      tests), run via the canonical DDEV command in AGENTS.md — 285 tests,
+      4035 assertions, all green.
+- [x] Manual `drush php:eval` smoke test against a real DDEV site: created
+      an apiary and confirmed exactly 5 of the 31 seeded starter items
+      have `scope = apiary`; confirmed all 6 new/changed routes
+      (`entity.apiary_action_log.*`, `hivelog.apiary_action_log.add`,
+      `hivelog.apiary.calendar_action.collection`) resolve via the route
+      provider after a router rebuild. Full page-render coverage (scope
+      filtering on both pages, Report Done/Ignored on an apiary item,
+      access control for a non-admin apiary member, breadcrumbs on the
+      new dual-parameter route, cache max-age bounding) is exercised by
+      the kernel test suite above, which renders the real controllers
+      through Drupal's renderer with real permissions/entity access.
+- [x] `composer lint` (phpcs, `--warning-severity=0` matching the real CI
+      invocation) clean on every new/changed file. Two pre-existing
+      errors were found in `Queen.php`/`HiveController.php` (the
+      "each index in a multi-line array must be on a new line" sniff,
+      confirmed via `git diff`/GitHub Actions run history to predate
+      this task — CI was green on the parent commit with this exact
+      code, so this was a drift between a newer local `drupal/coder`
+      install and CI's cached older one) — fixed via `phpcbf` as a
+      trivial, behaviour-free drive-by since they were auto-fixable and
+      it removes the drift risk entirely. `composer stan` reproduces the
+      same pre-existing, `continue-on-error: true` Drupal-stub false
+      positives documented in [[0024-calendar-test-coverage]]; no new
+      class of complaint introduced.
 
 ## Implementation notes
 - This is comparable in size to tasks 0018 + 0019 + 0020 + 0021
@@ -254,6 +272,44 @@ elsewhere:
   `HiveActionLogForm`/`HiveActionLogAccessControlHandler` as directly as
   possible — this task is almost entirely "the same thing, one level up
   the hierarchy," not new architecture.
+
+### Implementation summary (as built)
+- `extractCalendarFilters()`, `calendarChecklistEmptyMessage()`, and
+  `pendingActionTimingLabel()` were **duplicated** into `ApiaryController`
+  rather than extracted to a shared trait — this is only the second
+  occurrence of each (not the third, as item 5's design note
+  speculated), so the module's established "duplicate small controller
+  helpers" pattern still applies; revisit if a third occurrence appears.
+- `HivelogCalendarFilterForm::buildForm()`'s `$reset_url` parameter change
+  worked exactly as anticipated — `\Drupal::formBuilder()->getForm($class,
+  $arg)` resolves positionally, no special handling needed.
+- The existing `calendar_action` breadcrumb guard (`str_starts_with(...,
+  'entity.calendar_action.')`) needed **no changes** to correctly avoid a
+  spurious crumb on `hivelog.apiary_action_log.add` — confirmed via
+  `testBuildApiaryActionLogAddRouteDoesNotAddCalendarActionCrumb`, exactly
+  as item 4 predicted.
+- `ApiaryController::fullCalendar()` and `fullCalendarTitle()` were added
+  as new public controller methods; the Full Calendar page needed no new
+  breadcrumb code (covered by the existing generic `apiary` parameter
+  block), confirmed by `hivelogCustomRouteProvider`'s new `full calendar`
+  case in the breadcrumb unit test.
+- Several **pre-existing** tests that exercise `ApiaryController::view()`
+  or `HiveController::view()` needed `scope` values added to their
+  `CalendarAction::create()` fixtures once the two checklists became
+  scope-filtered (they previously relied on the default, unfiltered
+  "Seasonal Calendar" table): `HiveCalendarChecklistTest`
+  (`testDisabledCalendarActionHiddenFromViewsButVisibleInCollection` was
+  restructured into hive-scoped + apiary-scoped fixture pairs) and
+  `ControllerCacheMetadataTest::testApiaryViewCacheMetadata`. Eight test
+  files also needed `$this->installEntitySchema('apiary_action_log')`
+  added alongside their existing `hive_action_log` install, since the
+  apiary view now queries that storage.
+- New `tests/src/Kernel/ApiaryCalendarChecklistTest.php` mirrors
+  `HiveCalendarChecklistTest.php`'s default-status/year-preview/
+  reporting-flow coverage for the apiary-scoped checklist, plus new
+  coverage for `fullCalendar()` (both scopes, disabled items excluded)
+  and confirms the checklist's Report buttons never construct a
+  hive-scoped URL.
 
 ## Related
 - Project:: [[seasonal-calendar-and-hive-action-tracking]]

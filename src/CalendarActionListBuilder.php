@@ -23,6 +23,7 @@ class CalendarActionListBuilder extends EntityListBuilder {
   public function buildHeader() {
     $header['title'] = $this->t('Title');
     $header['apiary'] = $this->t('Apiary');
+    $header['scope'] = $this->t('Scope');
     $header['category'] = $this->t('Category');
     $header['weeks'] = $this->t('Week(s)');
     $header['enabled'] = $this->t('Enabled');
@@ -37,6 +38,11 @@ class CalendarActionListBuilder extends EntityListBuilder {
 
     $apiary = $entity->get('apiary')->entity;
     $row['apiary'] = $apiary ? $apiary->toLink() : '';
+
+    $scope = $entity->get('scope')->value;
+    $row['scope'] = $scope
+      ? ($entity->get('scope')->getSetting('allowed_values')[$scope] ?? $scope)
+      : '';
 
     $category = $entity->get('category')->value;
     $row['category'] = $category

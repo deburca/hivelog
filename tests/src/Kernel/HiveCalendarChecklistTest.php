@@ -70,6 +70,7 @@ class HiveCalendarChecklistTest extends KernelTestBase {
     $this->installEntitySchema('queen_observation');
     $this->installEntitySchema('calendar_action');
     $this->installEntitySchema('hive_action_log');
+    $this->installEntitySchema('apiary_action_log');
     $this->installSchema('file', ['file_usage']);
 
     $user = User::create([
@@ -102,54 +103,86 @@ class HiveCalendarChecklistTest extends KernelTestBase {
   /**
    * Tests that a disabled CalendarAction is hidden from views.
    *
-   * A `CalendarAction` with `enabled = FALSE` never appears on the apiary's
-   * calendar table or any hive's checklist, but does appear in
-   * entity.calendar_action.collection.
+   * A `CalendarAction` with `enabled = FALSE` never appears on its scope's
+   * checklist (the apiary-scoped checklist on the apiary page, or a hive's
+   * checklist for hive-scoped actions), but does appear in
+   * entity.calendar_action.collection. Since task 0027, the apiary page's
+   * checklist only shows `scope = apiary` actions and a hive's checklist
+   * only shows `scope = hive` actions, so this test uses one enabled/
+   * disabled pair per scope to exercise both checklists.
    */
   public function testDisabledCalendarActionHiddenFromViewsButVisibleInCollection(): void {
-    $enabled = CalendarAction::create([
+    $enabled_hive = CalendarAction::create([
       'apiary' => $this->apiary->id(),
-      'title' => 'Enabled Action',
+      'title' => 'Enabled Hive Action',
       'description' => 'Desc.',
       'week_start' => 10,
+      'scope' => 'hive',
     ]);
-    $enabled->save();
+    $enabled_hive->save();
 
-    $disabled = CalendarAction::create([
+    $disabled_hive = CalendarAction::create([
       'apiary' => $this->apiary->id(),
-      'title' => 'Disabled Action',
+      'title' => 'Disabled Hive Action',
       'description' => 'Desc.',
       'week_start' => 12,
       'enabled' => FALSE,
+      'scope' => 'hive',
     ]);
-    $disabled->save();
+    $disabled_hive->save();
 
-    // Apiary's calendar table.
-    $this->pushRequestWithQuery([], '/hivelog/apiary/1');
+    $enabled_apiary = CalendarAction::create([
+      'apiary' => $this->apiary->id(),
+      'title' => 'Enabled Apiary Action',
+      'description' => 'Desc.',
+      'week_start' => 14,
+      'scope' => 'apiary',
+    ]);
+    $enabled_apiary->save();
+
+    $disabled_apiary = CalendarAction::create([
+      'apiary' => $this->apiary->id(),
+      'title' => 'Disabled Apiary Action',
+      'description' => 'Desc.',
+      'week_start' => 16,
+      'enabled' => FALSE,
+      'scope' => 'apiary',
+    ]);
+    $disabled_apiary->save();
+
+    // Apiary's calendar checklist only shows apiary-scoped actions.
+    $this->pushRequestWithQuery(['status' => 'all'], '/hivelog/apiary/1');
     $apiary_controller = \Drupal::service('class_resolver')
       ->getInstanceFromDefinition(ApiaryController::class);
     $apiary_build = $apiary_controller->view($this->apiary);
     $apiary_html = (string) \Drupal::service('renderer')->renderInIsolation($apiary_build);
-    $this->assertStringContainsString('Enabled Action', $apiary_html);
-    $this->assertStringNotContainsString('Disabled Action', $apiary_html);
+    $this->assertStringContainsString('Enabled Apiary Action', $apiary_html);
+    $this->assertStringNotContainsString('Disabled Apiary Action', $apiary_html);
+    $this->assertStringNotContainsString('Enabled Hive Action', $apiary_html);
+    $this->assertStringNotContainsString('Disabled Hive Action', $apiary_html);
 
-    // Hive checklist (status=all so we're not additionally filtering by
-    // report status — we specifically want to isolate the enabled/disabled
-    // behaviour here).
+    // Hive checklist only shows hive-scoped actions (status=all so we're
+    // not additionally filtering by report status — we specifically want
+    // to isolate the enabled/disabled behaviour here).
     $this->pushRequestWithQuery(['status' => 'all']);
     $hive_controller = \Drupal::service('class_resolver')
       ->getInstanceFromDefinition(HiveController::class);
     $hive_build = $hive_controller->view($this->hive);
     $hive_html = (string) \Drupal::service('renderer')->renderInIsolation($hive_build);
-    $this->assertStringContainsString('Enabled Action', $hive_html);
-    $this->assertStringNotContainsString('Disabled Action', $hive_html);
+    $this->assertStringContainsString('Enabled Hive Action', $hive_html);
+    $this->assertStringNotContainsString('Disabled Hive Action', $hive_html);
+    $this->assertStringNotContainsString('Enabled Apiary Action', $hive_html);
+    $this->assertStringNotContainsString('Disabled Apiary Action', $hive_html);
 
-    // The list builder (management view) still shows both.
+    // The list builder (management view) still shows all four, regardless
+    // of scope or enabled state.
     $list_builder = \Drupal::entityTypeManager()->getListBuilder('calendar_action');
     $list_build = $list_builder->render();
     $list_html = (string) \Drupal::service('renderer')->renderInIsolation($list_build);
-    $this->assertStringContainsString('Enabled Action', $list_html);
-    $this->assertStringContainsString('Disabled Action', $list_html);
+    $this->assertStringContainsString('Enabled Hive Action', $list_html);
+    $this->assertStringContainsString('Disabled Hive Action', $list_html);
+    $this->assertStringContainsString('Enabled Apiary Action', $list_html);
+    $this->assertStringContainsString('Disabled Apiary Action', $list_html);
   }
 
   /**

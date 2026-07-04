@@ -269,7 +269,10 @@ class HiveController extends ControllerBase {
       ],
     ];
 
-    $build['calendar_filter'] = $this->formBuilder->getForm(HivelogCalendarFilterForm::class, $hive);
+    $build['calendar_filter'] = $this->formBuilder->getForm(
+      HivelogCalendarFilterForm::class,
+      Url::fromRoute('entity.hive.canonical', ['hive' => $hive->id()])
+    );
     $build['calendar_filter']['#weight'] = 26;
 
     $calendar_filters = $this->extractCalendarFilters();
@@ -595,15 +598,16 @@ class HiveController extends ControllerBase {
    *   One of `pending`, `done`, `ignored`, or `all`.
    *
    * @return array
-   *   An array with two keys: `total_enabled` is the count of enabled
-   *   calendar actions on the hive's apiary *before* the status filter is
-   *   applied — used to tell "nothing pending" apart from "no calendar
-   *   actions exist at all" for the empty-state message. `rows` is an
-   *   array keyed by calendar action id, each entry an associative array
+   *   An array with two keys: `total_enabled` is the count of enabled,
+   *   hive-scoped calendar actions on the hive's apiary *before* the status
+   *   filter is applied — used to tell "nothing pending" apart from "no
+   *   calendar actions exist at all" for the empty-state message. `rows` is
+   *   an array keyed by calendar action id, each entry an associative array
    *   with `calendar_action` (the \Drupal\hivelog\Entity\CalendarAction),
    *   `log` (the matching \Drupal\hivelog\Entity\HiveActionLog, or NULL if
    *   unreported), and `status` (the effective status string used for
-   *   filtering/display).
+   *   filtering/display). Apiary-scoped calendar actions (task 0027) are
+   *   excluded entirely — they never appear on any hive's checklist.
    */
   protected function buildCalendarChecklist(Hive $hive, int $year, string $status_filter): array {
     $apiary_id = $hive->get('apiary')->target_id;
@@ -617,6 +621,7 @@ class HiveController extends ControllerBase {
       ->accessCheck(TRUE)
       ->condition('apiary', $apiary_id)
       ->condition('enabled', TRUE)
+      ->condition('scope', 'hive')
       ->sort('week_start', 'ASC')
       ->execute();
 
@@ -1016,9 +1021,18 @@ class HiveController extends ControllerBase {
     // letter month abbreviation below it.
     $ticks = [];
     $month_names = [
-      1 => 'Jan', 2 => 'Feb', 3 => 'Mar', 4 => 'Apr',
-      5 => 'May', 6 => 'Jun', 7 => 'Jul', 8 => 'Aug',
-      9 => 'Sep', 10 => 'Oct', 11 => 'Nov', 12 => 'Dec',
+      1 => 'Jan',
+      2 => 'Feb',
+      3 => 'Mar',
+      4 => 'Apr',
+      5 => 'May',
+      6 => 'Jun',
+      7 => 'Jul',
+      8 => 'Aug',
+      9 => 'Sep',
+      10 => 'Oct',
+      11 => 'Nov',
+      12 => 'Dec',
     ];
     $start_month = (int) substr($axis_start, 5, 2);
     $end_month = (int) substr($axis_end, 5, 2);

@@ -402,3 +402,78 @@ entity.hive_action_log.delete_form:
     parameters:
       hive_action_log:
         type: entity:hive_action_log
+
+# Apiary action log routes.
+entity.apiary_action_log.collection:
+  path: '/hivelog/apiary-action-logs'
+  defaults:
+    _entity_list: 'apiary_action_log'
+    _title: 'HiveLog - Apiary Action Logs'
+  requirements:
+    _permission: 'view own apiary action log+view any apiary action log+administer hivelog'
+
+hivelog.apiary_action_log.add:
+  path: '/hivelog/apiary/{apiary}/calendar-action/{calendar_action}/log/add'
+  defaults:
+    _controller: '\Drupal\hivelog\Controller\ApiaryActionLogController::addForm'
+    _title: 'Add Apiary Action Log'
+  requirements:
+    _permission: 'add apiary action log+administer hivelog'
+  options:
+    parameters:
+      apiary:
+        type: entity:apiary
+      calendar_action:
+        type: entity:calendar_action
+
+entity.apiary_action_log.canonical:
+  path: '/hivelog/apiary-action-log/{apiary_action_log}'
+  defaults:
+    _controller: '\Drupal\hivelog\Controller\ApiaryActionLogController::view'
+    _title_callback: '\Drupal\hivelog\Controller\ApiaryActionLogController::title'
+  requirements:
+    _permission: 'view own apiary action log+view any apiary action log+administer hivelog'
+  options:
+    parameters:
+      apiary_action_log:
+        type: entity:apiary_action_log
+
+entity.apiary_action_log.edit_form:
+  path: '/hivelog/apiary-action-log/{apiary_action_log}/edit'
+  defaults:
+    _entity_form: 'apiary_action_log.edit'
+    _title: 'Edit Apiary Action Log'
+  requirements:
+    _permission: 'edit own apiary action log+edit any apiary action log+administer hivelog'
+  options:
+    parameters:
+      apiary_action_log:
+        type: entity:apiary_action_log
+
+entity.apiary_action_log.delete_form:
+  path: '/hivelog/apiary-action-log/{apiary_action_log}/delete'
+  defaults:
+    _entity_form: 'apiary_action_log.delete'
+    _title: 'Delete Apiary Action Log'
+  requirements:
+    _permission: 'delete own apiary action log+delete any apiary action log+administer hivelog'
+  options:
+    parameters:
+      apiary_action_log:
+        type: entity:apiary_action_log
+
+# Full calendar page: every enabled calendar action for one apiary,
+# regardless of scope (hive or apiary). Reference/management view only —
+# no reporting here; reporting happens on the apiary page (apiary-scoped
+# items) or each hive's page (hive-scoped items).
+hivelog.apiary.calendar_action.collection:
+  path: '/hivelog/apiary/{apiary}/calendar'
+  defaults:
+    _controller: '\Drupal\hivelog\Controller\ApiaryController::fullCalendar'
+    _title_callback: '\Drupal\hivelog\Controller\ApiaryController::fullCalendarTitle'
+  requirements:
+    _permission: 'view own calendar action+view any calendar action+administer hivelog'
+  options:
+    parameters:
+      apiary:
+        type: entity:apiary

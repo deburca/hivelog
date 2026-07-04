@@ -111,6 +111,7 @@ class CalendarAction extends ContentEntityBase implements EntityChangedInterface
       'category' => 'other',
       'week_start' => 2,
       'week_end' => 4,
+      'scope' => 'apiary',
     ],
     [
       'title' => 'Order & Prepare Equipment for the Season',
@@ -121,6 +122,7 @@ class CalendarAction extends ContentEntityBase implements EntityChangedInterface
       'category' => 'other',
       'week_start' => 4,
       'week_end' => 6,
+      'scope' => 'apiary',
     ],
     [
       'title' => 'Fondant / Emergency Feed Check',
@@ -141,6 +143,7 @@ class CalendarAction extends ContentEntityBase implements EntityChangedInterface
       'category' => 'other',
       'week_start' => 7,
       'week_end' => 9,
+      'scope' => 'apiary',
     ],
     [
       'title' => 'Spring Inspection & Clean-up',
@@ -208,6 +211,7 @@ class CalendarAction extends ContentEntityBase implements EntityChangedInterface
       'category' => 'swarm_prevention',
       'week_start' => 15,
       'week_end' => 17,
+      'scope' => 'apiary',
     ],
     [
       'title' => 'Swarm Prevention Check',
@@ -385,6 +389,7 @@ class CalendarAction extends ContentEntityBase implements EntityChangedInterface
       'category' => 'other',
       'week_start' => 49,
       'week_end' => 51,
+      'scope' => 'apiary',
     ],
   ];
 
@@ -587,12 +592,33 @@ class CalendarAction extends ContentEntityBase implements EntityChangedInterface
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
+    $fields['scope'] = BaseFieldDefinition::create('list_string')
+      ->setLabel(t('Scope'))
+      ->setDescription(t('Hive-scoped actions are reported separately on every hive in the apiary. Apiary-scoped actions apply once for the whole apiary (e.g. registration renewal, site maintenance) and are reported on the apiary itself, not on any individual hive.'))
+      ->setRequired(TRUE)
+      ->setDefaultValue('hive')
+      ->setSetting('allowed_values', [
+        'hive' => 'Hive',
+        'apiary' => 'Apiary',
+      ])
+      ->setDisplayOptions('form', [
+        'type' => 'options_select',
+        'weight' => 8,
+      ])
+      ->setDisplayOptions('view', [
+        'label' => 'inline',
+        'type' => 'list_default',
+        'weight' => 8,
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
+
     $fields['uid']
       ->setLabel(t('Owner'))
       ->setDescription(t('The user who created this calendar action.'))
       ->setDisplayOptions('form', [
         'type' => 'entity_reference_autocomplete',
-        'weight' => 8,
+        'weight' => 9,
       ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
