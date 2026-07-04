@@ -45,10 +45,19 @@
   margin: 0;
 }
 
+/* Explicit, high-contrast colour against the filter row's #fafafa
+   background (see .hivelog-filter-form above). Admin themes (e.g. Gin)
+   often render unfocused field labels in a low-contrast "muted" tone
+   that's legible against a plain white page background but disappears
+   against this row's light grey one — only becoming visible once the
+   field gains focus (:focus-within). Setting the colour explicitly here,
+   rather than leaving it to the active theme, keeps every filter label
+   readable regardless of focus state. */
 .hivelog-filter-form .form-item label {
   display: block;
   font-size: 0.85rem;
   margin-bottom: 0.15rem;
+  color: #1a1a1a;
 }
 
 /* Push the Filter / Reset actions to the right end of the filter row so
