@@ -287,6 +287,39 @@ class ControllerCacheMetadataTest extends KernelTestBase {
   }
 
   /**
+   * Tests that the Full Calendar page declares expected cache metadata.
+   *
+   * Unlike the plain calendar action view, this page has a GET filter
+   * form and pager, so it must also vary by `url.query_args`.
+   */
+  public function testApiaryFullCalendarCacheMetadata(): void {
+    $apiary = Apiary::create(['name' => 'Cache Apiary']);
+    $apiary->save();
+
+    $calendarAction = CalendarAction::create([
+      'apiary' => $apiary->id(),
+      'title' => 'Cache Full Calendar Action',
+      'description' => 'Desc.',
+      'week_start' => 10,
+    ]);
+    $calendarAction->save();
+
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(ApiaryController::class);
+    $build = $controller->fullCalendar($apiary);
+
+    $this->assertContains('url.query_args', $build['#cache']['contexts']);
+    $this->assertContains('user.permissions', $build['#cache']['contexts']);
+
+    foreach ($apiary->getCacheTags() as $tag) {
+      $this->assertContains($tag, $build['#cache']['tags']);
+    }
+    foreach ($calendarAction->getCacheTags() as $tag) {
+      $this->assertContains($tag, $build['#cache']['tags']);
+    }
+  }
+
+  /**
    * Tests that the hive action log view declares expected cache metadata.
    *
    * Including the linked inspection's cache tags when one is set.

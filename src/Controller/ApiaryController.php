@@ -14,6 +14,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Form\HivelogCalendarFilterForm;
+use Drupal\hivelog\Form\HivelogFullCalendarFilterForm;
 use Drupal\hivelog\Form\HivelogHiveFilterForm;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -32,6 +33,20 @@ class ApiaryController extends ControllerBase {
    * Pager element id for the embedded hive table.
    */
   protected const HIVES_PAGER_ELEMENT = 0;
+
+  /**
+   * Default number of calendar actions shown per page on the Full Calendar page.
+   */
+  public const CALENDAR_ACTIONS_PER_PAGE = 20;
+
+  /**
+   * Pager element id for the Full Calendar page's table.
+   *
+   * A standalone page (unlike the embedded hive/inspection tables), so
+   * element 0 is safe to reuse — there is only ever one paginated list on
+   * this page.
+   */
+  protected const CALENDAR_ACTIONS_PAGER_ELEMENT = 0;
 
   /**
    * The request stack.
@@ -408,31 +423,57 @@ class ApiaryController extends ControllerBase {
   }
 
   /**
-   * Displays every enabled calendar action for an apiary, both scopes.
+   * Displays every calendar action for an apiary, both scopes.
    *
-   * Reference/management view only — no Status/Report buttons here; actual
+   * Reference/management view — no Status/Report buttons here; actual
    * reporting still happens on the apiary page (for apiary-scoped items) or
-   * each hive's page (for hive-scoped items). Sorted by week_start, with a
-   * Scope column so it's visually clear which is which.
+   * each hive's page (for hive-scoped items). Formatted like every other
+   * embedded/collection table in the module (heading + Add action, a GET
+   * filter form, a paginated `hivelog:entity-table`, and per-row Edit/
+   * Delete operations), rather than the plain read-only table this page
+   * originally shipped with. Sorted by week_start, with a Scope column so
+   * it's visually clear which is which.
    */
   public function fullCalendar(Apiary $apiary) {
     $build = [];
 
+    // Heading row: title on the left, Add Calendar Action on the right —
+    // same layout as the Hives heading on the apiary page.
     $build['heading'] = [
-      '#type' => 'html_tag',
-      '#tag' => 'h2',
-      '#value' => $this->t('Full Calendar: @apiary', ['@apiary' => $apiary->label()]),
+      '#type' => 'container',
+      '#attributes' => ['class' => ['hivelog-list-heading']],
       '#weight' => 0,
+      'title' => [
+        '#type' => 'html_tag',
+        '#tag' => 'h2',
+        '#value' => $this->t('Full Calendar: @apiary', ['@apiary' => $apiary->label()]),
+        '#attributes' => ['class' => ['hivelog-list-heading__title']],
+      ],
+      'add' => [
+        '#type' => 'component',
+        '#component' => 'hivelog:button',
+        '#props' => [
+          'label' => (string) $this->t('Add Calendar Action'),
+          'url' => Url::fromRoute('hivelog.calendar_action.add', ['apiary' => $apiary->id()])->toString(),
+          'variant' => 'primary',
+          'extra_classes' => 'hivelog-list-heading__action',
+        ],
+      ],
     ];
 
-    $calendar_action_ids = $this->entityTypeManager
+    $build['filter'] = $this->formBuilder->getForm(HivelogFullCalendarFilterForm::class, $apiary);
+    $build['filter']['#weight'] = 1;
+
+    $filters = $this->extractFullCalendarFilters();
+    $query = $this->entityTypeManager
       ->getStorage('calendar_action')
       ->getQuery()
       ->accessCheck(TRUE)
       ->condition('apiary', $apiary->id())
-      ->condition('enabled', TRUE)
       ->sort('week_start', 'ASC')
-      ->execute();
+      ->pager(static::CALENDAR_ACTIONS_PER_PAGE, static::CALENDAR_ACTIONS_PAGER_ELEMENT);
+    $this->applyFullCalendarFilters($query, $filters);
+    $calendar_action_ids = $query->execute();
 
     $calendar_actions = $calendar_action_ids
       ? $this->entityTypeManager->getStorage('calendar_action')->loadMultiple($calendar_action_ids)
@@ -452,6 +493,8 @@ class ApiaryController extends ControllerBase {
       $this->t('Scope'),
       $this->t('Week(s)'),
       $this->t('Category'),
+      $this->t('Enabled'),
+      $this->t('Operations'),
     ];
 
     $rows = [];
@@ -470,12 +513,33 @@ class ApiaryController extends ControllerBase {
         ? ($calendar_action->get('category')->getSetting('allowed_values')[$category] ?? $category)
         : '';
 
+      $enabled_display = $calendar_action->get('enabled')->value ? (string) $this->t('Yes') : (string) $this->t('Disabled');
+
+      $buttons = [];
+      if ($calendar_action->access('update')) {
+        $buttons[] = ['label' => (string) $this->t('Edit'), 'url' => $calendar_action->toUrl('edit-form')->toString()];
+      }
+      if ($calendar_action->access('delete')) {
+        $buttons[] = [
+          'label' => (string) $this->t('Delete'),
+          'url' => $calendar_action->toUrl('delete-form')->toString(),
+          'variant' => 'danger',
+        ];
+      }
+      $actions = [
+        '#type' => 'component',
+        '#component' => 'hivelog:button-group',
+        '#props' => ['buttons' => $buttons],
+      ];
+
       $rows[] = [
         'cells' => [
           $calendar_action->toLink()->toString(),
           $scope_display,
           (string) $weeks,
           (string) $category_label,
+          $enabled_display,
+          $this->renderer->renderInIsolation($actions),
         ],
       ];
     }
@@ -486,13 +550,21 @@ class ApiaryController extends ControllerBase {
       '#props' => [
         'headers' => array_map('strval', $header),
         'rows' => $rows,
-        'empty_message' => (string) $this->t('No calendar actions have been added to this apiary yet.'),
+        'empty_message' => (string) (!empty($filters)
+          ? $this->t('No calendar actions match the current filters.')
+          : $this->t('No calendar actions have been added to this apiary yet.')),
       ],
-      '#weight' => 1,
+      '#weight' => 2,
+    ];
+
+    $build['pager'] = [
+      '#type' => 'pager',
+      '#element' => static::CALENDAR_ACTIONS_PAGER_ELEMENT,
+      '#weight' => 3,
     ];
 
     $cache = CacheableMetadata::createFromRenderArray($build)
-      ->addCacheContexts(['user.permissions'])
+      ->addCacheContexts(['url.query_args', 'user.permissions'])
       ->addCacheableDependency($apiary)
       ->addCacheTags($this->entityTypeManager->getDefinition('calendar_action')->getListCacheTags());
     foreach ($calendar_actions as $calendar_action) {
@@ -501,6 +573,77 @@ class ApiaryController extends ControllerBase {
     $cache->applyTo($build);
 
     return $build;
+  }
+
+  /**
+   * Extracts Full Calendar filter values from the current request.
+   *
+   * Unlike the other filter-value keys, `enabled` is only included when
+   * it differs from its default (`1`, "Enabled only") — this is what lets
+   * `!empty($filters)` keep distinguishing "no calendar actions exist at
+   * all" from "none match the current filters" for the empty-state
+   * message, while `applyFullCalendarFilters()` still treats a missing
+   * `enabled` key as the default rather than "no restriction".
+   *
+   * @return array<string, string>
+   *   Associative array keyed by filter name. Only non-default values are
+   *   included.
+   */
+  protected function extractFullCalendarFilters(): array {
+    $request = $this->requestStack->getCurrentRequest();
+    if (!$request) {
+      return [];
+    }
+
+    $filters = [];
+
+    $scope = trim((string) $request->query->get('scope', ''));
+    if ($scope !== '') {
+      $filters['scope'] = $scope;
+    }
+
+    $category = trim((string) $request->query->get('category', ''));
+    if ($category !== '') {
+      $filters['category'] = $category;
+    }
+
+    $enabled = trim((string) $request->query->get('enabled', '1'));
+    if (!in_array($enabled, ['', '0', '1'], TRUE)) {
+      $enabled = '1';
+    }
+    if ($enabled !== '1') {
+      $filters['enabled'] = $enabled;
+    }
+
+    $title = trim((string) $request->query->get('title', ''));
+    if ($title !== '') {
+      $filters['title'] = $title;
+    }
+
+    return $filters;
+  }
+
+  /**
+   * Applies Full Calendar filters to an entity query.
+   */
+  protected function applyFullCalendarFilters(QueryInterface $query, array $filters): void {
+    if (isset($filters['scope'])) {
+      $query->condition('scope', $filters['scope']);
+    }
+    if (isset($filters['category'])) {
+      $query->condition('category', $filters['category']);
+    }
+    if (isset($filters['title'])) {
+      $query->condition('title', '%' . $this->escapeLike($filters['title']) . '%', 'LIKE');
+    }
+    // A missing key means the default ("Enabled only", `1`) applies — this
+    // is what preserves the page's original "hide disabled actions"
+    // behaviour. An explicit empty string ("- Any -") means no
+    // restriction at all.
+    $enabled = $filters['enabled'] ?? '1';
+    if ($enabled !== '') {
+      $query->condition('enabled', $enabled === '1');
+    }
   }
 
   /**
