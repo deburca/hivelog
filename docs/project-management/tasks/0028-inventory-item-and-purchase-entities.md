@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: backlog
+status: in-progress
 priority: medium
 project: "[[inventory-tracking-and-depreciation]]"
 area: entity

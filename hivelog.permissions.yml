@@ -129,3 +129,35 @@ delete own apiary action log:
   title: 'Delete own apiary action logs'
 delete any apiary action log:
   title: 'Delete any apiary action log'
+
+# Inventory item permissions.
+view own inventory item:
+  title: 'View own inventory items'
+view any inventory item:
+  title: 'View any inventory item'
+add inventory item:
+  title: 'Add inventory items'
+edit own inventory item:
+  title: 'Edit own inventory items'
+edit any inventory item:
+  title: 'Edit any inventory item'
+delete own inventory item:
+  title: 'Delete own inventory items'
+delete any inventory item:
+  title: 'Delete any inventory item'
+
+# Inventory purchase permissions.
+view own inventory purchase:
+  title: 'View own inventory purchases'
+view any inventory purchase:
+  title: 'View any inventory purchase'
+add inventory purchase:
+  title: 'Add inventory purchases'
+edit own inventory purchase:
+  title: 'Edit own inventory purchases'
+edit any inventory purchase:
+  title: 'Edit any inventory purchase'
+delete own inventory purchase:
+  title: 'Delete own inventory purchases'
+delete any inventory purchase:
+  title: 'Delete any inventory purchase'

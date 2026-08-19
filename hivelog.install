@@ -32,6 +32,8 @@ function hivelog_uninstall() {
     'hive_action_log',
     'queen_observation',
     'hive_inspection',
+    'inventory_purchase',
+    'inventory_item',
     'queen',
     'calendar_action',
     'hive',
@@ -677,6 +679,33 @@ function hivelog_update_10019(&$sandbox) {
   }
 
   return t('Removed the bee_breed field from hives; breed is now tracked on the queen.');
+}
+
+/**
+ * Installs the Inventory Item and Inventory Purchase entity types.
+ *
+ * First half of the inventory tracking project (docs/project-management/
+ * decisions/0027-inventory-tracking-and-depreciation.md): InventoryItem is
+ * the per-apiary catalog of consumable/durable items; InventoryPurchase is
+ * the acquisition ledger (amount bought, unit price) that stock levels and
+ * durable-item depreciation are both computed from. The module is not yet
+ * in production, so no data migration is required.
+ */
+function hivelog_update_10020(&$sandbox) {
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+
+  if (!$entity_definition_update_manager->getEntityType('inventory_item')) {
+    $inventory_item_type = $entity_type_manager->getDefinition('inventory_item');
+    $entity_definition_update_manager->installEntityType($inventory_item_type);
+  }
+
+  if (!$entity_definition_update_manager->getEntityType('inventory_purchase')) {
+    $inventory_purchase_type = $entity_type_manager->getDefinition('inventory_purchase');
+    $entity_definition_update_manager->installEntityType($inventory_purchase_type);
+  }
+
+  return t('Installed the Inventory Item and Inventory Purchase entity types.');
 }
 
 /**
