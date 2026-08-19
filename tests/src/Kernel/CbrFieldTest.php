@@ -162,4 +162,28 @@ class CbrFieldTest extends KernelTestBase {
     $this->assertStringContainsString('Update your profile', $html_without);
   }
 
+  /**
+   * The landing page links to the queen collection.
+   *
+   * Issue: the HiveLog menu moved into the front-end `main` menu
+   * (`hivelog.links.menu.yml`), where the default one-level-deep menu
+   * block silently hides the "Queens" child link. An explicit in-page
+   * link on the apiary landing page means the queen collection stays
+   * reachable regardless of menu block configuration.
+   */
+  public function testLandingPageLinksToQueenCollection(): void {
+    $user = User::create([
+      'name' => 'queens-link-tester',
+      'mail' => 'queens-link-tester@example.com',
+    ]);
+    $user->save();
+    \Drupal::currentUser()->setAccount($user);
+
+    $build = \Drupal::entityTypeManager()->getListBuilder('apiary')->render();
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+
+    $this->assertStringContainsString('View all Queens', $html);
+    $this->assertStringContainsString('/hivelog/queens', $html);
+  }
+
 }

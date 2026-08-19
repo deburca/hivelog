@@ -160,14 +160,25 @@ class ApiaryListBuilder extends EntityListBuilder {
         '#value' => $this->t('Apiaries'),
         '#attributes' => ['class' => ['hivelog-list-heading__title']],
       ],
-      'add' => [
-        '#type' => 'component',
-        '#component' => 'hivelog:button',
-        '#props' => [
-          'label' => (string) $this->t('Add Apiary'),
-          'url' => Url::fromRoute('entity.apiary.add_form')->toString(),
-          'variant' => 'primary',
-          'extra_classes' => 'hivelog-list-heading__action',
+      'actions' => [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['hivelog-list-heading__action']],
+        'buttons' => [
+          '#type' => 'component',
+          '#component' => 'hivelog:button-group',
+          '#props' => [
+            'buttons' => [
+              [
+                'label' => (string) $this->t('Add Apiary'),
+                'url' => Url::fromRoute('entity.apiary.add_form')->toString(),
+                'variant' => 'primary',
+              ],
+              [
+                'label' => (string) $this->t('View all Queens'),
+                'url' => Url::fromRoute('entity.queen.collection')->toString(),
+              ],
+            ],
+          ],
         ],
       ],
       '#attached' => ['library' => ['hivelog/buttons']],
