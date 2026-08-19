@@ -137,7 +137,10 @@ class InventoryPurchaseTest extends KernelTestBase {
       'quantity' => 25,
       'unit_price' => 1.5,
     ]);
-    $this->expectException(\InvalidArgumentException::class);
+    // save() wraps the preSave() InvalidArgumentException in an
+    // EntityStorageException, matching CalendarActionTest::
+    // testWeekEndBeforeWeekStartRejected's expectation style.
+    $this->expectException(\Exception::class);
     $purchase->save();
   }
 

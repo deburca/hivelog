@@ -111,7 +111,10 @@ class InventoryItemTest extends KernelTestBase {
       'unit' => 'frame',
       'item_type' => 'durable',
     ]);
-    $this->expectException(\InvalidArgumentException::class);
+    // save() wraps the preSave() InvalidArgumentException in an
+    // EntityStorageException, matching CalendarActionTest::
+    // testWeekEndBeforeWeekStartRejected's expectation style.
+    $this->expectException(\Exception::class);
     $item->save();
   }
 
