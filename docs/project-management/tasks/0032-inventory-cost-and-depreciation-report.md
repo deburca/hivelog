@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: backlog
+status: done
 priority: low
 project: "[[inventory-tracking-and-depreciation]]"
 area: routing
@@ -24,30 +24,35 @@ cost), since Hivelog has no harvest-quantity/sales model yet — see the
 project note's scope.
 
 ## Acceptance criteria
-- [ ] `InventoryItem::getAnnualDepreciation(int $year): float` (or a
-      standalone service/utility method) — sums, across every `durable`
-      `InventoryPurchase` for the item, `total_cost / useful_life_years`
-      for each purchase whose window (`purchase year` through
-      `purchase year + useful_life_years − 1`) includes `$year`.
-  - [ ] A helper resolving the same across every item in an apiary,
-        not just one item, for report aggregation.
-- [ ] A report page (route + controller, e.g.
-      `/hivelog/apiary/{apiary}/inventory/cost-report`) showing, for a
+- [x] `InventoryItem::getAnnualDepreciation(int $year): float` — sums,
+      across every `durable` `InventoryPurchase` for the item,
+      `total_cost / useful_life_years` for each purchase whose window
+      (`purchase year` through `purchase year + useful_life_years − 1`)
+      includes `$year`.
+  - [x] `InventoryReportController::depreciationBreakdown()` resolves the
+        same across every durable item in an apiary, for report
+        aggregation.
+- [x] A report page (route + controller) at
+      `/hivelog/apiary/{apiary}/inventory/cost-report` showing, for a
       selected year: total consumable cost (`Σ InventoryUsage.quantity ×
       unit_cost_snapshot` for usage rows whose log's `year` matches),
       total active depreciation (from the helper above), and their sum,
-      with a breakdown table by item.
-- [ ] A year selector (previous/current/next), matching the existing
-      calendar checklist's year-switching UX
-      (`HiveController::extractCalendarFilters()`) rather than inventing
-      a new pattern.
-- [ ] Kernel tests: depreciation calculation across purchase-year
-      boundaries (a purchase made partway through its life should still
-      correctly stop contributing after `useful_life_years` full years),
-      multiple purchases of the same durable item at different times/costs,
-      consumable cost aggregation matching a hand-computed expected total,
-      the report's empty state when an apiary has no inventory activity
-      yet for the selected year.
+      with a breakdown table by item. Linked from the apiary page's
+      Inventory heading via a "View Cost Report" button.
+- [x] A year selector (previous/current/next), matching
+      `HiveController::extractCalendarFilters()`'s existing year-clamping
+      logic (`InventoryReportController::extractReportYear()`) rather
+      than inventing a new pattern.
+- [x] Kernel tests (`InventoryCostReportTest`, 7 tests): depreciation
+      calculation across purchase-year boundaries (a purchase made
+      partway through its life correctly stops contributing after
+      `useful_life_years` full years), multiple purchases of the same
+      durable item at different times/costs summed independently,
+      consumable cost aggregation matching a hand-computed expected total
+      (via the real `HiveActionLogForm` save path), the report's empty
+      state when an apiary has no inventory activity yet for the
+      selected year, and the out-of-range year query parameter falling
+      back to the current year.
 
 ## Implementation notes
 - Key files: `src/Entity/InventoryItem.php` (add the depreciation
@@ -64,7 +69,21 @@ project note's scope.
   this report page is a natural place to also surface "you're low on X"
   once stock-on-hand is already being computed for the breakdown table.
 
+## Verification
+- Full kernel+unit suite against `cms2` (MySQL): 383 tests, 0 failures
+  attributable to this change (the same two pre-existing local-sqlite-only
+  anomalies from task 0031's close-out — unrelated `QueenTest`/
+  `ApiaryCalendarChecklistTest` — still don't reproduce under CI's MySQL
+  backend).
+- End-to-end smoke test via `drush php:eval`: created a consumable item
+  (purchased 20L @ 2.0, used 5L via a real "done"
+  `HiveActionLogForm::save()`) and a durable item (purchased for 500,
+  5-year useful life), rendered the report for the current year, and
+  confirmed the breakdown table showed Sugar Syrup — 10.00 and
+  Extractor — 100.00, with a correct grand total of 110.00.
+
 ## Related
 - Project:: [[inventory-tracking-and-depreciation]]
 - Decisions:: [[0027-inventory-tracking-and-depreciation]]
-- Commits::
+- Commits:: b1a36ff (depreciation method, report controller, route,
+  apiary-page link, tests)

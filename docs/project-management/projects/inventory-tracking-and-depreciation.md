@@ -83,7 +83,12 @@ SORT status asc, priority asc
   usage with a snapshotted weighted-average unit cost; verified
   end-to-end against a real Drupal site, full suite at 376 tests/0
   failures attributable to this change)
-- [[0032-inventory-cost-and-depreciation-report]] — backlog
+- [[0032-inventory-cost-and-depreciation-report]] — done
+  (`InventoryItem::getAnnualDepreciation()`, `InventoryReportController`
+  aggregating consumable cost + durable depreciation per apiary/year with
+  a previous/current/next year selector and per-item breakdown table;
+  verified end-to-end against a real Drupal site, full suite at 383
+  tests/0 failures attributable to this change)
 - [[0033-inventory-test-coverage]] — backlog
 
 Suggested build order matches the numbering: the two ledger entities first
