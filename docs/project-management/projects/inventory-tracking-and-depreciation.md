@@ -71,7 +71,11 @@ SORT status asc, priority asc
   `hivelog:entity-table` list builders, `getStockOnHand()`, apiary page
   Inventory heading; verified end-to-end against a real Drupal site,
   full suite at 340 tests/4767 assertions/0 failures)
-- [[0030-calendar-action-item-requirement-and-recipe-ui]] — backlog
+- [[0030-calendar-action-item-requirement-and-recipe-ui]] — done (the
+  recipe entity, apiary-scoped access control, and the embedded
+  "Required Items" table on the calendar action canonical page; verified
+  end-to-end against a real Drupal site, full suite at 354
+  tests/4966 assertions/0 failures)
 - [[0031-inventory-usage-and-action-log-reporting-integration]] — backlog
 - [[0032-inventory-cost-and-depreciation-report]] — backlog
 - [[0033-inventory-test-coverage]] — backlog
