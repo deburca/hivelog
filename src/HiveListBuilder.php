@@ -28,8 +28,11 @@ class HiveListBuilder extends EntityListBuilder {
     $row['name'] = $entity->toLink();
     $apiary = $entity->get('apiary')->entity;
     $row['apiary'] = $apiary ? $apiary->toLink() : '';
-    $breed = $entity->get('bee_breed')->value;
-    $row['breed'] = $breed ? ($entity->get('bee_breed')->getSetting('allowed_values')[$breed] ?? $breed) : '';
+    // Breed lives on the active queen, not the hive — see
+    // Hive::getActiveQueen().
+    $queen = $entity->getActiveQueen();
+    $breed = $queen ? $queen->get('breed')->value : NULL;
+    $row['breed'] = $breed ? ($queen->get('breed')->getSetting('allowed_values')[$breed] ?? $breed) : '';
     $status = $entity->get('status')->value;
     $row['status'] = $entity->get('status')->getSetting('allowed_values')[$status] ?? $status;
     return $row + parent::buildRow($entity);

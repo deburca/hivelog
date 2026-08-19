@@ -149,6 +149,61 @@ class EmbeddedTableFilterPaginationTest extends KernelTestBase {
   }
 
   /**
+   * Tests the hive breed filter on the apiary page.
+   *
+   * Breed lives on the active queen, not the hive (see
+   * ApiaryController::hiveIdsForActiveQueenBreed()), so this exercises the
+   * query that resolves hives via their active queen's breed.
+   */
+  public function testApiaryHiveTableBreedFilter(): void {
+    $apiary = Apiary::create(['name' => 'Breed Filter Apiary']);
+    $apiary->save();
+
+    $buckfast_hive = Hive::create([
+      'name' => 'Buckfast Hive',
+      'apiary' => $apiary->id(),
+      'status' => 'active',
+    ]);
+    $buckfast_hive->save();
+    \Drupal::entityTypeManager()->getStorage('queen')->create([
+      'name' => 'Q-Buckfast',
+      'hive' => $buckfast_hive->id(),
+      'breed' => 'buckfast',
+      'status' => 'active',
+    ])->save();
+
+    $italian_hive = Hive::create([
+      'name' => 'Italian Hive',
+      'apiary' => $apiary->id(),
+      'status' => 'active',
+    ]);
+    $italian_hive->save();
+    \Drupal::entityTypeManager()->getStorage('queen')->create([
+      'name' => 'Q-Italian',
+      'hive' => $italian_hive->id(),
+      'breed' => 'italian',
+      'status' => 'active',
+    ])->save();
+
+    // No active queen at all — must never match a breed filter.
+    Hive::create([
+      'name' => 'Queenless Hive',
+      'apiary' => $apiary->id(),
+      'status' => 'active',
+    ])->save();
+
+    $this->pushRequestWithQuery(['breed' => 'buckfast']);
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(ApiaryController::class);
+    $build = $controller->view($apiary);
+
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+    $this->assertStringContainsString('Buckfast Hive', $html);
+    $this->assertStringNotContainsString('Italian Hive', $html);
+    $this->assertStringNotContainsString('Queenless Hive', $html);
+  }
+
+  /**
    * Tests the hive name substring filter on the apiary page.
    */
   public function testApiaryHiveTableNameFilter(): void {

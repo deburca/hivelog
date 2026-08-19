@@ -102,7 +102,6 @@ class HiveTest extends KernelTestBase {
       'apiary' => $this->apiary->id(),
       'hive_type' => 'langstroth',
       'hive_material' => 'wood',
-      'bee_breed' => 'buckfast',
       'temperament' => 'calm',
       'status' => 'active',
       'notes' => 'Strong colony.',
@@ -113,7 +112,6 @@ class HiveTest extends KernelTestBase {
     $this->assertEquals('Hive 1', $loaded->label());
     $this->assertEquals('langstroth', $loaded->get('hive_type')->value);
     $this->assertEquals('wood', $loaded->get('hive_material')->value);
-    $this->assertEquals('buckfast', $loaded->get('bee_breed')->value);
     $this->assertEquals('calm', $loaded->get('temperament')->value);
     $this->assertEquals('active', $loaded->get('status')->value);
     $this->assertEquals('Strong colony.', $loaded->get('notes')->value);
@@ -155,6 +153,26 @@ class HiveTest extends KernelTestBase {
 
     $this->assertFalse($hive->hasField('queen_year'));
     $this->assertFalse($hive->hasField('queen_colour'));
+  }
+
+  /**
+   * Tests that breed is no longer stored on the hive itself.
+   *
+   * Breed moved to the Queen entity: a queen's breed doesn't change when
+   * she's moved between hives, and a hive's breed identity comes from
+   * whichever queen currently occupies it (see
+   * Hive::getActiveQueen()). The hive should not expose a bee_breed base
+   * field anymore.
+   */
+  public function testHiveNoLongerStoresBreedDirectly(): void {
+    $hive = Hive::create([
+      'name' => 'No Inline Breed',
+      'apiary' => $this->apiary->id(),
+      'status' => 'active',
+    ]);
+    $hive->save();
+
+    $this->assertFalse($hive->hasField('bee_breed'));
   }
 
   /**
@@ -221,18 +239,15 @@ class HiveTest extends KernelTestBase {
       'name' => 'Original Hive',
       'apiary' => $this->apiary->id(),
       'status' => 'active',
-      'bee_breed' => 'italian',
     ]);
     $hive->save();
 
     $hive->set('name', 'Renamed Hive');
-    $hive->set('bee_breed', 'buckfast');
     $hive->set('status', 'merged');
     $hive->save();
 
     $loaded = Hive::load($hive->id());
     $this->assertEquals('Renamed Hive', $loaded->label());
-    $this->assertEquals('buckfast', $loaded->get('bee_breed')->value);
     $this->assertEquals('merged', $loaded->get('status')->value);
   }
 
@@ -512,6 +527,7 @@ class HiveTest extends KernelTestBase {
       'name' => 'Q-2024-001',
       'hive' => $hive->id(),
       'queen_year' => 2024,
+      'breed' => 'buckfast',
       'introduction_date' => '2024-05-01',
       'status' => 'active',
     ]);
@@ -544,6 +560,9 @@ class HiveTest extends KernelTestBase {
 
     $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
     $this->assertStringContainsString('Q-2024-001', $html);
+    // Breed is shown on the hive page via the active queen (issue: bee
+    // breed belongs to the queen, not the hive).
+    $this->assertStringContainsString('Buckfast', $html);
     // The queen's marking colour is derived from the hatch year.
     $this->assertStringContainsString('Green', $html);
     $this->assertStringContainsString('2024-05-01', $html);

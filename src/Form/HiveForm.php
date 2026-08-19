@@ -43,7 +43,7 @@ class HiveForm extends ContentEntityForm {
         'title' => $this->t('Colony'),
         'weight' => 2,
         'open' => FALSE,
-        'fields' => ['bee_breed', 'temperament'],
+        'fields' => ['temperament'],
       ],
       'hive_notes' => [
         'title' => $this->t('Notes & photos'),

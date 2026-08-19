@@ -149,9 +149,9 @@ The module also adds a `cbr_number` field to the Drupal `user` entity via
 `hivelog_uninstall()` to avoid a fatal PDO exception when the column has
 already been removed — see `_hivelog_cleanup_cbr_field()`.
 
-Allowed-value lists for hive `type`, `material`, `breed`, `temperament`,
-`status`, queen `breed` / `temperament` / `status`, and the various
-inspection enums are hard-coded in the respective `baseFieldDefinitions()`.
+Allowed-value lists for hive `type`, `material`, `temperament`, `status`,
+queen `breed` / `temperament` / `status`, and the various inspection enums
+are hard-coded in the respective `baseFieldDefinitions()`.
 Extending them requires editing the entity class **and** writing an update
 hook if existing data must be preserved.
 

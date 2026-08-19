@@ -150,25 +150,6 @@ class Hive extends ContentEntityBase implements EntityChangedInterface, EntityOw
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
-    $fields['bee_breed'] = BaseFieldDefinition::create('list_string')
-      ->setLabel(t('Bee Breed'))
-      ->setDescription(t('The breed of bees in this hive.'))
-      ->setSetting('allowed_values', [
-        'buckfast' => 'Buckfast',
-        'carniolan' => 'Apis mellifera carnica (Carniolan)',
-        'italian' => 'Apis mellifera ligustica (Italian)',
-        'caucasian' => 'Apis mellifera caucasica (Caucasian)',
-        // 'russian' => 'Russian',
-        'amm' => 'Apis mellifera mellifera (Dark European)',
-        'other' => 'Other',
-      ])
-      ->setDisplayOptions('form', [
-        'type' => 'options_select',
-        'weight' => 3,
-      ])
-      ->setDisplayConfigurable('form', TRUE)
-      ->setDisplayConfigurable('view', TRUE);
-
     $fields['temperament'] = BaseFieldDefinition::create('list_string')
       ->setLabel(t('Temperament'))
       ->setDescription(t('The general temperament of the colony.'))

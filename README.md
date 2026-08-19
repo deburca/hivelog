@@ -11,10 +11,12 @@ HiveLog provides a structured system for beekeepers to:
 
 - Track **apiary locations** (with optional GPS coordinates)
 - Manage individual **hives** and their characteristics (type, material,
-  breed, temperament)
+  temperament)
 - Track **queens** as first-class entities linked to a hive, with their own
-  identifier, provenance, and active/inactive lifecycle (hives outlive
-  queens, so queen info is not stored on the hive itself)
+  identifier, provenance, breed, and active/inactive lifecycle (hives outlive
+  queens, so queen info — including breed — is not stored on the hive
+  itself; a hive's breed identity comes from whichever queen currently
+  occupies it)
 - Record detailed **inspection logs** covering queen status, brood, stores,
   health, feeding, and management actions
 - Log **queen observations** separately from hive inspections for
@@ -63,7 +65,6 @@ After installation, navigate to **Administration → Structure → HiveLog**
    Each hive records:
    - Hive type (10x12, Norwegian, Langstroth, Trugstad, Normal)
    - Hive material (Wood, Styrofoam)
-   - Bee breed (Buckfast, Carniolan, Italian, Caucasian, Dark European/AMM, Other)
    - Temperament (Calm, Moderate, Aggressive)
    - Status (Active, Inactive, Dead, Sold, Merged)
 
@@ -73,7 +74,8 @@ After installation, navigate to **Administration → Structure → HiveLog**
    - A human-readable ID (e.g. `Q-2026-001`)
    - Origin (breeder, swarm, supplier, …)
    - Queen year (international marking colour auto-calculated)
-   - Breed and temperament
+   - Breed (Buckfast, Carniolan, Italian, Caucasian, Dark European/AMM, Other)
+     and temperament
    - Purchase cost and purchase date
    - Hive reference and introduction date
    - Status: **Active** or **Inactive**
@@ -359,8 +361,10 @@ ddev drush cr
 
 ## Extending the Module
 
-- **Add new hive types or breeds** — Edit the `allowed_values` arrays in the
-  corresponding `baseFieldDefinitions()` in `src/Entity/Hive.php`.
+- **Add new hive types or materials** — Edit the `allowed_values` arrays in
+  the corresponding `baseFieldDefinitions()` in `src/Entity/Hive.php`.
+- **Add new breeds** — Edit the `breed` field's `allowed_values` array in
+  `Queen::baseFieldDefinitions()` in `src/Entity/Queen.php`.
 - **Add new inspection fields** — Add a new `BaseFieldDefinition` in
   `src/Entity/HiveInspection.php`, then uninstall and reinstall the module (or
   write an update hook) to apply schema changes.

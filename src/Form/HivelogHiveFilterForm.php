@@ -60,6 +60,7 @@ class HivelogHiveFilterForm extends FormBase {
     $form['#cache']['contexts'][] = 'url.query_args';
 
     $hive_fields = $this->entityFieldManager->getBaseFieldDefinitions('hive');
+    $queen_fields = $this->entityFieldManager->getBaseFieldDefinitions('queen');
 
     $form['filters'] = [
       '#type' => 'container',
@@ -73,11 +74,14 @@ class HivelogHiveFilterForm extends FormBase {
       '#default_value' => $query ? (string) $query->get('status', '') : '',
     ];
 
-    $form['filters']['bee_breed'] = [
+    // Breed lives on the active queen, not the hive (a hive's breed
+    // identity comes from whichever queen currently occupies it) — see
+    // ApiaryController::applyHiveFilters().
+    $form['filters']['breed'] = [
       '#type' => 'select',
       '#title' => $this->t('Breed'),
-      '#options' => ['' => $this->t('- Any -')] + $hive_fields['bee_breed']->getSetting('allowed_values'),
-      '#default_value' => $query ? (string) $query->get('bee_breed', '') : '',
+      '#options' => ['' => $this->t('- Any -')] + $queen_fields['breed']->getSetting('allowed_values'),
+      '#default_value' => $query ? (string) $query->get('breed', '') : '',
     ];
 
     $form['filters']['temperament'] = [

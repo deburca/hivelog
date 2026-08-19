@@ -180,10 +180,12 @@ class ApiaryController extends ControllerBase {
           ],
         ],
       ];
+      $queen = $hive->getActiveQueen();
+      $breed = $queen ? $queen->get('breed')->value : NULL;
       $rows[] = [
         'cells' => [
           $hive->toLink()->toString(),
-          $hive->get('bee_breed')->value ? $hive->get('bee_breed')->getSetting('allowed_values')[$hive->get('bee_breed')->value] ?? $hive->get('bee_breed')->value : '',
+          $breed ? $queen->get('breed')->getSetting('allowed_values')[$breed] ?? $breed : '',
           $hive->get('temperament')->value ? $hive->get('temperament')->getSetting('allowed_values')[$hive->get('temperament')->value] ?? $hive->get('temperament')->value : '',
           $hive->get('status')->getSetting('allowed_values')[$hive->get('status')->value] ?? $hive->get('status')->value,
           $this->renderer->renderInIsolation($actions),
@@ -687,7 +689,7 @@ class ApiaryController extends ControllerBase {
       return [];
     }
     $filters = [];
-    foreach (['status', 'bee_breed', 'temperament', 'name'] as $key) {
+    foreach (['status', 'breed', 'temperament', 'name'] as $key) {
       $value = trim((string) $request->query->get($key, ''));
       if ($value !== '') {
         $filters[$key] = $value;
@@ -703,8 +705,11 @@ class ApiaryController extends ControllerBase {
     if (isset($filters['status'])) {
       $query->condition('status', $filters['status']);
     }
-    if (isset($filters['bee_breed'])) {
-      $query->condition('bee_breed', $filters['bee_breed']);
+    if (isset($filters['breed'])) {
+      // Breed lives on the active queen, not the hive, so resolve matching
+      // hive ids via the queen entity first (see Hive::getActiveQueen()).
+      $hive_ids = $this->hiveIdsForActiveQueenBreed($filters['breed']);
+      $query->condition('id', $hive_ids, 'IN');
     }
     if (isset($filters['temperament'])) {
       $query->condition('temperament', $filters['temperament']);
@@ -719,6 +724,37 @@ class ApiaryController extends ControllerBase {
    */
   protected function escapeLike(string $value): string {
     return addcslashes($value, '\\%_');
+  }
+
+  /**
+   * Finds hive ids whose active queen has the given breed.
+   *
+   * @param string $breed
+   *   One of the `breed` field's allowed values on the Queen entity.
+   *
+   * @return int[]
+   *   Matching hive ids, or `[0]` (a value no hive can have) if none match,
+   *   so callers can pass the result straight into an `IN` condition.
+   */
+  protected function hiveIdsForActiveQueenBreed(string $breed): array {
+    $queen_storage = $this->entityTypeManager->getStorage('queen');
+    $queen_ids = $queen_storage->getQuery()
+      ->accessCheck(TRUE)
+      ->condition('breed', $breed)
+      ->condition('status', 'active')
+      ->execute();
+
+    $hive_ids = [];
+    if ($queen_ids) {
+      foreach ($queen_storage->loadMultiple($queen_ids) as $queen) {
+        $hive_id = $queen->get('hive')->target_id;
+        if ($hive_id) {
+          $hive_ids[] = $hive_id;
+        }
+      }
+    }
+
+    return $hive_ids ?: [0];
   }
 
   /**

@@ -483,6 +483,11 @@ class HiveController extends ControllerBase {
         ? ($queen->get('queen_colour')->getSetting('allowed_values')[$colour] ?? $colour)
         : $this->t('Not set');
 
+      $breed = $queen->get('breed')->value;
+      $breed_label = $breed
+        ? ($queen->get('breed')->getSetting('allowed_values')[$breed] ?? $breed)
+        : $this->t('Not set');
+
       $section['details'] = [
         '#type' => 'table',
         '#header' => [$this->t('Field'), $this->t('Value')],
@@ -490,6 +495,7 @@ class HiveController extends ControllerBase {
         '#attached' => ['library' => ['hivelog/tables']],
         '#rows' => [
           [$this->t('Queen ID'), $queen->toLink()->toString()],
+          [$this->t('Breed'), $breed_label],
           [$this->t('Colour'), $colour_label],
           [$this->t('Year'), $queen->get('queen_year')->value ?: $this->t('Not set')],
           [$this->t('Introduced'), $queen->get('introduction_date')->value ?: $this->t('Not set')],

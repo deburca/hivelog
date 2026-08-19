@@ -657,6 +657,29 @@ function hivelog_update_10018(&$sandbox) {
 }
 
 /**
+ * Removes the now-duplicate bee_breed field from hives.
+ *
+ * Breed is a property of the queen, not the hive: a Buckfast queen can be
+ * introduced into any hive, and a hive keeps its breed identity from
+ * whichever queen currently occupies it. Queen::breed has always mirrored
+ * this field with an identical allowed-value list; hive breed is now
+ * resolved via Hive::getActiveQueen() instead. The module is not yet in
+ * production, so no data migration is required (same rationale as
+ * hivelog_update_10008, which split queen tracking off the hive).
+ */
+function hivelog_update_10019(&$sandbox) {
+  $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+
+  $bee_breed_definition = $entity_definition_update_manager
+    ->getFieldStorageDefinition('bee_breed', 'hive');
+  if ($bee_breed_definition) {
+    $entity_definition_update_manager->uninstallFieldStorageDefinition($bee_breed_definition);
+  }
+
+  return t('Removed the bee_breed field from hives; breed is now tracked on the queen.');
+}
+
+/**
  * Removes all traces of the cbr_number field from Drupal's tracking stores.
  *
  * The normal EntityDefinitionUpdateManager::uninstallFieldStorageDefinition()
