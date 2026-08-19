@@ -569,7 +569,7 @@ class HiveController extends ControllerBase {
       ];
       $rows[] = [
         'cells' => [
-          (string) ($inspection->get('inspection_date')->value ?: $this->t('N/A')),
+          $inspection->toLink($inspection->get('inspection_date')->value ?: $this->t('N/A'))->toString(),
           $weight !== NULL ? $weight . ' kg' : '',
           (string) ($inspection->get('queen_seen')->value ? $this->t('Yes') : $this->t('No')),
           $inspection->get('brood_pattern')->value ? $inspection->get('brood_pattern')->getSetting('allowed_values')[$inspection->get('brood_pattern')->value] ?? '' : '',

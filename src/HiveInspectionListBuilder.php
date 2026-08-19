@@ -27,7 +27,7 @@ class HiveInspectionListBuilder extends EntityListBuilder {
    * {@inheritdoc}
    */
   public function buildRow(EntityInterface $entity) {
-    $row['date'] = $entity->get('inspection_date')->value ?: $this->t('N/A');
+    $row['date'] = $entity->toLink($entity->get('inspection_date')->value ?: $this->t('N/A'));
     $hive = $entity->get('hive')->entity;
     $row['hive'] = $hive ? $hive->toLink() : '';
     $weight = $entity->get('weight')->value;
