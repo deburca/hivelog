@@ -76,7 +76,13 @@ SORT status asc, priority asc
   "Required Items" table on the calendar action canonical page; verified
   end-to-end against a real Drupal site, full suite at 354
   tests/4966 assertions/0 failures)
-- [[0031-inventory-usage-and-action-log-reporting-integration]] — backlog
+- [[0031-inventory-usage-and-action-log-reporting-integration]] — done
+  (`InventoryUsage` entity, shared `InventoryUsageFormTrait` wiring the
+  "done" report flow on both `HiveActionLogForm` and
+  `ApiaryActionLogForm` to pre-fill from the recipe and record actual
+  usage with a snapshotted weighted-average unit cost; verified
+  end-to-end against a real Drupal site, full suite at 376 tests/0
+  failures attributable to this change)
 - [[0032-inventory-cost-and-depreciation-report]] — backlog
 - [[0033-inventory-test-coverage]] — backlog
 

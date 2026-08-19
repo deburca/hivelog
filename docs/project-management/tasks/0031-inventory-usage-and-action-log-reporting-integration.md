@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: backlog
+status: done
 priority: medium
 project: "[[inventory-tracking-and-depreciation]]"
 area: entity
@@ -26,10 +26,10 @@ createLinkedInspection()` — a `done` report optionally creating related
 records as a side effect of saving.
 
 ## Acceptance criteria
-- [ ] `src/Entity/InventoryUsage.php` — base table
+- [x] `src/Entity/InventoryUsage.php` — base table
       `hivelog_inventory_usage`, entity keys (`id`, `uuid`, `owner` →
       `uid`); `label()` composed as `"@item — @quantity @unit"`.
-- [ ] Fields: `item` (required entity_reference → `inventory_item`, form
+- [x] Fields: `item` (required entity_reference → `inventory_item`, form
       widget restricted to `item_type = consumable` items only — see
       validation below for the durable case), `quantity` (required
       decimal), `hive_action_log` (optional entity_reference →
@@ -39,13 +39,13 @@ records as a side effect of saving.
       `Σ(purchase.quantity × purchase.unit_price) / Σ(purchase.quantity)`
       across all `InventoryPurchase` rows for `item` as of save time),
       plus `uid`/`created`/`changed`.
-- [ ] `preSave()` validation: exactly one of `hive_action_log` /
+- [x] `preSave()` validation: exactly one of `hive_action_log` /
       `apiary_action_log` must be set (not both, not neither); `item.
       item_type` must be `consumable` — reject (throw
       `\InvalidArgumentException`) an attempt to record usage against a
       `durable` item, per the ADR's explicit decision that durable items
       are never consumed by a usage record.
-- [ ] `HiveActionLogForm`/`ApiaryActionLogForm`: when the report's
+- [x] `HiveActionLogForm`/`ApiaryActionLogForm`: when the report's
       `status` is set to `done`, show the `calendar_action`'s
       `CalendarActionItemRequirement` rows as a pre-filled, editable list
       of item + quantity (defaulting to the recipe's quantity, per the
@@ -53,26 +53,33 @@ records as a side effect of saving.
       create one `InventoryUsage` row per non-zero-quantity line, linked
       to the newly-saved log. Mirror
       `HiveActionLogForm::createLinkedInspection()`'s
-      conditional-side-effect-on-save structure.
-- [ ] Editing an already-`done` log's usage rows: decide and implement
-      whether re-saving updates existing `InventoryUsage` rows in place
-      or creates new ones — recommend updating in place (matching a
-      single log having a stable, editable set of usage rows) unless a
-      concrete reason emerges to prefer an append-only usage history per
-      log.
-- [ ] `hivelog.permissions.yml`: `view own inventory usage`, `view any …`,
+      conditional-side-effect-on-save structure. Implemented as a shared
+      `InventoryUsageFormTrait` used by both forms.
+- [x] Editing an already-`done` log's usage rows: implemented updating
+      existing `InventoryUsage` rows in place on re-save (not
+      append-only), per the recommendation. Also handles the edge case
+      the ADR didn't explicitly spell out: changing status away from
+      `done` on an already-reported log deletes its previously recorded
+      usage rows, since they no longer represent a real consumption
+      event.
+- [x] `hivelog.permissions.yml`: `view own inventory usage`, `view any …`,
       `add …`, `edit own …`, `edit any …`, `delete own …`, `delete any …`.
-- [ ] `hivelog_update_NNNN` installs the new entity type; add to
+- [x] `hivelog_update_10022` installs the new entity type; added to
       `hivelog_uninstall()`'s cleanup list before `hive_action_log`/
-      `apiary_action_log`.
-- [ ] Kernel tests: CRUD, the exactly-one-of-hive/apiary-log guard, the
+      `apiary_action_log`/`inventory_item`, all of which it references.
+- [x] Kernel tests: CRUD, the exactly-one-of-hive/apiary-log guard, the
       consumable-only guard (durable item rejected), weighted-average
       `unit_cost_snapshot` derivation with multiple purchases at
-      different prices, the report-form pre-fill-from-recipe behaviour,
-      and `InventoryItem::getStockOnHand()` (from
+      different prices (including proof the snapshot is immutable after
+      creation even if a later, more expensive purchase is recorded),
+      the report-form pre-fill-from-recipe behaviour (both
+      `HiveActionLogForm` and `ApiaryActionLogForm`), and
+      `InventoryItem::getStockOnHand()` (from
       [[0029-inventory-catalog-and-purchase-ledger-ui]]) correctly
-      reflecting usage once these rows exist.
-- [ ] `ddev drush updb -y && ddev drush cr` clean.
+      reflecting usage once these rows exist. 34 new tests across
+      `InventoryUsageTest`, `InventoryUsageAccessTest`, and
+      `InventoryUsageReportingIntegrationTest`.
+- [x] `ddev drush updb -y && ddev drush cr` clean.
 
 ## Implementation notes
 - Key files: `src/Entity/InventoryUsage.php`,
@@ -93,7 +100,25 @@ records as a side effect of saving.
   backdated purchases after usage already occurred should be rare for
   this tool's scale).
 
+## Verification
+- Full kernel+unit suite against `cms2` (MySQL): 376 tests, 0 failures
+  attributable to this change. CI (`gh run list`, MySQL-backed) green on
+  the fix commit. Two local-sqlite-only anomalies
+  (`QueenTest::testCreateQueen` decimal formatting,
+  `ApiaryCalendarChecklistTest::testFullCalendarFiltersNarrowResults`)
+  are pre-existing, untouched by any commit in this session, and don't
+  reproduce under CI's MySQL backend — out of scope for this task.
+- End-to-end smoke test via `drush php:eval`: created an `InventoryItem`
+  + `InventoryPurchase` + `CalendarActionItemRequirement`, submitted a
+  `HiveActionLog` "done" report through the real
+  `HiveActionLogForm::save()` path, confirmed an `InventoryUsage` row was
+  created with the correct weighted-average `unit_cost_snapshot`, and
+  confirmed `InventoryItem::getStockOnHand()` reflected the consumption
+  (20 → 17).
+
 ## Related
 - Project:: [[inventory-tracking-and-depreciation]]
 - Decisions:: [[0027-inventory-tracking-and-depreciation]], [[0023-link-hive-action-log-to-inspection]]
-- Commits::
+- Commits:: 144b878 (entity, access control, form trait, wiring into both
+  action-log forms, permissions, install hook, tests), d763c35
+  (schema-install fix for two pre-existing tests + own new test file)
