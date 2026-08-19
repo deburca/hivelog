@@ -399,10 +399,10 @@ class ApiaryController extends ControllerBase {
     ];
 
     // Inventory: an apiary-scoped table of inventory items, matching the
-    // Hives table's pattern above — "View Inventory Items" still links out
-    // to the globally-listed catalog (InventoryItemListBuilder) for
-    // managing items across every apiary at once; "Add Inventory Item" and
-    // "View Cost Report" stay apiary-scoped.
+    // Hives table's pattern above. No "View Inventory Items" link-out —
+    // the items are already listed right here, and the main-nav
+    // "Inventory Items" link (hivelog.links.menu.yml) still reaches the
+    // global, cross-apiary catalog when that's what's actually wanted.
     $build['inventory_heading'] = [
       '#type' => 'container',
       '#attributes' => ['class' => ['hivelog-list-heading']],
@@ -416,12 +416,12 @@ class ApiaryController extends ControllerBase {
       'actions' => [
         '#type' => 'container',
         '#attributes' => ['class' => ['hivelog-list-heading__action']],
-        'view' => [
+        'cost_report' => [
           '#type' => 'component',
           '#component' => 'hivelog:button',
           '#props' => [
-            'label' => (string) $this->t('View Inventory Items'),
-            'url' => Url::fromRoute('entity.inventory_item.collection')->toString(),
+            'label' => (string) $this->t('View Cost Report'),
+            'url' => Url::fromRoute('hivelog.apiary.inventory_cost_report', ['apiary' => $apiary->id()])->toString(),
           ],
         ],
         'add' => [
@@ -431,14 +431,6 @@ class ApiaryController extends ControllerBase {
             'label' => (string) $this->t('Add Inventory Item'),
             'url' => Url::fromRoute('hivelog.inventory_item.add', ['apiary' => $apiary->id()])->toString(),
             'variant' => 'primary',
-          ],
-        ],
-        'cost_report' => [
-          '#type' => 'component',
-          '#component' => 'hivelog:button',
-          '#props' => [
-            'label' => (string) $this->t('View Cost Report'),
-            'url' => Url::fromRoute('hivelog.apiary.inventory_cost_report', ['apiary' => $apiary->id()])->toString(),
           ],
         ],
       ],
