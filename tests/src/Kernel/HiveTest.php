@@ -690,11 +690,21 @@ class HiveTest extends KernelTestBase {
     $this->assertStringContainsString('Queen Observations', $html);
     $this->assertStringContainsString('2024-06-20', $html);
 
-    // Inspections block renders before the Observations block below it.
+    // A shared "Hive Activity" heading sits above both blocks, reinforcing
+    // that inspections and queen observations are tracked together rather
+    // than as separate concerns.
+    $this->assertArrayHasKey('hive_activity_heading', $build);
+    $this->assertStringContainsString('Hive Activity', $html);
+    $activity_heading_pos = strpos($html, 'Hive Activity');
+
+    // Inspections block renders before the Observations block below it,
+    // both after the "Hive Activity" heading.
     $inspections_pos = strpos($html, 'Inspections');
     $observations_pos = strpos($html, 'Queen Observations');
+    $this->assertNotFalse($activity_heading_pos);
     $this->assertNotFalse($inspections_pos);
     $this->assertNotFalse($observations_pos);
+    $this->assertLessThan($inspections_pos, $activity_heading_pos);
     $this->assertLessThan($observations_pos, $inspections_pos);
   }
 

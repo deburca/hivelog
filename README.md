@@ -85,16 +85,17 @@ After installation, navigate to **Administration → Structure → HiveLog**
    being detached, and appears in the "Previous Queens" list on the hive
    view page.
 
-4. **Log queen observations** — From the hive view page, beside the
-   **Edit Queen** button, an **Add Observation** button opens a form
-   scoped to the currently-active queen, and returns you to the hive
-   afterward. Observations for every queen the hive has ever had are
-   listed on the hive view page in a "Queen Observations" table below the
-   Inspections table (newest first) — the two logs a beekeeper keeps
-   during the same hive visit stay on the same page rather than on
-   separate ones. The full history for one queen specifically is still
-   also listed at the bottom of that queen's own page. Each observation
-   captures:
+4. **Log queen observations** — The hive view page has a shared "Hive
+   Activity" heading over two tables: **Inspections**, then **Queen
+   Observations** below it (newest first) — the two logs a beekeeper
+   keeps during the same hive visit stay on the same page rather than on
+   separate ones. Observations for every queen the hive has ever had are
+   listed there, both filterable the same way (date range, plus
+   observation-specific fields). An **Add Observation** button in the
+   Queen Observations table's own heading opens a form scoped to the
+   currently-active queen, and returns you to the hive afterward. The
+   full history for one queen specifically is still also listed at the
+   bottom of that queen's own page. Each observation captures:
    - Observation date
    - Health (Excellent / Good / Fair / Poor)
    - Temperament (Calm / Moderate / Aggressive)

@@ -6,11 +6,15 @@
  * the two blocks stack full-width instead, spaced apart vertically.
  */
 
+.hivelog-activity-section-title {
+  margin: 1.5rem 0 0;
+}
+
 .hivelog-activity-columns {
   display: flex;
   flex-direction: column;
   gap: 2rem;
-  margin-top: 1rem;
+  margin-top: 0.5rem;
 }
 
 .hivelog-activity-column {
