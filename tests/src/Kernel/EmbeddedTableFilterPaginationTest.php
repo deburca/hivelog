@@ -514,8 +514,10 @@ class EmbeddedTableFilterPaginationTest extends KernelTestBase {
   }
 
   /**
-   * Tests the Queen filter on the Queen Observations table, and that the
-   * filter option only appears once a hive has had more than one queen.
+   * Tests the Queen filter on the Queen Observations table.
+   *
+   * Also tests that the filter option only appears once a hive has had
+   * more than one queen.
    */
   public function testHiveObservationsTableQueenFilter(): void {
     $apiary = Apiary::create(['name' => 'Observation Queen Apiary']);

@@ -259,7 +259,7 @@ class QueenObservationTest extends KernelTestBase {
   }
 
   /**
-   * Saving an observation for a hiveless queen falls back to her own page.
+   * Saving an observation for a hiveless queen falls back to its own page.
    */
   public function testSaveRedirectsToQueenWhenQueenHasNoHive(): void {
     $hiveless_queen = Queen::create([

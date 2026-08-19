@@ -160,8 +160,8 @@ class HiveTest extends KernelTestBase {
    * Tests that breed is no longer stored on the hive itself.
    *
    * Breed moved to the Queen entity: a queen's breed doesn't change when
-   * she's moved between hives, and a hive's breed identity comes from
-   * whichever queen currently occupies it (see
+   * the queen is moved between hives, and a hive's breed identity comes
+   * from whichever queen currently occupies it (see
    * Hive::getActiveQueen()). The hive should not expose a bee_breed base
    * field anymore.
    */
@@ -744,7 +744,7 @@ class HiveTest extends KernelTestBase {
    *
    * Observations are aggregated across every queen the hive has ever had
    * (Hive::getQueens()), not just the current one, so replacing a queen
-   * doesn't lose her observation history from the hive's activity log.
+   * doesn't lose its observation history from the hive's activity log.
    */
   public function testHiveViewQueenObservationsSurviveQueenReplacement(): void {
     $this->installConfig(['system']);
@@ -778,7 +778,8 @@ class HiveTest extends KernelTestBase {
     ])->save();
 
     // A new active queen demotes the first one, but per Queen::preSave()
-    // she keeps her `hive` reference — her observation should still show.
+    // the first queen keeps its `hive` reference — its observation
+    // should still show.
     $second_queen = Queen::create([
       'name' => 'Q-second',
       'hive' => $hive->id(),

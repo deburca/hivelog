@@ -406,7 +406,7 @@ class HiveController extends ControllerBase {
    * expose View / Edit links. Otherwise, invite the user to add a queen
    * via the hive-scoped add route. Either way, any other queens the hive
    * has previously had are listed below as history (see
-   * Hive::getQueens()) so retiring a queen doesn't erase her from the
+   * Hive::getQueens()) so retiring a queen doesn't erase it from the
    * hive's story.
    *
    * @param \Drupal\hivelog\Entity\Hive $hive
@@ -664,9 +664,9 @@ class HiveController extends ControllerBase {
    * @param \Drupal\hivelog\Entity\Hive $hive
    *   The hive being rendered.
    * @param \Drupal\hivelog\Entity\Queen|null $active_queen
-   *   The hive's currently active queen, if any — only she can receive a
-   *   new observation, so the "Add Observation" button only appears when
-   *   this is set.
+   *   The hive's currently active queen, if any — only the active queen
+   *   can receive a new observation, so the "Add Observation" button only
+   *   appears when this is set.
    *
    * @return array{0: array, 1: \Drupal\hivelog\Entity\QueenObservation[]}
    *   Tuple of [render array, loaded observation entities for cache deps].

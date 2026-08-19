@@ -102,9 +102,9 @@ class Queen extends ContentEntityBase implements EntityChangedInterface, EntityO
       }
       $conflict_ids = $query->execute();
       if ($conflict_ids) {
-        // Demote the previous queen but keep her `hive` reference intact —
-        // a retired queen still belongs to the hive's history (see
-        // Hive::getQueens()), she just isn't the *current* occupant.
+        // Demote the previous queen but keep its `hive` reference intact
+        // — a retired queen still belongs to the hive's history (see
+        // Hive::getQueens()); it just isn't the *current* occupant.
         foreach ($storage->loadMultiple($conflict_ids) as $conflict) {
           $conflict->set('status', 'inactive');
           $conflict->save();
