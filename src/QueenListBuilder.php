@@ -61,13 +61,13 @@ class QueenListBuilder extends EntityListBuilder {
    * ApiaryListBuilder::buildRow()).
    */
   public function buildRow(EntityInterface $entity) {
-    $row['name'] = $entity->toLink();
+    $row['name'] = $entity->toLink()->toString();
 
     $colour = $entity->get('queen_colour')->value;
     $row['colour'] = $colour ? ($entity->get('queen_colour')->getSetting('allowed_values')[$colour] ?? $colour) : '';
 
     $hive = $entity->get('hive')->entity;
-    $row['hive'] = $hive ? $hive->toLink() : '';
+    $row['hive'] = $hive ? $hive->toLink()->toString() : '';
 
     $row['introduced'] = $entity->get('introduction_date')->value ?? '';
 
@@ -120,9 +120,9 @@ class QueenListBuilder extends EntityListBuilder {
 
       $rows[] = [
         'cells' => [
-          $row['name'] instanceof \Stringable ? (string) $row['name'] : $row['name'],
+          $row['name'],
           $row['colour'] ?? '',
-          $row['hive'] instanceof \Stringable ? (string) $row['hive'] : ($row['hive'] ?? ''),
+          $row['hive'] ?? '',
           $row['introduced'] ?? '',
           $row['status'] ?? '',
           $ops_html,

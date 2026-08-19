@@ -90,7 +90,7 @@ class ApiaryListBuilder extends EntityListBuilder {
   public function buildRow(EntityInterface $entity) {
     $owner = $entity->getOwner();
     $row['cbr'] = $this->extractCbr($owner) ?: '—';
-    $row['name'] = $entity->toLink();
+    $row['name'] = $entity->toLink()->toString();
     $row['location'] = $entity->get('location')->value
       ? mb_strimwidth($entity->get('location')->value, 0, 60, '...')
       : '';
@@ -139,8 +139,8 @@ class ApiaryListBuilder extends EntityListBuilder {
 
       $rows[] = [
         'cells' => [
-          $row['cbr'] instanceof \Stringable ? (string) $row['cbr'] : $row['cbr'],
-          $row['name'] instanceof \Stringable ? (string) $row['name'] : $row['name'],
+          $row['cbr'],
+          $row['name'],
           $row['location'] ?? '',
           $row['owner'] ?? '',
           $ops_html,
