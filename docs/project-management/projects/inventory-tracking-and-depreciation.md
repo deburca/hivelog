@@ -62,7 +62,10 @@ WHERE contains(string(project), this.file.name)
 SORT status asc, priority asc
 ```
 
-- [[0028-inventory-item-and-purchase-entities]] — backlog
+- [[0028-inventory-item-and-purchase-entities]] — done (`InventoryItem`
+  and `InventoryPurchase` entities, basic forms/list builders,
+  permissions, `hivelog_update_10020`; verified end-to-end against a
+  real Drupal site, full suite at 318 tests/4550 assertions/0 failures)
 - [[0029-inventory-catalog-and-purchase-ledger-ui]] — backlog
 - [[0030-calendar-action-item-requirement-and-recipe-ui]] — backlog
 - [[0031-inventory-usage-and-action-log-reporting-integration]] — backlog
