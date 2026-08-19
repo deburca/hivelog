@@ -18,6 +18,7 @@ use Drupal\hivelog\Entity\Hive;
 use Drupal\hivelog\Entity\Queen;
 use Drupal\hivelog\Form\HivelogCalendarFilterForm;
 use Drupal\hivelog\Form\HivelogInspectionFilterForm;
+use Drupal\hivelog\Form\HivelogQueenObservationFilterForm;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -644,6 +645,7 @@ class HiveController extends ControllerBase {
    */
   protected function buildObservationsColumn(Hive $hive, ?Queen $active_queen): array {
     $queen_ids = array_map(fn(Queen $queen) => $queen->id(), $hive->getQueens());
+    $filters = $this->extractObservationFilters();
 
     $observations = [];
     if ($queen_ids) {
@@ -654,6 +656,7 @@ class HiveController extends ControllerBase {
         ->condition('queen', $queen_ids, 'IN')
         ->sort('observation_date', 'DESC')
         ->pager(static::OBSERVATIONS_PER_PAGE, static::OBSERVATIONS_PAGER_ELEMENT);
+      $this->applyObservationFilters($query, $filters);
       $observation_ids = $query->execute();
       $observations = $observation_ids
         ? $this->entityTypeManager->getStorage('queen_observation')->loadMultiple($observation_ids)
@@ -728,13 +731,16 @@ class HiveController extends ControllerBase {
       '#type' => 'container',
       '#attributes' => ['class' => ['hivelog-activity-column']],
       'heading' => $heading,
+      'filter' => $this->formBuilder->getForm(HivelogQueenObservationFilterForm::class, $hive),
       'table' => [
         '#type' => 'component',
         '#component' => 'hivelog:entity-table',
         '#props' => [
           'headers' => array_map('strval', $header),
           'rows' => $rows,
-          'empty_message' => (string) $this->t('No queen observations have been recorded for this hive yet.'),
+          'empty_message' => (string) (!empty($filters)
+            ? $this->t('No queen observations match the current filters.')
+            : $this->t('No queen observations have been recorded for this hive yet.')),
         ],
       ],
       'pager' => [
@@ -783,6 +789,56 @@ class HiveController extends ControllerBase {
     }
     if (isset($filters['brood_pattern'])) {
       $query->condition('brood_pattern', $filters['brood_pattern']);
+    }
+  }
+
+  /**
+   * Extracts queen observation filter values from the current request.
+   *
+   * Keys are prefixed `obs_` (see HivelogQueenObservationFilterForm) since
+   * this filter form shares a query string with the inspection filter
+   * form on the same page.
+   *
+   * @return array<string, string>
+   *   Associative array keyed by filter name (with the `obs_` prefix
+   *   stripped). Only non-empty values are included.
+   */
+  protected function extractObservationFilters(): array {
+    $request = $this->requestStack->getCurrentRequest();
+    if (!$request) {
+      return [];
+    }
+    $filters = [];
+    foreach (['date_from', 'date_to', 'health', 'temperament', 'active', 'queen'] as $key) {
+      $value = trim((string) $request->query->get('obs_' . $key, ''));
+      if ($value !== '') {
+        $filters[$key] = $value;
+      }
+    }
+    return $filters;
+  }
+
+  /**
+   * Applies queen observation filters to an entity query.
+   */
+  protected function applyObservationFilters(QueryInterface $query, array $filters): void {
+    if (isset($filters['date_from'])) {
+      $query->condition('observation_date', $filters['date_from'], '>=');
+    }
+    if (isset($filters['date_to'])) {
+      $query->condition('observation_date', $filters['date_to'], '<=');
+    }
+    if (isset($filters['health'])) {
+      $query->condition('health', $filters['health']);
+    }
+    if (isset($filters['temperament'])) {
+      $query->condition('temperament', $filters['temperament']);
+    }
+    if (isset($filters['active']) && in_array($filters['active'], ['0', '1'], TRUE)) {
+      $query->condition('active', (int) $filters['active']);
+    }
+    if (isset($filters['queen'])) {
+      $query->condition('queen', $filters['queen']);
     }
   }
 

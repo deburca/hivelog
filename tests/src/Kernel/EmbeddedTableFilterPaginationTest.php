@@ -9,6 +9,8 @@ use Drupal\hivelog\Controller\HiveController;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\Hive;
 use Drupal\hivelog\Entity\HiveInspection;
+use Drupal\hivelog\Entity\Queen;
+use Drupal\hivelog\Entity\QueenObservation;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\user\Entity\User;
 use PHPUnit\Framework\Attributes\Group;
@@ -381,6 +383,237 @@ class EmbeddedTableFilterPaginationTest extends KernelTestBase {
     $build = $controller->view($hive);
     $this->assertCount(1, $build['hive_activity']['inspections']['table']['#props']['rows']);
     $this->assertEquals('2024-05-02', (string) $build['hive_activity']['inspections']['table']['#props']['rows'][0]['cells'][0]);
+  }
+
+  /**
+   * Tests the date range filter on the Queen Observations table.
+   */
+  public function testHiveObservationsTableDateFilter(): void {
+    $apiary = Apiary::create(['name' => 'Observation Date Apiary']);
+    $apiary->save();
+    $hive = Hive::create([
+      'name' => 'Observation Date Hive',
+      'apiary' => $apiary->id(),
+      'status' => 'active',
+    ]);
+    $hive->save();
+    $queen = Queen::create([
+      'name' => 'Q-obs-date',
+      'hive' => $hive->id(),
+      'queen_year' => 2024,
+      'status' => 'active',
+    ]);
+    $queen->save();
+
+    QueenObservation::create([
+      'queen' => $queen->id(),
+      'observation_date' => '2024-03-01',
+    ])->save();
+    QueenObservation::create([
+      'queen' => $queen->id(),
+      'observation_date' => '2024-06-01',
+    ])->save();
+    QueenObservation::create([
+      'queen' => $queen->id(),
+      'observation_date' => '2024-09-01',
+    ])->save();
+
+    $this->pushRequestWithQuery([
+      'obs_date_from' => '2024-05-01',
+      'obs_date_to' => '2024-08-01',
+    ]);
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(HiveController::class);
+    $build = $controller->view($hive);
+
+    $rows = $build['hive_activity']['observations']['table']['#props']['rows'];
+    $this->assertCount(1, $rows);
+    $this->assertStringContainsString('2024-06-01', (string) $rows[0]['cells'][0]);
+  }
+
+  /**
+   * Tests the health filter on the Queen Observations table.
+   */
+  public function testHiveObservationsTableHealthFilter(): void {
+    $apiary = Apiary::create(['name' => 'Observation Health Apiary']);
+    $apiary->save();
+    $hive = Hive::create([
+      'name' => 'Observation Health Hive',
+      'apiary' => $apiary->id(),
+      'status' => 'active',
+    ]);
+    $hive->save();
+    $queen = Queen::create([
+      'name' => 'Q-obs-health',
+      'hive' => $hive->id(),
+      'queen_year' => 2024,
+      'status' => 'active',
+    ]);
+    $queen->save();
+
+    QueenObservation::create([
+      'queen' => $queen->id(),
+      'observation_date' => '2024-05-01',
+      'health' => 'excellent',
+    ])->save();
+    QueenObservation::create([
+      'queen' => $queen->id(),
+      'observation_date' => '2024-05-02',
+      'health' => 'poor',
+    ])->save();
+
+    $this->pushRequestWithQuery(['obs_health' => 'poor']);
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(HiveController::class);
+    $build = $controller->view($hive);
+
+    $rows = $build['hive_activity']['observations']['table']['#props']['rows'];
+    $this->assertCount(1, $rows);
+    $this->assertStringContainsString('2024-05-02', (string) $rows[0]['cells'][0]);
+  }
+
+  /**
+   * Tests the active (laying) filter on the Queen Observations table.
+   */
+  public function testHiveObservationsTableActiveFilter(): void {
+    $apiary = Apiary::create(['name' => 'Observation Active Apiary']);
+    $apiary->save();
+    $hive = Hive::create([
+      'name' => 'Observation Active Hive',
+      'apiary' => $apiary->id(),
+      'status' => 'active',
+    ]);
+    $hive->save();
+    $queen = Queen::create([
+      'name' => 'Q-obs-active',
+      'hive' => $hive->id(),
+      'queen_year' => 2024,
+      'status' => 'active',
+    ]);
+    $queen->save();
+
+    QueenObservation::create([
+      'queen' => $queen->id(),
+      'observation_date' => '2024-05-01',
+      'active' => TRUE,
+    ])->save();
+    QueenObservation::create([
+      'queen' => $queen->id(),
+      'observation_date' => '2024-05-02',
+      'active' => FALSE,
+    ])->save();
+
+    $this->pushRequestWithQuery(['obs_active' => '0']);
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(HiveController::class);
+    $build = $controller->view($hive);
+
+    $rows = $build['hive_activity']['observations']['table']['#props']['rows'];
+    $this->assertCount(1, $rows);
+    $this->assertStringContainsString('2024-05-02', (string) $rows[0]['cells'][0]);
+  }
+
+  /**
+   * Tests the Queen filter on the Queen Observations table, and that the
+   * filter option only appears once a hive has had more than one queen.
+   */
+  public function testHiveObservationsTableQueenFilter(): void {
+    $apiary = Apiary::create(['name' => 'Observation Queen Apiary']);
+    $apiary->save();
+    $hive = Hive::create([
+      'name' => 'Observation Queen Hive',
+      'apiary' => $apiary->id(),
+      'status' => 'active',
+    ]);
+    $hive->save();
+
+    $first_queen = Queen::create([
+      'name' => 'Q-obs-first',
+      'hive' => $hive->id(),
+      'queen_year' => 2023,
+      'status' => 'active',
+    ]);
+    $first_queen->save();
+    QueenObservation::create([
+      'queen' => $first_queen->id(),
+      'observation_date' => '2023-06-01',
+    ])->save();
+
+    // Only one queen so far: no Queen filter should be offered yet.
+    $this->pushRequestWithQuery([]);
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(HiveController::class);
+    $build = $controller->view($hive);
+    $this->assertArrayNotHasKey('obs_queen', $build['hive_activity']['observations']['filter']['filters']);
+
+    $second_queen = Queen::create([
+      'name' => 'Q-obs-second',
+      'hive' => $hive->id(),
+      'queen_year' => 2025,
+      'status' => 'active',
+    ]);
+    $second_queen->save();
+    QueenObservation::create([
+      'queen' => $second_queen->id(),
+      'observation_date' => '2025-06-01',
+    ])->save();
+
+    $build = $controller->view($hive);
+    $this->assertArrayHasKey('obs_queen', $build['hive_activity']['observations']['filter']['filters']);
+
+    $this->pushRequestWithQuery(['obs_queen' => $first_queen->id()]);
+    $build = $controller->view($hive);
+    $rows = $build['hive_activity']['observations']['table']['#props']['rows'];
+    $this->assertCount(1, $rows);
+    $this->assertStringContainsString('2023-06-01', (string) $rows[0]['cells'][0]);
+  }
+
+  /**
+   * Tests that the inspection and observation filter forms don't collide.
+   *
+   * Both forms are GET forms sharing the same page's query string; the
+   * observation filter keys are prefixed `obs_` specifically so that,
+   * e.g., filtering inspections by date does not also filter
+   * observations by date (and vice versa).
+   */
+  public function testInspectionAndObservationFiltersAreIndependent(): void {
+    $apiary = Apiary::create(['name' => 'Independent Filters Apiary']);
+    $apiary->save();
+    $hive = Hive::create([
+      'name' => 'Independent Filters Hive',
+      'apiary' => $apiary->id(),
+      'status' => 'active',
+    ]);
+    $hive->save();
+    $queen = Queen::create([
+      'name' => 'Q-independent',
+      'hive' => $hive->id(),
+      'queen_year' => 2024,
+      'status' => 'active',
+    ]);
+    $queen->save();
+
+    HiveInspection::create([
+      'hive' => $hive->id(),
+      'inspection_date' => '2024-05-01',
+    ])->save();
+    QueenObservation::create([
+      'queen' => $queen->id(),
+      'observation_date' => '2024-09-01',
+    ])->save();
+
+    // Filtering inspections to a window that excludes the inspection above
+    // must not affect the (differently-dated) observation.
+    $this->pushRequestWithQuery([
+      'date_from' => '2024-01-01',
+      'date_to' => '2024-01-31',
+    ]);
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(HiveController::class);
+    $build = $controller->view($hive);
+
+    $this->assertCount(0, $build['hive_activity']['inspections']['table']['#props']['rows']);
+    $this->assertCount(1, $build['hive_activity']['observations']['table']['#props']['rows']);
   }
 
   /**

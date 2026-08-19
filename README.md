@@ -253,6 +253,7 @@ hivelog/
 │   │   ├── HiveInspectionDeleteForm.php
 │   │   ├── HivelogHiveFilterForm.php         # Hive list filter form
 │   │   ├── HivelogInspectionFilterForm.php   # Inspection list filter form
+│   │   ├── HivelogQueenObservationFilterForm.php  # Queen observation list filter form
 │   │   ├── QueenForm.php         # Queen add/edit form
 │   │   ├── QueenDeleteForm.php
 │   │   ├── QueenObservationForm.php  # Queen observation add/edit form
