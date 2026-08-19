@@ -139,11 +139,11 @@ class HiveController extends ControllerBase {
     $active_queen = $hive->getActiveQueen();
     $build['queen'] = $this->buildQueenSection($hive, $active_queen) + ['#weight' => 8];
 
-    // Hive Activity: Inspections and Queen Observations side-by-side — the
-    // two logs a beekeeper keeps during the same hive visit belong next to
-    // each other, not on separate pages. Stacks to a single column below
-    // the 768px breakpoint per the module's responsive convention
-    // (ADR-0011).
+    // Hive Activity: Inspections, then Queen Observations below it — the
+    // two logs a beekeeper keeps during the same hive visit belong on the
+    // same page, not on separate ones. A side-by-side layout was tried
+    // first but left both tables too cramped, so they stack full-width
+    // instead (see css/hivelog.activity-columns.css).
     [$inspections_column, $inspections] = $this->buildInspectionsColumn($hive);
     [$observations_column, $observations] = $this->buildObservationsColumn($hive, $active_queen);
     $build['hive_activity'] = [

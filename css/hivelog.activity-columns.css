@@ -1,30 +1,18 @@
 /**
  * @file
- * Side-by-side layout for the hive page's "Hive Activity" section
- * (Inspections + Queen Observations). Follows the module's responsive
- * convention (ADR-0011): desktop is the default two-column rule below,
- * stacked to a single column at the 768px breakpoint shared with
- * hivelog.filter-form.css and hivelog.buttons.css.
+ * Layout for the hive page's "Hive Activity" section (Inspections, then
+ * Queen Observations below it). A side-by-side two-column layout was
+ * tried first but made both tables too cramped to read comfortably, so
+ * the two blocks stack full-width instead, spaced apart vertically.
  */
 
 .hivelog-activity-columns {
   display: flex;
-  align-items: flex-start;
-  gap: var(--hivelog-gap);
+  flex-direction: column;
+  gap: 2rem;
   margin-top: 1rem;
 }
 
 .hivelog-activity-column {
-  flex: 1 1 0;
-  /* Allow the column (and its table) to shrink below its content width
-     instead of forcing the row wider than the viewport; the entity-table
-     component's own .overflow-x-auto wrapper handles any table that still
-     doesn't fit. */
   min-width: 0;
-}
-
-@media (max-width: 768px) {
-  .hivelog-activity-columns {
-    flex-direction: column;
-  }
 }

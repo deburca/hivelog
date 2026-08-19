@@ -89,12 +89,12 @@ After installation, navigate to **Administration → Structure → HiveLog**
    **Edit Queen** button, an **Add Observation** button opens a form
    scoped to the currently-active queen, and returns you to the hive
    afterward. Observations for every queen the hive has ever had are
-   listed on the hive view page in a "Queen Observations" table
-   side-by-side with the Inspections table (newest first) — the two logs
-   a beekeeper keeps during the same hive visit stay next to each other
-   rather than on separate pages. The full history for one queen
-   specifically is still also listed at the bottom of that queen's own
-   page. Each observation captures:
+   listed on the hive view page in a "Queen Observations" table below the
+   Inspections table (newest first) — the two logs a beekeeper keeps
+   during the same hive visit stay on the same page rather than on
+   separate ones. The full history for one queen specifically is still
+   also listed at the bottom of that queen's own page. Each observation
+   captures:
    - Observation date
    - Health (Excellent / Good / Fair / Poor)
    - Temperament (Calm / Moderate / Aggressive)

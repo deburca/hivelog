@@ -86,7 +86,7 @@ class QueenObservationForm extends ContentEntityForm {
     }
 
     // Redirect to the parent hive when the queen currently belongs to one
-    // — observations are shown there, side-by-side with inspections, so
+    // — observations are shown there, below the inspections table, so
     // that's where the beekeeper came from and where they'll want to keep
     // working. Fall back to the queen's own page, then the queen
     // collection, when there's no hive to return to.

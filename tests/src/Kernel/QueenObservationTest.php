@@ -238,9 +238,9 @@ class QueenObservationTest extends KernelTestBase {
   /**
    * Saving an observation redirects to the parent hive, not the queen page.
    *
-   * Observations are shown on the hive view page side-by-side with
-   * inspections (see HiveController::buildObservationsColumn()), so
-   * that's where the beekeeper should land after recording one.
+   * Observations are shown on the hive view page below inspections (see
+   * HiveController::buildObservationsColumn()), so that's where the
+   * beekeeper should land after recording one.
    */
   public function testSaveRedirectsToHiveWhenQueenHasOne(): void {
     $observation = QueenObservation::create([

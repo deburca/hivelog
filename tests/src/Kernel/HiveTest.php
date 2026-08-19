@@ -635,14 +635,14 @@ class HiveTest extends KernelTestBase {
   }
 
   /**
-   * Tests that Queen Observations render side-by-side with Inspections.
+   * Tests that Queen Observations render below Inspections on the hive page.
    *
    * The two logs a beekeeper keeps during the same hive visit should stay
-   * next to each other rather than requiring a trip to the queen's own
-   * page — see HiveController::buildHiveActivitySection() and
+   * on the same page rather than requiring a trip to the queen's own page
+   * — see HiveController::buildHiveActivitySection() and
    * css/hivelog.activity-columns.css.
    */
-  public function testHiveViewShowsQueenObservationsBesideInspections(): void {
+  public function testHiveViewShowsQueenObservationsBelowInspections(): void {
     $this->installConfig(['system']);
 
     $user = User::create([
@@ -685,7 +685,7 @@ class HiveTest extends KernelTestBase {
     $this->assertStringContainsString('Queen Observations', $html);
     $this->assertStringContainsString('2024-06-20', $html);
 
-    // Inspections column renders before the Observations column.
+    // Inspections block renders before the Observations block below it.
     $inspections_pos = strpos($html, 'Inspections');
     $observations_pos = strpos($html, 'Queen Observations');
     $this->assertNotFalse($inspections_pos);
