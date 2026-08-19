@@ -502,6 +502,10 @@ class HiveTest extends KernelTestBase {
     $this->assertArrayHasKey('queen', $build);
     $this->assertStringContainsString('No active queen is recorded for this hive.', $html);
     $this->assertStringContainsString('Add Queen', $html);
+    // The queen section always links to the queen collection, regardless
+    // of whether this hive currently has an active queen.
+    $this->assertStringContainsString('View all Queens', $html);
+    $this->assertStringContainsString('/hivelog/queens', $html);
   }
 
   /**
@@ -568,6 +572,7 @@ class HiveTest extends KernelTestBase {
     $this->assertStringContainsString('Green', $html);
     $this->assertStringContainsString('2024-05-01', $html);
     $this->assertStringContainsString('Edit Queen', $html);
+    $this->assertStringContainsString('View all Queens', $html);
     // Add Observation now lives on the Queen Observations column's own
     // heading (see buildObservationsColumn()), after the queen summary.
     $this->assertStringContainsString('Add Observation', $html);

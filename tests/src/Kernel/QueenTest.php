@@ -504,4 +504,41 @@ class QueenTest extends KernelTestBase {
     $this->assertStringContainsString('/hivelog/queen/add', $html);
   }
 
+  /**
+   * The queen collection table uses the hivelog:entity-table component.
+   *
+   * Matches every other list page in the module (see
+   * ApiaryListBuilder::render()) rather than the default core table, with
+   * plain Edit/Delete button links instead of a dropbutton.
+   */
+  public function testQueenCollectionUsesEntityTableComponent(): void {
+    $queen = Queen::create([
+      'name' => 'Q-listed',
+      'hive' => $this->hive->id(),
+      'queen_year' => 2024,
+      'status' => 'active',
+    ]);
+    $queen->save();
+
+    $role = Role::create(['id' => 'queen_row_editor', 'label' => 'Queen Row Editor']);
+    $role->grantPermission('edit any queen');
+    $role->grantPermission('delete any queen');
+    $role->save();
+    $user = User::create(['name' => 'queen-row-tester', 'mail' => 'queen-row-tester@example.com']);
+    $user->addRole('queen_row_editor');
+    $user->save();
+    \Drupal::currentUser()->setAccount($user);
+
+    $build = \Drupal::entityTypeManager()->getListBuilder('queen')->render();
+
+    $this->assertEquals('component', $build['table']['#type']);
+    $this->assertEquals('hivelog:entity-table', $build['table']['#component']);
+    $this->assertCount(1, $build['table']['#props']['rows']);
+    $this->assertStringContainsString('Q-listed', (string) $build['table']['#props']['rows'][0]['cells'][0]);
+
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+    $this->assertStringContainsString('hivelog-entity-table', $html);
+    $this->assertStringContainsString('button--danger', $html);
+  }
+
 }

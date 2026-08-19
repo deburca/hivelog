@@ -470,6 +470,16 @@ class HiveController extends ControllerBase {
       ];
     }
 
+    $section['view_all'] = [
+      '#type' => 'component',
+      '#component' => 'hivelog:button',
+      '#props' => [
+        'label' => (string) $this->t('View all Queens'),
+        'url' => Url::fromRoute('entity.queen.collection')->toString(),
+        'extra_classes' => 'hivelog-list-heading__action',
+      ],
+    ];
+
     $history = array_values(array_filter(
       $hive->getQueens(),
       fn(Queen $candidate) => !$queen || $candidate->id() !== $queen->id()
