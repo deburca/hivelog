@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: backlog
+status: done
 priority: medium
 project: "[[inventory-tracking-and-depreciation]]"
 area: tests
@@ -27,26 +27,43 @@ from any single task in isolation), and confirm no regressions in
 existing calendar/hive/queen coverage.
 
 ## Acceptance criteria
-- [ ] Full kernel + unit suite passes (`--group hivelog`), zero
+- [x] Full kernel + unit suite passes (`--group hivelog`), zero
       errors/failures, against a real Drupal site — not just `php -l`.
-- [ ] Access-control parity coverage for all four new entity types
-      (`InventoryItem`, `InventoryPurchase`, `CalendarActionItemRequirement`,
-      `InventoryUsage`), mirroring `ApiaryScopedAccessTest`'s existing
-      style for `CalendarAction`/`HiveActionLog`.
-- [ ] An end-to-end integration test: create an `InventoryItem`
-      (consumable) and a `CalendarActionItemRequirement` for it, report a
-      `HiveActionLog` as `done` with the pre-filled quantity accepted
-      as-is, and assert the resulting `InventoryUsage` row, the item's
-      `getStockOnHand()`, and the cost report's total all agree.
-- [ ] An end-to-end depreciation test: purchase a durable item, assert
-      `getAnnualDepreciation()` is non-zero for years within its useful
-      life and exactly zero for years outside it, at both boundaries.
-- [ ] Regression check: existing `HiveTest`, `QueenTest`,
-      `EmbeddedTableFilterPaginationTest`, and
-      `ApiaryCalendarChecklistTest`/`HiveCalendarChecklistTest` suites
-      still pass unmodified (or with only mechanical updates for new
-      unrelated fields, e.g. new `setUp()` schema installs) — this
-      project should not need to change any of that existing test logic.
+      Run with `SIMPLETEST_DB=mysql://...` against `cms2` specifically
+      (matching CI's backend exactly), not the sqlite driver used
+      elsewhere this session for faster local iteration — sqlite surfaced
+      two pre-existing, unrelated flakes (`QueenTest::testCreateQueen`
+      decimal formatting, `ApiaryCalendarChecklistTest::
+      testFullCalendarFiltersNarrowResults`) that don't reproduce under
+      MySQL, so MySQL is the authoritative local check going forward.
+- [x] Access-control parity coverage for all four new entity types was
+      already in place from each task's own tests: `InventoryItem` and
+      `InventoryPurchase` via `InventoryAccessTest` (task 0029),
+      `CalendarActionItemRequirement` via
+      `CalendarActionItemRequirementAccessTest` (task 0030),
+      `InventoryUsage` via `InventoryUsageAccessTest` (task 0031) — all
+      already mirror `ApiaryScopedAccessTest`'s owner/beekeeper/outsider ×
+      view/edit/delete × public/private matrix. No gap found here.
+- [x] `InventoryEndToEndTest::
+      testUsageStockAndCostReportAgreeOnPreFilledQuantity` — the one real
+      coverage gap: reads the form's own pre-filled recipe default
+      (rather than hardcoding it, so "accepted as-is" is genuinely
+      exercised), reports `done`, and asserts the resulting
+      `InventoryUsage` row, `InventoryItem::getStockOnHand()`, and the
+      cost report's rendered total all agree on the same figure.
+- [x] `InventoryEndToEndTest::
+      testDepreciationIsNonZeroWithinLifeAndZeroOutsideAtBothBoundaries` —
+      standalone purchase-only scenario matching this criterion's wording
+      directly, complementing `InventoryCostReportTest::
+      testDepreciationWindowBoundaries` (task 0032) which already covered
+      the same boundaries via the report path.
+- [x] Regression check: confirmed `HiveTest.php`, `QueenTest.php`, and
+      `EmbeddedTableFilterPaginationTest.php` were never touched by any
+      commit in this project (tasks 0028-0033); `HiveCalendarChecklistTest.php`
+      and `ControllerCacheMetadataTest.php` received only the mechanical
+      `installEntitySchema('calendar_action_item_requirement')` addition
+      allowed by this criterion (commit 1c89d6a, task 0030) — no test
+      logic changed. All pass under the MySQL run above.
 
 ## Implementation notes
 - Run via the project's documented command (see `README.md`'s Testing
@@ -58,7 +75,18 @@ existing calendar/hive/queen coverage.
   issue in `QueenListBuilder`/`ApiaryListBuilder`), fix it here rather
   than filing a separate task, and note it in this task's own commit.
 
+## Verification
+- Full kernel+unit suite against `cms2` with `SIMPLETEST_DB=mysql`
+  (matching CI's backend): 385 tests, 0 failures/errors, 10 deprecations
+  (all pre-existing geofield/symfony deprecation noise unrelated to this
+  project).
+- No real bug surfaced during this task's full-suite run — unlike the
+  `Link`/`Stringable` issue found earlier this session, this run only
+  confirmed a genuine coverage gap (the cross-task integration test),
+  not a code defect.
+
 ## Related
 - Project:: [[inventory-tracking-and-depreciation]]
 - Decisions:: [[0027-inventory-tracking-and-depreciation]]
-- Commits::
+- Commits:: 56d8f05 (InventoryEndToEndTest: cross-task integration +
+  depreciation boundary tests)

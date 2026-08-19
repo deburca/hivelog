@@ -89,7 +89,15 @@ SORT status asc, priority asc
   a previous/current/next year selector and per-item breakdown table;
   verified end-to-end against a real Drupal site, full suite at 383
   tests/0 failures attributable to this change)
-- [[0033-inventory-test-coverage]] — backlog
+- [[0033-inventory-test-coverage]] — done (`InventoryEndToEndTest`
+  closing the one real cross-task coverage gap — a chained assertion
+  that `InventoryUsage`, `getStockOnHand()`, and the cost report all
+  agree on the same pre-filled report — plus a standalone depreciation
+  boundary test; access-control parity for all four new entity types
+  and regression coverage for existing calendar/hive/queen tests were
+  already satisfied by tasks 0028-0032's own tests; full suite verified
+  against `cms2` with `SIMPLETEST_DB=mysql` (matching CI's backend): 385
+  tests, 0 failures)
 
 Suggested build order matches the numbering: the two ledger entities first
 (nothing else can be built without them), then their own CRUD UI, then the
