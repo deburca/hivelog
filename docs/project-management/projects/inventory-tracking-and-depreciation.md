@@ -66,7 +66,11 @@ SORT status asc, priority asc
   and `InventoryPurchase` entities, basic forms/list builders,
   permissions, `hivelog_update_10020`; verified end-to-end against a
   real Drupal site, full suite at 318 tests/4550 assertions/0 failures)
-- [[0029-inventory-catalog-and-purchase-ledger-ui]] — backlog
+- [[0029-inventory-catalog-and-purchase-ledger-ui]] — done (routes,
+  access control, sectioned canonical pages, self-built-heading +
+  `hivelog:entity-table` list builders, `getStockOnHand()`, apiary page
+  Inventory heading; verified end-to-end against a real Drupal site,
+  full suite at 340 tests/4767 assertions/0 failures)
 - [[0030-calendar-action-item-requirement-and-recipe-ui]] — backlog
 - [[0031-inventory-usage-and-action-log-reporting-integration]] — backlog
 - [[0032-inventory-cost-and-depreciation-report]] — backlog
