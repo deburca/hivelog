@@ -785,4 +785,38 @@ class HiveTest extends KernelTestBase {
     $this->assertStringContainsString('Q-first', $html);
   }
 
+  /**
+   * Tests that the Seasonal Calendar heading links to the Full Calendar page.
+   *
+   * Matches the "View"/"Add" button convention already used on the
+   * Inspections and Queen Observations headings, so every embedded list
+   * on the hive page has some way to navigate onward — see
+   * hivelog.apiary.calendar_action.collection.
+   */
+  public function testHiveViewCalendarHeadingLinksToFullCalendar(): void {
+    $this->installConfig(['system']);
+
+    $user = User::create([
+      'name' => 'calendar-link-tester',
+      'mail' => 'calendar-link-tester@example.com',
+    ]);
+    $user->save();
+    \Drupal::currentUser()->setAccount($user);
+
+    $hive = Hive::create([
+      'name' => 'Calendar Link Hive',
+      'apiary' => $this->apiary->id(),
+      'status' => 'active',
+    ]);
+    $hive->save();
+
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(HiveController::class);
+    $build = $controller->view($hive);
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+
+    $this->assertStringContainsString('View Full Calendar', $html);
+    $this->assertStringContainsString('/hivelog/apiary/' . $this->apiary->id() . '/calendar', $html);
+  }
+
 }

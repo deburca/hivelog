@@ -188,6 +188,15 @@ class HiveController extends ControllerBase {
         '#value' => $this->t('Seasonal Calendar (current week: @week)', ['@week' => $current_week]),
         '#attributes' => ['class' => ['hivelog-list-heading__title']],
       ],
+      'view' => [
+        '#type' => 'component',
+        '#component' => 'hivelog:button',
+        '#props' => [
+          'label' => (string) $this->t('View Full Calendar'),
+          'url' => Url::fromRoute('hivelog.apiary.calendar_action.collection', ['apiary' => $hive->get('apiary')->target_id])->toString(),
+          'extra_classes' => 'hivelog-list-heading__action',
+        ],
+      ],
     ];
 
     $build['calendar_filter'] = $this->formBuilder->getForm(
