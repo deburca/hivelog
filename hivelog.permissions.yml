@@ -177,3 +177,19 @@ delete own calendar action item requirement:
   title: 'Delete own calendar action item requirements'
 delete any calendar action item requirement:
   title: 'Delete any calendar action item requirement'
+
+# Inventory usage permissions.
+view own inventory usage:
+  title: 'View own inventory usage records'
+view any inventory usage:
+  title: 'View any inventory usage record'
+add inventory usage:
+  title: 'Add inventory usage records'
+edit own inventory usage:
+  title: 'Edit own inventory usage records'
+edit any inventory usage:
+  title: 'Edit any inventory usage record'
+delete own inventory usage:
+  title: 'Delete own inventory usage records'
+delete any inventory usage:
+  title: 'Delete any inventory usage record'

@@ -97,11 +97,6 @@ class InventoryItem extends ContentEntityBase implements EntityChangedInterface,
    * is returned for durable items (stock isn't a meaningful concept for
    * them — see ADR-0027) and for an unsaved item.
    *
-   * InventoryUsage (task 0031) doesn't exist yet, so usage is treated as
-   * zero until then via a `hasDefinition()` guard rather than querying a
-   * storage that doesn't exist — once InventoryUsage ships, this method
-   * starts subtracting real usage with no further changes needed here.
-   *
    * @return float|null
    *   Stock on hand, or NULL if not applicable.
    */
@@ -125,20 +120,53 @@ class InventoryItem extends ContentEntityBase implements EntityChangedInterface,
     }
 
     $used = 0.0;
-    if ($entity_type_manager->hasDefinition('inventory_usage')) {
-      $usage_storage = $entity_type_manager->getStorage('inventory_usage');
-      $usage_ids = $usage_storage->getQuery()
-        ->accessCheck(FALSE)
-        ->condition('item', $this->id())
-        ->execute();
-      if ($usage_ids) {
-        foreach ($usage_storage->loadMultiple($usage_ids) as $usage) {
-          $used += (float) $usage->get('quantity')->value;
-        }
+    $usage_storage = $entity_type_manager->getStorage('inventory_usage');
+    $usage_ids = $usage_storage->getQuery()
+      ->accessCheck(FALSE)
+      ->condition('item', $this->id())
+      ->execute();
+    if ($usage_ids) {
+      foreach ($usage_storage->loadMultiple($usage_ids) as $usage) {
+        $used += (float) $usage->get('quantity')->value;
       }
     }
 
     return $purchased - $used;
+  }
+
+  /**
+   * Returns the weighted-average purchase cost per unit for this item.
+   *
+   * `Σ(purchase.quantity × purchase.unit_price) / Σ(purchase.quantity)`
+   * across every `InventoryPurchase` for this item to date. Used by
+   * `InventoryUsage::preSave()` to snapshot a cost at the moment a usage
+   * record is created — see ADR-0027's cost-snapshot decision. Returns
+   * `0.0` when there are no purchases yet, rather than NULL, since "no
+   * cost basis yet" is a legitimate (if unhelpful) value to snapshot,
+   * not an error.
+   */
+  public function getWeightedAverageUnitCost(): float {
+    if ($this->isNew()) {
+      return 0.0;
+    }
+
+    $purchase_storage = $this->entityTypeManager()->getStorage('inventory_purchase');
+    $purchase_ids = $purchase_storage->getQuery()
+      ->accessCheck(FALSE)
+      ->condition('item', $this->id())
+      ->execute();
+    if (!$purchase_ids) {
+      return 0.0;
+    }
+
+    $total_quantity = 0.0;
+    $total_cost = 0.0;
+    foreach ($purchase_storage->loadMultiple($purchase_ids) as $purchase) {
+      $total_quantity += (float) $purchase->get('quantity')->value;
+      $total_cost += (float) $purchase->get('total_cost')->value;
+    }
+
+    return $total_quantity > 0 ? $total_cost / $total_quantity : 0.0;
   }
 
   /**

@@ -12,9 +12,14 @@ use Drupal\Core\Form\FormStateInterface;
  *
  * Mirrors HiveActionLogForm minus the "also create a hive inspection"
  * checkbox and its supporting logic — there is no apiary-level equivalent
- * of a hive inspection (see ApiaryActionLog's class docblock).
+ * of a hive inspection (see ApiaryActionLog's class docblock). Inventory
+ * usage integration (InventoryUsageFormTrait) is shared with
+ * HiveActionLogForm as-is, since neither the fields nor the sync logic
+ * need anything hive/apiary-specific.
  */
 class ApiaryActionLogForm extends ContentEntityForm {
+
+  use InventoryUsageFormTrait;
 
   /**
    * {@inheritdoc}
@@ -62,6 +67,8 @@ class ApiaryActionLogForm extends ContentEntityForm {
       }
     }
 
+    $this->buildInventoryUsageFields($form, $this->entity, 'apiary_action_log_sections');
+
     return $form;
   }
 
@@ -83,6 +90,8 @@ class ApiaryActionLogForm extends ContentEntityForm {
         '%label' => $entity->label(),
       ]));
     }
+
+    $this->syncInventoryUsage($entity, $form_state);
 
     // Redirect to the parent apiary view.
     $apiary_id = $entity->get('apiary')->target_id;

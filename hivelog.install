@@ -28,6 +28,7 @@ function hivelog_uninstall() {
   // Delete entities in child-first order so foreign key constraints (if any)
   // are respected.
   $entity_type_ids = [
+    'inventory_usage',
     'apiary_action_log',
     'hive_action_log',
     'queen_observation',
@@ -728,6 +729,28 @@ function hivelog_update_10021(&$sandbox) {
   }
 
   return t('Installed the Calendar Action Item Requirement entity type.');
+}
+
+/**
+ * Installs the Inventory Usage entity type.
+ *
+ * The "actual" half of inventory tracking (docs/project-management/
+ * decisions/0027-inventory-tracking-and-depreciation.md): how much of a
+ * consumable InventoryItem was really used when a HiveActionLog or
+ * ApiaryActionLog was reported done, as opposed to
+ * CalendarActionItemRequirement's recipe estimate. The module is not yet
+ * in production, so no data migration is required.
+ */
+function hivelog_update_10022(&$sandbox) {
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+
+  if (!$entity_definition_update_manager->getEntityType('inventory_usage')) {
+    $usage_type = $entity_type_manager->getDefinition('inventory_usage');
+    $entity_definition_update_manager->installEntityType($usage_type);
+  }
+
+  return t('Installed the Inventory Usage entity type.');
 }
 
 /**
