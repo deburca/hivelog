@@ -63,18 +63,11 @@ class InventoryReportController extends ControllerBase {
 
     $build = [];
 
-    $build['heading'] = [
-      '#type' => 'container',
-      '#attributes' => ['class' => ['hivelog-list-heading']],
-      '#weight' => 0,
-      'title' => [
-        '#type' => 'html_tag',
-        '#tag' => 'h2',
-        '#value' => $this->t('Inventory Cost Report: @apiary', ['@apiary' => $apiary->label()]),
-        '#attributes' => ['class' => ['hivelog-list-heading__title']],
-      ],
-    ];
-
+    // No self-built heading here — unlike ApiaryController::fullCalendar()
+    // and similar pages, this page's inline heading would have had no
+    // buttons of its own (the year selector is its own row below), so it
+    // would have done nothing but restate the route's own page title
+    // (costReportTitle()) as a second, redundant heading.
     $build['year_selector'] = [
       '#type' => 'component',
       '#component' => 'hivelog:button-group',
@@ -93,7 +86,7 @@ class InventoryReportController extends ControllerBase {
           number_format($consumable_total + $depreciation_total, 2),
         ],
       ],
-      '#attributes' => ['class' => ['hivelog-inventory-report-summary']],
+      '#attributes' => ['class' => ['hivelog-inventory-report-table']],
       '#attached' => ['library' => ['hivelog/tables']],
     ];
 
@@ -129,6 +122,7 @@ class InventoryReportController extends ControllerBase {
         '#header' => [$this->t('Item'), $this->t('Type'), $this->t('Quantity used'), $this->t('Cost')],
         '#rows' => $breakdown_rows,
         '#empty' => $this->t('No inventory cost or depreciation recorded for @year.', ['@year' => $year]),
+        '#attributes' => ['class' => ['hivelog-inventory-report-table']],
         '#attached' => ['library' => ['hivelog/tables']],
       ],
     ];
