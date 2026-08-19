@@ -74,6 +74,8 @@ class HiveActionLogInspectionLinkTest extends KernelTestBase {
     $this->installEntitySchema('hive');
     $this->installEntitySchema('hive_inspection');
     $this->installEntitySchema('calendar_action');
+    $this->installEntitySchema('calendar_action_item_requirement');
+    $this->installEntitySchema('inventory_usage');
     $this->installEntitySchema('hive_action_log');
     $this->installEntitySchema('apiary_action_log');
     $this->installSchema('file', ['file_usage']);

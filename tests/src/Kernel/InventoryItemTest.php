@@ -48,6 +48,7 @@ class InventoryItemTest extends KernelTestBase {
     $this->installEntitySchema('apiary');
     $this->installEntitySchema('inventory_item');
     $this->installEntitySchema('inventory_purchase');
+    $this->installEntitySchema('inventory_usage');
     $this->installSchema('file', ['file_usage']);
 
     $this->apiary = Apiary::create(['name' => 'Test Apiary']);
