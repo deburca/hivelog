@@ -161,3 +161,19 @@ delete own inventory purchase:
   title: 'Delete own inventory purchases'
 delete any inventory purchase:
   title: 'Delete any inventory purchase'
+
+# Calendar action item requirement permissions.
+view own calendar action item requirement:
+  title: 'View own calendar action item requirements'
+view any calendar action item requirement:
+  title: 'View any calendar action item requirement'
+add calendar action item requirement:
+  title: 'Add calendar action item requirements'
+edit own calendar action item requirement:
+  title: 'Edit own calendar action item requirements'
+edit any calendar action item requirement:
+  title: 'Edit any calendar action item requirement'
+delete own calendar action item requirement:
+  title: 'Delete own calendar action item requirements'
+delete any calendar action item requirement:
+  title: 'Delete any calendar action item requirement'

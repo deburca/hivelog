@@ -29,6 +29,8 @@ trait ApiaryAccessTrait {
    * - ApiaryActionLog: apiary_action_log → apiary directly.
    * - InventoryItem: inventory_item → apiary directly.
    * - InventoryPurchase: inventory_purchase → apiary directly.
+   * - CalendarActionItemRequirement: calendar_action_item_requirement →
+   *   calendar_action → apiary.
    *
    * @param \Drupal\Core\Entity\EntityInterface $entity
    *   The entity to resolve the apiary from.
@@ -109,6 +111,14 @@ trait ApiaryAccessTrait {
     if ($entity_type === 'inventory_purchase') {
       // @phpstan-ignore-next-line
       return $entity->get('apiary')->entity;
+    }
+
+    // CalendarActionItemRequirement → calendar_action → apiary.
+    if ($entity_type === 'calendar_action_item_requirement') {
+      // @phpstan-ignore-next-line
+      $calendar_action = $entity->get('calendar_action')->entity;
+      // @phpstan-ignore-next-line
+      return $calendar_action ? $calendar_action->get('apiary')->entity : NULL;
     }
 
     return NULL;

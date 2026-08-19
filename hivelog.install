@@ -32,6 +32,7 @@ function hivelog_uninstall() {
     'hive_action_log',
     'queen_observation',
     'hive_inspection',
+    'calendar_action_item_requirement',
     'inventory_purchase',
     'inventory_item',
     'queen',
@@ -706,6 +707,27 @@ function hivelog_update_10020(&$sandbox) {
   }
 
   return t('Installed the Inventory Item and Inventory Purchase entity types.');
+}
+
+/**
+ * Installs the Calendar Action Item Requirement entity type.
+ *
+ * The "recipe" half of inventory tracking (docs/project-management/
+ * decisions/0027-inventory-tracking-and-depreciation.md): links a
+ * CalendarAction to the InventoryItems (and quantities) it typically
+ * requires. The module is not yet in production, so no data migration is
+ * required.
+ */
+function hivelog_update_10021(&$sandbox) {
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+
+  if (!$entity_definition_update_manager->getEntityType('calendar_action_item_requirement')) {
+    $requirement_type = $entity_type_manager->getDefinition('calendar_action_item_requirement');
+    $entity_definition_update_manager->installEntityType($requirement_type);
+  }
+
+  return t('Installed the Calendar Action Item Requirement entity type.');
 }
 
 /**

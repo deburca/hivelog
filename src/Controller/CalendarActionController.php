@@ -9,6 +9,7 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityFormBuilderInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Render\RendererInterface;
+use Drupal\Core\Url;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\CalendarAction;
 use Drupal\hivelog\Utility\SimpleBulletText;
@@ -61,6 +62,16 @@ class CalendarActionController extends ControllerBase {
   }
 
   /**
+   * Provides the add form for a requirement within a calendar action context.
+   */
+  public function addRequirementForm(CalendarAction $calendar_action) {
+    $requirement = $this->entityTypeManager->getStorage('calendar_action_item_requirement')->create([
+      'calendar_action' => $calendar_action->id(),
+    ]);
+    return $this->entityFormBuilder->getForm($requirement, 'add');
+  }
+
+  /**
    * Displays a calendar action with its fields grouped into readable sections.
    */
   public function view(CalendarAction $calendar_action) {
@@ -86,9 +97,16 @@ class CalendarActionController extends ControllerBase {
       ]),
     ];
 
+    [$requirements_section, $requirements] = $this->buildRequirementsSection($calendar_action);
+    $build['requirements'] = $requirements_section;
+
     $cache = CacheableMetadata::createFromRenderArray($build)
       ->addCacheContexts(['user.permissions'])
-      ->addCacheableDependency($calendar_action);
+      ->addCacheableDependency($calendar_action)
+      ->addCacheTags($this->entityTypeManager->getDefinition('calendar_action_item_requirement')->getListCacheTags());
+    foreach ($requirements as $requirement) {
+      $cache->addCacheableDependency($requirement);
+    }
     $cache->applyTo($build);
 
     return $build;
@@ -125,6 +143,103 @@ class CalendarActionController extends ControllerBase {
       '#props' => ['buttons' => $buttons],
       '#weight' => -10,
     ];
+  }
+
+  /**
+   * Builds the embedded "Required Items" section of the calendar action view.
+   *
+   * This is the recipe that a "done" report's inventory usage form pre-fills
+   * from. Mirrors HiveController::buildInspectionsColumn()'s heading+table
+   * shape, without pagination — recipes are short lists by nature.
+   *
+   * @param \Drupal\hivelog\Entity\CalendarAction $calendar_action
+   *   The calendar action being rendered.
+   *
+   * @return array{0: array, 1: \Drupal\hivelog\Entity\CalendarActionItemRequirement[]}
+   *   Tuple of [render array, loaded requirement entities for cache deps].
+   */
+  protected function buildRequirementsSection(CalendarAction $calendar_action): array {
+    $requirement_ids = $this->entityTypeManager
+      ->getStorage('calendar_action_item_requirement')
+      ->getQuery()
+      ->accessCheck(TRUE)
+      ->condition('calendar_action', $calendar_action->id())
+      ->sort('id', 'ASC')
+      ->execute();
+    $requirements = $requirement_ids
+      ? $this->entityTypeManager->getStorage('calendar_action_item_requirement')->loadMultiple($requirement_ids)
+      : [];
+
+    $header = [
+      $this->t('Item'),
+      $this->t('Quantity'),
+      $this->t('Unit'),
+      $this->t('Operations'),
+    ];
+
+    $rows = [];
+    foreach ($requirements as $requirement) {
+      $item = $requirement->get('item')->entity;
+      $buttons = [];
+      if ($requirement->access('update')) {
+        $buttons[] = ['label' => (string) $this->t('Edit'), 'url' => $requirement->toUrl('edit-form')->toString()];
+      }
+      if ($requirement->access('delete')) {
+        $buttons[] = [
+          'label' => (string) $this->t('Delete'),
+          'url' => $requirement->toUrl('delete-form')->toString(),
+          'variant' => 'danger',
+        ];
+      }
+      $actions = [
+        '#type' => 'component',
+        '#component' => 'hivelog:button-group',
+        '#props' => ['buttons' => $buttons],
+      ];
+      $rows[] = [
+        'cells' => [
+          $item ? $item->toLink()->toString() : (string) $this->t('Unknown item'),
+          rtrim(rtrim(number_format((float) $requirement->get('quantity')->value, 3, '.', ''), '0'), '.'),
+          $item ? $item->get('unit')->value : '',
+          $this->renderer->renderInIsolation($actions),
+        ],
+      ];
+    }
+
+    $section = [
+      '#type' => 'container',
+      'heading' => [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['hivelog-list-heading']],
+        'title' => [
+          '#type' => 'html_tag',
+          '#tag' => 'h3',
+          '#value' => $this->t('Required Items'),
+          '#attributes' => ['class' => ['hivelog-list-heading__title']],
+        ],
+        'add' => [
+          '#type' => 'component',
+          '#component' => 'hivelog:button',
+          '#props' => [
+            'label' => (string) $this->t('Add Required Item'),
+            'url' => Url::fromRoute('hivelog.calendar_action_item_requirement.add', ['calendar_action' => $calendar_action->id()])->toString(),
+            'variant' => 'primary',
+            'extra_classes' => 'hivelog-list-heading__action',
+          ],
+        ],
+      ],
+      'table' => [
+        '#type' => 'component',
+        '#component' => 'hivelog:entity-table',
+        '#props' => [
+          'headers' => array_map('strval', $header),
+          'rows' => $rows,
+          'empty_message' => (string) $this->t('No required items have been recorded for this calendar action yet.'),
+        ],
+      ],
+    ];
+
+    return [$section, $requirements];
   }
 
   /**

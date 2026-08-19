@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\hivelog\Kernel;
 
+use Drupal\hivelog\Controller\CalendarActionController;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\CalendarAction;
+use Drupal\hivelog\Entity\CalendarActionItemRequirement;
+use Drupal\hivelog\Entity\InventoryItem;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\user\Entity\User;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
@@ -47,6 +51,8 @@ class CalendarActionTest extends KernelTestBase {
     $this->installEntitySchema('apiary');
     $this->installEntitySchema('hive');
     $this->installEntitySchema('calendar_action');
+    $this->installEntitySchema('inventory_item');
+    $this->installEntitySchema('calendar_action_item_requirement');
     $this->installSchema('file', ['file_usage']);
 
     $this->apiary = Apiary::create(['name' => 'Test Apiary']);
@@ -316,6 +322,86 @@ class CalendarActionTest extends KernelTestBase {
       }
     }
     $this->assertTrue($found, sprintf('Expected a validation violation on "%s".', $property_prefix));
+  }
+
+  /**
+   * Tests the empty-state message when a calendar action has no requirements yet.
+   */
+  public function testViewShowsEmptyRequirementsMessage(): void {
+    $this->installConfig(['system']);
+
+    $user = User::create([
+      'name' => 'no-requirements-tester',
+      'mail' => 'no-requirements-tester@example.com',
+    ]);
+    $user->save();
+    \Drupal::currentUser()->setAccount($user);
+
+    $action = CalendarAction::create([
+      'apiary' => $this->apiary->id(),
+      'title' => 'No Requirements Action',
+      'description' => 'Desc.',
+      'week_start' => 10,
+    ]);
+    $action->save();
+
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(CalendarActionController::class);
+    $build = $controller->view($action);
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+
+    $this->assertArrayHasKey('requirements', $build);
+    $this->assertStringContainsString('Required Items', $html);
+    $this->assertStringContainsString('Add Required Item', $html);
+    $this->assertStringContainsString('No required items have been recorded for this calendar action yet.', $html);
+  }
+
+  /**
+   * Tests that required items render in the embedded requirements table.
+   */
+  public function testViewShowsRequirementRows(): void {
+    $this->installConfig(['system']);
+
+    $user = User::create([
+      'name' => 'requirements-tester',
+      'mail' => 'requirements-tester@example.com',
+    ]);
+    $user->save();
+    \Drupal::currentUser()->setAccount($user);
+
+    $action = CalendarAction::create([
+      'apiary' => $this->apiary->id(),
+      'title' => 'Varroa Treatment (Spring)',
+      'description' => 'Desc.',
+      'week_start' => 15,
+    ]);
+    $action->save();
+
+    $item = InventoryItem::create([
+      'apiary' => $this->apiary->id(),
+      'name' => 'Apivar Strips',
+      'unit' => 'strip',
+      'item_type' => 'consumable',
+    ]);
+    $item->save();
+
+    CalendarActionItemRequirement::create([
+      'calendar_action' => $action->id(),
+      'item' => $item->id(),
+      'quantity' => 2,
+    ])->save();
+
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(CalendarActionController::class);
+    $build = $controller->view($action);
+
+    $this->assertEquals('component', $build['requirements']['table']['#type']);
+    $this->assertEquals('hivelog:entity-table', $build['requirements']['table']['#component']);
+    $this->assertCount(1, $build['requirements']['table']['#props']['rows']);
+
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+    $this->assertStringContainsString('Apivar Strips', $html);
+    $this->assertStringContainsString('strip', $html);
   }
 
 }

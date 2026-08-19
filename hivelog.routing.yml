@@ -607,3 +607,43 @@ entity.inventory_purchase.delete_form:
     parameters:
       inventory_purchase:
         type: entity:inventory_purchase
+
+# Calendar action item requirement routes ("recipe" lines). No collection
+# or canonical route — managed entirely from the embedded table on the
+# parent calendar action's canonical page (CalendarActionController::
+# buildRequirementsSection()).
+hivelog.calendar_action_item_requirement.add:
+  path: '/hivelog/calendar-action/{calendar_action}/requirement/add'
+  defaults:
+    _controller: '\Drupal\hivelog\Controller\CalendarActionController::addRequirementForm'
+    _title: 'Add Required Item'
+  requirements:
+    _permission: 'add calendar action item requirement+administer hivelog'
+  options:
+    parameters:
+      calendar_action:
+        type: entity:calendar_action
+
+entity.calendar_action_item_requirement.edit_form:
+  path: '/hivelog/calendar-action-requirement/{calendar_action_item_requirement}/edit'
+  defaults:
+    _entity_form: 'calendar_action_item_requirement.edit'
+    _title: 'Edit Requirement'
+  requirements:
+    _permission: 'edit own calendar action item requirement+edit any calendar action item requirement+administer hivelog'
+  options:
+    parameters:
+      calendar_action_item_requirement:
+        type: entity:calendar_action_item_requirement
+
+entity.calendar_action_item_requirement.delete_form:
+  path: '/hivelog/calendar-action-requirement/{calendar_action_item_requirement}/delete'
+  defaults:
+    _entity_form: 'calendar_action_item_requirement.delete'
+    _title: 'Delete Requirement'
+  requirements:
+    _permission: 'delete own calendar action item requirement+delete any calendar action item requirement+administer hivelog'
+  options:
+    parameters:
+      calendar_action_item_requirement:
+        type: entity:calendar_action_item_requirement
