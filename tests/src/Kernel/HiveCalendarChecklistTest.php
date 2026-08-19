@@ -72,6 +72,9 @@ class HiveCalendarChecklistTest extends KernelTestBase {
     $this->installEntitySchema('calendar_action_item_requirement');
     $this->installEntitySchema('hive_action_log');
     $this->installEntitySchema('apiary_action_log');
+    $this->installEntitySchema('inventory_item');
+    $this->installEntitySchema('inventory_purchase');
+    $this->installEntitySchema('inventory_usage');
     $this->installSchema('file', ['file_usage']);
 
     $user = User::create([

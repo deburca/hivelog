@@ -35,6 +35,19 @@ class ApiaryController extends ControllerBase {
   protected const HIVES_PAGER_ELEMENT = 0;
 
   /**
+   * Default number of inventory items shown per page in the embedded list.
+   */
+  public const INVENTORY_ITEMS_PER_PAGE = 20;
+
+  /**
+   * Pager element id for the embedded inventory items table.
+   *
+   * Distinct from HIVES_PAGER_ELEMENT since both tables are embedded on
+   * the same apiary view() page.
+   */
+  protected const INVENTORY_ITEMS_PAGER_ELEMENT = 1;
+
+  /**
    * Default number of calendar actions shown per page on the Full Calendar page.
    */
   public const CALENDAR_ACTIONS_PER_PAGE = 20;
@@ -385,12 +398,11 @@ class ApiaryController extends ControllerBase {
       '#weight' => 22,
     ];
 
-    // Inventory: a simple pointer out to the (apiary-scoped, but globally
-    // listed — see InventoryItemListBuilder) inventory catalog, mirroring
-    // the calendar heading's two-button layout above. No embedded table
-    // here — the catalog and purchase ledger have their own dedicated
-    // pages with filtering/stock-on-hand that this page doesn't need to
-    // duplicate.
+    // Inventory: an apiary-scoped table of inventory items, matching the
+    // Hives table's pattern above — "View Inventory Items" still links out
+    // to the globally-listed catalog (InventoryItemListBuilder) for
+    // managing items across every apiary at once; "Add Inventory Item" and
+    // "View Cost Report" stay apiary-scoped.
     $build['inventory_heading'] = [
       '#type' => 'container',
       '#attributes' => ['class' => ['hivelog-list-heading']],
@@ -432,6 +444,86 @@ class ApiaryController extends ControllerBase {
       ],
     ];
 
+    $inventory_item_ids = $this->entityTypeManager
+      ->getStorage('inventory_item')
+      ->getQuery()
+      ->accessCheck(TRUE)
+      ->condition('apiary', $apiary->id())
+      ->sort('name', 'ASC')
+      ->pager(static::INVENTORY_ITEMS_PER_PAGE, static::INVENTORY_ITEMS_PAGER_ELEMENT)
+      ->execute();
+
+    $inventory_items = $inventory_item_ids
+      ? $this->entityTypeManager->getStorage('inventory_item')->loadMultiple($inventory_item_ids)
+      : [];
+    $inventory_items = array_filter(
+      $inventory_items,
+      fn($item) => $item->access('view', $this->currentUser)
+    );
+
+    $inventory_header = [
+      $this->t('Name'),
+      $this->t('Category'),
+      $this->t('Unit'),
+      $this->t('Type'),
+      $this->t('Stock on Hand'),
+      $this->t('Status'),
+      $this->t('Operations'),
+    ];
+
+    $inventory_rows = [];
+    foreach ($inventory_items as $item) {
+      $actions = [
+        '#type' => 'component',
+        '#component' => 'hivelog:button-group',
+        '#props' => [
+          'buttons' => [
+            ['label' => (string) $this->t('Edit'), 'url' => $item->toUrl('edit-form')->toString()],
+            [
+              'label' => (string) $this->t('Delete'),
+              'url' => $item->toUrl('delete-form')->toString(),
+              'variant' => 'danger',
+            ],
+          ],
+        ],
+      ];
+
+      $category = $item->get('category')->value;
+      $item_type = $item->get('item_type')->value;
+      $status = $item->get('status')->value;
+      /** @var \Drupal\hivelog\Entity\InventoryItem $item */
+      $stock = $item->getStockOnHand();
+
+      $inventory_rows[] = [
+        'cells' => [
+          $item->toLink()->toString(),
+          $category ? ($item->get('category')->getSetting('allowed_values')[$category] ?? $category) : '',
+          $item->get('unit')->value,
+          $item->get('item_type')->getSetting('allowed_values')[$item_type] ?? $item_type,
+          $stock === NULL ? '' : rtrim(rtrim(number_format($stock, 3, '.', ''), '0'), '.') . ' ' . $item->get('unit')->value,
+          $item->get('status')->getSetting('allowed_values')[$status] ?? $status,
+          $this->renderer->renderInIsolation($actions),
+        ],
+      ];
+    }
+
+    $build['inventory_table'] = [
+      '#type' => 'component',
+      '#component' => 'hivelog:entity-table',
+      '#props' => [
+        'headers' => array_map('strval', $inventory_header),
+        'rows' => $inventory_rows,
+        'empty_message' => (string) $this->t('No inventory items have been added to this apiary yet.'),
+      ],
+      '#weight' => 26,
+    ];
+
+    $build['inventory_pager'] = [
+      '#type' => 'pager',
+      '#element' => static::INVENTORY_ITEMS_PAGER_ELEMENT,
+      '#weight' => 27,
+    ];
+
     // Explicit cache metadata.
     // - url.query_args: pager + filter state, and now the calendar
     //   checklist's status/year filter, are all encoded in the query string.
@@ -445,6 +537,13 @@ class ApiaryController extends ControllerBase {
     //   rendered calendar action/log's own tags: invalidate on any change
     //   to either, since the checklist is computed by cross-referencing
     //   both on read.
+    // - Inventory item list cache tag + each rendered item's own tags:
+    //   invalidate on any inventory item change. Also inventory_purchase/
+    //   inventory_usage list cache tags, since the Stock on Hand column is
+    //   derived from both and a purchase/usage save doesn't bump the
+    //   owning InventoryItem's own cache tag — matching
+    //   InventoryItemController::view()'s cache metadata for the same
+    //   derived value.
     // - max-age: the heading's "current week" and each unreported row's
     //   Due now/Overdue/Upcoming suffix are computed from date('W')/
     //   date('Y') ("now"), so the render must not be cached past the
@@ -456,7 +555,13 @@ class ApiaryController extends ControllerBase {
       ->addCacheTags($this->entityTypeManager->getDefinition('hive')->getListCacheTags())
       ->addCacheTags($this->entityTypeManager->getDefinition('calendar_action')->getListCacheTags())
       ->addCacheTags($this->entityTypeManager->getDefinition('apiary_action_log')->getListCacheTags())
+      ->addCacheTags($this->entityTypeManager->getDefinition('inventory_item')->getListCacheTags())
+      ->addCacheTags($this->entityTypeManager->getDefinition('inventory_purchase')->getListCacheTags())
+      ->addCacheTags($this->entityTypeManager->getDefinition('inventory_usage')->getListCacheTags())
       ->setCacheMaxAge($this->secondsUntilNextIsoWeek());
+    foreach ($inventory_items as $item) {
+      $cache->addCacheableDependency($item);
+    }
     foreach ($hives as $hive) {
       $cache->addCacheableDependency($hive);
     }
