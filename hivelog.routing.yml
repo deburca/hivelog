@@ -478,6 +478,23 @@ hivelog.apiary.calendar_action.collection:
       apiary:
         type: entity:apiary
 
+# Per-apiary, per-year inventory cost & depreciation report (task 0032).
+# Read-side aggregation only — no schema, no _entity_access, matching
+# hivelog.apiary.calendar_action.collection's pattern (global permission
+# only, no per-apiary custom access check, consistent with every other
+# apiary-scoped controller route in this file).
+hivelog.apiary.inventory_cost_report:
+  path: '/hivelog/apiary/{apiary}/inventory/cost-report'
+  defaults:
+    _controller: '\Drupal\hivelog\Controller\InventoryReportController::costReport'
+    _title_callback: '\Drupal\hivelog\Controller\InventoryReportController::costReportTitle'
+  requirements:
+    _permission: 'view own inventory item+view any inventory item+administer hivelog'
+  options:
+    parameters:
+      apiary:
+        type: entity:apiary
+
 # Inventory item routes.
 entity.inventory_item.collection:
   path: '/hivelog/inventory-items'

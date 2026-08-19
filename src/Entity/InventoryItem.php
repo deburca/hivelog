@@ -170,6 +170,54 @@ class InventoryItem extends ContentEntityBase implements EntityChangedInterface,
   }
 
   /**
+   * Returns this durable item's active depreciation for a given year.
+   *
+   * Straight-line depreciation per ADR-0027: a durable purchase costing
+   * `C`, bought in year `Y0`, with `useful_life_years = N`, contributes
+   * `C / N` to each year from `Y0` through `Y0 + N − 1`, and `0` after
+   * that. Sums this across every purchase of this item whose window
+   * covers `$year`, so multiple purchases of the same durable item at
+   * different times/prices are all accounted for independently. Returns
+   * `0.0` for a consumable item, an unsaved item, or a year outside every
+   * purchase's window — never NULL, since "no depreciation this year" is
+   * a legitimate value, not an error.
+   */
+  public function getAnnualDepreciation(int $year): float {
+    if ($this->isNew() || $this->get('item_type')->value !== 'durable') {
+      return 0.0;
+    }
+
+    $useful_life_years = (int) $this->get('useful_life_years')->value;
+    if ($useful_life_years < 1) {
+      return 0.0;
+    }
+
+    $purchase_storage = $this->entityTypeManager()->getStorage('inventory_purchase');
+    $purchase_ids = $purchase_storage->getQuery()
+      ->accessCheck(FALSE)
+      ->condition('item', $this->id())
+      ->execute();
+    if (!$purchase_ids) {
+      return 0.0;
+    }
+
+    $depreciation = 0.0;
+    foreach ($purchase_storage->loadMultiple($purchase_ids) as $purchase) {
+      $purchase_date = $purchase->get('purchase_date')->value;
+      if (!$purchase_date) {
+        continue;
+      }
+      $purchase_year = (int) substr($purchase_date, 0, 4);
+      if ($year < $purchase_year || $year > $purchase_year + $useful_life_years - 1) {
+        continue;
+      }
+      $depreciation += (float) $purchase->get('total_cost')->value / $useful_life_years;
+    }
+
+    return $depreciation;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public static function baseFieldDefinitions(EntityTypeInterface $entity_type) {
