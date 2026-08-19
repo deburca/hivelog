@@ -288,11 +288,11 @@ class EmbeddedTableFilterPaginationTest extends KernelTestBase {
       ->getInstanceFromDefinition(HiveController::class);
     $build = $controller->view($hive);
 
-    $this->assertArrayHasKey('inspections_table', $build);
-    $this->assertArrayHasKey('inspections_pager', $build);
+    $this->assertArrayHasKey('inspections', $build['hive_activity']);
+    $this->assertArrayHasKey('pager', $build['hive_activity']['inspections']);
     $this->assertCount(
       HiveController::INSPECTIONS_PER_PAGE,
-      $build['inspections_table']['#props']['rows'],
+      $build['hive_activity']['inspections']['table']['#props']['rows'],
       'First page should contain exactly INSPECTIONS_PER_PAGE rows.'
     );
 
@@ -300,7 +300,7 @@ class EmbeddedTableFilterPaginationTest extends KernelTestBase {
     $controller = \Drupal::service('class_resolver')
       ->getInstanceFromDefinition(HiveController::class);
     $build = $controller->view($hive);
-    $this->assertCount(3, $build['inspections_table']['#props']['rows']);
+    $this->assertCount(3, $build['hive_activity']['inspections']['table']['#props']['rows']);
   }
 
   /**
@@ -340,8 +340,8 @@ class EmbeddedTableFilterPaginationTest extends KernelTestBase {
       ->getInstanceFromDefinition(HiveController::class);
     $build = $controller->view($hive);
 
-    $this->assertCount(1, $build['inspections_table']['#props']['rows']);
-    $this->assertEquals('2024-06-01', (string) $build['inspections_table']['#props']['rows'][0]['cells'][0]);
+    $this->assertCount(1, $build['hive_activity']['inspections']['table']['#props']['rows']);
+    $this->assertEquals('2024-06-01', (string) $build['hive_activity']['inspections']['table']['#props']['rows'][0]['cells'][0]);
   }
 
   /**
@@ -372,15 +372,15 @@ class EmbeddedTableFilterPaginationTest extends KernelTestBase {
     $controller = \Drupal::service('class_resolver')
       ->getInstanceFromDefinition(HiveController::class);
     $build = $controller->view($hive);
-    $this->assertCount(1, $build['inspections_table']['#props']['rows']);
-    $this->assertEquals('2024-05-01', (string) $build['inspections_table']['#props']['rows'][0]['cells'][0]);
+    $this->assertCount(1, $build['hive_activity']['inspections']['table']['#props']['rows']);
+    $this->assertEquals('2024-05-01', (string) $build['hive_activity']['inspections']['table']['#props']['rows'][0]['cells'][0]);
 
     $this->pushRequestWithQuery(['queen_seen' => '0']);
     $controller = \Drupal::service('class_resolver')
       ->getInstanceFromDefinition(HiveController::class);
     $build = $controller->view($hive);
-    $this->assertCount(1, $build['inspections_table']['#props']['rows']);
-    $this->assertEquals('2024-05-02', (string) $build['inspections_table']['#props']['rows'][0]['cells'][0]);
+    $this->assertCount(1, $build['hive_activity']['inspections']['table']['#props']['rows']);
+    $this->assertEquals('2024-05-02', (string) $build['hive_activity']['inspections']['table']['#props']['rows'][0]['cells'][0]);
   }
 
   /**
@@ -423,7 +423,7 @@ class EmbeddedTableFilterPaginationTest extends KernelTestBase {
     $build = $controller->view($hive);
 
     // Table should reflect the filter (only 2024 row).
-    $this->assertCount(1, $build['inspections_table']['#props']['rows']);
+    $this->assertCount(1, $build['hive_activity']['inspections']['table']['#props']['rows']);
 
     // Histogram should still summarise the most recent year (2025).
     $this->assertArrayHasKey('weight_histogram', $build);

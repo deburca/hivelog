@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\hivelog\Kernel;
 
+use Drupal\Core\Form\FormState;
 use Drupal\hivelog\Controller\QueenObservationController;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\Hive;
 use Drupal\hivelog\Entity\Queen;
 use Drupal\hivelog\Entity\QueenObservation;
+use Drupal\hivelog\Form\QueenObservationForm;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
@@ -222,6 +224,64 @@ class QueenObservationTest extends KernelTestBase {
     // Action buttons: Edit is default variant, Delete is danger.
     $this->assertStringContainsString('button--default', $html);
     $this->assertStringContainsString('button--danger', $html);
+  }
+
+  /**
+   * Builds a QueenObservationForm instance with the given entity attached.
+   */
+  protected function buildFormObject(QueenObservation $observation): QueenObservationForm {
+    $form_object = \Drupal::entityTypeManager()->getFormObject('queen_observation', 'add');
+    $form_object->setEntity($observation);
+    return $form_object;
+  }
+
+  /**
+   * Saving an observation redirects to the parent hive, not the queen page.
+   *
+   * Observations are shown on the hive view page side-by-side with
+   * inspections (see HiveController::buildObservationsColumn()), so
+   * that's where the beekeeper should land after recording one.
+   */
+  public function testSaveRedirectsToHiveWhenQueenHasOne(): void {
+    $observation = QueenObservation::create([
+      'queen' => $this->queen->id(),
+      'observation_date' => '2025-06-15',
+    ]);
+
+    $form_object = $this->buildFormObject($observation);
+    $form_state = new FormState();
+    $form_object->save([], $form_state);
+
+    $redirect = $form_state->getRedirect();
+    $this->assertNotNull($redirect);
+    $this->assertEquals('entity.hive.canonical', $redirect->getRouteName());
+    $this->assertEquals(['hive' => $this->hive->id()], $redirect->getRouteParameters());
+  }
+
+  /**
+   * Saving an observation for a hiveless queen falls back to her own page.
+   */
+  public function testSaveRedirectsToQueenWhenQueenHasNoHive(): void {
+    $hiveless_queen = Queen::create([
+      'name' => 'Q-hiveless',
+      'queen_year' => 2024,
+      'status' => 'inactive',
+    ]);
+    $hiveless_queen->save();
+
+    $observation = QueenObservation::create([
+      'queen' => $hiveless_queen->id(),
+      'observation_date' => '2025-06-15',
+    ]);
+
+    $form_object = $this->buildFormObject($observation);
+    $form_state = new FormState();
+    $form_object->save([], $form_state);
+
+    $redirect = $form_state->getRedirect();
+    $this->assertNotNull($redirect);
+    $this->assertEquals('entity.queen.canonical', $redirect->getRouteName());
+    $this->assertEquals(['queen' => $hiveless_queen->id()], $redirect->getRouteParameters());
   }
 
 }

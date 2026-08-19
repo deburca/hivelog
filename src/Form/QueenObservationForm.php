@@ -85,10 +85,18 @@ class QueenObservationForm extends ContentEntityForm {
       $this->messenger()->addStatus($this->t('Queen observation has been updated.'));
     }
 
-    // Redirect to the parent queen view when possible.
-    $queen_id = $entity->get('queen')->target_id;
-    if ($queen_id) {
-      $form_state->setRedirect('entity.queen.canonical', ['queen' => $queen_id]);
+    // Redirect to the parent hive when the queen currently belongs to one
+    // — observations are shown there, side-by-side with inspections, so
+    // that's where the beekeeper came from and where they'll want to keep
+    // working. Fall back to the queen's own page, then the queen
+    // collection, when there's no hive to return to.
+    $queen = $entity->get('queen')->entity;
+    $hive_id = $queen ? $queen->get('hive')->target_id : NULL;
+    if ($hive_id) {
+      $form_state->setRedirect('entity.hive.canonical', ['hive' => $hive_id]);
+    }
+    elseif ($queen) {
+      $form_state->setRedirect('entity.queen.canonical', ['queen' => $queen->id()]);
     }
     else {
       $form_state->setRedirect('entity.queen.collection');

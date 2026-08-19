@@ -192,9 +192,10 @@ class QueenTest extends KernelTestBase {
     $reloaded_second = Queen::load($second->id());
 
     $this->assertEquals('inactive', $reloaded_first->get('status')->value);
-    $this->assertEmpty(
+    $this->assertEquals(
+      $this->hive->id(),
       $reloaded_first->get('hive')->target_id,
-      'Previous queen should be detached from the hive when a new active queen takes over.'
+      'Previous queen should stay linked to the hive as history when a new active queen takes over.'
     );
     $this->assertEquals('active', $reloaded_second->get('status')->value);
     $this->assertEquals($this->hive->id(), $reloaded_second->get('hive')->target_id);
@@ -485,6 +486,22 @@ class QueenTest extends KernelTestBase {
     // At least one em-dash should appear for the empty origin / breed /
     // purchase_date / etc. rows.
     $this->assertStringContainsString('—', $html);
+  }
+
+  /**
+   * The queen collection page has its own "Add Queen" button.
+   *
+   * The HiveLog menu moved into the front-end `main` menu, where the
+   * default one-level-deep menu block and Local Actions block placement
+   * can't be relied on. QueenListBuilder::render() builds the button
+   * itself so it's reachable regardless of that chrome.
+   */
+  public function testQueenCollectionHasAddQueenButton(): void {
+    $build = \Drupal::entityTypeManager()->getListBuilder('queen')->render();
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+
+    $this->assertStringContainsString('Add Queen', $html);
+    $this->assertStringContainsString('/hivelog/queen/add', $html);
   }
 
 }

@@ -12,6 +12,7 @@ use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\Hive;
 use Drupal\hivelog\Entity\HiveInspection;
 use Drupal\hivelog\Entity\Queen;
+use Drupal\hivelog\Entity\QueenObservation;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\user\Entity\User;
 use PHPUnit\Framework\Attributes\Group;
@@ -382,12 +383,12 @@ class HiveTest extends KernelTestBase {
     // No hero anymore.
     $this->assertArrayNotHasKey('hero', $build);
     $this->assertArrayHasKey('images', $build);
-    // Images block weight must be greater than inspections table weight so it
-    // sorts below the list of inspections.
+    // Images block weight must be greater than the hive activity section's
+    // weight so it sorts below the Inspections/Queen Observations columns.
     $this->assertGreaterThan(
-      $build['inspections_table']['#weight'],
+      $build['hive_activity']['#weight'],
       $build['images']['#weight'],
-      'Images grid should sort after the inspections table.'
+      'Images grid should sort after the hive activity section.'
     );
 
     $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
@@ -551,11 +552,11 @@ class HiveTest extends KernelTestBase {
       $build['queen']['#weight'],
       'Queen section should sort after the weight histogram.'
     );
-    // And before the inspections heading so it still precedes the list.
+    // And before the hive activity section so it still precedes the lists.
     $this->assertLessThan(
-      $build['inspections_heading']['#weight'],
+      $build['hive_activity']['#weight'],
       $build['queen']['#weight'],
-      'Queen section should sort before the inspections heading.'
+      'Queen section should sort before the hive activity section.'
     );
 
     $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
@@ -567,7 +568,8 @@ class HiveTest extends KernelTestBase {
     $this->assertStringContainsString('Green', $html);
     $this->assertStringContainsString('2024-05-01', $html);
     $this->assertStringContainsString('Edit Queen', $html);
-    // Issue #55: Add Observation button renders beside Edit Queen.
+    // Add Observation now lives on the Queen Observations column's own
+    // heading (see buildObservationsColumn()), after the queen summary.
     $this->assertStringContainsString('Add Observation', $html);
     $edit_pos = strpos($html, 'Edit Queen');
     $add_pos = strpos($html, 'Add Observation');
@@ -630,6 +632,157 @@ class HiveTest extends KernelTestBase {
     $this->assertNotFalse($weight_pos);
     $this->assertNotFalse($queen_pos);
     $this->assertLessThan($queen_pos, $weight_pos, 'Weight column should appear before Queen column.');
+  }
+
+  /**
+   * Tests that Queen Observations render side-by-side with Inspections.
+   *
+   * The two logs a beekeeper keeps during the same hive visit should stay
+   * next to each other rather than requiring a trip to the queen's own
+   * page — see HiveController::buildHiveActivitySection() and
+   * css/hivelog.activity-columns.css.
+   */
+  public function testHiveViewShowsQueenObservationsBesideInspections(): void {
+    $this->installConfig(['system']);
+
+    $user = User::create([
+      'name' => 'activity-tester',
+      'mail' => 'activity-tester@example.com',
+    ]);
+    $user->save();
+    \Drupal::currentUser()->setAccount($user);
+
+    $hive = Hive::create([
+      'name' => 'Activity Hive',
+      'apiary' => $this->apiary->id(),
+      'status' => 'active',
+    ]);
+    $hive->save();
+
+    $queen = Queen::create([
+      'name' => 'Q-activity',
+      'hive' => $hive->id(),
+      'queen_year' => 2024,
+      'status' => 'active',
+    ]);
+    $queen->save();
+
+    QueenObservation::create([
+      'queen' => $queen->id(),
+      'observation_date' => '2024-06-20',
+      'health' => 'good',
+    ])->save();
+
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(HiveController::class);
+    $build = $controller->view($hive);
+
+    $this->assertArrayHasKey('observations', $build['hive_activity']);
+    $this->assertCount(1, $build['hive_activity']['observations']['table']['#props']['rows']);
+
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+    $this->assertStringContainsString('hivelog-activity-columns', $html);
+    $this->assertStringContainsString('Queen Observations', $html);
+    $this->assertStringContainsString('2024-06-20', $html);
+
+    // Inspections column renders before the Observations column.
+    $inspections_pos = strpos($html, 'Inspections');
+    $observations_pos = strpos($html, 'Queen Observations');
+    $this->assertNotFalse($inspections_pos);
+    $this->assertNotFalse($observations_pos);
+    $this->assertLessThan($observations_pos, $inspections_pos);
+  }
+
+  /**
+   * Tests the empty-state message when a hive has never had a queen.
+   */
+  public function testHiveViewQueenObservationsEmptyMessageWithNoQueen(): void {
+    $this->installConfig(['system']);
+
+    $user = User::create([
+      'name' => 'no-queen-observations-tester',
+      'mail' => 'no-queen-observations-tester@example.com',
+    ]);
+    $user->save();
+    \Drupal::currentUser()->setAccount($user);
+
+    $hive = Hive::create([
+      'name' => 'Never Queened Hive',
+      'apiary' => $this->apiary->id(),
+      'status' => 'active',
+    ]);
+    $hive->save();
+
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(HiveController::class);
+    $build = $controller->view($hive);
+
+    $this->assertCount(0, $build['hive_activity']['observations']['table']['#props']['rows']);
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+    $this->assertStringContainsString('No queen observations have been recorded for this hive yet.', $html);
+    // No active queen means no Add Observation button in that column.
+    $this->assertStringNotContainsString('Add Observation', $html);
+  }
+
+  /**
+   * Tests that a retired queen's observations still show on the hive page.
+   *
+   * Observations are aggregated across every queen the hive has ever had
+   * (Hive::getQueens()), not just the current one, so replacing a queen
+   * doesn't lose her observation history from the hive's activity log.
+   */
+  public function testHiveViewQueenObservationsSurviveQueenReplacement(): void {
+    $this->installConfig(['system']);
+
+    $user = User::create([
+      'name' => 'replacement-tester',
+      'mail' => 'replacement-tester@example.com',
+    ]);
+    $user->save();
+    \Drupal::currentUser()->setAccount($user);
+
+    $hive = Hive::create([
+      'name' => 'Replacement Hive',
+      'apiary' => $this->apiary->id(),
+      'status' => 'active',
+    ]);
+    $hive->save();
+
+    $first_queen = Queen::create([
+      'name' => 'Q-first',
+      'hive' => $hive->id(),
+      'queen_year' => 2023,
+      'status' => 'active',
+    ]);
+    $first_queen->save();
+
+    QueenObservation::create([
+      'queen' => $first_queen->id(),
+      'observation_date' => '2023-07-01',
+      'health' => 'good',
+    ])->save();
+
+    // A new active queen demotes the first one, but per Queen::preSave()
+    // she keeps her `hive` reference — her observation should still show.
+    $second_queen = Queen::create([
+      'name' => 'Q-second',
+      'hive' => $hive->id(),
+      'queen_year' => 2025,
+      'status' => 'active',
+    ]);
+    $second_queen->save();
+
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(HiveController::class);
+    $build = $controller->view($hive);
+
+    $this->assertCount(1, $build['hive_activity']['observations']['table']['#props']['rows']);
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+    $this->assertStringContainsString('2023-07-01', $html);
+
+    // The retired queen shows up in the "Previous Queens" history too.
+    $this->assertStringContainsString('Previous Queens', $html);
+    $this->assertStringContainsString('Q-first', $html);
   }
 
 }

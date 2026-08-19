@@ -81,12 +81,20 @@ After installation, navigate to **Administration → Structure → HiveLog**
    - Status: **Active** or **Inactive**
    Only one queen may be active per hive at a time. Saving a new active
    queen on a hive that already has one automatically marks the previous
-   queen inactive and detaches it from the hive.
+   queen inactive; she stays linked to the hive as history rather than
+   being detached, and appears in the "Previous Queens" list on the hive
+   view page.
 
 4. **Log queen observations** — From the hive view page, beside the
    **Edit Queen** button, an **Add Observation** button opens a form
-   scoped to the currently-active queen. Observations are listed at the
-   bottom of the queen page (newest first). Each observation captures:
+   scoped to the currently-active queen, and returns you to the hive
+   afterward. Observations for every queen the hive has ever had are
+   listed on the hive view page in a "Queen Observations" table
+   side-by-side with the Inspections table (newest first) — the two logs
+   a beekeeper keeps during the same hive visit stay next to each other
+   rather than on separate pages. The full history for one queen
+   specifically is still also listed at the bottom of that queen's own
+   page. Each observation captures:
    - Observation date
    - Health (Excellent / Good / Fair / Poor)
    - Temperament (Calm / Moderate / Aggressive)

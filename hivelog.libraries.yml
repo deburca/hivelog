@@ -62,3 +62,12 @@ forms:
   dependencies:
     - hivelog/buttons
     - hivelog/responsive
+
+activity_columns:
+  version: 1.x
+  css:
+    component:
+      css/hivelog.activity-columns.css: {}
+  dependencies:
+    - hivelog/tables
+    - hivelog/responsive

@@ -89,6 +89,33 @@ class Hive extends ContentEntityBase implements EntityChangedInterface, EntityOw
   }
 
   /**
+   * Returns every queen ever linked to this hive, most recent first.
+   *
+   * Unlike getActiveQueen(), this includes retired (inactive) queens —
+   * Queen::preSave() keeps a demoted queen's `hive` reference intact
+   * specifically so this history remains resolvable. Used by the hive view
+   * page to show past queens and to aggregate queen observations across
+   * the hive's whole lifetime, not just the current occupant.
+   *
+   * @return \Drupal\hivelog\Entity\Queen[]
+   *   Queens linked to this hive, sorted by introduction date descending
+   *   (queens without an introduction date sort last).
+   */
+  public function getQueens(): array {
+    if ($this->isNew()) {
+      return [];
+    }
+    $storage = $this->entityTypeManager()->getStorage('queen');
+    $ids = $storage->getQuery()
+      ->accessCheck(FALSE)
+      ->condition('hive', $this->id())
+      ->sort('introduction_date', 'DESC')
+      ->sort('id', 'DESC')
+      ->execute();
+    return $ids ? $storage->loadMultiple($ids) : [];
+  }
+
+  /**
    * {@inheritdoc}
    */
   public static function baseFieldDefinitions(EntityTypeInterface $entity_type) {

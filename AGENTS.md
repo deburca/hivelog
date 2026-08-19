@@ -125,7 +125,9 @@ requires a corresponding update hook (see `hivelog.install`).
   those states.
 - `Hive` — references an `Apiary` via `apiary` entity_reference. Queen info
   is NOT stored on the hive (see `Queen` below); `Hive::getActiveQueen()`
-  resolves the active queen via a reverse lookup on `queen.hive`.
+  resolves the active queen via a reverse lookup on `queen.hive`, and
+  `Hive::getQueens()` resolves every queen (active or retired) ever linked
+  to the hive, most recent first, for the hive page's queen history.
 - `HiveInspection` — references a `Hive` and carries the full inspection
   payload (external check, queen, brood, stores, health, management, notes).
 - `Queen` — references a `Hive` via `hive` entity_reference (optional).
@@ -135,7 +137,8 @@ requires a corresponding update hook (see `hivelog.install`).
   auto-derives `queen_colour` from `queen_year` via the `QUEEN_COLOUR_MAP`
   constant (international queen marking convention) AND enforces the
   "one active queen per hive" invariant by demoting any previously active
-  queen on the same hive to `inactive` and clearing its `hive` reference.
+  queen on the same hive to `inactive` — her `hive` reference is left
+  intact so she still shows up in the hive's queen history.
 - `QueenObservation` — references a `Queen` via `queen` entity_reference
   (required). Captures point-in-time queen-specific notes separate from
   hive-level inspections: `observation_date`, `health` (excellent / good /
@@ -183,6 +186,19 @@ view builder, because each parent view embeds a list builder of its children
 Permissions use the `_permission: 'X+administer hivelog'` OR syntax so that
 users with `administer hivelog` bypass all fine-grained checks; the access
 control handlers in `src/*AccessControlHandler.php` mirror the same rule.
+
+The whole HiveLog menu tree lives in the site's front-end `main` menu, not
+Structure, so a top-level "Add" action reachable via Drupal's core Local
+Actions block or nested menu links is not guaranteed to be visible — the
+front end may not place that block, or its menu block may not render more
+than one level deep. `ApiaryListBuilder` and `QueenListBuilder` (the two
+collections with a context-free add route — `entity.apiary.add_form` and
+`entity.queen.add_form`) therefore build their own "Add" heading directly
+in `render()` instead of relying on `hivelog.links.action.yml`. Hive,
+HiveInspection and QueenObservation have no context-free add route at all
+(they always require a parent — apiary/hive/queen — pre-selected via a
+scoped add route above), so their collection pages have no add button by
+design, with or without menu chrome.
 
 ### CSS and components
 

@@ -15,6 +15,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\Hive;
+use Drupal\hivelog\Entity\Queen;
 use Drupal\hivelog\Form\HivelogCalendarFilterForm;
 use Drupal\hivelog\Form\HivelogInspectionFilterForm;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -34,6 +35,19 @@ class HiveController extends ControllerBase {
    * Pager element id for the embedded inspection table.
    */
   protected const INSPECTIONS_PAGER_ELEMENT = 0;
+
+  /**
+   * Default number of queen observations shown per page in the embedded list.
+   */
+  public const OBSERVATIONS_PER_PAGE = 20;
+
+  /**
+   * Pager element id for the embedded queen observations table.
+   *
+   * Distinct from INSPECTIONS_PAGER_ELEMENT since both tables paginate
+   * independently on the same page (see buildHiveActivitySection()).
+   */
+  protected const OBSERVATIONS_PAGER_ELEMENT = 1;
 
   /**
    * The request stack.
@@ -125,114 +139,20 @@ class HiveController extends ControllerBase {
     $active_queen = $hive->getActiveQueen();
     $build['queen'] = $this->buildQueenSection($hive, $active_queen) + ['#weight' => 8];
 
-    // Heading row: the "Inspections" title on the left, the Add Inspection
-    // action on the right. Placing the action here (rather than inline
-    // with the filter form below) keeps it at the top-right of the list
-    // section where it logically belongs.
-    $build['inspections_heading'] = [
+    // Hive Activity: Inspections and Queen Observations side-by-side — the
+    // two logs a beekeeper keeps during the same hive visit belong next to
+    // each other, not on separate pages. Stacks to a single column below
+    // the 768px breakpoint per the module's responsive convention
+    // (ADR-0011).
+    [$inspections_column, $inspections] = $this->buildInspectionsColumn($hive);
+    [$observations_column, $observations] = $this->buildObservationsColumn($hive, $active_queen);
+    $build['hive_activity'] = [
       '#type' => 'container',
-      '#attributes' => ['class' => ['hivelog-list-heading']],
+      '#attributes' => ['class' => ['hivelog-activity-columns']],
+      '#attached' => ['library' => ['hivelog/activity_columns']],
       '#weight' => 10,
-      'title' => [
-        '#type' => 'html_tag',
-        '#tag' => 'h3',
-        '#value' => $this->t('Inspections'),
-        '#attributes' => ['class' => ['hivelog-list-heading__title']],
-      ],
-      'add' => [
-        '#type' => 'component',
-        '#component' => 'hivelog:button',
-        '#props' => [
-          'label' => (string) $this->t('Add Inspection'),
-          'url' => Url::fromRoute('hivelog.inspection.add', ['hive' => $hive->id()])->toString(),
-          'variant' => 'primary',
-          'extra_classes' => 'hivelog-list-heading__action',
-        ],
-      ],
-    ];
-
-    // Filter form sits on its own row below the heading. The form's own
-    // CSS pushes the Filter / Reset buttons to the right-hand side of the
-    // filter row.
-    $build['inspections_filter'] = $this->formBuilder->getForm(HivelogInspectionFilterForm::class, $hive);
-    $build['inspections_filter']['#weight'] = 11;
-
-    // Build the paginated + filtered inspection query.
-    $filters = $this->extractInspectionFilters();
-    $query = $this->entityTypeManager
-      ->getStorage('hive_inspection')
-      ->getQuery()
-      ->accessCheck(TRUE)
-      ->condition('hive', $hive->id())
-      ->sort('inspection_date', 'DESC')
-      ->pager(static::INSPECTIONS_PER_PAGE, static::INSPECTIONS_PAGER_ELEMENT);
-    $this->applyInspectionFilters($query, $filters);
-    $inspection_ids = $query->execute();
-
-    $inspections = $inspection_ids
-      ? $this->entityTypeManager->getStorage('hive_inspection')->loadMultiple($inspection_ids)
-      : [];
-
-    $header = [
-      $this->t('Date'),
-      $this->t('Weight'),
-      $this->t('Queen'),
-      $this->t('Brood'),
-      $this->t('Honey'),
-      $this->t('Temperament'),
-      $this->t('Population'),
-      $this->t('Operations'),
-    ];
-
-    $rows = [];
-    foreach ($inspections as $inspection) {
-      $weight = $inspection->get('weight')->value;
-      $actions = [
-        '#type' => 'component',
-        '#component' => 'hivelog:button-group',
-        '#props' => [
-          'buttons' => [
-            ['label' => (string) $this->t('View'), 'url' => $inspection->toUrl('canonical')->toString()],
-            ['label' => (string) $this->t('Edit'), 'url' => $inspection->toUrl('edit-form')->toString()],
-            [
-              'label' => (string) $this->t('Delete'),
-              'url' => $inspection->toUrl('delete-form')->toString(),
-              'variant' => 'danger',
-            ],
-          ],
-        ],
-      ];
-      $rows[] = [
-        'cells' => [
-          (string) ($inspection->get('inspection_date')->value ?: $this->t('N/A')),
-          $weight !== NULL ? $weight . ' kg' : '',
-          (string) ($inspection->get('queen_seen')->value ? $this->t('Yes') : $this->t('No')),
-          $inspection->get('brood_pattern')->value ? $inspection->get('brood_pattern')->getSetting('allowed_values')[$inspection->get('brood_pattern')->value] ?? '' : '',
-          $inspection->get('honey_stores')->value ? $inspection->get('honey_stores')->getSetting('allowed_values')[$inspection->get('honey_stores')->value] ?? '' : '',
-          $inspection->get('temperament')->value ? $inspection->get('temperament')->getSetting('allowed_values')[$inspection->get('temperament')->value] ?? '' : '',
-          $inspection->get('population')->value ? $inspection->get('population')->getSetting('allowed_values')[$inspection->get('population')->value] ?? '' : '',
-          $this->renderer->renderInIsolation($actions),
-        ],
-      ];
-    }
-
-    $build['inspections_table'] = [
-      '#type' => 'component',
-      '#component' => 'hivelog:entity-table',
-      '#props' => [
-        'headers' => array_map('strval', $header),
-        'rows' => $rows,
-        'empty_message' => (string) (!empty($filters)
-          ? $this->t('No inspections match the current filters.')
-          : $this->t('No inspections have been recorded for this hive yet.')),
-      ],
-      '#weight' => 12,
-    ];
-
-    $build['inspections_pager'] = [
-      '#type' => 'pager',
-      '#element' => static::INSPECTIONS_PAGER_ELEMENT,
-      '#weight' => 13,
+      'inspections' => $inspections_column,
+      'observations' => $observations_column,
     ];
 
     // Attached pictures, rendered in a grid below the inspection list.
@@ -396,14 +316,17 @@ class HiveController extends ControllerBase {
     ];
 
     // Explicit cache metadata.
-    // - url.query_args: inspection filter + pager state, and now the
+    // - url.query_args: inspection + observation pager state, and now the
     //   calendar checklist's status/year filter, are all encoded in the
     //   query string.
-    // - user.permissions: the inspection list respects per-entity access
-    //   checks, so cache entries must vary by effective permissions.
+    // - user.permissions: the inspection/observation lists respect
+    //   per-entity access checks, so cache entries must vary by effective
+    //   permissions.
     // - Hive entity tags: invalidate on hive update/delete.
     // - Inspection list cache tag + every rendered inspection's tags:
     //   invalidate on any inspection change.
+    // - Queen observation list cache tag + every rendered observation's
+    //   tags: invalidate on any observation change.
     // - Calendar action / hive action log list cache tags + every rendered
     //   calendar action/log's own tags: invalidate on any change to either,
     //   since the checklist is computed by cross-referencing both on read.
@@ -417,6 +340,7 @@ class HiveController extends ControllerBase {
       ->addCacheableDependency($hive)
       ->addCacheTags($this->entityTypeManager->getDefinition('hive_inspection')->getListCacheTags())
       ->addCacheTags($this->entityTypeManager->getDefinition('queen')->getListCacheTags())
+      ->addCacheTags($this->entityTypeManager->getDefinition('queen_observation')->getListCacheTags())
       ->addCacheTags($this->entityTypeManager->getDefinition('calendar_action')->getListCacheTags())
       ->addCacheTags($this->entityTypeManager->getDefinition('hive_action_log')->getListCacheTags())
       ->setCacheMaxAge($this->secondsUntilNextIsoWeek());
@@ -425,6 +349,9 @@ class HiveController extends ControllerBase {
     }
     foreach ($inspections as $inspection) {
       $cache->addCacheableDependency($inspection);
+    }
+    foreach ($observations as $observation) {
+      $cache->addCacheableDependency($observation);
     }
     // The histogram is derived from a separate unfiltered query, so include
     // those inspections' cache tags too.
@@ -458,14 +385,17 @@ class HiveController extends ControllerBase {
    *
    * When an active queen is present, summarise its key attributes and
    * expose View / Edit links. Otherwise, invite the user to add a queen
-   * via the hive-scoped add route.
+   * via the hive-scoped add route. Either way, any other queens the hive
+   * has previously had are listed below as history (see
+   * Hive::getQueens()) so retiring a queen doesn't erase her from the
+   * hive's story.
    *
    * @param \Drupal\hivelog\Entity\Hive $hive
    *   The hive being rendered.
    * @param \Drupal\hivelog\Entity\Queen|null $queen
    *   The hive's currently active queen, if any.
    */
-  protected function buildQueenSection(Hive $hive, $queen): array {
+  protected function buildQueenSection(Hive $hive, ?Queen $queen): array {
     $section = [
       '#type' => 'container',
       '#attributes' => ['class' => ['hivelog-list-heading']],
@@ -501,22 +431,15 @@ class HiveController extends ControllerBase {
           [$this->t('Introduced'), $queen->get('introduction_date')->value ?: $this->t('Not set')],
         ],
       ];
+      // Note: no "Add Observation" button here — it lives on the Queen
+      // Observations column's own heading instead (see
+      // buildObservationsColumn()), alongside the observations it adds to.
       $section['edit'] = [
         '#type' => 'component',
         '#component' => 'hivelog:button',
         '#props' => [
           'label' => (string) $this->t('Edit Queen'),
           'url' => $queen->toUrl('edit-form')->toString(),
-          'extra_classes' => 'hivelog-list-heading__action',
-        ],
-      ];
-      $section['add_observation'] = [
-        '#type' => 'component',
-        '#component' => 'hivelog:button',
-        '#props' => [
-          'label' => (string) $this->t('Add Observation'),
-          'url' => Url::fromRoute('hivelog.queen_observation.add', ['queen' => $queen->id()])->toString(),
-          'variant' => 'primary',
           'extra_classes' => 'hivelog-list-heading__action',
         ],
       ];
@@ -537,7 +460,290 @@ class HiveController extends ControllerBase {
       ];
     }
 
+    $history = array_values(array_filter(
+      $hive->getQueens(),
+      fn(Queen $candidate) => !$queen || $candidate->id() !== $queen->id()
+    ));
+    if ($history) {
+      $section['history'] = $this->buildQueenHistorySection($history);
+    }
+
     return $section;
+  }
+
+  /**
+   * Builds the "Previous Queens" history table shown below the queen section.
+   *
+   * @param \Drupal\hivelog\Entity\Queen[] $queens
+   *   Non-current queens the hive has had, most recent first.
+   */
+  protected function buildQueenHistorySection(array $queens): array {
+    $rows = [];
+    foreach ($queens as $queen) {
+      $breed = $queen->get('breed')->value;
+      $breed_label = $breed
+        ? ($queen->get('breed')->getSetting('allowed_values')[$breed] ?? $breed)
+        : $this->t('Not set');
+      $status = $queen->get('status')->value;
+      $status_label = $queen->get('status')->getSetting('allowed_values')[$status] ?? $status;
+      $rows[] = [
+        $queen->toLink()->toString(),
+        $breed_label,
+        $status_label,
+        $queen->get('introduction_date')->value ?: $this->t('Not set'),
+      ];
+    }
+
+    return [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['hivelog-queen-history']],
+      'heading' => [
+        '#type' => 'html_tag',
+        '#tag' => 'h4',
+        '#value' => $this->t('Previous Queens'),
+      ],
+      'table' => [
+        '#type' => 'table',
+        '#header' => [$this->t('Queen ID'), $this->t('Breed'), $this->t('Status'), $this->t('Introduced')],
+        '#rows' => $rows,
+        '#attributes' => ['class' => ['hivelog-queen-table']],
+        '#attached' => ['library' => ['hivelog/tables']],
+      ],
+    ];
+  }
+
+  /**
+   * Builds the Inspections column of the hive activity section.
+   *
+   * @param \Drupal\hivelog\Entity\Hive $hive
+   *   The hive being rendered.
+   *
+   * @return array{0: array, 1: \Drupal\hivelog\Entity\HiveInspection[]}
+   *   Tuple of [render array, loaded inspection entities for cache deps].
+   */
+  protected function buildInspectionsColumn(Hive $hive): array {
+    $filters = $this->extractInspectionFilters();
+    $query = $this->entityTypeManager
+      ->getStorage('hive_inspection')
+      ->getQuery()
+      ->accessCheck(TRUE)
+      ->condition('hive', $hive->id())
+      ->sort('inspection_date', 'DESC')
+      ->pager(static::INSPECTIONS_PER_PAGE, static::INSPECTIONS_PAGER_ELEMENT);
+    $this->applyInspectionFilters($query, $filters);
+    $inspection_ids = $query->execute();
+
+    $inspections = $inspection_ids
+      ? $this->entityTypeManager->getStorage('hive_inspection')->loadMultiple($inspection_ids)
+      : [];
+
+    $header = [
+      $this->t('Date'),
+      $this->t('Weight'),
+      $this->t('Queen'),
+      $this->t('Brood'),
+      $this->t('Honey'),
+      $this->t('Temperament'),
+      $this->t('Population'),
+      $this->t('Operations'),
+    ];
+
+    $rows = [];
+    foreach ($inspections as $inspection) {
+      $weight = $inspection->get('weight')->value;
+      $actions = [
+        '#type' => 'component',
+        '#component' => 'hivelog:button-group',
+        '#props' => [
+          'buttons' => [
+            ['label' => (string) $this->t('View'), 'url' => $inspection->toUrl('canonical')->toString()],
+            ['label' => (string) $this->t('Edit'), 'url' => $inspection->toUrl('edit-form')->toString()],
+            [
+              'label' => (string) $this->t('Delete'),
+              'url' => $inspection->toUrl('delete-form')->toString(),
+              'variant' => 'danger',
+            ],
+          ],
+        ],
+      ];
+      $rows[] = [
+        'cells' => [
+          (string) ($inspection->get('inspection_date')->value ?: $this->t('N/A')),
+          $weight !== NULL ? $weight . ' kg' : '',
+          (string) ($inspection->get('queen_seen')->value ? $this->t('Yes') : $this->t('No')),
+          $inspection->get('brood_pattern')->value ? $inspection->get('brood_pattern')->getSetting('allowed_values')[$inspection->get('brood_pattern')->value] ?? '' : '',
+          $inspection->get('honey_stores')->value ? $inspection->get('honey_stores')->getSetting('allowed_values')[$inspection->get('honey_stores')->value] ?? '' : '',
+          $inspection->get('temperament')->value ? $inspection->get('temperament')->getSetting('allowed_values')[$inspection->get('temperament')->value] ?? '' : '',
+          $inspection->get('population')->value ? $inspection->get('population')->getSetting('allowed_values')[$inspection->get('population')->value] ?? '' : '',
+          $this->renderer->renderInIsolation($actions),
+        ],
+      ];
+    }
+
+    $build = [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['hivelog-activity-column']],
+      'heading' => [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['hivelog-list-heading']],
+        'title' => [
+          '#type' => 'html_tag',
+          '#tag' => 'h3',
+          '#value' => $this->t('Inspections'),
+          '#attributes' => ['class' => ['hivelog-list-heading__title']],
+        ],
+        'add' => [
+          '#type' => 'component',
+          '#component' => 'hivelog:button',
+          '#props' => [
+            'label' => (string) $this->t('Add Inspection'),
+            'url' => Url::fromRoute('hivelog.inspection.add', ['hive' => $hive->id()])->toString(),
+            'variant' => 'primary',
+            'extra_classes' => 'hivelog-list-heading__action',
+          ],
+        ],
+      ],
+      'filter' => $this->formBuilder->getForm(HivelogInspectionFilterForm::class, $hive),
+      'table' => [
+        '#type' => 'component',
+        '#component' => 'hivelog:entity-table',
+        '#props' => [
+          'headers' => array_map('strval', $header),
+          'rows' => $rows,
+          'empty_message' => (string) (!empty($filters)
+            ? $this->t('No inspections match the current filters.')
+            : $this->t('No inspections have been recorded for this hive yet.')),
+        ],
+      ],
+      'pager' => [
+        '#type' => 'pager',
+        '#element' => static::INSPECTIONS_PAGER_ELEMENT,
+      ],
+    ];
+
+    return [$build, $inspections];
+  }
+
+  /**
+   * Builds the Queen Observations column of the hive activity section.
+   *
+   * Aggregates observations across every queen the hive has ever had (see
+   * Hive::getQueens()), not just the current one, so the column keeps its
+   * history when a queen is replaced — mirroring how Inspections continue
+   * across queen changes.
+   *
+   * @param \Drupal\hivelog\Entity\Hive $hive
+   *   The hive being rendered.
+   * @param \Drupal\hivelog\Entity\Queen|null $active_queen
+   *   The hive's currently active queen, if any — only she can receive a
+   *   new observation, so the "Add Observation" button only appears when
+   *   this is set.
+   *
+   * @return array{0: array, 1: \Drupal\hivelog\Entity\QueenObservation[]}
+   *   Tuple of [render array, loaded observation entities for cache deps].
+   */
+  protected function buildObservationsColumn(Hive $hive, ?Queen $active_queen): array {
+    $queen_ids = array_map(fn(Queen $queen) => $queen->id(), $hive->getQueens());
+
+    $observations = [];
+    if ($queen_ids) {
+      $query = $this->entityTypeManager
+        ->getStorage('queen_observation')
+        ->getQuery()
+        ->accessCheck(TRUE)
+        ->condition('queen', $queen_ids, 'IN')
+        ->sort('observation_date', 'DESC')
+        ->pager(static::OBSERVATIONS_PER_PAGE, static::OBSERVATIONS_PAGER_ELEMENT);
+      $observation_ids = $query->execute();
+      $observations = $observation_ids
+        ? $this->entityTypeManager->getStorage('queen_observation')->loadMultiple($observation_ids)
+        : [];
+    }
+
+    $header = [
+      $this->t('Date'),
+      $this->t('Queen'),
+      $this->t('Health'),
+      $this->t('Temperament'),
+      $this->t('Active'),
+      $this->t('Operations'),
+    ];
+
+    $rows = [];
+    foreach ($observations as $observation) {
+      $health = $observation->get('health')->value;
+      $temperament = $observation->get('temperament')->value;
+      $observed_queen = $observation->get('queen')->entity;
+      $actions = [
+        '#type' => 'component',
+        '#component' => 'hivelog:button-group',
+        '#props' => [
+          'buttons' => [
+            ['label' => (string) $this->t('View'), 'url' => $observation->toUrl('canonical')->toString()],
+            ['label' => (string) $this->t('Edit'), 'url' => $observation->toUrl('edit-form')->toString()],
+            [
+              'label' => (string) $this->t('Delete'),
+              'url' => $observation->toUrl('delete-form')->toString(),
+              'variant' => 'danger',
+            ],
+          ],
+        ],
+      ];
+      $rows[] = [
+        'cells' => [
+          $observation->toLink($observation->get('observation_date')->value ?: $this->t('N/A'))->toString(),
+          $observed_queen ? $observed_queen->toLink()->toString() : '',
+          $health ? ($observation->get('health')->getSetting('allowed_values')[$health] ?? $health) : '',
+          $temperament ? ($observation->get('temperament')->getSetting('allowed_values')[$temperament] ?? $temperament) : '',
+          (string) ($observation->get('active')->value ? $this->t('Yes') : $this->t('No')),
+          $this->renderer->renderInIsolation($actions),
+        ],
+      ];
+    }
+
+    $heading = [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['hivelog-list-heading']],
+      'title' => [
+        '#type' => 'html_tag',
+        '#tag' => 'h3',
+        '#value' => $this->t('Queen Observations'),
+        '#attributes' => ['class' => ['hivelog-list-heading__title']],
+      ],
+    ];
+    if ($active_queen) {
+      $heading['add'] = [
+        '#type' => 'component',
+        '#component' => 'hivelog:button',
+        '#props' => [
+          'label' => (string) $this->t('Add Observation'),
+          'url' => Url::fromRoute('hivelog.queen_observation.add', ['queen' => $active_queen->id()])->toString(),
+          'variant' => 'primary',
+          'extra_classes' => 'hivelog-list-heading__action',
+        ],
+      ];
+    }
+
+    $build = [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['hivelog-activity-column']],
+      'heading' => $heading,
+      'table' => [
+        '#type' => 'component',
+        '#component' => 'hivelog:entity-table',
+        '#props' => [
+          'headers' => array_map('strval', $header),
+          'rows' => $rows,
+          'empty_message' => (string) $this->t('No queen observations have been recorded for this hive yet.'),
+        ],
+      ],
+      'pager' => [
+        '#type' => 'pager',
+        '#element' => static::OBSERVATIONS_PAGER_ELEMENT,
+      ],
+    ];
+
+    return [$build, $observations];
   }
 
   /**
