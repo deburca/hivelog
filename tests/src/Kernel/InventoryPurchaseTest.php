@@ -207,6 +207,32 @@ class InventoryPurchaseTest extends KernelTestBase {
   }
 
   /**
+   * Tests that the collection page uses the hivelog:entity-table component.
+   *
+   * Also checks for the self-built "Add Purchase" heading.
+   */
+  public function testCollectionUsesEntityTableWithHeading(): void {
+    InventoryPurchase::create([
+      'apiary' => $this->apiary->id(),
+      'item' => $this->item->id(),
+      'purchase_date' => '2026-03-01',
+      'quantity' => 25,
+      'unit_price' => 1.5,
+    ])->save();
+
+    $build = \Drupal::entityTypeManager()->getListBuilder('inventory_purchase')->render();
+
+    $this->assertEquals('component', $build['table']['#type']);
+    $this->assertEquals('hivelog:entity-table', $build['table']['#component']);
+    $this->assertCount(1, $build['table']['#props']['rows']);
+
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+    $this->assertStringContainsString('hivelog-entity-table', $html);
+    $this->assertStringContainsString('Add Purchase', $html);
+    $this->assertStringContainsString('View Inventory Items', $html);
+  }
+
+  /**
    * Asserts that a constraint violation list has a violation on a property.
    */
   protected function assertViolationOnProperty($violations, string $property_prefix): void {

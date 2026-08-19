@@ -6,6 +6,7 @@ namespace Drupal\Tests\hivelog\Kernel;
 
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\InventoryItem;
+use Drupal\hivelog\Entity\InventoryPurchase;
 use Drupal\KernelTests\KernelTestBase;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
@@ -46,6 +47,7 @@ class InventoryItemTest extends KernelTestBase {
     $this->installEntitySchema('file');
     $this->installEntitySchema('apiary');
     $this->installEntitySchema('inventory_item');
+    $this->installEntitySchema('inventory_purchase');
     $this->installSchema('file', ['file_usage']);
 
     $this->apiary = Apiary::create(['name' => 'Test Apiary']);
@@ -198,6 +200,100 @@ class InventoryItemTest extends KernelTestBase {
       'item_type' => 'consumable',
     ]);
     $this->assertCount(0, $item->validate());
+  }
+
+  /**
+   * Tests that stock on hand sums purchases for a consumable item.
+   */
+  public function testGetStockOnHandSumsPurchases(): void {
+    $item = InventoryItem::create([
+      'apiary' => $this->apiary->id(),
+      'name' => 'Sugar',
+      'unit' => 'kg',
+      'item_type' => 'consumable',
+    ]);
+    $item->save();
+
+    $this->assertEquals(0.0, $item->getStockOnHand());
+
+    InventoryPurchase::create([
+      'apiary' => $this->apiary->id(),
+      'item' => $item->id(),
+      'purchase_date' => '2026-03-01',
+      'quantity' => 25,
+      'unit_price' => 1.5,
+    ])->save();
+    InventoryPurchase::create([
+      'apiary' => $this->apiary->id(),
+      'item' => $item->id(),
+      'purchase_date' => '2026-06-01',
+      'quantity' => 10,
+      'unit_price' => 1.6,
+    ])->save();
+
+    $this->assertEquals(35.0, InventoryItem::load($item->id())->getStockOnHand());
+  }
+
+  /**
+   * Tests that stock on hand is NULL for durable items.
+   */
+  public function testGetStockOnHandNullForDurable(): void {
+    $item = InventoryItem::create([
+      'apiary' => $this->apiary->id(),
+      'name' => 'Frames',
+      'unit' => 'frame',
+      'item_type' => 'durable',
+      'useful_life_years' => 5,
+    ]);
+    $item->save();
+
+    InventoryPurchase::create([
+      'apiary' => $this->apiary->id(),
+      'item' => $item->id(),
+      'purchase_date' => '2026-03-01',
+      'quantity' => 20,
+      'unit_price' => 3,
+    ])->save();
+
+    $this->assertNull(InventoryItem::load($item->id())->getStockOnHand());
+  }
+
+  /**
+   * Tests that stock on hand is NULL for an unsaved item.
+   */
+  public function testGetStockOnHandNullForUnsavedItem(): void {
+    $item = InventoryItem::create([
+      'apiary' => $this->apiary->id(),
+      'name' => 'Unsaved',
+      'unit' => 'kg',
+      'item_type' => 'consumable',
+    ]);
+    $this->assertNull($item->getStockOnHand());
+  }
+
+  /**
+   * Tests that the collection page uses the hivelog:entity-table component.
+   *
+   * Also checks for the self-built "Add Inventory Item" heading.
+   */
+  public function testCollectionUsesEntityTableWithHeading(): void {
+    InventoryItem::create([
+      'apiary' => $this->apiary->id(),
+      'name' => 'Sugar',
+      'unit' => 'kg',
+      'item_type' => 'consumable',
+    ])->save();
+
+    $build = \Drupal::entityTypeManager()->getListBuilder('inventory_item')->render();
+
+    $this->assertEquals('component', $build['table']['#type']);
+    $this->assertEquals('hivelog:entity-table', $build['table']['#component']);
+    $this->assertCount(1, $build['table']['#props']['rows']);
+
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+    $this->assertStringContainsString('hivelog-entity-table', $html);
+    $this->assertStringContainsString('Add Inventory Item', $html);
+    $this->assertStringContainsString('View Purchases', $html);
   }
 
   /**

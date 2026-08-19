@@ -125,14 +125,9 @@ class InventoryPurchaseForm extends ContentEntityForm {
       ]));
     }
 
-    // Redirect to the parent apiary view.
-    $apiary_id = $entity->get('apiary')->target_id;
-    if ($apiary_id) {
-      $form_state->setRedirect('entity.apiary.canonical', ['apiary' => $apiary_id]);
-    }
-    else {
-      $form_state->setRedirect('entity.apiary.collection');
-    }
+    // Redirect to the purchase collection, not the parent apiary — see
+    // the equivalent note in InventoryItemForm::save().
+    $form_state->setRedirect('entity.inventory_purchase.collection');
   }
 
 }

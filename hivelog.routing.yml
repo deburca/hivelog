@@ -477,3 +477,133 @@ hivelog.apiary.calendar_action.collection:
     parameters:
       apiary:
         type: entity:apiary
+
+# Inventory item routes.
+entity.inventory_item.collection:
+  path: '/hivelog/inventory-items'
+  defaults:
+    _entity_list: 'inventory_item'
+    _title: 'HiveLog - Inventory Items'
+  requirements:
+    _permission: 'view own inventory item+view any inventory item+administer hivelog'
+
+entity.inventory_item.add_form:
+  path: '/hivelog/inventory-item/add'
+  defaults:
+    _entity_form: 'inventory_item.add'
+    _title: 'Add Inventory Item'
+  requirements:
+    _permission: 'add inventory item+administer hivelog'
+
+hivelog.inventory_item.add:
+  path: '/hivelog/apiary/{apiary}/inventory-item/add'
+  defaults:
+    _controller: '\Drupal\hivelog\Controller\InventoryItemController::addForm'
+    _title: 'Add Inventory Item'
+  requirements:
+    _permission: 'add inventory item+administer hivelog'
+  options:
+    parameters:
+      apiary:
+        type: entity:apiary
+
+entity.inventory_item.canonical:
+  path: '/hivelog/inventory-item/{inventory_item}'
+  defaults:
+    _controller: '\Drupal\hivelog\Controller\InventoryItemController::view'
+    _title_callback: '\Drupal\hivelog\Controller\InventoryItemController::title'
+  requirements:
+    _permission: 'view own inventory item+view any inventory item+administer hivelog'
+  options:
+    parameters:
+      inventory_item:
+        type: entity:inventory_item
+
+entity.inventory_item.edit_form:
+  path: '/hivelog/inventory-item/{inventory_item}/edit'
+  defaults:
+    _entity_form: 'inventory_item.edit'
+    _title: 'Edit Inventory Item'
+  requirements:
+    _permission: 'edit own inventory item+edit any inventory item+administer hivelog'
+  options:
+    parameters:
+      inventory_item:
+        type: entity:inventory_item
+
+entity.inventory_item.delete_form:
+  path: '/hivelog/inventory-item/{inventory_item}/delete'
+  defaults:
+    _entity_form: 'inventory_item.delete'
+    _title: 'Delete Inventory Item'
+  requirements:
+    _permission: 'delete own inventory item+delete any inventory item+administer hivelog'
+  options:
+    parameters:
+      inventory_item:
+        type: entity:inventory_item
+
+# Inventory purchase routes.
+entity.inventory_purchase.collection:
+  path: '/hivelog/inventory-purchases'
+  defaults:
+    _entity_list: 'inventory_purchase'
+    _title: 'HiveLog - Inventory Purchases'
+  requirements:
+    _permission: 'view own inventory purchase+view any inventory purchase+administer hivelog'
+
+entity.inventory_purchase.add_form:
+  path: '/hivelog/inventory-purchase/add'
+  defaults:
+    _entity_form: 'inventory_purchase.add'
+    _title: 'Add Inventory Purchase'
+  requirements:
+    _permission: 'add inventory purchase+administer hivelog'
+
+hivelog.inventory_purchase.add:
+  path: '/hivelog/apiary/{apiary}/inventory-purchase/add'
+  defaults:
+    _controller: '\Drupal\hivelog\Controller\InventoryPurchaseController::addForm'
+    _title: 'Add Inventory Purchase'
+  requirements:
+    _permission: 'add inventory purchase+administer hivelog'
+  options:
+    parameters:
+      apiary:
+        type: entity:apiary
+
+entity.inventory_purchase.canonical:
+  path: '/hivelog/inventory-purchase/{inventory_purchase}'
+  defaults:
+    _controller: '\Drupal\hivelog\Controller\InventoryPurchaseController::view'
+    _title_callback: '\Drupal\hivelog\Controller\InventoryPurchaseController::title'
+  requirements:
+    _permission: 'view own inventory purchase+view any inventory purchase+administer hivelog'
+  options:
+    parameters:
+      inventory_purchase:
+        type: entity:inventory_purchase
+
+entity.inventory_purchase.edit_form:
+  path: '/hivelog/inventory-purchase/{inventory_purchase}/edit'
+  defaults:
+    _entity_form: 'inventory_purchase.edit'
+    _title: 'Edit Inventory Purchase'
+  requirements:
+    _permission: 'edit own inventory purchase+edit any inventory purchase+administer hivelog'
+  options:
+    parameters:
+      inventory_purchase:
+        type: entity:inventory_purchase
+
+entity.inventory_purchase.delete_form:
+  path: '/hivelog/inventory-purchase/{inventory_purchase}/delete'
+  defaults:
+    _entity_form: 'inventory_purchase.delete'
+    _title: 'Delete Inventory Purchase'
+  requirements:
+    _permission: 'delete own inventory purchase+delete any inventory purchase+administer hivelog'
+  options:
+    parameters:
+      inventory_purchase:
+        type: entity:inventory_purchase

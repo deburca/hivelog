@@ -15,6 +15,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\hivelog\Form\InventoryPurchaseDeleteForm;
 use Drupal\hivelog\Form\InventoryPurchaseForm;
 use Drupal\hivelog\HivelogEntityStorage;
+use Drupal\hivelog\InventoryPurchaseAccessControlHandler;
 use Drupal\hivelog\InventoryPurchaseListBuilder;
 use Drupal\user\EntityOwnerInterface;
 use Drupal\user\EntityOwnerTrait;
@@ -45,6 +46,7 @@ use Drupal\user\EntityOwnerTrait;
       'edit' => InventoryPurchaseForm::class,
       'delete' => InventoryPurchaseDeleteForm::class,
     ],
+    'access' => InventoryPurchaseAccessControlHandler::class,
   ],
   base_table: 'hivelog_inventory_purchase',
   admin_permission: 'administer hivelog',
@@ -55,8 +57,10 @@ use Drupal\user\EntityOwnerTrait;
   ],
   links: [
     'canonical' => '/hivelog/inventory-purchase/{inventory_purchase}',
+    'add-form' => '/hivelog/inventory-purchase/add',
     'edit-form' => '/hivelog/inventory-purchase/{inventory_purchase}/edit',
     'delete-form' => '/hivelog/inventory-purchase/{inventory_purchase}/delete',
+    'collection' => '/hivelog/inventory-purchases',
   ],
 )]
 class InventoryPurchase extends ContentEntityBase implements EntityChangedInterface, EntityOwnerInterface {

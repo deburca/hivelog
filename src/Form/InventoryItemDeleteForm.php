@@ -26,29 +26,19 @@ class InventoryItemDeleteForm extends ContentEntityDeleteForm {
    * {@inheritdoc}
    */
   public function getCancelUrl() {
-    $apiary_id = $this->entity->get('apiary')->target_id;
-    if ($apiary_id) {
-      return new Url('entity.apiary.canonical', ['apiary' => $apiary_id]);
-    }
-    return new Url('entity.apiary.collection');
+    return new Url('entity.inventory_item.collection');
   }
 
   /**
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $apiary_id = $this->entity->get('apiary')->target_id;
     $this->entity->delete();
     $this->messenger()->addStatus($this->t('Inventory item %name has been deleted.', [
       '%name' => $this->entity->label(),
     ]));
 
-    if ($apiary_id) {
-      $form_state->setRedirectUrl(new Url('entity.apiary.canonical', ['apiary' => $apiary_id]));
-    }
-    else {
-      $form_state->setRedirectUrl(new Url('entity.apiary.collection'));
-    }
+    $form_state->setRedirectUrl(new Url('entity.inventory_item.collection'));
   }
 
 }

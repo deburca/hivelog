@@ -15,6 +15,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\hivelog\Form\InventoryItemDeleteForm;
 use Drupal\hivelog\Form\InventoryItemForm;
 use Drupal\hivelog\HivelogEntityStorage;
+use Drupal\hivelog\InventoryItemAccessControlHandler;
 use Drupal\hivelog\InventoryItemListBuilder;
 use Drupal\user\EntityOwnerInterface;
 use Drupal\user\EntityOwnerTrait;
@@ -47,6 +48,7 @@ use Drupal\user\EntityOwnerTrait;
       'edit' => InventoryItemForm::class,
       'delete' => InventoryItemDeleteForm::class,
     ],
+    'access' => InventoryItemAccessControlHandler::class,
   ],
   base_table: 'hivelog_inventory_item',
   admin_permission: 'administer hivelog',
@@ -58,8 +60,10 @@ use Drupal\user\EntityOwnerTrait;
   ],
   links: [
     'canonical' => '/hivelog/inventory-item/{inventory_item}',
+    'add-form' => '/hivelog/inventory-item/add',
     'edit-form' => '/hivelog/inventory-item/{inventory_item}/edit',
     'delete-form' => '/hivelog/inventory-item/{inventory_item}/delete',
+    'collection' => '/hivelog/inventory-items',
   ],
 )]
 class InventoryItem extends ContentEntityBase implements EntityChangedInterface, EntityOwnerInterface {
@@ -83,6 +87,58 @@ class InventoryItem extends ContentEntityBase implements EntityChangedInterface,
     if ($item_type === 'durable' && empty($useful_life_years)) {
       throw new \InvalidArgumentException('A durable inventory item must have a useful life (in years) set.');
     }
+  }
+
+  /**
+   * Returns current stock on hand for a consumable item, or NULL.
+   *
+   * Computed as purchased quantity minus used quantity — never stored as
+   * a running balance, mirroring Hive::getActiveQueen()/getQueens(). NULL
+   * is returned for durable items (stock isn't a meaningful concept for
+   * them — see ADR-0027) and for an unsaved item.
+   *
+   * InventoryUsage (task 0031) doesn't exist yet, so usage is treated as
+   * zero until then via a `hasDefinition()` guard rather than querying a
+   * storage that doesn't exist — once InventoryUsage ships, this method
+   * starts subtracting real usage with no further changes needed here.
+   *
+   * @return float|null
+   *   Stock on hand, or NULL if not applicable.
+   */
+  public function getStockOnHand(): ?float {
+    if ($this->isNew() || $this->get('item_type')->value !== 'consumable') {
+      return NULL;
+    }
+
+    $entity_type_manager = $this->entityTypeManager();
+
+    $purchased = 0.0;
+    $purchase_storage = $entity_type_manager->getStorage('inventory_purchase');
+    $purchase_ids = $purchase_storage->getQuery()
+      ->accessCheck(FALSE)
+      ->condition('item', $this->id())
+      ->execute();
+    if ($purchase_ids) {
+      foreach ($purchase_storage->loadMultiple($purchase_ids) as $purchase) {
+        $purchased += (float) $purchase->get('quantity')->value;
+      }
+    }
+
+    $used = 0.0;
+    if ($entity_type_manager->hasDefinition('inventory_usage')) {
+      $usage_storage = $entity_type_manager->getStorage('inventory_usage');
+      $usage_ids = $usage_storage->getQuery()
+        ->accessCheck(FALSE)
+        ->condition('item', $this->id())
+        ->execute();
+      if ($usage_ids) {
+        foreach ($usage_storage->loadMultiple($usage_ids) as $usage) {
+          $used += (float) $usage->get('quantity')->value;
+        }
+      }
+    }
+
+    return $purchased - $used;
   }
 
   /**

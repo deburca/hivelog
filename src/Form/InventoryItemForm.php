@@ -109,14 +109,11 @@ class InventoryItemForm extends ContentEntityForm {
       ]));
     }
 
-    // Redirect to the parent apiary view.
-    $apiary_id = $entity->get('apiary')->target_id;
-    if ($apiary_id) {
-      $form_state->setRedirect('entity.apiary.canonical', ['apiary' => $apiary_id]);
-    }
-    else {
-      $form_state->setRedirect('entity.apiary.collection');
-    }
+    // Redirect to the item collection, not the parent apiary — unlike
+    // Hive/CalendarAction, the apiary canonical page doesn't embed an
+    // inventory items table, only a link out to this collection, so
+    // that's where the saved item is actually visible.
+    $form_state->setRedirect('entity.inventory_item.collection');
   }
 
 }

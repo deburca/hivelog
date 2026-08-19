@@ -385,6 +385,45 @@ class ApiaryController extends ControllerBase {
       '#weight' => 22,
     ];
 
+    // Inventory: a simple pointer out to the (apiary-scoped, but globally
+    // listed — see InventoryItemListBuilder) inventory catalog, mirroring
+    // the calendar heading's two-button layout above. No embedded table
+    // here — the catalog and purchase ledger have their own dedicated
+    // pages with filtering/stock-on-hand that this page doesn't need to
+    // duplicate.
+    $build['inventory_heading'] = [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['hivelog-list-heading']],
+      '#weight' => 25,
+      'title' => [
+        '#type' => 'html_tag',
+        '#tag' => 'h3',
+        '#value' => $this->t('Inventory'),
+        '#attributes' => ['class' => ['hivelog-list-heading__title']],
+      ],
+      'actions' => [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['hivelog-list-heading__action']],
+        'view' => [
+          '#type' => 'component',
+          '#component' => 'hivelog:button',
+          '#props' => [
+            'label' => (string) $this->t('View Inventory Items'),
+            'url' => Url::fromRoute('entity.inventory_item.collection')->toString(),
+          ],
+        ],
+        'add' => [
+          '#type' => 'component',
+          '#component' => 'hivelog:button',
+          '#props' => [
+            'label' => (string) $this->t('Add Inventory Item'),
+            'url' => Url::fromRoute('hivelog.inventory_item.add', ['apiary' => $apiary->id()])->toString(),
+            'variant' => 'primary',
+          ],
+        ],
+      ],
+    ];
+
     // Explicit cache metadata.
     // - url.query_args: pager + filter state, and now the calendar
     //   checklist's status/year filter, are all encoded in the query string.

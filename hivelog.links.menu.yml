@@ -32,3 +32,17 @@ hivelog.queen_observations:
   route_name: entity.queen_observation.collection
   parent: hivelog.admin
   weight: 4
+
+hivelog.inventory_items:
+  title: 'Inventory Items'
+  description: 'Manage the inventory catalog.'
+  route_name: entity.inventory_item.collection
+  parent: hivelog.admin
+  weight: 5
+
+hivelog.inventory_purchases:
+  title: 'Inventory Purchases'
+  description: 'View all inventory purchases.'
+  route_name: entity.inventory_purchase.collection
+  parent: hivelog.admin
+  weight: 6
