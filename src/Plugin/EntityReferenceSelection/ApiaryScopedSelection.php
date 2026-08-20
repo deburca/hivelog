@@ -9,7 +9,7 @@ use Drupal\Core\Entity\Plugin\EntityReferenceSelection\DefaultSelection;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
- * Scopes InventoryItem/Product autocomplete suggestions to one apiary.
+ * Scopes InventoryItem/Product autocomplete suggestions.
  *
  * Both `inventory_item` and `product` carry a direct `apiary` entity
  * reference field, so one generic handler covers every field that
@@ -18,11 +18,20 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
  * `CalendarActionProductYield.product`) — see
  * docs/project-management/tasks/0041-scope-item-and-product-autocomplete-to-current-apiary.md.
  *
- * Requesting code sets `apiary_id` in `#selection_settings` on the
- * `entity_autocomplete` form element to activate the filter; with no
- * `apiary_id` present, this behaves identically to the parent
- * `DefaultSelection` (unfiltered), which is what a standalone add form
- * with no apiary context yet should still get.
+ * Two independent filters, both narrowing what a widget *offers* for new
+ * selection only — neither ever touches existing references:
+ * - Apiary scoping: requesting code sets `apiary_id` in
+ *   `#selection_settings` on the `entity_autocomplete` form element to
+ *   activate this; with no `apiary_id` present, suggestions span every
+ *   apiary, which is what a standalone add form with no apiary context
+ *   yet should still get.
+ * - Discontinued-status filtering: always applied, unconditionally —
+ *   see docs/project-management/tasks/0043-hide-discontinued-items-and-products-from-selection.md.
+ *   Mirrors `CalendarAction.enabled`: hidden going forward, existing
+ *   references (and the widget's own current value on an edit form)
+ *   are untouched, since `EntityReferenceAutocompleteWidget` reads the
+ *   current value straight off the entity rather than through this
+ *   query.
  */
 #[EntityReferenceSelection(
   id: "default:hivelog_apiary_scoped",
@@ -43,6 +52,8 @@ class ApiaryScopedSelection extends DefaultSelection {
     if ($apiary_id) {
       $query->condition('apiary', $apiary_id);
     }
+
+    $query->condition('status', 'discontinued', '<>');
 
     return $query;
   }

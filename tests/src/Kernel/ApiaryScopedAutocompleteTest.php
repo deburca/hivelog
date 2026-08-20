@@ -7,6 +7,7 @@ namespace Drupal\Tests\hivelog\Kernel;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\CalendarAction;
 use Drupal\hivelog\Entity\InventoryItem;
+use Drupal\hivelog\Entity\InventoryPurchase;
 use Drupal\hivelog\Entity\Product;
 use Drupal\KernelTests\KernelTestBase;
 use PHPUnit\Framework\Attributes\Group;
@@ -203,15 +204,16 @@ class ApiaryScopedAutocompleteTest extends KernelTestBase {
   }
 
   /**
-   * Tests that a standalone add form with no known apiary stays unfiltered.
+   * Tests that a standalone add form with no known apiary stays apiary-unfiltered.
    *
    * The global `entity.inventory_purchase.add_form` route (linked from
    * `InventoryPurchaseListBuilder`'s heading) has no apiary pre-filled —
-   * there's nothing to scope to yet, so this must fall back to the
-   * default, unfiltered selection handler rather than filtering to
-   * nothing.
+   * there's nothing to scope to yet, so cross-apiary items must still be
+   * offered. The widget still uses the custom selection handler (not
+   * falling back to plain `default`), since that handler also carries
+   * the always-on discontinued-status filter from task 0043.
    */
-  public function testStandaloneAddFormWithNoApiaryStaysUnfiltered(): void {
+  public function testStandaloneAddFormWithNoApiaryStaysApiaryUnfiltered(): void {
     $item_a = InventoryItem::create([
       'apiary' => $this->apiaryA->id(),
       'name' => 'Sugar A',
@@ -231,11 +233,144 @@ class ApiaryScopedAutocompleteTest extends KernelTestBase {
     $build = \Drupal::service('entity.form_builder')->getForm($purchase, 'add');
     $element = $build['item']['widget'][0]['target_id'];
 
-    $this->assertEquals('default', $element['#selection_handler']);
+    $this->assertEquals('default:hivelog_apiary_scoped', $element['#selection_handler']);
 
     $referenceable = $this->referenceableEntities($element, 'inventory_item');
     $this->assertArrayHasKey($item_a->id(), $referenceable['inventory_item']);
     $this->assertArrayHasKey($item_b->id(), $referenceable['inventory_item']);
+  }
+
+  /**
+   * Tests that a discontinued item is hidden from a fresh InventoryPurchase form.
+   *
+   * See docs/project-management/tasks/0043-hide-discontinued-items-and-products-from-selection.md.
+   */
+  public function testDiscontinuedItemHiddenFromFreshInventoryPurchaseForm(): void {
+    $active = InventoryItem::create([
+      'apiary' => $this->apiaryA->id(),
+      'name' => 'Active Sugar',
+      'unit' => 'kg',
+      'item_type' => 'consumable',
+    ]);
+    $active->save();
+    $discontinued = InventoryItem::create([
+      'apiary' => $this->apiaryA->id(),
+      'name' => 'Discontinued Sugar',
+      'unit' => 'kg',
+      'item_type' => 'consumable',
+      'status' => 'discontinued',
+    ]);
+    $discontinued->save();
+
+    $purchase = \Drupal::entityTypeManager()->getStorage('inventory_purchase')->create(['apiary' => $this->apiaryA->id()]);
+    $build = \Drupal::service('entity.form_builder')->getForm($purchase, 'add');
+    $element = $build['item']['widget'][0]['target_id'];
+
+    $referenceable = $this->referenceableEntities($element, 'inventory_item');
+    $this->assertArrayHasKey($active->id(), $referenceable['inventory_item']);
+    $this->assertArrayNotHasKey($discontinued->id(), $referenceable['inventory_item']);
+  }
+
+  /**
+   * Tests that a discontinued product is hidden from a fresh yield-recipe form.
+   *
+   * See docs/project-management/tasks/0043-hide-discontinued-items-and-products-from-selection.md.
+   */
+  public function testDiscontinuedProductHiddenFromFreshCalendarActionProductYieldForm(): void {
+    $active = Product::create([
+      'apiary' => $this->apiaryA->id(),
+      'name' => 'Active Honey',
+      'unit' => 'kg',
+      'expected_unit_price' => 10,
+    ]);
+    $active->save();
+    $discontinued = Product::create([
+      'apiary' => $this->apiaryA->id(),
+      'name' => 'Discontinued Honey',
+      'unit' => 'kg',
+      'expected_unit_price' => 10,
+      'status' => 'discontinued',
+    ]);
+    $discontinued->save();
+
+    $calendar_action = CalendarAction::create([
+      'apiary' => $this->apiaryA->id(),
+      'title' => 'Harvest',
+      'description' => 'Desc.',
+      'week_start' => 28,
+    ]);
+    $calendar_action->save();
+
+    $yield = \Drupal::entityTypeManager()->getStorage('calendar_action_product_yield')->create([
+      'calendar_action' => $calendar_action->id(),
+    ]);
+    $build = \Drupal::service('entity.form_builder')->getForm($yield, 'add');
+    $element = $build['product']['widget'][0]['target_id'];
+
+    $referenceable = $this->referenceableEntities($element, 'product');
+    $this->assertArrayHasKey($active->id(), $referenceable['product']);
+    $this->assertArrayNotHasKey($discontinued->id(), $referenceable['product']);
+  }
+
+  /**
+   * Tests that an existing purchase keeps its since-discontinued item.
+   *
+   * A since-discontinued item is hidden from new choices, but an existing
+   * purchase that already references it still shows the current value
+   * and still saves cleanly on edit. See
+   * docs/project-management/tasks/0043-hide-discontinued-items-and-products-from-selection.md's
+   * "existing references untouched" criterion.
+   */
+  public function testExistingInventoryPurchaseKeepsDiscontinuedItemOnEditAndSave(): void {
+    $item = InventoryItem::create([
+      'apiary' => $this->apiaryA->id(),
+      'name' => 'Soon Discontinued Sugar',
+      'unit' => 'kg',
+      'item_type' => 'consumable',
+    ]);
+    $item->save();
+
+    $purchase = InventoryPurchase::create([
+      'apiary' => $this->apiaryA->id(),
+      'item' => $item->id(),
+      'purchase_date' => '2026-03-01',
+      'quantity' => 10,
+      'unit_price' => 1.5,
+    ]);
+    $purchase->save();
+
+    $item->set('status', 'discontinued');
+    $item->save();
+
+    // A fresh add form no longer offers it — checked against another,
+    // still-active item in the same apiary so the referenceable set
+    // itself isn't empty (an empty result has no `inventory_item` key
+    // at all, which would make the assertion below vacuous).
+    $still_active = InventoryItem::create([
+      'apiary' => $this->apiaryA->id(),
+      'name' => 'Still Active Sugar',
+      'unit' => 'kg',
+      'item_type' => 'consumable',
+    ]);
+    $still_active->save();
+
+    $new_purchase = \Drupal::entityTypeManager()->getStorage('inventory_purchase')->create(['apiary' => $this->apiaryA->id()]);
+    $add_build = \Drupal::service('entity.form_builder')->getForm($new_purchase, 'add');
+    $add_element = $add_build['item']['widget'][0]['target_id'];
+    $referenceable = $this->referenceableEntities($add_element, 'inventory_item');
+    $this->assertArrayHasKey($still_active->id(), $referenceable['inventory_item']);
+    $this->assertArrayNotHasKey($item->id(), $referenceable['inventory_item']);
+
+    // The existing purchase's edit form still shows its current value.
+    $edit_build = \Drupal::service('entity.form_builder')->getForm($purchase, 'edit');
+    $edit_element = $edit_build['item']['widget'][0]['target_id'];
+    $this->assertNotEmpty($edit_element['#default_value']);
+    $this->assertEquals($item->id(), reset($edit_element['#default_value'])->id());
+
+    // Re-saving the existing entity (unchanged) still succeeds.
+    $this->assertCount(0, $purchase->validate());
+    $purchase->save();
+    $this->assertEquals($item->id(), InventoryPurchase::load($purchase->id())->get('item')->target_id);
   }
 
 }
