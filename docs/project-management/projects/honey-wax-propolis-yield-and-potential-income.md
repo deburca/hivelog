@@ -70,7 +70,10 @@ WHERE contains(string(project), this.file.name)
 SORT status asc, priority asc
 ```
 
-- [[0035-product-catalog-entity-and-ui]] — backlog
+- [[0035-product-catalog-entity-and-ui]] — done (`Product` entity,
+  access control, forms, list builder, canonical controller, and an
+  embedded apiary-page table; verified end-to-end against a real Drupal
+  site, full suite at 401 tests/0 failures)
 - [[0036-calendar-action-product-yield-and-recipe-ui]] — backlog
 - [[0037-harvest-yield-and-action-log-reporting-integration]] — backlog
 - [[0038-potential-income-in-the-cost-report]] — backlog
