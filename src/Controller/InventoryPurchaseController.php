@@ -86,6 +86,17 @@ class InventoryPurchaseController extends ControllerBase {
       ]),
     ];
 
+    // Disposal is its own section, shown only once a disposal date is
+    // actually recorded — matching how ApiaryController's Stock on Hand
+    // section only appears for consumables, rather than always rendering
+    // an empty section for the common (never-disposed) case.
+    if (!$inventory_purchase->get('disposal_date')->isEmpty()) {
+      $build['disposal'] = $this->buildSection($this->t('Disposal'), $inventory_purchase, [
+        'disposal_date',
+        'disposal_reason',
+      ]);
+    }
+
     $cache = CacheableMetadata::createFromRenderArray($build)
       ->addCacheContexts(['user.permissions'])
       ->addCacheableDependency($inventory_purchase);
@@ -198,11 +209,17 @@ class InventoryPurchaseController extends ControllerBase {
         ];
 
       case 'purchase_date':
+      case 'disposal_date':
         $timestamp = strtotime($field->value . ' 00:00:00 UTC');
         return [
           '#plain_text' => $timestamp !== FALSE
             ? $this->dateFormatter->format($timestamp, 'custom', 'Y-m-d')
             : (string) $field->value,
+        ];
+
+      case 'disposal_reason':
+        return [
+          '#markup' => nl2br(Html::escape((string) $field->value)),
         ];
 
       case 'quantity':

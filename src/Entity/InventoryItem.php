@@ -231,6 +231,14 @@ class InventoryItem extends ContentEntityBase implements EntityChangedInterface,
       if ($year < $purchase_year || $year > $purchase_year + $useful_life_years - 1) {
         continue;
       }
+      // Task 0049: a disposed purchase stops contributing for years after
+      // its disposal year, even if still inside the useful-life window —
+      // the disposal year itself still counts (whole-year accounting,
+      // matching the rest of this method's lack of partial-year proration).
+      $disposal_date = $purchase->get('disposal_date')->value;
+      if ($disposal_date && $year > (int) substr($disposal_date, 0, 4)) {
+        continue;
+      }
       $depreciation += (float) $purchase->get('total_cost')->value / $useful_life_years;
     }
 

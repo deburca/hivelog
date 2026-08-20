@@ -105,6 +105,23 @@ class InventoryPurchase extends ContentEntityBase implements EntityChangedInterf
     if ($item && $apiary_id && (int) $item->get('apiary')->target_id !== (int) $apiary_id) {
       throw new \InvalidArgumentException('An inventory purchase\'s item must belong to the same apiary as the purchase.');
     }
+
+    // Defensive invariants for the disposal event (task 0049): only
+    // meaningful for a durable item — depreciation is what disposal
+    // actually affects, and consumables aren't depreciated — and can't
+    // predate the purchase itself. InventoryPurchaseForm::validateForm()
+    // already blocks both at the UI layer; this guards programmatic
+    // creation too.
+    $disposal_date = $this->get('disposal_date')->value;
+    if ($disposal_date) {
+      if ($item && $item->get('item_type')->value !== 'durable') {
+        throw new \InvalidArgumentException('A disposal date can only be recorded for a purchase of a durable item.');
+      }
+      $purchase_date = $this->get('purchase_date')->value;
+      if ($purchase_date && $disposal_date < $purchase_date) {
+        throw new \InvalidArgumentException('A purchase\'s disposal date cannot be before its purchase date.');
+      }
+    }
   }
 
   /**
@@ -211,12 +228,33 @@ class InventoryPurchase extends ContentEntityBase implements EntityChangedInterf
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
+    $fields['disposal_date'] = BaseFieldDefinition::create('datetime')
+      ->setLabel(t('Disposal Date'))
+      ->setDescription(t('Optional, durable items only: the date this purchase was disposed of/retired/written off. Once set, it stops counting toward depreciation for years after it, even if still inside the useful-life window.'))
+      ->setSetting('datetime_type', 'date')
+      ->setDisplayOptions('form', ['type' => 'datetime_default', 'weight' => 8])
+      ->setDisplayOptions('view', ['label' => 'inline', 'type' => 'datetime_default', 'weight' => 8])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
+
+    $fields['disposal_reason'] = BaseFieldDefinition::create('string_long')
+      ->setLabel(t('Disposal Reason'))
+      ->setDescription(t('Optional: why/how this purchase was disposed of, e.g. broken, lost, retired early.'))
+      ->setDisplayOptions('form', [
+        'type' => 'string_textarea',
+        'weight' => 9,
+        'settings' => ['rows' => 3],
+      ])
+      ->setDisplayOptions('view', ['label' => 'above', 'type' => 'basic_string', 'weight' => 9])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
+
     $fields['uid']
       ->setLabel(t('Owner'))
       ->setDescription(t('The user who recorded this purchase.'))
       ->setDisplayOptions('form', [
         'type' => 'entity_reference_autocomplete',
-        'weight' => 8,
+        'weight' => 10,
       ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);

@@ -44,6 +44,11 @@ class InventoryPurchaseTest extends KernelTestBase {
   protected InventoryItem $item;
 
   /**
+   * A test durable inventory item, belonging to `$apiary`.
+   */
+  protected InventoryItem $durableItem;
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp(): void {
@@ -65,6 +70,15 @@ class InventoryPurchaseTest extends KernelTestBase {
       'item_type' => 'consumable',
     ]);
     $this->item->save();
+
+    $this->durableItem = InventoryItem::create([
+      'apiary' => $this->apiary->id(),
+      'name' => 'Extractor',
+      'unit' => 'each',
+      'item_type' => 'durable',
+      'useful_life_years' => 5,
+    ]);
+    $this->durableItem->save();
   }
 
   /**
@@ -140,6 +154,60 @@ class InventoryPurchaseTest extends KernelTestBase {
     // save() wraps the preSave() InvalidArgumentException in an
     // EntityStorageException, matching CalendarActionTest::
     // testWeekEndBeforeWeekStartRejected's expectation style.
+    $this->expectException(\Exception::class);
+    $purchase->save();
+  }
+
+  /**
+   * Tests that a disposal date can be recorded for a durable item's purchase.
+   *
+   * See docs/project-management/tasks/0049-asset-disposal-and-write-off-tracking.md.
+   */
+  public function testDisposalDateAndReasonSaveForDurableItem(): void {
+    $purchase = InventoryPurchase::create([
+      'apiary' => $this->apiary->id(),
+      'item' => $this->durableItem->id(),
+      'purchase_date' => '2024-01-01',
+      'quantity' => 1,
+      'unit_price' => 500,
+      'disposal_date' => '2025-06-01',
+      'disposal_reason' => 'Frame broke beyond repair.',
+    ]);
+    $purchase->save();
+
+    $loaded = InventoryPurchase::load($purchase->id());
+    $this->assertEquals('2025-06-01', $loaded->get('disposal_date')->value);
+    $this->assertEquals('Frame broke beyond repair.', $loaded->get('disposal_reason')->value);
+  }
+
+  /**
+   * Tests that a disposal date is rejected for a consumable item's purchase.
+   */
+  public function testDisposalDateRejectedForConsumableItem(): void {
+    $purchase = InventoryPurchase::create([
+      'apiary' => $this->apiary->id(),
+      'item' => $this->item->id(),
+      'purchase_date' => '2026-03-01',
+      'quantity' => 25,
+      'unit_price' => 1.5,
+      'disposal_date' => '2026-04-01',
+    ]);
+    $this->expectException(\Exception::class);
+    $purchase->save();
+  }
+
+  /**
+   * Tests that a disposal date cannot predate the purchase date.
+   */
+  public function testDisposalDateCannotPredatePurchaseDate(): void {
+    $purchase = InventoryPurchase::create([
+      'apiary' => $this->apiary->id(),
+      'item' => $this->durableItem->id(),
+      'purchase_date' => '2024-06-01',
+      'quantity' => 1,
+      'unit_price' => 500,
+      'disposal_date' => '2024-01-01',
+    ]);
     $this->expectException(\Exception::class);
     $purchase->save();
   }

@@ -54,9 +54,15 @@ class InventoryPurchaseForm extends ContentEntityForm {
         'open' => FALSE,
         'fields' => ['quantity', 'unit_price', 'supplier'],
       ],
+      'inventory_purchase_disposal' => [
+        'title' => $this->t('Disposal'),
+        'weight' => 2,
+        'open' => FALSE,
+        'fields' => ['disposal_date', 'disposal_reason'],
+      ],
       'inventory_purchase_notes' => [
         'title' => $this->t('Notes'),
-        'weight' => 2,
+        'weight' => 3,
         'open' => FALSE,
         'fields' => ['notes', 'uid'],
       ],
@@ -88,10 +94,25 @@ class InventoryPurchaseForm extends ContentEntityForm {
 
     $item_id = $this->getNullableFieldValue($form_state, 'item');
     $apiary_id = $this->getNullableFieldValue($form_state, 'apiary');
-    if ($item_id !== NULL && $apiary_id !== NULL) {
-      $item = $this->entityTypeManager->getStorage('inventory_item')->load($item_id);
-      if ($item && (int) $item->get('apiary')->target_id !== (int) $apiary_id) {
-        $form_state->setErrorByName('item', $this->t('The selected item must belong to the same apiary as this purchase.'));
+    $item = $item_id !== NULL ? $this->entityTypeManager->getStorage('inventory_item')->load($item_id) : NULL;
+    if ($item && $apiary_id !== NULL && (int) $item->get('apiary')->target_id !== (int) $apiary_id) {
+      $form_state->setErrorByName('item', $this->t('The selected item must belong to the same apiary as this purchase.'));
+    }
+
+    // Read the massaged, string-formatted date values off a freshly built
+    // entity clone rather than $form_state->getValue() directly — the
+    // datetime widget's raw form value is a DrupalDateTime object at this
+    // point, not yet the 'Y-m-d' string WidgetInterface::extractFormValues()
+    // produces, and buildEntity() is what runs that massaging.
+    $entity = $this->buildEntity($form, $form_state);
+    $disposal_date = $entity->get('disposal_date')->value;
+    if ($disposal_date) {
+      if ($item && $item->get('item_type')->value !== 'durable') {
+        $form_state->setErrorByName('disposal_date', $this->t('A disposal date can only be recorded for a purchase of a durable item.'));
+      }
+      $purchase_date = $entity->get('purchase_date')->value;
+      if ($purchase_date && $disposal_date < $purchase_date) {
+        $form_state->setErrorByName('disposal_date', $this->t('The disposal date cannot be before the purchase date.'));
       }
     }
   }

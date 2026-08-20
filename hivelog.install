@@ -11,6 +11,7 @@ use Drupal\hivelog\Entity\Hive;
 use Drupal\hivelog\Entity\HiveActionLog;
 use Drupal\hivelog\Entity\HiveInspection;
 use Drupal\hivelog\Entity\InventoryItem;
+use Drupal\hivelog\Entity\InventoryPurchase;
 use Drupal\user\Entity\Role;
 
 /**
@@ -843,6 +844,34 @@ function hivelog_update_10026(&$sandbox) {
   }
 
   return t('Installed the low_stock_threshold field storage on Inventory Item.');
+}
+
+/**
+ * Installs the disposal_date/disposal_reason field storage on Inventory Purchase.
+ *
+ * Disposal/write-off tracking for docs/project-management/tasks/
+ * 0049-asset-disposal-and-write-off-tracking.md. The module is not yet
+ * in production, so no data migration is required.
+ */
+function hivelog_update_10027(&$sandbox) {
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+
+  $field_definitions = InventoryPurchase::baseFieldDefinitions(
+    $entity_type_manager->getDefinition('inventory_purchase')
+  );
+  foreach (['disposal_date', 'disposal_reason'] as $field_name) {
+    if (isset($field_definitions[$field_name])) {
+      $entity_definition_update_manager->installFieldStorageDefinition(
+        $field_name,
+        'inventory_purchase',
+        'hivelog',
+        $field_definitions[$field_name]
+      );
+    }
+  }
+
+  return t('Installed the disposal_date/disposal_reason field storage on Inventory Purchase.');
 }
 
 /**

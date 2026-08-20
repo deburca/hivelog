@@ -112,6 +112,46 @@ class InventoryCostReportTest extends KernelTestBase {
   }
 
   /**
+   * Tests that a disposed purchase stops depreciating after its disposal year.
+   *
+   * See docs/project-management/tasks/0049-asset-disposal-and-write-off-tracking.md.
+   * Contrasted with testDepreciationWindowBoundaries()'s undisposed,
+   * full-window case: here the useful-life window (2024-2026) is cut
+   * short by a disposal in 2025, so 2026 — still inside the original
+   * window — must show zero, not the usual per-year contribution.
+   */
+  public function testDisposalStopsDepreciationAfterDisposalYear(): void {
+    $item = InventoryItem::create([
+      'apiary' => $this->apiary->id(),
+      'name' => 'Frames',
+      'unit' => 'frame',
+      'item_type' => 'durable',
+      'useful_life_years' => 3,
+    ]);
+    $item->save();
+
+    // Bought in 2024, useful_life_years = 3: window would be 2024-2026,
+    // but disposed mid-way through 2025.
+    InventoryPurchase::create([
+      'apiary' => $this->apiary->id(),
+      'item' => $item->id(),
+      'purchase_date' => '2024-06-01',
+      'quantity' => 10,
+      'unit_price' => 3,
+      'disposal_date' => '2025-09-01',
+    ])->save();
+
+    $this->assertEquals(0.0, $item->getAnnualDepreciation(2023));
+    $this->assertEquals(10.0, $item->getAnnualDepreciation(2024));
+    // The disposal year itself still counts (whole-year accounting, no
+    // partial-year proration).
+    $this->assertEquals(10.0, $item->getAnnualDepreciation(2025));
+    // Still inside the original 2024-2026 useful-life window, but the
+    // disposal cuts it short.
+    $this->assertEquals(0.0, $item->getAnnualDepreciation(2026));
+  }
+
+  /**
    * Tests that multiple purchases of the same item are summed independently.
    */
   public function testMultiplePurchasesSummedIndependently(): void {
