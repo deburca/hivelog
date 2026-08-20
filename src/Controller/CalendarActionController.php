@@ -72,6 +72,16 @@ class CalendarActionController extends ControllerBase {
   }
 
   /**
+   * Provides the add form for a yield within a calendar action context.
+   */
+  public function addYieldForm(CalendarAction $calendar_action) {
+    $yield = $this->entityTypeManager->getStorage('calendar_action_product_yield')->create([
+      'calendar_action' => $calendar_action->id(),
+    ]);
+    return $this->entityFormBuilder->getForm($yield, 'add');
+  }
+
+  /**
    * Displays a calendar action with its fields grouped into readable sections.
    */
   public function view(CalendarAction $calendar_action) {
@@ -100,12 +110,19 @@ class CalendarActionController extends ControllerBase {
     [$requirements_section, $requirements] = $this->buildRequirementsSection($calendar_action);
     $build['requirements'] = $requirements_section;
 
+    [$yield_section, $yields] = $this->buildYieldSection($calendar_action);
+    $build['yields'] = $yield_section;
+
     $cache = CacheableMetadata::createFromRenderArray($build)
       ->addCacheContexts(['user.permissions'])
       ->addCacheableDependency($calendar_action)
-      ->addCacheTags($this->entityTypeManager->getDefinition('calendar_action_item_requirement')->getListCacheTags());
+      ->addCacheTags($this->entityTypeManager->getDefinition('calendar_action_item_requirement')->getListCacheTags())
+      ->addCacheTags($this->entityTypeManager->getDefinition('calendar_action_product_yield')->getListCacheTags());
     foreach ($requirements as $requirement) {
       $cache->addCacheableDependency($requirement);
+    }
+    foreach ($yields as $yield) {
+      $cache->addCacheableDependency($yield);
     }
     $cache->applyTo($build);
 
@@ -240,6 +257,105 @@ class CalendarActionController extends ControllerBase {
     ];
 
     return [$section, $requirements];
+  }
+
+  /**
+   * Builds the embedded "Expected Yield" section of the calendar action view.
+   *
+   * This is the recipe that a "done" report's yield form pre-fills from.
+   * Placed alongside (not replacing) buildRequirementsSection() — a
+   * calendar action can need items (jars) and yield products (honey) at
+   * once. Mirrors buildRequirementsSection() exactly, one level removed
+   * (outputs instead of inputs).
+   *
+   * @param \Drupal\hivelog\Entity\CalendarAction $calendar_action
+   *   The calendar action being rendered.
+   *
+   * @return array{0: array, 1: \Drupal\hivelog\Entity\CalendarActionProductYield[]}
+   *   Tuple of [render array, loaded yield entities for cache deps].
+   */
+  protected function buildYieldSection(CalendarAction $calendar_action): array {
+    $yield_ids = $this->entityTypeManager
+      ->getStorage('calendar_action_product_yield')
+      ->getQuery()
+      ->accessCheck(TRUE)
+      ->condition('calendar_action', $calendar_action->id())
+      ->sort('id', 'ASC')
+      ->execute();
+    $yields = $yield_ids
+      ? $this->entityTypeManager->getStorage('calendar_action_product_yield')->loadMultiple($yield_ids)
+      : [];
+
+    $header = [
+      $this->t('Product'),
+      $this->t('Quantity'),
+      $this->t('Unit'),
+      $this->t('Operations'),
+    ];
+
+    $rows = [];
+    foreach ($yields as $yield) {
+      $product = $yield->get('product')->entity;
+      $buttons = [];
+      if ($yield->access('update')) {
+        $buttons[] = ['label' => (string) $this->t('Edit'), 'url' => $yield->toUrl('edit-form')->toString()];
+      }
+      if ($yield->access('delete')) {
+        $buttons[] = [
+          'label' => (string) $this->t('Delete'),
+          'url' => $yield->toUrl('delete-form')->toString(),
+          'variant' => 'danger',
+        ];
+      }
+      $actions = [
+        '#type' => 'component',
+        '#component' => 'hivelog:button-group',
+        '#props' => ['buttons' => $buttons],
+      ];
+      $rows[] = [
+        'cells' => [
+          $product ? $product->toLink()->toString() : (string) $this->t('Unknown product'),
+          rtrim(rtrim(number_format((float) $yield->get('quantity')->value, 3, '.', ''), '0'), '.'),
+          $product ? $product->get('unit')->value : '',
+          $this->renderer->renderInIsolation($actions),
+        ],
+      ];
+    }
+
+    $section = [
+      '#type' => 'container',
+      'heading' => [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['hivelog-list-heading']],
+        'title' => [
+          '#type' => 'html_tag',
+          '#tag' => 'h3',
+          '#value' => $this->t('Expected Yield'),
+          '#attributes' => ['class' => ['hivelog-list-heading__title']],
+        ],
+        'add' => [
+          '#type' => 'component',
+          '#component' => 'hivelog:button',
+          '#props' => [
+            'label' => (string) $this->t('Add Expected Yield'),
+            'url' => Url::fromRoute('hivelog.calendar_action_product_yield.add', ['calendar_action' => $calendar_action->id()])->toString(),
+            'variant' => 'primary',
+            'extra_classes' => 'hivelog-list-heading__action',
+          ],
+        ],
+      ],
+      'table' => [
+        '#type' => 'component',
+        '#component' => 'hivelog:entity-table',
+        '#props' => [
+          'headers' => array_map('strval', $header),
+          'rows' => $rows,
+          'empty_message' => (string) $this->t('No expected yield has been recorded for this calendar action yet.'),
+        ],
+      ],
+    ];
+
+    return [$section, $yields];
   }
 
   /**

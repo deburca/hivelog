@@ -729,3 +729,43 @@ entity.calendar_action_item_requirement.delete_form:
     parameters:
       calendar_action_item_requirement:
         type: entity:calendar_action_item_requirement
+
+# Calendar action product yield routes ("recipe" lines, output side). No
+# collection or canonical route — managed entirely from the embedded
+# table on the parent calendar action's canonical page
+# (CalendarActionController::buildYieldSection()).
+hivelog.calendar_action_product_yield.add:
+  path: '/hivelog/calendar-action/{calendar_action}/yield/add'
+  defaults:
+    _controller: '\Drupal\hivelog\Controller\CalendarActionController::addYieldForm'
+    _title: 'Add Expected Yield'
+  requirements:
+    _permission: 'add calendar action product yield+administer hivelog'
+  options:
+    parameters:
+      calendar_action:
+        type: entity:calendar_action
+
+entity.calendar_action_product_yield.edit_form:
+  path: '/hivelog/calendar-action-yield/{calendar_action_product_yield}/edit'
+  defaults:
+    _entity_form: 'calendar_action_product_yield.edit'
+    _title: 'Edit Yield'
+  requirements:
+    _permission: 'edit own calendar action product yield+edit any calendar action product yield+administer hivelog'
+  options:
+    parameters:
+      calendar_action_product_yield:
+        type: entity:calendar_action_product_yield
+
+entity.calendar_action_product_yield.delete_form:
+  path: '/hivelog/calendar-action-yield/{calendar_action_product_yield}/delete'
+  defaults:
+    _entity_form: 'calendar_action_product_yield.delete'
+    _title: 'Delete Yield'
+  requirements:
+    _permission: 'delete own calendar action product yield+delete any calendar action product yield+administer hivelog'
+  options:
+    parameters:
+      calendar_action_product_yield:
+        type: entity:calendar_action_product_yield

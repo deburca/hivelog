@@ -34,6 +34,7 @@ function hivelog_uninstall() {
     'queen_observation',
     'hive_inspection',
     'calendar_action_item_requirement',
+    'calendar_action_product_yield',
     'inventory_purchase',
     'inventory_item',
     'product',
@@ -772,6 +773,27 @@ function hivelog_update_10023(&$sandbox) {
   }
 
   return t('Installed the Product entity type.');
+}
+
+/**
+ * Installs the Calendar Action Product Yield entity type.
+ *
+ * The "plan" (recipe) half of yield tracking for docs/project-management/
+ * decisions/0034-honey-wax-propolis-yield-and-potential-income.md — one
+ * level removed from CalendarActionItemRequirement (outputs instead of
+ * inputs). The module is not yet in production, so no data migration is
+ * required.
+ */
+function hivelog_update_10024(&$sandbox) {
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+
+  if (!$entity_definition_update_manager->getEntityType('calendar_action_product_yield')) {
+    $yield_type = $entity_type_manager->getDefinition('calendar_action_product_yield');
+    $entity_definition_update_manager->installEntityType($yield_type);
+  }
+
+  return t('Installed the Calendar Action Product Yield entity type.');
 }
 
 /**

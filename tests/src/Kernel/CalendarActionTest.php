@@ -8,7 +8,9 @@ use Drupal\hivelog\Controller\CalendarActionController;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\CalendarAction;
 use Drupal\hivelog\Entity\CalendarActionItemRequirement;
+use Drupal\hivelog\Entity\CalendarActionProductYield;
 use Drupal\hivelog\Entity\InventoryItem;
+use Drupal\hivelog\Entity\Product;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\user\Entity\User;
 use PHPUnit\Framework\Attributes\Group;
@@ -53,6 +55,8 @@ class CalendarActionTest extends KernelTestBase {
     $this->installEntitySchema('calendar_action');
     $this->installEntitySchema('inventory_item');
     $this->installEntitySchema('calendar_action_item_requirement');
+    $this->installEntitySchema('product');
+    $this->installEntitySchema('calendar_action_product_yield');
     $this->installSchema('file', ['file_usage']);
 
     $this->apiary = Apiary::create(['name' => 'Test Apiary']);
@@ -402,6 +406,149 @@ class CalendarActionTest extends KernelTestBase {
     $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
     $this->assertStringContainsString('Apivar Strips', $html);
     $this->assertStringContainsString('strip', $html);
+  }
+
+  /**
+   * Tests the empty-state message when a calendar action has no yield recipe yet.
+   */
+  public function testViewShowsEmptyYieldMessage(): void {
+    $this->installConfig(['system']);
+
+    $user = User::create([
+      'name' => 'no-yield-tester',
+      'mail' => 'no-yield-tester@example.com',
+    ]);
+    $user->save();
+    \Drupal::currentUser()->setAccount($user);
+
+    $action = CalendarAction::create([
+      'apiary' => $this->apiary->id(),
+      'title' => 'No Yield Action',
+      'description' => 'Desc.',
+      'week_start' => 10,
+    ]);
+    $action->save();
+
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(CalendarActionController::class);
+    $build = $controller->view($action);
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+
+    $this->assertArrayHasKey('yields', $build);
+    $this->assertStringContainsString('Expected Yield', $html);
+    $this->assertStringContainsString('Add Expected Yield', $html);
+    $this->assertStringContainsString('No expected yield has been recorded for this calendar action yet.', $html);
+  }
+
+  /**
+   * Tests that expected yield rows render in the embedded yield table.
+   */
+  public function testViewShowsYieldRows(): void {
+    $this->installConfig(['system']);
+
+    $user = User::create([
+      'name' => 'yield-tester',
+      'mail' => 'yield-tester@example.com',
+    ]);
+    $user->save();
+    \Drupal::currentUser()->setAccount($user);
+
+    $action = CalendarAction::create([
+      'apiary' => $this->apiary->id(),
+      'title' => 'Harvest Summer Honey',
+      'description' => 'Desc.',
+      'week_start' => 28,
+    ]);
+    $action->save();
+
+    $product = Product::create([
+      'apiary' => $this->apiary->id(),
+      'name' => 'Honey',
+      'unit' => 'kg',
+      'expected_unit_price' => 12,
+    ]);
+    $product->save();
+
+    CalendarActionProductYield::create([
+      'calendar_action' => $action->id(),
+      'product' => $product->id(),
+      'quantity' => 20,
+    ])->save();
+
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(CalendarActionController::class);
+    $build = $controller->view($action);
+
+    $this->assertEquals('component', $build['yields']['table']['#type']);
+    $this->assertEquals('hivelog:entity-table', $build['yields']['table']['#component']);
+    $this->assertCount(1, $build['yields']['table']['#props']['rows']);
+
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+    $this->assertStringContainsString('Honey', $html);
+    $this->assertStringContainsString('kg', $html);
+  }
+
+  /**
+   * Tests that requirement and yield sections both render together.
+   *
+   * A harvest action can need items (jars) and yield products (honey) at
+   * once — both embedded tables must render correctly on the same page.
+   */
+  public function testViewShowsBothRequirementAndYieldSectionsTogether(): void {
+    $this->installConfig(['system']);
+
+    $user = User::create([
+      'name' => 'both-sections-tester',
+      'mail' => 'both-sections-tester@example.com',
+    ]);
+    $user->save();
+    \Drupal::currentUser()->setAccount($user);
+
+    $action = CalendarAction::create([
+      'apiary' => $this->apiary->id(),
+      'title' => 'Harvest Summer Honey',
+      'description' => 'Desc.',
+      'week_start' => 28,
+    ]);
+    $action->save();
+
+    $item = InventoryItem::create([
+      'apiary' => $this->apiary->id(),
+      'name' => '500g Honey Jars',
+      'unit' => 'jar',
+      'item_type' => 'consumable',
+    ]);
+    $item->save();
+
+    CalendarActionItemRequirement::create([
+      'calendar_action' => $action->id(),
+      'item' => $item->id(),
+      'quantity' => 40,
+    ])->save();
+
+    $product = Product::create([
+      'apiary' => $this->apiary->id(),
+      'name' => 'Honey',
+      'unit' => 'kg',
+      'expected_unit_price' => 12,
+    ]);
+    $product->save();
+
+    CalendarActionProductYield::create([
+      'calendar_action' => $action->id(),
+      'product' => $product->id(),
+      'quantity' => 20,
+    ])->save();
+
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(CalendarActionController::class);
+    $build = $controller->view($action);
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+
+    $this->assertStringContainsString('500g Honey Jars', $html);
+    $this->assertStringContainsString('Honey', $html);
+    $this->assertStringContainsString('Required Items', $html);
+    $this->assertStringContainsString('Expected Yield', $html);
   }
 
 }

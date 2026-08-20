@@ -209,3 +209,19 @@ delete own product:
   title: 'Delete own products'
 delete any product:
   title: 'Delete any product'
+
+# Calendar action product yield permissions.
+view own calendar action product yield:
+  title: 'View own calendar action product yields'
+view any calendar action product yield:
+  title: 'View any calendar action product yield'
+add calendar action product yield:
+  title: 'Add calendar action product yields'
+edit own calendar action product yield:
+  title: 'Edit own calendar action product yields'
+edit any calendar action product yield:
+  title: 'Edit any calendar action product yield'
+delete own calendar action product yield:
+  title: 'Delete own calendar action product yields'
+delete any calendar action product yield:
+  title: 'Delete any calendar action product yield'
