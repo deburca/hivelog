@@ -79,7 +79,13 @@ SORT status asc, priority asc
   section embedded on the calendar action page alongside "Required
   Items"; verified end-to-end against a real Drupal site, full suite at
   416 tests/0 failures)
-- [[0037-harvest-yield-and-action-log-reporting-integration]] — backlog
+- [[0037-harvest-yield-and-action-log-reporting-integration]] — done
+  (`HarvestYield` entity, shared `HarvestYieldFormTrait` wiring the "done"
+  report flow on both `HiveActionLogForm` and `ApiaryActionLogForm`
+  alongside the existing `InventoryUsageFormTrait`, so a harvest report
+  can record consumables used and products produced in one save; verified
+  end-to-end against a real Drupal site, full suite at 437 tests/0
+  failures)
 - [[0038-potential-income-in-the-cost-report]] — backlog
 - [[0039-yield-and-income-test-coverage]] — backlog
 

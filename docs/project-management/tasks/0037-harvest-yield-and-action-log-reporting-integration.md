@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: backlog
+status: done
 priority: medium
 project: "[[honey-wax-propolis-yield-and-potential-income]]"
 area: entity
@@ -25,12 +25,12 @@ same conditional-side-effect-on-save shape, same form, applied to yield
 instead of usage.
 
 ## Acceptance criteria
-- [ ] `src/Entity/HarvestYield.php` — base table
+- [x] `src/Entity/HarvestYield.php` — base table
       `hivelog_harvest_yield`, entity keys (`id`, `uuid`, `owner` →
       `uid`); `label()` composed as `"@product — @quantity @unit"`. No
       `form`/`list_builder` handlers — no dedicated UI, rows are
       system-managed via the action-log forms, matching `InventoryUsage`.
-- [ ] Fields: `product` (required entity_reference → `product`),
+- [x] Fields: `product` (required entity_reference → `product`),
       `quantity` (required decimal, precision 10/scale 3),
       `hive_action_log` (optional entity_reference → `hive_action_log`),
       `apiary_action_log` (optional entity_reference →
@@ -38,16 +38,16 @@ instead of usage.
       12/scale 4, view-only — auto-derived in `preSave()` from
       `product.expected_unit_price` at creation time, never
       recalculated), plus `uid`/`created`/`changed`.
-- [ ] `preSave()` validation: exactly one of `hive_action_log` /
+- [x] `preSave()` validation: exactly one of `hive_action_log` /
       `apiary_action_log` must be set (not both, not neither) — mirrors
       `InventoryUsage::preSave()`'s identical guard.
-- [ ] `unit_price_snapshot` is only set `if ($this->isNew() ||
+- [x] `unit_price_snapshot` is only set `if ($this->isNew() ||
       $this->get('unit_price_snapshot')->isEmpty())` — proves a later
       change to `product.expected_unit_price` does not retroactively
       change an already-recorded yield's snapshot, matching
       `InventoryUsage.unit_cost_snapshot`'s immutability guarantee
       exactly.
-- [ ] `HiveActionLogForm`/`ApiaryActionLogForm`: when the report's
+- [x] `HiveActionLogForm`/`ApiaryActionLogForm`: when the report's
       `status` is set to `done`, show the `calendar_action`'s
       `CalendarActionProductYield` rows as a pre-filled, editable list of
       product + quantity (defaulting to the recipe's quantity), and on
@@ -57,18 +57,18 @@ instead of usage.
       `InventoryUsageFormTrait` — both traits are used together on the
       same two forms (a "done" harvest report can show inventory-usage
       fields for jars *and* yield fields for honey/wax on the same page).
-- [ ] Editing an already-`done` log's yield rows: re-saving updates
+- [x] Editing an already-`done` log's yield rows: re-saving updates
       existing `HarvestYield` rows in place (not append-only), matching
       `InventoryUsage`'s resolved behaviour. Changing status away from
       `done` on an already-reported log deletes its previously recorded
       yield rows, matching `InventoryUsageFormTrait::syncInventoryUsage()`'s
       identical edge-case handling.
-- [ ] `hivelog.permissions.yml`: seven permissions for `harvest yield`
+- [x] `hivelog.permissions.yml`: seven permissions for `harvest yield`
       (view own/any, add, edit own/any, delete own/any).
-- [ ] `hivelog_update_NNNN` installs the new entity type; added to
+- [x] `hivelog_update_NNNN` installs the new entity type; added to
       `hivelog_uninstall()`'s cleanup list before `hive_action_log`/
       `apiary_action_log`/`product`, all of which it references.
-- [ ] Kernel tests: CRUD, the exactly-one-of-hive/apiary-log guard,
+- [x] Kernel tests: CRUD, the exactly-one-of-hive/apiary-log guard,
       `unit_price_snapshot` derivation and its immutability after
       creation (even after `product.expected_unit_price` changes), the
       report-form pre-fill-from-recipe behaviour (both
@@ -77,7 +77,7 @@ instead of usage.
       that inventory-usage and yield fields both appear correctly on the
       same "done" report form when a calendar action has both a
       requirement and a yield recipe.
-- [ ] `ddev drush updb -y && ddev drush cr` clean.
+- [x] `ddev drush updb -y && ddev drush cr` clean.
 
 ## Implementation notes
 - Key files: `src/Entity/HarvestYield.php`,
@@ -101,8 +101,33 @@ instead of usage.
   the same harvest report).
 - No unit-conversion concern here either — `quantity` is always in the
   referenced `Product.unit`.
+- Four pre-existing kernel tests that exercise `HiveActionLogForm`/
+  `ApiaryActionLogForm` directly (`HiveActionLogInspectionLinkTest`,
+  `InventoryEndToEndTest`, `InventoryCostReportTest`,
+  `InventoryUsageReportingIntegrationTest`) needed
+  `product`/`calendar_action_product_yield`/`harvest_yield` schema
+  installs added to their `setUp()`, since both forms' `save()` now
+  unconditionally call `syncHarvestYield()` — the same recurring
+  regression pattern hit by every prior task this session that added an
+  unconditional query to a shared form/controller method.
+
+## Verification
+- Full kernel+unit suite against `cms2` with `SIMPLETEST_DB=mysql`
+  (matching CI's backend): 437 tests, 0 failures/errors (up from 416
+  before this task).
+- `ddev drush updb -y`: `hivelog_update_10025` applied cleanly, installing
+  the `harvest_yield` entity type.
+- End-to-end smoke test via `drush php:eval`: a calendar action with both
+  a jars requirement and a honey yield recipe, reported `done` through
+  the real `HiveActionLogForm::save()` path with both fields submitted in
+  one save — confirmed both an `InventoryUsage` row (40 jars) and a
+  `HarvestYield` row (20 kg honey, `unit_price_snapshot` correctly
+  derived as 12.0000) were created from the single submission, and
+  `InventoryItem::getStockOnHand()` reflected the jar consumption — then
+  cleaned up.
 
 ## Related
 - Project:: [[honey-wax-propolis-yield-and-potential-income]]
 - Decisions:: [[0034-honey-wax-propolis-yield-and-potential-income]], [[0027-inventory-tracking-and-depreciation]]
-- Commits::
+- Commits:: 5adfdd3 (entity, access control, shared form trait, wiring
+  into both action-log forms, permissions, install hook, tests)
