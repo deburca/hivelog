@@ -49,7 +49,11 @@ SORT status asc, priority asc
   `inventory_item`/`product`, wired via a shared trait onto all three
   affected forms; verified end-to-end against a real Drupal site, full
   suite at 447 tests/0 failures)
-- [[0042-low-stock-warning]] — backlog (should-have)
+- [[0042-low-stock-warning]] — done (optional per-item
+  `low_stock_threshold` field + `isLowStock()`, surfaced as an inline
+  "(Low Stock)" suffix on the Stock on Hand cell on both the item's own
+  page and the apiary page's embedded table; full suite at 452 tests/0
+  failures)
 - [[0043-hide-discontinued-items-and-products-from-selection]] — backlog (should-have)
 - [[0044-multi-year-cost-and-income-trend-view]] — backlog (should-have)
 - [[0045-warn-before-deleting-referenced-items-and-products]] — backlog (should-have)
