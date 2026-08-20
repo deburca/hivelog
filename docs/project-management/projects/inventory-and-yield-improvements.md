@@ -71,7 +71,11 @@ SORT status asc, priority asc
 - [[0046-real-sales-ledger]] — backlog (could-have)
 - [[0047-cross-apiary-aggregate-views]] — backlog (could-have)
 - [[0048-unit-conversion]] — backlog (could-have)
-- [[0049-asset-disposal-and-write-off-tracking]] — backlog (could-have)
+- [[0049-asset-disposal-and-write-off-tracking]] — done (optional
+  `disposal_date`/`disposal_reason` on `InventoryPurchase`, durable-only
+  and never before the purchase date; `getAnnualDepreciation()` zeroes a
+  disposed purchase's contribution for years after its disposal year;
+  full suite at 465 tests/0 failures)
 - [[0050-fifo-lot-costing]] — backlog (could-have)
 - [[0051-expected-unit-price-audit-trail]] — backlog (could-have)
 - [[0052-merge-usage-and-yield-form-traits]] — backlog (could-have)
