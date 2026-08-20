@@ -13,14 +13,17 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
- * Controller for the per-apiary, per-year inventory cost & depreciation report.
+ * Controller for the per-apiary, per-year financial report.
  *
  * Sums, for a selected year: the cost of consumables actually used
  * (`Σ InventoryUsage.quantity × unit_cost_snapshot`) plus the active
- * depreciation of durable assets (`InventoryItem::getAnnualDepreciation()`).
- * Purely a read-side aggregation over entities the rest of the inventory
- * feature already maintains — see
- * docs/project-management/decisions/0027-inventory-tracking-and-depreciation.md.
+ * depreciation of durable assets (`InventoryItem::getAnnualDepreciation()`),
+ * against the potential income from products actually produced
+ * (`Σ HarvestYield.quantity × unit_price_snapshot`), giving a net
+ * (income − cost) figure. Purely a read-side aggregation over entities
+ * the rest of the inventory/yield features already maintain — see
+ * docs/project-management/decisions/0027-inventory-tracking-and-depreciation.md
+ * and docs/project-management/decisions/0034-honey-wax-propolis-yield-and-potential-income.md.
  */
 class InventoryReportController extends ControllerBase {
 
@@ -50,16 +53,20 @@ class InventoryReportController extends ControllerBase {
   }
 
   /**
-   * Builds the cost & depreciation report for one apiary and year.
+   * Builds the financial report for one apiary and year.
    */
   public function costReport(Apiary $apiary) {
     $year = $this->extractReportYear();
 
     $consumables = $this->consumableCostBreakdown($apiary, $year);
     $depreciation = $this->depreciationBreakdown($apiary, $year);
+    $yields = $this->yieldBreakdown($apiary, $year);
 
     $consumable_total = array_reduce($consumables, fn($carry, $row) => $carry + $row['cost'], 0.0);
     $depreciation_total = array_reduce($depreciation, fn($carry, $row) => $carry + $row['depreciation'], 0.0);
+    $income_total = array_reduce($yields, fn($carry, $row) => $carry + $row['income'], 0.0);
+    $cost_total = $consumable_total + $depreciation_total;
+    $net = $income_total - $cost_total;
 
     $build = [];
 
@@ -78,12 +85,20 @@ class InventoryReportController extends ControllerBase {
     $build['summary'] = [
       '#type' => 'table',
       '#weight' => 2,
-      '#header' => [$this->t('Total consumable cost'), $this->t('Total active depreciation'), $this->t('Total')],
+      '#header' => [
+        $this->t('Total consumable cost'),
+        $this->t('Total active depreciation'),
+        $this->t('Total cost'),
+        $this->t('Total potential income'),
+        $this->t('Net'),
+      ],
       '#rows' => [
         [
           number_format($consumable_total, 2),
           number_format($depreciation_total, 2),
-          number_format($consumable_total + $depreciation_total, 2),
+          number_format($cost_total, 2),
+          number_format($income_total, 2),
+          number_format($net, 2),
         ],
       ],
       '#attributes' => ['class' => ['hivelog-inventory-report-table']],
@@ -107,6 +122,14 @@ class InventoryReportController extends ControllerBase {
         number_format($row['depreciation'], 2),
       ];
     }
+    foreach ($yields as $row) {
+      $breakdown_rows[] = [
+        $row['product']->toLink()->toString(),
+        $this->t('Yield'),
+        rtrim(rtrim(number_format($row['quantity'], 3, '.', ''), '0'), '.') . ' ' . $row['product']->get('unit')->value,
+        number_format($row['income'], 2),
+      ];
+    }
 
     $build['breakdown'] = [
       '#type' => 'container',
@@ -119,9 +142,9 @@ class InventoryReportController extends ControllerBase {
       ],
       'table' => [
         '#type' => 'table',
-        '#header' => [$this->t('Item'), $this->t('Type'), $this->t('Quantity used'), $this->t('Cost')],
+        '#header' => [$this->t('Item'), $this->t('Type'), $this->t('Quantity'), $this->t('Amount')],
         '#rows' => $breakdown_rows,
-        '#empty' => $this->t('No inventory cost or depreciation recorded for @year.', ['@year' => $year]),
+        '#empty' => $this->t('No inventory cost, depreciation, or yield recorded for @year.', ['@year' => $year]),
         '#attributes' => ['class' => ['hivelog-inventory-report-table']],
         '#attached' => ['library' => ['hivelog/tables']],
       ],
@@ -131,12 +154,16 @@ class InventoryReportController extends ControllerBase {
       ->addCacheContexts(['url.query_args:year', 'user.permissions'])
       ->addCacheableDependency($apiary)
       ->addCacheTags($this->entityTypeManager->getDefinition('inventory_purchase')->getListCacheTags())
-      ->addCacheTags($this->entityTypeManager->getDefinition('inventory_usage')->getListCacheTags());
+      ->addCacheTags($this->entityTypeManager->getDefinition('inventory_usage')->getListCacheTags())
+      ->addCacheTags($this->entityTypeManager->getDefinition('harvest_yield')->getListCacheTags());
     foreach ($consumables as $row) {
       $cache->addCacheableDependency($row['item']);
     }
     foreach ($depreciation as $row) {
       $cache->addCacheableDependency($row['item']);
+    }
+    foreach ($yields as $row) {
+      $cache->addCacheableDependency($row['product']);
     }
     $cache->applyTo($build);
 
@@ -144,10 +171,10 @@ class InventoryReportController extends ControllerBase {
   }
 
   /**
-   * Title callback for the cost report page.
+   * Title callback for the financial report page.
    */
   public function costReportTitle(Apiary $apiary) {
-    return $this->t('Inventory Cost Report: @apiary', ['@apiary' => $apiary->label()]);
+    return $this->t('Apiary Financial Report: @apiary', ['@apiary' => $apiary->label()]);
   }
 
   /**
@@ -185,19 +212,17 @@ class InventoryReportController extends ControllerBase {
   }
 
   /**
-   * Builds the consumable cost breakdown for an apiary/year, keyed by item id.
+   * Resolves this apiary's hive-scoped and apiary-scoped log ids for a year.
    *
-   * Sums `InventoryUsage` rows whose owning log (hive- or apiary-scoped)
-   * belongs to this apiary and matches `$year` — joined via two entity
-   * queries (apiary-scoped logs directly, hive-scoped logs via the
-   * apiary's hives) since `InventoryUsage` has no direct apiary/year
+   * Shared by `consumableCostBreakdown()` and `yieldBreakdown()`, since
+   * neither `InventoryUsage` nor `HarvestYield` has a direct apiary/year
    * field of its own (see ADR-0027's "computed, never stored" costing
-   * decision).
+   * decision) — both are joined via their owning log instead.
    *
-   * @return array<int, array{item: \Drupal\hivelog\Entity\InventoryItem, quantity: float, cost: float}>
-   *   Breakdown rows keyed by inventory item id.
+   * @return array{apiary_log_ids: array<int|string>, hive_log_ids: array<int|string>}
+   *   The two id sets, each possibly empty.
    */
-  protected function consumableCostBreakdown(Apiary $apiary, int $year): array {
+  protected function apiaryYearLogIds(Apiary $apiary, int $year): array {
     $apiary_log_ids = $this->entityTypeManager->getStorage('apiary_action_log')->getQuery()
       ->accessCheck(FALSE)
       ->condition('apiary', $apiary->id())
@@ -216,6 +241,21 @@ class InventoryReportController extends ControllerBase {
         ->condition('year', $year)
         ->execute();
     }
+
+    return ['apiary_log_ids' => $apiary_log_ids, 'hive_log_ids' => $hive_log_ids];
+  }
+
+  /**
+   * Builds the consumable cost breakdown for an apiary/year, keyed by item id.
+   *
+   * Sums `InventoryUsage` rows whose owning log (hive- or apiary-scoped)
+   * belongs to this apiary and matches `$year`.
+   *
+   * @return array<int, array{item: \Drupal\hivelog\Entity\InventoryItem, quantity: float, cost: float}>
+   *   Breakdown rows keyed by inventory item id.
+   */
+  protected function consumableCostBreakdown(Apiary $apiary, int $year): array {
+    ['apiary_log_ids' => $apiary_log_ids, 'hive_log_ids' => $hive_log_ids] = $this->apiaryYearLogIds($apiary, $year);
 
     if (!$apiary_log_ids && !$hive_log_ids) {
       return [];
@@ -283,6 +323,59 @@ class InventoryReportController extends ControllerBase {
       if ($depreciation > 0) {
         $breakdown[(int) $item->id()] = ['item' => $item, 'depreciation' => $depreciation];
       }
+    }
+
+    return $breakdown;
+  }
+
+  /**
+   * Builds the potential-income breakdown for an apiary/year, keyed by product id.
+   *
+   * Sums `HarvestYield` rows whose owning log (hive- or apiary-scoped)
+   * belongs to this apiary and matches `$year`, mirroring
+   * `consumableCostBreakdown()`'s exact join shape via
+   * `apiaryYearLogIds()` — the only differences are the entity type
+   * (`harvest_yield` vs. `inventory_usage`) and the snapshot field
+   * (`unit_price_snapshot` vs. `unit_cost_snapshot`).
+   *
+   * @return array<int, array{product: \Drupal\hivelog\Entity\Product, quantity: float, income: float}>
+   *   Breakdown rows keyed by product id.
+   */
+  protected function yieldBreakdown(Apiary $apiary, int $year): array {
+    ['apiary_log_ids' => $apiary_log_ids, 'hive_log_ids' => $hive_log_ids] = $this->apiaryYearLogIds($apiary, $year);
+
+    if (!$apiary_log_ids && !$hive_log_ids) {
+      return [];
+    }
+
+    $yield_storage = $this->entityTypeManager->getStorage('harvest_yield');
+    $query = $yield_storage->getQuery()->accessCheck(FALSE);
+    $or = $query->orConditionGroup();
+    if ($apiary_log_ids) {
+      $or->condition('apiary_action_log', array_values($apiary_log_ids), 'IN');
+    }
+    if ($hive_log_ids) {
+      $or->condition('hive_action_log', array_values($hive_log_ids), 'IN');
+    }
+    $yield_ids = $query->condition($or)->execute();
+    if (!$yield_ids) {
+      return [];
+    }
+
+    $breakdown = [];
+    foreach ($yield_storage->loadMultiple($yield_ids) as $yield) {
+      $product = $yield->get('product')->entity;
+      if (!$product) {
+        continue;
+      }
+      $product_id = (int) $product->id();
+      if (!isset($breakdown[$product_id])) {
+        $breakdown[$product_id] = ['product' => $product, 'quantity' => 0.0, 'income' => 0.0];
+      }
+      $quantity = (float) $yield->get('quantity')->value;
+      $unit_price = (float) $yield->get('unit_price_snapshot')->value;
+      $breakdown[$product_id]['quantity'] += $quantity;
+      $breakdown[$product_id]['income'] += $quantity * $unit_price;
     }
 
     return $breakdown;

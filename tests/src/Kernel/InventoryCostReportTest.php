@@ -9,10 +9,12 @@ use Drupal\hivelog\Controller\InventoryReportController;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\CalendarAction;
 use Drupal\hivelog\Entity\CalendarActionItemRequirement;
+use Drupal\hivelog\Entity\CalendarActionProductYield;
 use Drupal\hivelog\Entity\Hive;
 use Drupal\hivelog\Entity\HiveActionLog;
 use Drupal\hivelog\Entity\InventoryItem;
 use Drupal\hivelog\Entity\InventoryPurchase;
+use Drupal\hivelog\Entity\Product;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
@@ -246,7 +248,7 @@ class InventoryCostReportTest extends KernelTestBase {
 
     $this->assertStringContainsString('Sugar Syrup', $html);
     $this->assertStringContainsString('10.00', $html);
-    $this->assertStringNotContainsString('No inventory cost or depreciation recorded', $html);
+    $this->assertStringNotContainsString('No inventory cost, depreciation, or yield recorded', $html);
   }
 
   /**
@@ -291,7 +293,7 @@ class InventoryCostReportTest extends KernelTestBase {
     $build = $controller->costReport($this->apiary);
     $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
 
-    $this->assertStringContainsString('No inventory cost or depreciation recorded', $html);
+    $this->assertStringContainsString('No inventory cost, depreciation, or yield recorded', $html);
     $this->assertStringContainsString('0.00', $html);
   }
 
@@ -306,6 +308,112 @@ class InventoryCostReportTest extends KernelTestBase {
     $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
 
     $this->assertStringContainsString((string) $current_year, $html);
+  }
+
+  /**
+   * Tests the report's potential-income aggregation against a hand-computed total.
+   */
+  public function testReportAggregatesPotentialIncomeMatchingHandComputedTotal(): void {
+    $role = Role::create(['id' => 'admin', 'label' => 'Admin']);
+    $role->grantPermission('administer hivelog');
+    $role->save();
+    $user = User::create(['name' => 'admin', 'mail' => 'admin@example.com']);
+    $user->addRole('admin');
+    $user->save();
+    \Drupal::currentUser()->setAccount($user);
+
+    $hive = Hive::create(['name' => 'Report Hive', 'apiary' => $this->apiary->id(), 'status' => 'active']);
+    $hive->save();
+
+    $product = Product::create([
+      'apiary' => $this->apiary->id(),
+      'name' => 'Honey',
+      'unit' => 'kg',
+      'expected_unit_price' => 12,
+    ]);
+    $product->save();
+
+    $calendar_action = CalendarAction::create([
+      'apiary' => $this->apiary->id(),
+      'title' => 'Harvest Summer Honey',
+      'description' => 'Desc.',
+      'week_start' => 28,
+    ]);
+    $calendar_action->save();
+
+    CalendarActionProductYield::create([
+      'calendar_action' => $calendar_action->id(),
+      'product' => $product->id(),
+      'quantity' => 20,
+    ])->save();
+
+    // Report a done log for the current year, producing 15 kg. Expected
+    // income: 15 * 12 (expected_unit_price snapshot at creation) = 180.0.
+    $log = HiveActionLog::create([
+      'hive' => $hive->id(),
+      'calendar_action' => $calendar_action->id(),
+      'status' => 'done',
+    ]);
+    $form_object = \Drupal::entityTypeManager()->getFormObject('hive_action_log', 'add');
+    $form_object->setEntity($log);
+    $form_state = (new FormState())->setValue('harvest_yield_' . $product->id(), 15);
+    $form_object->save([], $form_state);
+
+    $current_year = (int) date('Y');
+    $this->pushRequestWithQuery(['year' => $current_year]);
+    $controller = \Drupal::service('class_resolver')->getInstanceFromDefinition(InventoryReportController::class);
+    $build = $controller->costReport($this->apiary);
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+
+    $this->assertStringContainsString('Honey', $html);
+    $this->assertStringContainsString('180.00', $html);
+    $this->assertStringNotContainsString('No inventory cost, depreciation, or yield recorded', $html);
+  }
+
+  /**
+   * Tests that the net figure is a signed negative number for a loss year.
+   *
+   * Cost exceeds income, so net must render as a negative number rather
+   * than being hidden or floored at zero — hiding a loss would be
+   * misleading for a profitability report.
+   */
+  public function testNetFigureIsSignedNegativeForLossYear(): void {
+    $role = Role::create(['id' => 'admin', 'label' => 'Admin']);
+    $role->grantPermission('administer hivelog');
+    $role->save();
+    $user = User::create(['name' => 'admin', 'mail' => 'admin@example.com']);
+    $user->addRole('admin');
+    $user->save();
+    \Drupal::currentUser()->setAccount($user);
+
+    $current_year = (int) date('Y');
+
+    // Durable item depreciating 200/year, no yield recorded at all —
+    // cost > income (0), so net must be -200.00.
+    $item = InventoryItem::create([
+      'apiary' => $this->apiary->id(),
+      'name' => 'Extractor',
+      'unit' => 'each',
+      'item_type' => 'durable',
+      'useful_life_years' => 5,
+    ]);
+    $item->save();
+    InventoryPurchase::create([
+      'apiary' => $this->apiary->id(),
+      'item' => $item->id(),
+      'purchase_date' => $current_year . '-01-01',
+      'quantity' => 1,
+      'unit_price' => 1000,
+    ])->save();
+
+    $this->pushRequestWithQuery(['year' => $current_year]);
+    $controller = \Drupal::service('class_resolver')->getInstanceFromDefinition(InventoryReportController::class);
+    $build = $controller->costReport($this->apiary);
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+
+    // 1000 / 5 years = 200.00 depreciation, 0.00 income, net = -200.00.
+    $this->assertStringContainsString('200.00', $html);
+    $this->assertStringContainsString('-200.00', $html);
   }
 
   /**

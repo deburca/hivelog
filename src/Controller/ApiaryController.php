@@ -436,7 +436,7 @@ class ApiaryController extends ControllerBase {
           '#type' => 'component',
           '#component' => 'hivelog:button',
           '#props' => [
-            'label' => (string) $this->t('View Cost Report'),
+            'label' => (string) $this->t('View Financial Report'),
             'url' => Url::fromRoute('hivelog.apiary.inventory_cost_report', ['apiary' => $apiary->id()])->toString(),
           ],
         ],
