@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\hivelog\Kernel;
 
+use Drupal\hivelog\Controller\HiveActionLogController;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\CalendarAction;
 use Drupal\hivelog\Entity\Hive;
@@ -251,6 +252,29 @@ class HiveActionLogTest extends KernelTestBase {
       ->count()
       ->execute();
     $this->assertEquals(2, $count);
+  }
+
+  /**
+   * Tests that the canonical view renders its detail table with the styled class.
+   *
+   * Regression test for a table CSS gap found via a code audit: the
+   * table used `hivelog-hive-action-log-table`, but that class was
+   * never added to `css/hivelog.tables.css`'s selector groups, so the
+   * page rendered fully unstyled.
+   */
+  public function testViewRendersStyledTable(): void {
+    $log = HiveActionLog::create([
+      'hive' => $this->hive->id(),
+      'calendar_action' => $this->calendarAction->id(),
+      'status' => 'done',
+    ]);
+    $log->save();
+
+    $controller = \Drupal::service('class_resolver')->getInstanceFromDefinition(HiveActionLogController::class);
+    $build = $controller->view($log);
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+
+    $this->assertStringContainsString('hivelog-hive-action-log-table', $html);
   }
 
   /**
