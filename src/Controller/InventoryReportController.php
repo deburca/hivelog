@@ -57,16 +57,15 @@ class InventoryReportController extends ControllerBase {
    */
   public function costReport(Apiary $apiary) {
     $year = $this->extractReportYear();
-
-    $consumables = $this->consumableCostBreakdown($apiary, $year);
-    $depreciation = $this->depreciationBreakdown($apiary, $year);
-    $yields = $this->yieldBreakdown($apiary, $year);
-
-    $consumable_total = array_reduce($consumables, fn($carry, $row) => $carry + $row['cost'], 0.0);
-    $depreciation_total = array_reduce($depreciation, fn($carry, $row) => $carry + $row['depreciation'], 0.0);
-    $income_total = array_reduce($yields, fn($carry, $row) => $carry + $row['income'], 0.0);
-    $cost_total = $consumable_total + $depreciation_total;
-    $net = $income_total - $cost_total;
+    $totals = $this->computeApiaryYearTotals($apiary, $year);
+    $consumables = $totals['consumables'];
+    $depreciation = $totals['depreciation'];
+    $yields = $totals['yields'];
+    $consumable_total = $totals['consumable_total'];
+    $depreciation_total = $totals['depreciation_total'];
+    $income_total = $totals['income_total'];
+    $cost_total = $totals['cost_total'];
+    $net = $totals['net'];
 
     $build = [];
 
@@ -165,6 +164,36 @@ class InventoryReportController extends ControllerBase {
     foreach ($yields as $row) {
       $cache->addCacheableDependency($row['product']);
     }
+
+    [$trend_rows, $trend_cache_dependencies] = $this->buildTrendRows($apiary);
+    $build['trend'] = [
+      '#type' => 'container',
+      '#weight' => 4,
+      '#attributes' => ['class' => ['hivelog-inventory-report-trend']],
+      'heading' => [
+        '#type' => 'html_tag',
+        '#tag' => 'h3',
+        '#value' => $this->t('5-Year Trend'),
+      ],
+      'table' => [
+        '#type' => 'table',
+        '#header' => [
+          $this->t('Year'),
+          $this->t('Total consumable cost'),
+          $this->t('Total active depreciation'),
+          $this->t('Total cost'),
+          $this->t('Total potential income'),
+          $this->t('Net'),
+        ],
+        '#rows' => $trend_rows,
+        '#attributes' => ['class' => ['hivelog-inventory-report-table']],
+        '#attached' => ['library' => ['hivelog/tables']],
+      ],
+    ];
+    foreach ($trend_cache_dependencies as $dependency) {
+      $cache->addCacheableDependency($dependency);
+    }
+
     $cache->applyTo($build);
 
     return $build;
@@ -175,6 +204,86 @@ class InventoryReportController extends ControllerBase {
    */
   public function costReportTitle(Apiary $apiary) {
     return $this->t('Apiary Financial Report: @apiary', ['@apiary' => $apiary->label()]);
+  }
+
+  /**
+   * Computes every cost/income total for one apiary/year.
+   *
+   * Shared by `costReport()`'s single-year summary and `buildTrendRows()`'s
+   * multi-year loop, so the two never drift out of sync on how a total is
+   * derived.
+   *
+   * @return array
+   *   The three breakdown arrays (`consumables`, `depreciation`, `yields`,
+   *   in `consumableCostBreakdown()`/`depreciationBreakdown()`/
+   *   `yieldBreakdown()`'s own shapes) plus the five totals derived from
+   *   them (`consumable_total`, `depreciation_total`, `income_total`,
+   *   `cost_total`, `net`), all as floats.
+   */
+  protected function computeApiaryYearTotals(Apiary $apiary, int $year): array {
+    $consumables = $this->consumableCostBreakdown($apiary, $year);
+    $depreciation = $this->depreciationBreakdown($apiary, $year);
+    $yields = $this->yieldBreakdown($apiary, $year);
+
+    $consumable_total = array_reduce($consumables, fn($carry, $row) => $carry + $row['cost'], 0.0);
+    $depreciation_total = array_reduce($depreciation, fn($carry, $row) => $carry + $row['depreciation'], 0.0);
+    $income_total = array_reduce($yields, fn($carry, $row) => $carry + $row['income'], 0.0);
+    $cost_total = $consumable_total + $depreciation_total;
+    $net = $income_total - $cost_total;
+
+    return [
+      'consumables' => $consumables,
+      'depreciation' => $depreciation,
+      'yields' => $yields,
+      'consumable_total' => $consumable_total,
+      'depreciation_total' => $depreciation_total,
+      'income_total' => $income_total,
+      'cost_total' => $cost_total,
+      'net' => $net,
+    ];
+  }
+
+  /**
+   * Builds the 5-year (plus current) trend table rows for an apiary.
+   *
+   * Always covers the real current calendar year and the five before it
+   * — independent of the report's own ±1 year selector — so the trend is
+   * legible without clicking through years one at a time. A year with no
+   * activity at all still gets its own row, all zeros, rather than being
+   * skipped, so a genuine gap reads as "zero that year" rather than
+   * looking like missing data.
+   *
+   * @return array{0: array<int, array<int, string>>, 1: array<\Drupal\Core\Cache\CacheableDependencyInterface>}
+   *   A tuple of the table's `#rows` and every item/product entity
+   *   encountered, for the caller to fold into its own cache metadata.
+   */
+  protected function buildTrendRows(Apiary $apiary): array {
+    $current_year = (int) date('Y');
+    $rows = [];
+    $cache_dependencies = [];
+
+    for ($year = $current_year - 5; $year <= $current_year; $year++) {
+      $totals = $this->computeApiaryYearTotals($apiary, $year);
+      $rows[] = [
+        (string) $year,
+        number_format($totals['consumable_total'], 2),
+        number_format($totals['depreciation_total'], 2),
+        number_format($totals['cost_total'], 2),
+        number_format($totals['income_total'], 2),
+        number_format($totals['net'], 2),
+      ];
+      foreach ($totals['consumables'] as $row) {
+        $cache_dependencies[] = $row['item'];
+      }
+      foreach ($totals['depreciation'] as $row) {
+        $cache_dependencies[] = $row['item'];
+      }
+      foreach ($totals['yields'] as $row) {
+        $cache_dependencies[] = $row['product'];
+      }
+    }
+
+    return [$rows, $cache_dependencies];
   }
 
   /**

@@ -417,6 +417,98 @@ class InventoryCostReportTest extends KernelTestBase {
   }
 
   /**
+   * Tests the 5-year trend table across three years of durable-item activity.
+   *
+   * See docs/project-management/tasks/0044-multi-year-cost-and-income-trend-view.md.
+   * Uses durable-item depreciation (rather than usage/yield, which need a
+   * full action-log flow) since each item's `useful_life_years = 1`
+   * isolates its depreciation to exactly one year, giving deterministic
+   * per-year expected totals without extra setup.
+   */
+  public function testTrendTableShowsThreeYearsOfActivityWithCorrectTotals(): void {
+    $current_year = (int) date('Y');
+
+    $item_a = InventoryItem::create([
+      'apiary' => $this->apiary->id(),
+      'name' => 'Trend Item A',
+      'unit' => 'each',
+      'item_type' => 'durable',
+      'useful_life_years' => 1,
+    ]);
+    $item_a->save();
+    InventoryPurchase::create([
+      'apiary' => $this->apiary->id(),
+      'item' => $item_a->id(),
+      'purchase_date' => ($current_year - 4) . '-01-01',
+      'quantity' => 1,
+      'unit_price' => 100,
+    ])->save();
+
+    $item_b = InventoryItem::create([
+      'apiary' => $this->apiary->id(),
+      'name' => 'Trend Item B',
+      'unit' => 'each',
+      'item_type' => 'durable',
+      'useful_life_years' => 1,
+    ]);
+    $item_b->save();
+    InventoryPurchase::create([
+      'apiary' => $this->apiary->id(),
+      'item' => $item_b->id(),
+      'purchase_date' => ($current_year - 2) . '-01-01',
+      'quantity' => 1,
+      'unit_price' => 50,
+    ])->save();
+
+    $item_c = InventoryItem::create([
+      'apiary' => $this->apiary->id(),
+      'name' => 'Trend Item C',
+      'unit' => 'each',
+      'item_type' => 'durable',
+      'useful_life_years' => 1,
+    ]);
+    $item_c->save();
+    InventoryPurchase::create([
+      'apiary' => $this->apiary->id(),
+      'item' => $item_c->id(),
+      'purchase_date' => $current_year . '-01-01',
+      'quantity' => 1,
+      'unit_price' => 30,
+    ])->save();
+
+    $this->pushRequestWithQuery(['year' => $current_year]);
+    $controller = \Drupal::service('class_resolver')->getInstanceFromDefinition(InventoryReportController::class);
+    $build = $controller->costReport($this->apiary);
+
+    $trend_rows = $build['trend']['table']['#rows'];
+    $this->assertCount(6, $trend_rows);
+
+    $by_year = [];
+    foreach ($trend_rows as $row) {
+      $by_year[$row[0]] = $row;
+    }
+
+    // Column order: Year, consumable cost, depreciation, total cost, income, net.
+    $this->assertEquals('100.00', $by_year[(string) ($current_year - 4)][2]);
+    $this->assertEquals('-100.00', $by_year[(string) ($current_year - 4)][5]);
+    $this->assertEquals('50.00', $by_year[(string) ($current_year - 2)][2]);
+    $this->assertEquals('-50.00', $by_year[(string) ($current_year - 2)][5]);
+    $this->assertEquals('30.00', $by_year[(string) $current_year][2]);
+    $this->assertEquals('-30.00', $by_year[(string) $current_year][5]);
+
+    // A year with genuinely no activity still gets a zeroed row, not a
+    // skipped one.
+    $this->assertEquals('0.00', $by_year[(string) ($current_year - 3)][2]);
+    $this->assertEquals('0.00', $by_year[(string) ($current_year - 3)][5]);
+
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+    $this->assertStringContainsString('5-Year Trend', $html);
+    // Trend Item C's depreciation window covers the selected report year
+    // (the current year), so it also appears in the per-item breakdown.
+    $this->assertStringContainsString('Trend Item C', $html);
+  }
+
+  /**
    * Pushes a GET request with the given query string onto the request stack.
    */
   protected function pushRequestWithQuery(array $query): void {
