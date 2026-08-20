@@ -450,6 +450,78 @@ class InventoryItemTest extends KernelTestBase {
   }
 
   /**
+   * Tests that the delete form has no reference-count warning by default.
+   *
+   * See docs/project-management/tasks/0045-warn-before-deleting-referenced-items-and-products.md.
+   */
+  public function testDeleteWarningAbsentWhenNoHistoricalReferences(): void {
+    $item = InventoryItem::create([
+      'apiary' => $this->apiary->id(),
+      'name' => 'Never Used',
+      'unit' => 'kg',
+      'item_type' => 'consumable',
+    ]);
+    $item->save();
+
+    $form_object = \Drupal::entityTypeManager()->getFormObject('inventory_item', 'delete');
+    $form_object->setEntity($item);
+    $description = (string) $form_object->getDescription();
+
+    $this->assertEquals('This action cannot be undone.', $description);
+  }
+
+  /**
+   * Tests that the delete form warns when purchases reference this item.
+   */
+  public function testDeleteWarningPresentWhenPurchasesExist(): void {
+    $item = InventoryItem::create([
+      'apiary' => $this->apiary->id(),
+      'name' => 'Sugar',
+      'unit' => 'kg',
+      'item_type' => 'consumable',
+    ]);
+    $item->save();
+    InventoryPurchase::create([
+      'apiary' => $this->apiary->id(),
+      'item' => $item->id(),
+      'purchase_date' => '2026-03-01',
+      'quantity' => 10,
+      'unit_price' => 1.5,
+    ])->save();
+
+    $form_object = \Drupal::entityTypeManager()->getFormObject('inventory_item', 'delete');
+    $form_object->setEntity($item);
+    $description = (string) $form_object->getDescription();
+
+    $this->assertStringContainsString('1 historical purchase/usage record', $description);
+    $this->assertStringContainsString('Unknown item', $description);
+  }
+
+  /**
+   * Tests that deletion still succeeds once confirmed, warning or not.
+   */
+  public function testDeleteStillSucceedsDespiteWarning(): void {
+    $item = InventoryItem::create([
+      'apiary' => $this->apiary->id(),
+      'name' => 'Sugar',
+      'unit' => 'kg',
+      'item_type' => 'consumable',
+    ]);
+    $item->save();
+    InventoryPurchase::create([
+      'apiary' => $this->apiary->id(),
+      'item' => $item->id(),
+      'purchase_date' => '2026-03-01',
+      'quantity' => 10,
+      'unit_price' => 1.5,
+    ])->save();
+
+    $id = $item->id();
+    $item->delete();
+    $this->assertNull(InventoryItem::load($id));
+  }
+
+  /**
    * Asserts that a constraint violation list has a violation on a property.
    */
   protected function assertViolationOnProperty($violations, string $property_prefix): void {

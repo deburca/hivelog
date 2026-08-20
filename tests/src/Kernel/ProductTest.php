@@ -6,6 +6,9 @@ namespace Drupal\Tests\hivelog\Kernel;
 
 use Drupal\hivelog\Controller\ApiaryController;
 use Drupal\hivelog\Entity\Apiary;
+use Drupal\hivelog\Entity\ApiaryActionLog;
+use Drupal\hivelog\Entity\CalendarAction;
+use Drupal\hivelog\Entity\HarvestYield;
 use Drupal\hivelog\Entity\Product;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\user\Entity\User;
@@ -56,6 +59,8 @@ class ProductTest extends KernelTestBase {
     $this->installEntitySchema('inventory_purchase');
     $this->installEntitySchema('inventory_usage');
     $this->installEntitySchema('product');
+    $this->installEntitySchema('calendar_action_product_yield');
+    $this->installEntitySchema('harvest_yield');
     $this->installSchema('file', ['file_usage']);
 
     $this->apiary = Apiary::create(['name' => 'Test Apiary']);
@@ -220,6 +225,67 @@ class ProductTest extends KernelTestBase {
     $this->assertStringContainsString('Propolis Tincture', $html);
     $this->assertStringContainsString('8.00', $html);
     $this->assertStringContainsString('Add Product', $html);
+  }
+
+  /**
+   * Tests that the delete form has no reference-count warning by default.
+   *
+   * See docs/project-management/tasks/0045-warn-before-deleting-referenced-items-and-products.md.
+   */
+  public function testDeleteWarningAbsentWhenNoHistoricalReferences(): void {
+    $product = Product::create([
+      'apiary' => $this->apiary->id(),
+      'name' => 'Never Harvested',
+      'unit' => 'kg',
+      'expected_unit_price' => 10,
+    ]);
+    $product->save();
+
+    $form_object = \Drupal::entityTypeManager()->getFormObject('product', 'delete');
+    $form_object->setEntity($product);
+    $description = (string) $form_object->getDescription();
+
+    $this->assertEquals('This action cannot be undone.', $description);
+  }
+
+  /**
+   * Tests that the delete form warns when harvest yields reference this product.
+   */
+  public function testDeleteWarningPresentWhenHarvestYieldsExist(): void {
+    $product = Product::create([
+      'apiary' => $this->apiary->id(),
+      'name' => 'Honey',
+      'unit' => 'kg',
+      'expected_unit_price' => 10,
+    ]);
+    $product->save();
+
+    $calendar_action = CalendarAction::create([
+      'apiary' => $this->apiary->id(),
+      'title' => 'Harvest',
+      'description' => 'Desc.',
+      'week_start' => 28,
+    ]);
+    $calendar_action->save();
+    $log = ApiaryActionLog::create([
+      'apiary' => $this->apiary->id(),
+      'calendar_action' => $calendar_action->id(),
+      'year' => (int) date('Y'),
+      'status' => 'done',
+    ]);
+    $log->save();
+    HarvestYield::create([
+      'product' => $product->id(),
+      'quantity' => 5,
+      'apiary_action_log' => $log->id(),
+    ])->save();
+
+    $form_object = \Drupal::entityTypeManager()->getFormObject('product', 'delete');
+    $form_object->setEntity($product);
+    $description = (string) $form_object->getDescription();
+
+    $this->assertStringContainsString('1 historical yield record', $description);
+    $this->assertStringContainsString('Unknown product', $description);
   }
 
   /**
