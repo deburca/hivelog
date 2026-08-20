@@ -74,7 +74,11 @@ SORT status asc, priority asc
   access control, forms, list builder, canonical controller, and an
   embedded apiary-page table; verified end-to-end against a real Drupal
   site, full suite at 401 tests/0 failures)
-- [[0036-calendar-action-product-yield-and-recipe-ui]] — backlog
+- [[0036-calendar-action-product-yield-and-recipe-ui]] — done
+  (`CalendarActionProductYield` recipe entity and an "Expected Yield"
+  section embedded on the calendar action page alongside "Required
+  Items"; verified end-to-end against a real Drupal site, full suite at
+  416 tests/0 failures)
 - [[0037-harvest-yield-and-action-log-reporting-integration]] — backlog
 - [[0038-potential-income-in-the-cost-report]] — backlog
 - [[0039-yield-and-income-test-coverage]] — backlog

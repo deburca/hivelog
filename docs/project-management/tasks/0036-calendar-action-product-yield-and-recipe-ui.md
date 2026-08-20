@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: backlog
+status: done
 priority: medium
 project: "[[honey-wax-propolis-yield-and-potential-income]]"
 area: entity
@@ -24,41 +24,41 @@ report form from. Mirrors
 removed (outputs instead of inputs).
 
 ## Acceptance criteria
-- [ ] `src/Entity/CalendarActionProductYield.php` — base table
+- [x] `src/Entity/CalendarActionProductYield.php` — base table
       `hivelog_calendar_action_product_yield`, entity keys (`id`, `uuid`,
       `owner` → `uid`). No `collection` or `canonical` link — managed
       entirely from the embedded table, matching
       `CalendarActionItemRequirement`.
-- [ ] Fields: `calendar_action` (required entity_reference →
+- [x] Fields: `calendar_action` (required entity_reference →
       `calendar_action`), `product` (required entity_reference →
       `product`), `quantity` (required decimal, precision 10/scale 3),
       plus `uid`/`created`/`changed`. `quantity`'s unit is implicitly the
       referenced product's `unit` (no redundant field).
-- [ ] `preSave()` guard: `product.apiary` must equal
+- [x] `preSave()` guard: `product.apiary` must equal
       `calendar_action.apiary` — throws, mirroring
       `CalendarActionItemRequirement::preSave()`'s identical guard;
       enforced as a proper form error too.
-- [ ] Recipe management embedded on the `CalendarAction` canonical page
+- [x] Recipe management embedded on the `CalendarAction` canonical page
       via a new `CalendarActionController::buildYieldSection()`, placed
       alongside (not replacing) `buildRequirementsSection()` — a
       calendar action can need items (jars) and yield products (honey)
       at once, e.g. "Harvest Summer Honey" needs jars *and* produces
       honey/wax. An "Expected Yield" table (product, quantity, unit,
       operations) with Add/Edit/Delete, scoped to that calendar action.
-- [ ] `CalendarActionForm` unchanged — no new fields added there.
-- [ ] `hivelog.permissions.yml`: seven permissions (view own/any, add,
+- [x] `CalendarActionForm` unchanged — no new fields added there.
+- [x] `hivelog.permissions.yml`: seven permissions (view own/any, add,
       edit own/any, delete own/any).
-- [ ] `hivelog_update_NNNN` installs the entity type; added to
+- [x] `hivelog_update_NNNN` installs the entity type; added to
       `hivelog_uninstall()`'s cleanup list ahead of both
       `calendar_action` and `product` (it references both).
-- [ ] Kernel tests: `CalendarActionProductYieldTest` (CRUD, the
+- [x] Kernel tests: `CalendarActionProductYieldTest` (CRUD, the
       same-apiary guard, required-field/validation coverage),
       `CalendarActionProductYieldAccessTest` (apiary-scoped access
       parity, owner-only delete), and coverage in `CalendarActionTest`
       for the embedded yield table (populated rows + empty-state
       message) alongside the existing requirements-table coverage — both
       sections must render correctly together on the same page.
-- [ ] `ddev drush updb -y && ddev drush cr` clean.
+- [x] `ddev drush updb -y && ddev drush cr` clean.
 
 ## Implementation notes
 - Key files: `src/Entity/CalendarActionProductYield.php`,
@@ -81,10 +81,24 @@ removed (outputs instead of inputs).
   `CalendarActionController::view()` directly without the new schema
   installed — task 0030 hit this exact regression
   (`installEntitySchema('calendar_action_item_requirement')` missing from
-  two pre-existing tests); expect the same class of fix here for
-  `calendar_action_product_yield`.
+  two pre-existing tests); the same class of fix was needed here too, for
+  `ControllerCacheMetadataTest` and `HiveCalendarChecklistTest`.
+
+## Verification
+- Full kernel+unit suite against `cms2` with `SIMPLETEST_DB=mysql`
+  (matching CI's backend): 416 tests, 0 failures/errors (up from 401
+  before this task).
+- `ddev drush updb -y`: `hivelog_update_10024` applied cleanly, installing
+  the `calendar_action_product_yield` entity type.
+- End-to-end smoke test via `drush php:eval`: created a real
+  `CalendarAction` ("Harvest Summer Honey") with both a
+  `CalendarActionItemRequirement` (jars) and a `CalendarActionProductYield`
+  (honey), confirmed both the "Required Items" and "Expected Yield"
+  sections render correctly together on the same calendar action page —
+  then cleaned up.
 
 ## Related
 - Project:: [[honey-wax-propolis-yield-and-potential-income]]
 - Decisions:: [[0034-honey-wax-propolis-yield-and-potential-income]], [[0027-inventory-tracking-and-depreciation]]
-- Commits::
+- Commits:: 9df3d8f (entity, access control, forms, embedded yield
+  section on the calendar action page, permissions, install hook, tests)
