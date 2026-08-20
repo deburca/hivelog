@@ -146,7 +146,7 @@ worth the extra bookkeeping, but is explicitly out of scope here.
   pre-existing behavior for any action log, not new to this ADR; no true
   profit figure exists without also knowing the cost of goods actually
   *sold* vs. produced, which this ADR doesn't attempt.
-- Follow-up tasks: a project note + task breakdown, once requested,
-  mirroring [[inventory-tracking-and-depreciation]]'s structure. A future
-  ADR would be needed for an actual sales ledger (real transactions, not
-  the aggregate assumption this ADR settles for).
+- Follow-up tasks: see the
+  [[honey-wax-propolis-yield-and-potential-income]] project note for the
+  task breakdown. A future ADR would be needed for an actual sales ledger
+  (real transactions, not the aggregate assumption this ADR settles for).
