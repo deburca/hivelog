@@ -3,8 +3,8 @@
  * Table styling for HiveLog detail-section tables.
  *
  * Covers inspection, queen, observation, inventory detail view, inventory
- * report, and product detail view tables. Entity list tables use the
- * hivelog:entity-table SDC component instead.
+ * report, product detail view, and calendar action detail view tables.
+ * Entity list tables use the hivelog:entity-table SDC component instead.
  */
 
 /* Full-width tables. */
@@ -14,7 +14,8 @@
 .hivelog-inventory-item-table,
 .hivelog-inventory-purchase-table,
 .hivelog-inventory-report-table,
-.hivelog-product-table {
+.hivelog-product-table,
+.hivelog-calendar-action-table {
   width: 100%;
   border-collapse: collapse;
 }
@@ -33,7 +34,9 @@
 .hivelog-inventory-report-table th,
 .hivelog-inventory-report-table td,
 .hivelog-product-table th,
-.hivelog-product-table td {
+.hivelog-product-table td,
+.hivelog-calendar-action-table th,
+.hivelog-calendar-action-table td {
   border-bottom: 1px solid #e0e0e0;
   padding: 0.5rem 0.75rem;
 }
@@ -45,7 +48,8 @@
 .hivelog-inventory-item-table thead th,
 .hivelog-inventory-purchase-table thead th,
 .hivelog-inventory-report-table thead th,
-.hivelog-product-table thead th {
+.hivelog-product-table thead th,
+.hivelog-calendar-action-table thead th {
   border-bottom: 2px solid #ccc;
   text-align: left;
 }
@@ -71,7 +75,8 @@
   .hivelog-inventory-item-table,
   .hivelog-inventory-purchase-table,
   .hivelog-inventory-report-table,
-  .hivelog-product-table {
+  .hivelog-product-table,
+  .hivelog-calendar-action-table {
     table-layout: fixed;
   }
 
@@ -88,7 +93,9 @@
   .hivelog-inventory-report-table th,
   .hivelog-inventory-report-table td,
   .hivelog-product-table th,
-  .hivelog-product-table td {
+  .hivelog-product-table td,
+  .hivelog-calendar-action-table th,
+  .hivelog-calendar-action-table td {
     padding: 0.4rem 0.5rem;
     vertical-align: top;
     overflow-wrap: anywhere;
@@ -106,7 +113,9 @@
   .hivelog-inventory-purchase-table th:first-child,
   .hivelog-inventory-purchase-table td:first-child,
   .hivelog-product-table th:first-child,
-  .hivelog-product-table td:first-child {
+  .hivelog-product-table td:first-child,
+  .hivelog-calendar-action-table th:first-child,
+  .hivelog-calendar-action-table td:first-child {
     width: 40%;
     font-weight: 600;
   }
