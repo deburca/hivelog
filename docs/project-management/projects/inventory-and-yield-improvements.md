@@ -44,7 +44,11 @@ SORT status asc, priority asc
   more unstyled table classes found and fixed, matching the calendar
   action/product table fixes; verified live against `cms2`'s actual
   served CSS)
-- [[0041-scope-item-and-product-autocomplete-to-current-apiary]] — backlog (must-have)
+- [[0041-scope-item-and-product-autocomplete-to-current-apiary]] — done
+  (one generic `ApiaryScopedSelection` handler covering both
+  `inventory_item`/`product`, wired via a shared trait onto all three
+  affected forms; verified end-to-end against a real Drupal site, full
+  suite at 447 tests/0 failures)
 - [[0042-low-stock-warning]] — backlog (should-have)
 - [[0043-hide-discontinued-items-and-products-from-selection]] — backlog (should-have)
 - [[0044-multi-year-cost-and-income-trend-view]] — backlog (should-have)
