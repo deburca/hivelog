@@ -15,6 +15,7 @@ use Drupal\hivelog\Entity\HiveInspection;
 class HiveActionLogForm extends ContentEntityForm {
 
   use InventoryUsageFormTrait;
+  use HarvestYieldFormTrait;
 
   /**
    * {@inheritdoc}
@@ -92,6 +93,7 @@ class HiveActionLogForm extends ContentEntityForm {
     }
 
     $this->buildInventoryUsageFields($form, $this->entity, 'hive_action_log_sections');
+    $this->buildYieldFields($form, $this->entity, 'hive_action_log_sections');
 
     return $form;
   }
@@ -116,6 +118,7 @@ class HiveActionLogForm extends ContentEntityForm {
     }
 
     $this->syncInventoryUsage($entity, $form_state);
+    $this->syncHarvestYield($entity, $form_state);
 
     // Optionally create a linked hive inspection. Re-validates both the
     // submitted status and the create permission server-side — never

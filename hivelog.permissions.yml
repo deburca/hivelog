@@ -225,3 +225,19 @@ delete own calendar action product yield:
   title: 'Delete own calendar action product yields'
 delete any calendar action product yield:
   title: 'Delete any calendar action product yield'
+
+# Harvest yield permissions.
+view own harvest yield:
+  title: 'View own harvest yield records'
+view any harvest yield:
+  title: 'View any harvest yield record'
+add harvest yield:
+  title: 'Add harvest yield records'
+edit own harvest yield:
+  title: 'Edit own harvest yield records'
+edit any harvest yield:
+  title: 'Edit any harvest yield record'
+delete own harvest yield:
+  title: 'Delete own harvest yield records'
+delete any harvest yield:
+  title: 'Delete any harvest yield record'

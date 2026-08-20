@@ -29,6 +29,7 @@ function hivelog_uninstall() {
   // are respected.
   $entity_type_ids = [
     'inventory_usage',
+    'harvest_yield',
     'apiary_action_log',
     'hive_action_log',
     'queen_observation',
@@ -794,6 +795,27 @@ function hivelog_update_10024(&$sandbox) {
   }
 
   return t('Installed the Calendar Action Product Yield entity type.');
+}
+
+/**
+ * Installs the Harvest Yield entity type.
+ *
+ * The "actual" half of yield tracking for docs/project-management/
+ * decisions/0034-honey-wax-propolis-yield-and-potential-income.md,
+ * mirroring InventoryUsage one level removed (outputs instead of
+ * inputs). The module is not yet in production, so no data migration is
+ * required.
+ */
+function hivelog_update_10025(&$sandbox) {
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+
+  if (!$entity_definition_update_manager->getEntityType('harvest_yield')) {
+    $harvest_yield_type = $entity_type_manager->getDefinition('harvest_yield');
+    $entity_definition_update_manager->installEntityType($harvest_yield_type);
+  }
+
+  return t('Installed the Harvest Yield entity type.');
 }
 
 /**
