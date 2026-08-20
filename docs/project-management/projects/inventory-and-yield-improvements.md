@@ -40,7 +40,10 @@ WHERE contains(string(project), this.file.name)
 SORT status asc, priority asc
 ```
 
-- [[0040-style-hive-and-apiary-action-log-detail-tables]] — backlog (must-have)
+- [[0040-style-hive-and-apiary-action-log-detail-tables]] — done (two
+  more unstyled table classes found and fixed, matching the calendar
+  action/product table fixes; verified live against `cms2`'s actual
+  served CSS)
 - [[0041-scope-item-and-product-autocomplete-to-current-apiary]] — backlog (must-have)
 - [[0042-low-stock-warning]] — backlog (should-have)
 - [[0043-hide-discontinued-items-and-products-from-selection]] — backlog (should-have)
