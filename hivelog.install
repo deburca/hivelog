@@ -36,6 +36,7 @@ function hivelog_uninstall() {
     'calendar_action_item_requirement',
     'inventory_purchase',
     'inventory_item',
+    'product',
     'queen',
     'calendar_action',
     'hive',
@@ -751,6 +752,26 @@ function hivelog_update_10022(&$sandbox) {
   }
 
   return t('Installed the Inventory Usage entity type.');
+}
+
+/**
+ * Installs the Product entity type.
+ *
+ * The sellable-output catalog for docs/project-management/decisions/
+ * 0034-honey-wax-propolis-yield-and-potential-income.md — honey, wax,
+ * propolis. The module is not yet in production, so no data migration is
+ * required.
+ */
+function hivelog_update_10023(&$sandbox) {
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+
+  if (!$entity_definition_update_manager->getEntityType('product')) {
+    $product_type = $entity_type_manager->getDefinition('product');
+    $entity_definition_update_manager->installEntityType($product_type);
+  }
+
+  return t('Installed the Product entity type.');
 }
 
 /**

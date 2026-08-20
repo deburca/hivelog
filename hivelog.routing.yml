@@ -625,6 +625,71 @@ entity.inventory_purchase.delete_form:
       inventory_purchase:
         type: entity:inventory_purchase
 
+# Product routes.
+entity.product.collection:
+  path: '/hivelog/products'
+  defaults:
+    _entity_list: 'product'
+    _title: 'HiveLog - Products'
+  requirements:
+    _permission: 'view own product+view any product+administer hivelog'
+
+entity.product.add_form:
+  path: '/hivelog/product/add'
+  defaults:
+    _entity_form: 'product.add'
+    _title: 'Add Product'
+  requirements:
+    _permission: 'add product+administer hivelog'
+
+hivelog.product.add:
+  path: '/hivelog/apiary/{apiary}/product/add'
+  defaults:
+    _controller: '\Drupal\hivelog\Controller\ProductController::addForm'
+    _title: 'Add Product'
+  requirements:
+    _permission: 'add product+administer hivelog'
+  options:
+    parameters:
+      apiary:
+        type: entity:apiary
+
+entity.product.canonical:
+  path: '/hivelog/product/{product}'
+  defaults:
+    _controller: '\Drupal\hivelog\Controller\ProductController::view'
+    _title_callback: '\Drupal\hivelog\Controller\ProductController::title'
+  requirements:
+    _permission: 'view own product+view any product+administer hivelog'
+  options:
+    parameters:
+      product:
+        type: entity:product
+
+entity.product.edit_form:
+  path: '/hivelog/product/{product}/edit'
+  defaults:
+    _entity_form: 'product.edit'
+    _title: 'Edit Product'
+  requirements:
+    _permission: 'edit own product+edit any product+administer hivelog'
+  options:
+    parameters:
+      product:
+        type: entity:product
+
+entity.product.delete_form:
+  path: '/hivelog/product/{product}/delete'
+  defaults:
+    _entity_form: 'product.delete'
+    _title: 'Delete Product'
+  requirements:
+    _permission: 'delete own product+delete any product+administer hivelog'
+  options:
+    parameters:
+      product:
+        type: entity:product
+
 # Calendar action item requirement routes ("recipe" lines). No collection
 # or canonical route — managed entirely from the embedded table on the
 # parent calendar action's canonical page (CalendarActionController::

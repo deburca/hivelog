@@ -193,3 +193,19 @@ delete own inventory usage:
   title: 'Delete own inventory usage records'
 delete any inventory usage:
   title: 'Delete any inventory usage record'
+
+# Product permissions.
+view own product:
+  title: 'View own products'
+view any product:
+  title: 'View any product'
+add product:
+  title: 'Add products'
+edit own product:
+  title: 'Edit own products'
+edit any product:
+  title: 'Edit any product'
+delete own product:
+  title: 'Delete own products'
+delete any product:
+  title: 'Delete any product'

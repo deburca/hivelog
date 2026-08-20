@@ -48,6 +48,19 @@ class ApiaryController extends ControllerBase {
   protected const INVENTORY_ITEMS_PAGER_ELEMENT = 1;
 
   /**
+   * Default number of products shown per page in the embedded list.
+   */
+  public const PRODUCTS_PER_PAGE = 20;
+
+  /**
+   * Pager element id for the embedded products table.
+   *
+   * Distinct from HIVES_PAGER_ELEMENT/INVENTORY_ITEMS_PAGER_ELEMENT since
+   * all three tables are embedded on the same apiary view() page.
+   */
+  protected const PRODUCTS_PAGER_ELEMENT = 2;
+
+  /**
    * Default number of calendar actions shown per page on the Full Calendar page.
    */
   public const CALENDAR_ACTIONS_PER_PAGE = 20;
@@ -527,6 +540,107 @@ class ApiaryController extends ControllerBase {
       '#weight' => 27,
     ];
 
+    // Products: the sellable-output catalog (honey, wax, propolis) — same
+    // apiary-scoped, embedded-table shape as Inventory above, per
+    // [[0035-product-catalog-entity-and-ui]].
+    $build['products_heading'] = [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['hivelog-list-heading']],
+      '#weight' => 30,
+      'title' => [
+        '#type' => 'html_tag',
+        '#tag' => 'h3',
+        '#value' => $this->t('Products'),
+        '#attributes' => ['class' => ['hivelog-list-heading__title']],
+      ],
+      'actions' => [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['hivelog-list-heading__action']],
+        'add' => [
+          '#type' => 'component',
+          '#component' => 'hivelog:button',
+          '#props' => [
+            'label' => (string) $this->t('Add Product'),
+            'url' => Url::fromRoute('hivelog.product.add', ['apiary' => $apiary->id()])->toString(),
+            'variant' => 'primary',
+          ],
+        ],
+      ],
+    ];
+
+    $product_ids = $this->entityTypeManager
+      ->getStorage('product')
+      ->getQuery()
+      ->accessCheck(TRUE)
+      ->condition('apiary', $apiary->id())
+      ->sort('name', 'ASC')
+      ->pager(static::PRODUCTS_PER_PAGE, static::PRODUCTS_PAGER_ELEMENT)
+      ->execute();
+
+    $products = $product_ids
+      ? $this->entityTypeManager->getStorage('product')->loadMultiple($product_ids)
+      : [];
+    $products = array_filter(
+      $products,
+      fn($product) => $product->access('view', $this->currentUser)
+    );
+
+    $products_header = [
+      $this->t('Name'),
+      $this->t('Unit'),
+      $this->t('Expected Unit Price'),
+      $this->t('Status'),
+      $this->t('Operations'),
+    ];
+
+    $products_rows = [];
+    foreach ($products as $product) {
+      $actions = [
+        '#type' => 'component',
+        '#component' => 'hivelog:button-group',
+        '#props' => [
+          'buttons' => [
+            ['label' => (string) $this->t('Edit'), 'url' => $product->toUrl('edit-form')->toString()],
+            [
+              'label' => (string) $this->t('Delete'),
+              'url' => $product->toUrl('delete-form')->toString(),
+              'variant' => 'danger',
+            ],
+          ],
+        ],
+      ];
+
+      $status = $product->get('status')->value;
+      $price = $product->get('expected_unit_price')->value;
+
+      $products_rows[] = [
+        'cells' => [
+          $product->toLink()->toString(),
+          $product->get('unit')->value,
+          $price !== NULL && $price !== '' ? number_format((float) $price, 2) : '',
+          $product->get('status')->getSetting('allowed_values')[$status] ?? $status,
+          $this->renderer->renderInIsolation($actions),
+        ],
+      ];
+    }
+
+    $build['products_table'] = [
+      '#type' => 'component',
+      '#component' => 'hivelog:entity-table',
+      '#props' => [
+        'headers' => array_map('strval', $products_header),
+        'rows' => $products_rows,
+        'empty_message' => (string) $this->t('No products have been added to this apiary yet.'),
+      ],
+      '#weight' => 31,
+    ];
+
+    $build['products_pager'] = [
+      '#type' => 'pager',
+      '#element' => static::PRODUCTS_PAGER_ELEMENT,
+      '#weight' => 32,
+    ];
+
     // Explicit cache metadata.
     // - url.query_args: pager + filter state, and now the calendar
     //   checklist's status/year filter, are all encoded in the query string.
@@ -547,6 +661,9 @@ class ApiaryController extends ControllerBase {
     //   owning InventoryItem's own cache tag — matching
     //   InventoryItemController::view()'s cache metadata for the same
     //   derived value.
+    // - Product list cache tag + each rendered product's own tags:
+    //   invalidate on any product change so the embedded table is never
+    //   stale.
     // - max-age: the heading's "current week" and each unreported row's
     //   Due now/Overdue/Upcoming suffix are computed from date('W')/
     //   date('Y') ("now"), so the render must not be cached past the
@@ -561,9 +678,13 @@ class ApiaryController extends ControllerBase {
       ->addCacheTags($this->entityTypeManager->getDefinition('inventory_item')->getListCacheTags())
       ->addCacheTags($this->entityTypeManager->getDefinition('inventory_purchase')->getListCacheTags())
       ->addCacheTags($this->entityTypeManager->getDefinition('inventory_usage')->getListCacheTags())
+      ->addCacheTags($this->entityTypeManager->getDefinition('product')->getListCacheTags())
       ->setCacheMaxAge($this->secondsUntilNextIsoWeek());
     foreach ($inventory_items as $item) {
       $cache->addCacheableDependency($item);
+    }
+    foreach ($products as $product) {
+      $cache->addCacheableDependency($product);
     }
     foreach ($hives as $hive) {
       $cache->addCacheableDependency($hive);

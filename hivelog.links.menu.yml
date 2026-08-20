@@ -46,3 +46,10 @@ hivelog.inventory_purchases:
   route_name: entity.inventory_purchase.collection
   parent: hivelog.admin
   weight: 6
+
+hivelog.products:
+  title: 'Products'
+  description: 'Manage the sellable-product catalog.'
+  route_name: entity.product.collection
+  parent: hivelog.admin
+  weight: 7
