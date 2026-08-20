@@ -12,6 +12,8 @@ use Drupal\Core\Form\FormStateInterface;
  */
 class CalendarActionItemRequirementForm extends ContentEntityForm {
 
+  use ApiaryScopedAutocompleteTrait;
+
   /**
    * {@inheritdoc}
    */
@@ -21,6 +23,12 @@ class CalendarActionItemRequirementForm extends ContentEntityForm {
     $form['#prefix'] = '<div class="hivelog-entity-form">';
     $form['#suffix'] = '</div>';
     $form['#attached']['library'][] = 'hivelog/forms';
+
+    // Scope the item autocomplete to the calendar action's own apiary —
+    // see ApiaryScopedAutocompleteTrait for why this doesn't live-update
+    // if the calendar_action field itself is changed afterwards.
+    $calendar_action = $this->entity->get('calendar_action')->entity;
+    $this->scopeAutocompleteToApiary($form, 'item', $calendar_action ? $calendar_action->get('apiary')->target_id : NULL);
 
     return $form;
   }

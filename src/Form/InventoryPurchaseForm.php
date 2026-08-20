@@ -12,6 +12,8 @@ use Drupal\Core\Form\FormStateInterface;
  */
 class InventoryPurchaseForm extends ContentEntityForm {
 
+  use ApiaryScopedAutocompleteTrait;
+
   /**
    * {@inheritdoc}
    */
@@ -27,6 +29,11 @@ class InventoryPurchaseForm extends ContentEntityForm {
     if (isset($form['total_cost'])) {
       $form['total_cost']['#access'] = FALSE;
     }
+
+    // Scope the item autocomplete to this purchase's own apiary — see
+    // ApiaryScopedAutocompleteTrait for why this doesn't live-update if
+    // the apiary field itself is changed afterwards.
+    $this->scopeAutocompleteToApiary($form, 'item', $this->entity->get('apiary')->target_id);
 
     $form['inventory_purchase_sections'] = [
       '#type' => 'vertical_tabs',
