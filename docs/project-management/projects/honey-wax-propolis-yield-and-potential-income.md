@@ -86,7 +86,11 @@ SORT status asc, priority asc
   can record consumables used and products produced in one save; verified
   end-to-end against a real Drupal site, full suite at 437 tests/0
   failures)
-- [[0038-potential-income-in-the-cost-report]] — backlog
+- [[0038-potential-income-in-the-cost-report]] — done (`yieldBreakdown()`
+  + shared `apiaryYearLogIds()` helper; the report is now cost vs.
+  potential income vs. a signed net figure, renamed "Apiary Financial
+  Report"; verified end-to-end against a real Drupal site, full suite at
+  439 tests/0 failures)
 - [[0039-yield-and-income-test-coverage]] — backlog
 
 Suggested build order matches the numbering, and mirrors
