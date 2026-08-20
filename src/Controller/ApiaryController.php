@@ -403,6 +403,9 @@ class ApiaryController extends ControllerBase {
     // the items are already listed right here, and the main-nav
     // "Inventory Items" link (hivelog.links.menu.yml) still reaches the
     // global, cross-apiary catalog when that's what's actually wanted.
+    // "Add Purchase" (apiary-scoped, pre-fills apiary) is the direct path
+    // to recording stock for a consumable item — stock on hand is a
+    // computed value (purchases minus usage), never directly editable.
     $build['inventory_heading'] = [
       '#type' => 'container',
       '#attributes' => ['class' => ['hivelog-list-heading']],
@@ -431,6 +434,14 @@ class ApiaryController extends ControllerBase {
             'label' => (string) $this->t('Add Inventory Item'),
             'url' => Url::fromRoute('hivelog.inventory_item.add', ['apiary' => $apiary->id()])->toString(),
             'variant' => 'primary',
+          ],
+        ],
+        'add_purchase' => [
+          '#type' => 'component',
+          '#component' => 'hivelog:button',
+          '#props' => [
+            'label' => (string) $this->t('Add Purchase'),
+            'url' => Url::fromRoute('hivelog.inventory_purchase.add', ['apiary' => $apiary->id()])->toString(),
           ],
         ],
       ],
@@ -583,18 +594,16 @@ class ApiaryController extends ControllerBase {
   public function fullCalendar(Apiary $apiary) {
     $build = [];
 
-    // Heading row: title on the left, Add Calendar Action on the right —
-    // same layout as the Hives heading on the apiary page.
+    // Heading row: Add Calendar Action, right-aligned via
+    // .hivelog-list-heading__action's margin-left: auto. No title text
+    // here — this is a standalone page (unlike Hives/Inventory, which are
+    // sections within the longer apiary page and need their own label),
+    // so a duplicate of the route's own page title
+    // (fullCalendarTitle()) would just repeat the <h1> immediately above.
     $build['heading'] = [
       '#type' => 'container',
       '#attributes' => ['class' => ['hivelog-list-heading']],
       '#weight' => 0,
-      'title' => [
-        '#type' => 'html_tag',
-        '#tag' => 'h2',
-        '#value' => $this->t('Full Calendar: @apiary', ['@apiary' => $apiary->label()]),
-        '#attributes' => ['class' => ['hivelog-list-heading__title']],
-      ],
       'add' => [
         '#type' => 'component',
         '#component' => 'hivelog:button',

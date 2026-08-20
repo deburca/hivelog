@@ -19,7 +19,7 @@
 }
 
 .hivelog-list-heading__action {
-  margin: 0;
+  margin: 0 0 0 auto;
   white-space: nowrap;
 }
 
