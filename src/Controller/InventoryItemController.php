@@ -79,6 +79,10 @@ class InventoryItemController extends ControllerBase {
     if ($inventory_item->get('item_type')->value === 'consumable') {
       $stock = $inventory_item->getStockOnHand();
       $unit = $inventory_item->get('unit')->value;
+      $stock_display = $stock === NULL ? (string) $this->t('Unknown') : rtrim(rtrim(number_format($stock, 3, '.', ''), '0'), '.') . ' ' . $unit;
+      if ($inventory_item->isLowStock()) {
+        $stock_display = (string) $this->t('@stock (Low Stock)', ['@stock' => $stock_display]);
+      }
       $build['stock'] = [
         '#type' => 'container',
         '#attributes' => ['class' => ['hivelog-inventory-item-section']],
@@ -88,7 +92,7 @@ class InventoryItemController extends ControllerBase {
           '#value' => $this->t('Stock on Hand'),
         ],
         'value' => [
-          '#markup' => '<p>' . ($stock === NULL ? (string) $this->t('Unknown') : rtrim(rtrim(number_format($stock, 3, '.', ''), '0'), '.') . ' ' . $unit) . '</p>',
+          '#markup' => '<p>' . $stock_display . '</p>',
         ],
       ];
     }
@@ -210,6 +214,11 @@ class InventoryItemController extends ControllerBase {
         $allowed_values = $field->getSetting('allowed_values');
         return [
           '#plain_text' => (string) ($allowed_values[$field->value] ?? $field->value),
+        ];
+
+      case 'low_stock_threshold':
+        return [
+          '#plain_text' => rtrim(rtrim(number_format((float) $field->value, 3, '.', ''), '0'), '.') . ' ' . $inventory_item->get('unit')->value,
         ];
 
       default:

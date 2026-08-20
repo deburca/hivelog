@@ -135,6 +135,26 @@ class InventoryItem extends ContentEntityBase implements EntityChangedInterface,
   }
 
   /**
+   * Whether this item's stock on hand is at or below its low-stock threshold.
+   *
+   * Always `FALSE` for a durable item (no stock-on-hand concept — see
+   * `getStockOnHand()`), an unsaved item, or one with no threshold set —
+   * "no threshold" means no warning was requested, not "always low".
+   */
+  public function isLowStock(): bool {
+    if ($this->get('low_stock_threshold')->isEmpty()) {
+      return FALSE;
+    }
+
+    $stock = $this->getStockOnHand();
+    if ($stock === NULL) {
+      return FALSE;
+    }
+
+    return $stock <= (float) $this->get('low_stock_threshold')->value;
+  }
+
+  /**
    * Returns the weighted-average purchase cost per unit for this item.
    *
    * `Σ(purchase.quantity × purchase.unit_price) / Σ(purchase.quantity)`
@@ -334,6 +354,24 @@ class InventoryItem extends ContentEntityBase implements EntityChangedInterface,
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
+    $fields['low_stock_threshold'] = BaseFieldDefinition::create('decimal')
+      ->setLabel(t('Low Stock Threshold'))
+      ->setDescription(t('Optional, consumables only: get flagged as low stock once stock on hand falls to this level or below, in the item\'s own unit. Leave empty for no warning.'))
+      ->setSetting('precision', 10)
+      ->setSetting('scale', 3)
+      ->setSetting('min', 0)
+      ->setDisplayOptions('form', [
+        'type' => 'number',
+        'weight' => 6,
+      ])
+      ->setDisplayOptions('view', [
+        'label' => 'inline',
+        'type' => 'number_decimal',
+        'weight' => 6,
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
+
     $fields['status'] = BaseFieldDefinition::create('list_string')
       ->setLabel(t('Status'))
       ->setDescription(t('Discontinued items are hidden from new purchase/requirement selection, but remain listed here for management.'))
@@ -345,12 +383,12 @@ class InventoryItem extends ContentEntityBase implements EntityChangedInterface,
       ])
       ->setDisplayOptions('form', [
         'type' => 'options_select',
-        'weight' => 6,
+        'weight' => 7,
       ])
       ->setDisplayOptions('view', [
         'label' => 'inline',
         'type' => 'list_default',
-        'weight' => 6,
+        'weight' => 7,
       ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
@@ -360,7 +398,7 @@ class InventoryItem extends ContentEntityBase implements EntityChangedInterface,
       ->setDescription(t('The user who created this inventory item.'))
       ->setDisplayOptions('form', [
         'type' => 'entity_reference_autocomplete',
-        'weight' => 7,
+        'weight' => 8,
       ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);

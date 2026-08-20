@@ -509,6 +509,10 @@ class ApiaryController extends ControllerBase {
       $status = $item->get('status')->value;
       /** @var \Drupal\hivelog\Entity\InventoryItem $item */
       $stock = $item->getStockOnHand();
+      $stock_display = $stock === NULL ? '' : rtrim(rtrim(number_format($stock, 3, '.', ''), '0'), '.') . ' ' . $item->get('unit')->value;
+      if ($item->isLowStock()) {
+        $stock_display = (string) $this->t('@stock (Low Stock)', ['@stock' => $stock_display]);
+      }
 
       $inventory_rows[] = [
         'cells' => [
@@ -516,7 +520,7 @@ class ApiaryController extends ControllerBase {
           $category ? ($item->get('category')->getSetting('allowed_values')[$category] ?? $category) : '',
           $item->get('unit')->value,
           $item->get('item_type')->getSetting('allowed_values')[$item_type] ?? $item_type,
-          $stock === NULL ? '' : rtrim(rtrim(number_format($stock, 3, '.', ''), '0'), '.') . ' ' . $item->get('unit')->value,
+          $stock_display,
           $item->get('status')->getSetting('allowed_values')[$status] ?? $status,
           $this->renderer->renderInIsolation($actions),
         ],

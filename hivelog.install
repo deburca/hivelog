@@ -10,6 +10,7 @@ use Drupal\hivelog\Entity\CalendarAction;
 use Drupal\hivelog\Entity\Hive;
 use Drupal\hivelog\Entity\HiveActionLog;
 use Drupal\hivelog\Entity\HiveInspection;
+use Drupal\hivelog\Entity\InventoryItem;
 use Drupal\user\Entity\Role;
 
 /**
@@ -816,6 +817,32 @@ function hivelog_update_10025(&$sandbox) {
   }
 
   return t('Installed the Harvest Yield entity type.');
+}
+
+/**
+ * Installs the low_stock_threshold field storage on Inventory Item.
+ *
+ * Optional per-item threshold for docs/project-management/tasks/
+ * 0042-low-stock-warning.md. The module is not yet in production, so no
+ * data migration is required.
+ */
+function hivelog_update_10026(&$sandbox) {
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+
+  $field_definitions = InventoryItem::baseFieldDefinitions(
+    $entity_type_manager->getDefinition('inventory_item')
+  );
+  if (isset($field_definitions['low_stock_threshold'])) {
+    $entity_definition_update_manager->installFieldStorageDefinition(
+      'low_stock_threshold',
+      'inventory_item',
+      'hivelog',
+      $field_definitions['low_stock_threshold']
+    );
+  }
+
+  return t('Installed the low_stock_threshold field storage on Inventory Item.');
 }
 
 /**
