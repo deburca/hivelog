@@ -54,9 +54,20 @@ SORT status asc, priority asc
   "(Low Stock)" suffix on the Stock on Hand cell on both the item's own
   page and the apiary page's embedded table; full suite at 452 tests/0
   failures)
-- [[0043-hide-discontinued-items-and-products-from-selection]] — backlog (should-have)
-- [[0044-multi-year-cost-and-income-trend-view]] — backlog (should-have)
-- [[0045-warn-before-deleting-referenced-items-and-products]] — backlog (should-have)
+- [[0043-hide-discontinued-items-and-products-from-selection]] — done
+  (sequenced directly on 0041's `ApiaryScopedSelection`: an always-on
+  status filter, plus a trait behavior change so the filter applies even
+  on the standalone no-apiary add form; full suite at 461 tests/0
+  failures)
+- [[0044-multi-year-cost-and-income-trend-view]] — done (a 5-year-plus-
+  current trend table on the financial report, sharing a new
+  `computeApiaryYearTotals()` helper with the existing single-year
+  summary so the two can't drift apart; full suite at 461 tests/0
+  failures)
+- [[0045-warn-before-deleting-referenced-items-and-products]] — done
+  (`getDescription()` overrides on both delete forms warn with a
+  reference count when historical purchase/usage/yield records exist;
+  full suite at 461 tests/0 failures)
 - [[0046-real-sales-ledger]] — backlog (could-have)
 - [[0047-cross-apiary-aggregate-views]] — backlog (could-have)
 - [[0048-unit-conversion]] — backlog (could-have)
@@ -66,11 +77,11 @@ SORT status asc, priority asc
 - [[0052-merge-usage-and-yield-form-traits]] — backlog (could-have)
 - [[0053-product-category-field]] — backlog (could-have)
 
-Suggested order: the two must-haves first (0040 is a trivial CSS fix,
-0041 fixes a real save-time error trap for multi-apiary users), then the
-four should-haves as time allows, then could-haves opportunistically —
-none of the could-haves block anything else in this list. 0046 and 0047
-are the two most speculative; confirm real demand before starting either.
+All six must-have/should-have tasks (0040-0045) are done as of this
+update. Only the eight could-haves (0046-0053) remain, to be picked up
+opportunistically — none of them block anything else in this list. 0046
+and 0047 are the two most speculative; confirm real demand before
+starting either.
 
 ## Open questions
 - Should 0046 (real sales ledger) get its own ADR before any
