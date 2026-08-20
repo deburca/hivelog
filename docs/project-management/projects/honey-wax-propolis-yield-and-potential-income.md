@@ -91,7 +91,14 @@ SORT status asc, priority asc
   potential income vs. a signed net figure, renamed "Apiary Financial
   Report"; verified end-to-end against a real Drupal site, full suite at
   439 tests/0 failures)
-- [[0039-yield-and-income-test-coverage]] — backlog
+- [[0039-yield-and-income-test-coverage]] — done (`YieldEndToEndTest`
+  closing the one real cross-task coverage gap — a chained assertion
+  that `HarvestYield` and the report's income total agree on a
+  pre-filled report, plus a combined jars-consumed-and-honey-produced
+  scenario reported together in one save; access-control parity and the
+  net-figure loss-year criterion were already satisfied by tasks
+  0035-0038's own tests; full suite verified against `cms2` with
+  `SIMPLETEST_DB=mysql`: 441 tests, 0 failures)
 
 Suggested build order matches the numbering, and mirrors
 [[inventory-tracking-and-depreciation]]'s own sequence exactly (it is, in

@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: backlog
+status: done
 priority: medium
 project: "[[honey-wax-propolis-yield-and-potential-income]]"
 area: tests
@@ -24,50 +24,45 @@ in isolation), and confirm no regressions in existing calendar/hive/
 queen/inventory coverage.
 
 ## Acceptance criteria
-- [ ] Full kernel + unit suite passes (`--group hivelog`), zero
+- [x] Full kernel + unit suite passes (`--group hivelog`), zero
       errors/failures, against a real Drupal site with
       `SIMPLETEST_DB=mysql` (matching CI's backend, per the lesson from
       [[0033-inventory-test-coverage]] — sqlite surfaced two unrelated
       flakes there that don't reproduce under MySQL).
-- [ ] Access-control parity coverage for all three new entity types
-      (`Product`, `CalendarActionProductYield`, `HarvestYield`) — audit
-      first whether each task's own tests (0035-0037) already cover this
-      before writing anything new, following 0033's approach exactly
-      (it found the parity coverage for inventory's four entity types
-      was already complete by the time it ran, and only needed to add
-      the one genuinely missing cross-task test).
-- [ ] An end-to-end integration test: create a `Product` and a
-      `CalendarActionProductYield` for it, report a `HiveActionLog` as
-      `done` with the pre-filled quantity accepted as-is (reading the
-      form's own default rather than hardcoding it, matching
-      `InventoryEndToEndTest`'s pattern), and assert the resulting
-      `HarvestYield` row and the cost report's potential-income total
-      agree.
-- [ ] An end-to-end test covering a calendar action with *both* a
-      `CalendarActionItemRequirement` (jars) and a
-      `CalendarActionProductYield` (honey) reported `done` together in
-      one save: assert both an `InventoryUsage` row and a `HarvestYield`
-      row are created correctly from the same form submission, and that
-      `InventoryItem::getStockOnHand()` and the cost report's income
-      figure both reflect it. This is the one scenario no single task
-      0035-0038 tests end-to-end on its own — inventory usage and yield
-      have to work correctly *together* on the same form.
-- [ ] A net-figure test: an apiary/year with cost exceeding income,
-      confirming the report's net figure renders as a signed negative
-      number (not zero-floored), per
-      [[0038-potential-income-in-the-cost-report]]'s acceptance
-      criterion.
-- [ ] Regression check: existing `HiveTest`, `QueenTest`,
-      `EmbeddedTableFilterPaginationTest`,
-      `ApiaryCalendarChecklistTest`/`HiveCalendarChecklistTest`, and every
-      test from [[inventory-tracking-and-depreciation]] (`InventoryItemTest`,
-      `InventoryPurchaseTest`, `InventoryUsageTest`,
-      `InventoryUsageAccessTest`, `InventoryUsageReportingIntegrationTest`,
-      `InventoryCostReportTest`, `InventoryEndToEndTest`, etc.) still pass
-      unmodified, or with only mechanical `setUp()` schema-install
-      additions for the three new entity types — this project should not
-      need to change any of that existing test logic, matching
-      [[0033-inventory-test-coverage]]'s own regression discipline.
+- [x] Access-control parity coverage for all three new entity types
+      (`Product`, `CalendarActionProductYield`, `HarvestYield`) — audited
+      first: `ProductAccessTest` (9 tests), `CalendarActionProductYieldAccessTest`
+      (8 tests), `HarvestYieldAccessTest` (7 tests) already existed from
+      tasks 0035-0037 and covered the full owner/beekeeper/outsider ×
+      view/update/delete × public/private matrix. No gap found here,
+      exactly matching 0033's own outcome.
+- [x] `YieldEndToEndTest::testYieldAndIncomeReportAgreeOnPreFilledQuantity`
+      — creates a `Product` and a `CalendarActionProductYield` for it,
+      reads the form's own pre-filled default (rather than hardcoding
+      it), reports `done` submitting exactly that default, and asserts
+      the resulting `HarvestYield` row and the financial report's
+      potential-income total agree.
+- [x] `YieldEndToEndTest::testUsageAndYieldTogetherReflectInStockOnHandAndIncome`
+      — a calendar action with *both* a `CalendarActionItemRequirement`
+      (jars) and a `CalendarActionProductYield` (honey) reported `done`
+      together in one save: asserts both an `InventoryUsage` row and a
+      `HarvestYield` row are created from the same submission, and that
+      `InventoryItem::getStockOnHand()` and the report's income figure
+      both reflect it. This was the one scenario no single task 0035-0038
+      tested end-to-end on its own.
+- [x] Net-figure loss-year coverage — already satisfied by
+      `InventoryCostReportTest::testNetFigureIsSignedNegativeForLossYear`,
+      written as part of [[0038-potential-income-in-the-cost-report]]
+      itself. No gap here; nothing new added.
+- [x] Regression check: confirmed via `git log`/`git show` audit that
+      `HiveTest.php` and `QueenTest.php` were never touched by any commit
+      in this project (tasks 0035-0039), and that
+      `EmbeddedTableFilterPaginationTest.php`,
+      `ApiaryCalendarChecklistTest.php`, `HiveCalendarChecklistTest.php`,
+      and `ControllerCacheMetadataTest.php` received only mechanical
+      `installEntitySchema()` additions (`product`,
+      `calendar_action_product_yield`) — no test logic changed. All pass
+      under the full MySQL run below.
 
 ## Implementation notes
 - Run via the project's documented command (see `README.md`'s Testing
@@ -87,7 +82,16 @@ queen/inventory coverage.
   those methods directly and check its `setUp()` before considering this
   task done, not just the tests this project's own new files added.
 
+## Verification
+- Full kernel+unit suite against `cms2` with `SIMPLETEST_DB=mysql`
+  (matching CI's backend): 441 tests, 0 failures/errors (up from 439
+  before this task).
+- No real bug surfaced during this task's full-suite run — the run only
+  confirmed a genuine coverage gap (the two new
+  `YieldEndToEndTest` scenarios), not a code defect, matching
+  [[0038-potential-income-in-the-cost-report]]'s own outcome.
+
 ## Related
 - Project:: [[honey-wax-propolis-yield-and-potential-income]]
 - Decisions:: [[0034-honey-wax-propolis-yield-and-potential-income]], [[0027-inventory-tracking-and-depreciation]]
-- Commits::
+- Commits:: a955296 (`YieldEndToEndTest`: cross-task integration tests)
