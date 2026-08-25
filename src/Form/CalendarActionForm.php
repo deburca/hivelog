@@ -49,6 +49,15 @@ class CalendarActionForm extends ContentEntityForm {
       ],
     ];
 
+    if (!$this->entity->isNew()) {
+      $sections['calendar_action_yield'] = [
+        'title' => $this->t('Products & Yields'),
+        'weight' => 3,
+        'open' => FALSE,
+        'fields' => [],
+      ];
+    }
+
     foreach ($sections as $section_key => $section) {
       $form[$section_key] = [
         '#type' => 'details',
@@ -62,6 +71,33 @@ class CalendarActionForm extends ContentEntityForm {
           $form[$field_name]['#group'] = $section_key;
         }
       }
+    }
+
+    // Required Items and Expected Yield are separate entities keyed to an
+    // existing calendar action id, so they can't live on this form (in
+    // particular, not on the add form, before the entity has an id) —
+    // point to where they're actually managed instead. See task discussion:
+    // long-term these should become their own vertical tab rendered inline;
+    // this is the interim pointer.
+    if (!$this->entity->isNew()) {
+      $form['calendar_action_yield_info'] = [
+        '#type' => 'container',
+        '#group' => 'calendar_action_yield',
+        'description' => [
+          '#type' => 'html_tag',
+          '#tag' => 'p',
+          '#value' => $this->t("Required Items and Expected Yield are managed from this calendar action's own page, not this edit form."),
+        ],
+        'link' => [
+          '#type' => 'component',
+          '#component' => 'hivelog:button',
+          '#props' => [
+            'label' => (string) $this->t('Go to Required Items & Expected Yield'),
+            'url' => $this->entity->toUrl('canonical')->toString(),
+            'variant' => 'primary',
+          ],
+        ],
+      ];
     }
 
     return $form;
