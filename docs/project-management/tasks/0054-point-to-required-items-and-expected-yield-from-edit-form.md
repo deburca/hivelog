@@ -67,9 +67,7 @@ form the same way).
   in the existing `CalendarActionForm::form()` override, following the
   same `$sections` array + per-field `#group` assignment pattern
   already used for Overview/Schedule/Description.
-- Not yet committed — applied directly to the working tree at the
-  request that produced this task doc; no branch has actually been
-  created yet under the `branch:` name above.
+- Committed on the `branch:` above (50c942a).
 
 ## Verification
 - Verified against a real Drupal site (`cms2`'s local ddev, `kbg`
@@ -97,4 +95,4 @@ form the same way).
   [[0055-embed-required-items-and-expected-yield-in-calendar-action-edit-form]])_
 - Decisions:: [[0025-seasonal-calendar-and-hive-action-tracking]],
   [[0034-honey-wax-propolis-yield-and-potential-income]]
-- Commits:: _(pending — not yet committed)_
+- Commits:: 50c942a
