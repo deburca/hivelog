@@ -4,6 +4,8 @@ description: 'Beekeeping activity logger for managing apiaries, hives, and inspe
 core_version_requirement: ^11
 package: Custom
 version: '1.7.1'
+'interface translation project': hivelog
+'interface translation server pattern': modules/contrib/hivelog/translations/hivelog.%language.po
 dependencies:
   - drupal:datetime
   - drupal:file

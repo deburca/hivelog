@@ -1,0 +1,2628 @@
+# $Id$
+#
+# Danish translation of the HiveLog module.
+# Copyright 2026 Paddy de Búrca.
+# Generated from files:
+#  modules/contrib/hivelog/hivelog.module: n/a
+#  modules/contrib/hivelog/hivelog.install: n/a
+#  modules/contrib/hivelog/hivelog.info.yml: n/a
+#  modules/contrib/hivelog/hivelog.links.menu.yml: n/a
+#  modules/contrib/hivelog/src/Breadcrumb/HivelogBreadcrumbBuilder.php: n/a
+#  modules/contrib/hivelog/hivelog.links.action.yml: n/a
+#  modules/contrib/hivelog/hivelog.routing.yml: n/a
+#  modules/contrib/hivelog/src/ApiaryListBuilder.php: n/a
+#  modules/contrib/hivelog/src/QueenListBuilder.php: n/a
+#  modules/contrib/hivelog/src/Controller/HiveController.php: n/a
+#  modules/contrib/hivelog/src/Controller/ApiaryController.php: n/a
+#  modules/contrib/hivelog/src/Entity/Hive.php: n/a
+#  modules/contrib/hivelog/src/Entity/Queen.php: n/a
+#  modules/contrib/hivelog/src/Entity/QueenObservation.php: n/a
+#  modules/contrib/hivelog/src/InventoryItemListBuilder.php: n/a
+#  modules/contrib/hivelog/src/Entity/InventoryItem.php: n/a
+#  modules/contrib/hivelog/src/InventoryPurchaseListBuilder.php: n/a
+#  modules/contrib/hivelog/src/Entity/InventoryPurchase.php: n/a
+#  modules/contrib/hivelog/src/ProductListBuilder.php: n/a
+#  modules/contrib/hivelog/src/Entity/Product.php: n/a
+#  modules/contrib/hivelog/hivelog.links.task.yml: n/a
+#  modules/contrib/hivelog/src/Controller/QueenController.php: n/a
+#  modules/contrib/hivelog/src/Controller/ApiaryActionLogController.php: n/a
+#  modules/contrib/hivelog/src/Controller/CalendarActionController.php: n/a
+#  modules/contrib/hivelog/src/Controller/HiveActionLogController.php: n/a
+#  modules/contrib/hivelog/src/Controller/HiveInspectionController.php: n/a
+#  modules/contrib/hivelog/src/Controller/InventoryItemController.php: n/a
+#  modules/contrib/hivelog/src/Controller/InventoryPurchaseController.php: n/a
+#  modules/contrib/hivelog/src/Controller/ProductController.php: n/a
+#  modules/contrib/hivelog/src/Controller/QueenObservationController.php: n/a
+#  modules/contrib/hivelog/hivelog.permissions.yml: n/a
+#  modules/contrib/hivelog/src/ApiaryActionLogListBuilder.php: n/a
+#  modules/contrib/hivelog/src/CalendarActionListBuilder.php: n/a
+#  modules/contrib/hivelog/src/HiveListBuilder.php: n/a
+#  modules/contrib/hivelog/src/Entity/Apiary.php: n/a
+#  modules/contrib/hivelog/src/Entity/ApiaryActionLog.php: n/a
+#  modules/contrib/hivelog/src/Entity/CalendarAction.php: n/a
+#  modules/contrib/hivelog/src/HiveActionLogListBuilder.php: n/a
+#  modules/contrib/hivelog/src/Entity/CalendarActionItemRequirement.php: n/a
+#  modules/contrib/hivelog/src/Entity/CalendarActionProductYield.php: n/a
+#  modules/contrib/hivelog/src/Entity/HiveActionLog.php: n/a
+#  modules/contrib/hivelog/src/Controller/InventoryReportController.php: n/a
+#  modules/contrib/hivelog/src/Form/HivelogCalendarFilterForm.php: n/a
+#  modules/contrib/hivelog/src/Form/HivelogHiveFilterForm.php: n/a
+#  modules/contrib/hivelog/src/Entity/HarvestYield.php: n/a
+#  modules/contrib/hivelog/src/Entity/InventoryUsage.php: n/a
+#  modules/contrib/hivelog/src/Form/HivelogFullCalendarFilterForm.php: n/a
+#  modules/contrib/hivelog/src/HiveInspectionListBuilder.php: n/a
+#  modules/contrib/hivelog/src/QueenObservationListBuilder.php: n/a
+#  modules/contrib/hivelog/src/Form/HivelogInspectionFilterForm.php: n/a
+#  modules/contrib/hivelog/src/Form/HivelogQueenObservationFilterForm.php: n/a
+#  modules/contrib/hivelog/src/Entity/HiveInspection.php: n/a
+#  modules/contrib/hivelog/src/Form/ApiaryActionLogForm.php: n/a
+#  modules/contrib/hivelog/src/Form/CalendarActionForm.php: n/a
+#  modules/contrib/hivelog/src/Form/HiveActionLogForm.php: n/a
+#  modules/contrib/hivelog/src/Form/HiveForm.php: n/a
+#  modules/contrib/hivelog/src/Form/HiveInspectionForm.php: n/a
+#  modules/contrib/hivelog/src/Form/InventoryItemForm.php: n/a
+#  modules/contrib/hivelog/src/Form/InventoryPurchaseForm.php: n/a
+#  modules/contrib/hivelog/src/Form/QueenObservationForm.php: n/a
+#  modules/contrib/hivelog/src/Form/QueenForm.php: n/a
+#  modules/contrib/hivelog/src/Form/ApiaryActionLogDeleteForm.php: n/a
+#  modules/contrib/hivelog/src/Form/HiveActionLogDeleteForm.php: n/a
+#  modules/contrib/hivelog/src/Form/ApiaryDeleteForm.php: n/a
+#  modules/contrib/hivelog/src/Form/ApiaryForm.php: n/a
+#  modules/contrib/hivelog/src/Form/CalendarActionDeleteForm.php: n/a
+#  modules/contrib/hivelog/src/Form/CalendarActionItemRequirementDeleteForm.php: n/a
+#  modules/contrib/hivelog/src/Form/CalendarActionItemRequirementForm.php: n/a
+#  modules/contrib/hivelog/src/Form/CalendarActionProductYieldDeleteForm.php: n/a
+#  modules/contrib/hivelog/src/Form/CalendarActionProductYieldForm.php: n/a
+#  modules/contrib/hivelog/src/Form/HarvestYieldFormTrait.php: n/a
+#  modules/contrib/hivelog/src/Form/HiveDeleteForm.php: n/a
+#  modules/contrib/hivelog/src/Form/HiveInspectionDeleteForm.php: n/a
+#  modules/contrib/hivelog/src/Form/InventoryItemDeleteForm.php: n/a
+#  modules/contrib/hivelog/src/Form/InventoryPurchaseDeleteForm.php: n/a
+#  modules/contrib/hivelog/src/Form/InventoryUsageFormTrait.php: n/a
+#  modules/contrib/hivelog/src/Form/ProductDeleteForm.php: n/a
+#  modules/contrib/hivelog/src/Form/ProductForm.php: n/a
+#  modules/contrib/hivelog/src/Form/QueenDeleteForm.php: n/a
+#  modules/contrib/hivelog/src/Form/QueenObservationDeleteForm.php: n/a
+#  modules/contrib/hivelog/src/Plugin/EntityReferenceSelection/ApiaryScopedSelection.php: n/a
+#
+msgid ""
+msgstr "Project-Id-Version: hivelog\nPOT-Creation-Date: 2026-08-27 19:45+0200\nPO-Revision-Date: 2026-08-27 19:37+0200\nLast-Translator: Paddy de Búrca\nLanguage-Team: Danish\nLanguage: da\nMIME-Version: 1.0\nContent-Type: text/plain; charset=UTF-8\nContent-Transfer-Encoding: 8bit\nPlural-Forms: nplurals=2; plural=(n != 1);\n"
+#: modules/contrib/hivelog/hivelog.module:51
+msgid "Central Beehive Registration (CBR) number"
+msgstr "Centralt bigårdsregister (CBR)-nummer"
+#: modules/contrib/hivelog/hivelog.module:52
+msgid "Your national/central beehive registration number, if any."
+msgstr "Dit nationale/centrale bigårdsregistreringsnummer, hvis du har et."
+#: modules/contrib/hivelog/hivelog.install:153
+msgid "Replaced latitude/longitude fields with geolocation field on apiaries."
+msgstr "Erstattede breddegrad-/længdegradsfelter med et geolokationsfelt på bigårde."
+#: modules/contrib/hivelog/hivelog.install:217
+msgid "Migrated apiary geolocation field from geolocation module to geofield module."
+msgstr "Migrerede bigårdens geolokationsfelt fra geolocation-modulet til geofield-modulet."
+#: modules/contrib/hivelog/hivelog.install:240
+msgid "Added external check field to hive inspections."
+msgstr "Tilføjede feltet for udvendig kontrol til stadeeftersyn."
+#: modules/contrib/hivelog/hivelog.install:263
+msgid "Added weight field to hive inspections."
+msgstr "Tilføjede vægtfelt til stadeeftersyn."
+#: modules/contrib/hivelog/hivelog.install:286
+msgid "Added images field to hives."
+msgstr "Tilføjede billedfelt til bistader."
+#: modules/contrib/hivelog/hivelog.install:309
+msgid "Added images field to hive inspections."
+msgstr "Tilføjede billedfelt til stadeeftersyn."
+#: modules/contrib/hivelog/hivelog.install:329
+msgid "Retired dormant queen_brood field on hive inspections."
+msgstr "Fjernede det ubrugte queen_brood-felt på stadeeftersyn."
+#: modules/contrib/hivelog/hivelog.install:360
+msgid "Installed the Queen entity type and removed queen_year/queen_colour from hives."
+msgstr "Installerede entitetstypen Dronning og fjernede queen_year/queen_colour fra bistader."
+#: modules/contrib/hivelog/hivelog.install:379
+msgid "Installed the Queen Observation entity type."
+msgstr "Installerede entitetstypen Dronningobservation."
+#: modules/contrib/hivelog/hivelog.install:394
+msgid "CBR field already installed; nothing to do."
+msgstr "CBR-feltet er allerede installeret; intet at gøre."
+#: modules/contrib/hivelog/hivelog.install:408
+msgid "Added CBR number field to user accounts."
+msgstr "Tilføjede CBR-nummerfelt til brugerkonti."
+#: modules/contrib/hivelog/hivelog.install:445
+msgid "Re-synced apiary.geolocation stored field storage definition."
+msgstr "Gensynkroniserede den lagrede feltdefinition for apiary.geolocation."
+#: modules/contrib/hivelog/hivelog.install:494
+msgid "Migrated hivelog permissions to own/any variants for roles: @roles."
+msgstr "Migrerede hivelog-tilladelser til egne/alle-varianter for rollerne: @roles."
+#: modules/contrib/hivelog/hivelog.install:498
+msgid "No roles had old hivelog permissions to migrate."
+msgstr "Ingen roller havde gamle hivelog-tilladelser at migrere."
+#: modules/contrib/hivelog/hivelog.install:533
+msgid "Installed beekeepers and visibility fields on the Apiary entity."
+msgstr "Installerede felterne biavlere og synlighed på bigårds-entiteten."
+#: modules/contrib/hivelog/hivelog.install:554
+msgid "Installed the Calendar Action entity type."
+msgstr "Installerede entitetstypen Kalenderhandling."
+#: modules/contrib/hivelog/hivelog.install:576
+msgid "Installed the Hive Action Log entity type."
+msgstr "Installerede entitetstypen Stade-handlingslog."
+#: modules/contrib/hivelog/hivelog.install:610
+msgid "Installed the inspection field on the Hive Action Log entity."
+msgstr "Installerede eftersynsfeltet på Stade-handlingslog-entiteten."
+#: modules/contrib/hivelog/hivelog.install:644
+msgid "Installed the scope field on the Calendar Action entity."
+msgstr "Installerede omfangsfeltet på Kalenderhandling-entiteten."
+#: modules/contrib/hivelog/hivelog.install:665
+msgid "Installed the Apiary Action Log entity type."
+msgstr "Installerede entitetstypen Bigårds-handlingslog."
+#: modules/contrib/hivelog/hivelog.install:688
+msgid "Removed the bee_breed field from hives; breed is now tracked on the queen."
+msgstr "Fjernede bee_breed-feltet fra bistader; race registreres nu på dronningen."
+#: modules/contrib/hivelog/hivelog.install:715
+msgid "Installed the Inventory Item and Inventory Purchase entity types."
+msgstr "Installerede entitetstyperne Lagervare og Lagerindkøb."
+#: modules/contrib/hivelog/hivelog.install:736
+msgid "Installed the Calendar Action Item Requirement entity type."
+msgstr "Installerede entitetstypen Kalenderhandlings vareforbrug."
+#: modules/contrib/hivelog/hivelog.install:758
+msgid "Installed the Inventory Usage entity type."
+msgstr "Installerede entitetstypen Lagerforbrug."
+#: modules/contrib/hivelog/hivelog.install:778
+msgid "Installed the Product entity type."
+msgstr "Installerede entitetstypen Produkt."
+#: modules/contrib/hivelog/hivelog.install:799
+msgid "Installed the Calendar Action Product Yield entity type."
+msgstr "Installerede entitetstypen Kalenderhandlings produktudbytte."
+#: modules/contrib/hivelog/hivelog.install:820
+msgid "Installed the Harvest Yield entity type."
+msgstr "Installerede entitetstypen Høstudbytte."
+#: modules/contrib/hivelog/hivelog.install:846
+msgid "Installed the low_stock_threshold field storage on Inventory Item."
+msgstr "Installerede feltlageret low_stock_threshold på Lagervare."
+#: modules/contrib/hivelog/hivelog.install:874
+msgid "Installed the disposal_date/disposal_reason field storage on Inventory Purchase."
+msgstr "Installerede feltlageret disposal_date/disposal_reason på Lagerindkøb."
+#: modules/contrib/hivelog/hivelog.install:61
+msgid "Could not delete @type entities during uninstall: @message"
+msgstr "Kunne ikke slette @type-entiteter under afinstallation: @message"
+#: modules/contrib/hivelog/hivelog.install:930
+msgid "Cleaned up cbr_number field tracking directly during uninstall."
+msgstr "Ryddede op i sporingen af cbr_number-feltet direkte under afinstallation."
+#: modules/contrib/hivelog/hivelog.info.yml:0
+#: modules/contrib/hivelog/hivelog.links.menu.yml:0
+#: modules/contrib/hivelog/src/Breadcrumb/HivelogBreadcrumbBuilder.php:80
+msgid "HiveLog"
+msgstr "HiveLog"
+#: modules/contrib/hivelog/hivelog.info.yml:0
+msgid "Beekeeping activity logger for managing apiaries, hives, and inspections."
+msgstr "Aktivitetslog for biavl til styring af bigårde, bistader og eftersyn."
+#: modules/contrib/hivelog/hivelog.info.yml:0
+msgid "Custom"
+msgstr "Tilpasset"
+#: modules/contrib/hivelog/hivelog.links.action.yml:0
+#: modules/contrib/hivelog/hivelog.routing.yml:0
+#: modules/contrib/hivelog/src/ApiaryListBuilder.php:172
+msgid "Add Apiary"
+msgstr "Tilføj bigård"
+#: modules/contrib/hivelog/hivelog.links.action.yml:0
+#: modules/contrib/hivelog/hivelog.routing.yml:0;0
+#: modules/contrib/hivelog/src/QueenListBuilder.php:147
+#: modules/contrib/hivelog/src/Controller/HiveController.php:474
+msgid "Add Queen"
+msgstr "Tilføj dronning"
+#: modules/contrib/hivelog/hivelog.links.menu.yml:0
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:144
+#: modules/contrib/hivelog/src/Entity/Hive.php:29
+msgid "Hives"
+msgstr "Bistader"
+#: modules/contrib/hivelog/hivelog.links.menu.yml:0
+#: modules/contrib/hivelog/src/Controller/HiveController.php:621
+msgid "Inspections"
+msgstr "Eftersyn"
+#: modules/contrib/hivelog/hivelog.links.menu.yml:0
+#: modules/contrib/hivelog/src/QueenListBuilder.php:140
+#: modules/contrib/hivelog/src/Entity/Queen.php:35
+msgid "Queens"
+msgstr "Dronninger"
+#: modules/contrib/hivelog/hivelog.links.menu.yml:0
+#: modules/contrib/hivelog/src/Controller/HiveController.php:741
+#: modules/contrib/hivelog/src/Entity/QueenObservation.php:34
+msgid "Queen Observations"
+msgstr "Dronningobservationer"
+#: modules/contrib/hivelog/hivelog.links.menu.yml:0
+#: modules/contrib/hivelog/src/InventoryItemListBuilder.php:152
+#: modules/contrib/hivelog/src/Entity/InventoryItem.php:39
+msgid "Inventory Items"
+msgstr "Lagervarer"
+#: modules/contrib/hivelog/hivelog.links.menu.yml:0
+#: modules/contrib/hivelog/src/InventoryPurchaseListBuilder.php:138
+#: modules/contrib/hivelog/src/Entity/InventoryPurchase.php:37
+msgid "Inventory Purchases"
+msgstr "Lagerindkøb"
+#: modules/contrib/hivelog/hivelog.links.menu.yml:0
+#: modules/contrib/hivelog/src/ProductListBuilder.php:136
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:557
+#: modules/contrib/hivelog/src/Entity/Product.php:38
+msgid "Products"
+msgstr "Produkter"
+#: modules/contrib/hivelog/hivelog.links.menu.yml:0
+msgid "Manage apiaries, hives, and inspections."
+msgstr "Administrér bigårde, bistader og eftersyn."
+#: modules/contrib/hivelog/hivelog.links.menu.yml:0
+msgid "View all hives."
+msgstr "Se alle bistader."
+#: modules/contrib/hivelog/hivelog.links.menu.yml:0
+msgid "View all inspections."
+msgstr "Se alle eftersyn."
+#: modules/contrib/hivelog/hivelog.links.menu.yml:0
+msgid "Manage queens across all hives."
+msgstr "Administrér dronninger på tværs af alle bistader."
+#: modules/contrib/hivelog/hivelog.links.menu.yml:0
+msgid "View all queen observations."
+msgstr "Se alle dronningobservationer."
+#: modules/contrib/hivelog/hivelog.links.menu.yml:0
+msgid "Manage the inventory catalog."
+msgstr "Administrér lagerkataloget."
+#: modules/contrib/hivelog/hivelog.links.menu.yml:0
+msgid "View all inventory purchases."
+msgstr "Se alle lagerindkøb."
+#: modules/contrib/hivelog/hivelog.links.menu.yml:0
+msgid "Manage the sellable-product catalog."
+msgstr "Administrér kataloget over salgbare produkter."
+#: modules/contrib/hivelog/hivelog.links.task.yml:0;0;0;0;0
+#: modules/contrib/hivelog/src/Controller/HiveController.php:588;713
+#: modules/contrib/hivelog/src/Controller/QueenController.php:176
+msgid "View"
+msgstr "Vis"
+#: modules/contrib/hivelog/hivelog.links.task.yml:0;0;0;0;0
+#: modules/contrib/hivelog/src/ApiaryListBuilder.php:103
+#: modules/contrib/hivelog/src/InventoryItemListBuilder.php:97
+#: modules/contrib/hivelog/src/InventoryPurchaseListBuilder.php:83
+#: modules/contrib/hivelog/src/ProductListBuilder.php:83
+#: modules/contrib/hivelog/src/QueenListBuilder.php:79
+#: modules/contrib/hivelog/src/Controller/ApiaryActionLogController.php:146
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:200;381;497;607;812
+#: modules/contrib/hivelog/src/Controller/CalendarActionController.php:145;202;301
+#: modules/contrib/hivelog/src/Controller/HiveActionLogController.php:148
+#: modules/contrib/hivelog/src/Controller/HiveController.php:297;589;714
+#: modules/contrib/hivelog/src/Controller/HiveInspectionController.php:210
+#: modules/contrib/hivelog/src/Controller/InventoryItemController.php:122
+#: modules/contrib/hivelog/src/Controller/InventoryPurchaseController.php:121
+#: modules/contrib/hivelog/src/Controller/ProductController.php:93
+#: modules/contrib/hivelog/src/Controller/QueenController.php:177;246
+#: modules/contrib/hivelog/src/Controller/QueenObservationController.php:130
+msgid "Edit"
+msgstr "Rediger"
+#: modules/contrib/hivelog/hivelog.links.task.yml:0;0;0;0;0
+#: modules/contrib/hivelog/src/ApiaryListBuilder.php:107
+#: modules/contrib/hivelog/src/InventoryItemListBuilder.php:101
+#: modules/contrib/hivelog/src/InventoryPurchaseListBuilder.php:87
+#: modules/contrib/hivelog/src/ProductListBuilder.php:87
+#: modules/contrib/hivelog/src/QueenListBuilder.php:83
+#: modules/contrib/hivelog/src/Controller/ApiaryActionLogController.php:150
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:202;499;609;818
+#: modules/contrib/hivelog/src/Controller/CalendarActionController.php:149;206;305
+#: modules/contrib/hivelog/src/Controller/HiveActionLogController.php:152
+#: modules/contrib/hivelog/src/Controller/HiveController.php:591;716
+#: modules/contrib/hivelog/src/Controller/HiveInspectionController.php:214
+#: modules/contrib/hivelog/src/Controller/InventoryItemController.php:126
+#: modules/contrib/hivelog/src/Controller/InventoryPurchaseController.php:125
+#: modules/contrib/hivelog/src/Controller/ProductController.php:97
+#: modules/contrib/hivelog/src/Controller/QueenController.php:179;250
+#: modules/contrib/hivelog/src/Controller/QueenObservationController.php:134
+msgid "Delete"
+msgstr "Slet"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Administer HiveLog"
+msgstr "Administrér HiveLog"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Full administrative access to the HiveLog module."
+msgstr "Fuld administrativ adgang til HiveLog-modulet."
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "View own apiaries"
+msgstr "Se egne bigårde"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "View any apiary"
+msgstr "Se enhver bigård"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Add apiaries"
+msgstr "Tilføj bigårde"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Edit own apiaries"
+msgstr "Rediger egne bigårde"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Edit any apiary"
+msgstr "Rediger enhver bigård"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Delete own apiaries"
+msgstr "Slet egne bigårde"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Delete any apiary"
+msgstr "Slet enhver bigård"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "View own hives"
+msgstr "Se egne bistader"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "View any hive"
+msgstr "Se enhver bistade"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Add hives"
+msgstr "Tilføj bistader"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Edit own hives"
+msgstr "Rediger egne bistader"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Edit any hive"
+msgstr "Rediger enhver bistade"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Delete own hives"
+msgstr "Slet egne bistader"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Delete any hive"
+msgstr "Slet enhver bistade"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "View own hive inspections"
+msgstr "Se egne stadeeftersyn"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "View any hive inspection"
+msgstr "Se enhver stadeeftersyn"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Add hive inspections"
+msgstr "Tilføj stadeeftersyn"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Edit own hive inspections"
+msgstr "Rediger egne stadeeftersyn"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Edit any hive inspection"
+msgstr "Rediger enhver stadeeftersyn"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Delete own hive inspections"
+msgstr "Slet egne stadeeftersyn"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Delete any hive inspection"
+msgstr "Slet enhver stadeeftersyn"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "View own queens"
+msgstr "Se egne dronninger"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "View any queen"
+msgstr "Se enhver dronning"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Add queens"
+msgstr "Tilføj dronninger"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Edit own queens"
+msgstr "Rediger egne dronninger"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Edit any queen"
+msgstr "Rediger enhver dronning"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Delete own queens"
+msgstr "Slet egne dronninger"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Delete any queen"
+msgstr "Slet enhver dronning"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "View own queen observations"
+msgstr "Se egne dronningobservationer"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "View any queen observation"
+msgstr "Se enhver dronningobservation"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Add queen observations"
+msgstr "Tilføj dronningobservationer"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Edit own queen observations"
+msgstr "Rediger egne dronningobservationer"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Edit any queen observation"
+msgstr "Rediger enhver dronningobservation"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Delete own queen observations"
+msgstr "Slet egne dronningobservationer"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Delete any queen observation"
+msgstr "Slet enhver dronningobservation"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "View own calendar actions"
+msgstr "Se egne kalenderhandlinger"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "View any calendar action"
+msgstr "Se enhver kalenderhandling"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Add calendar actions"
+msgstr "Tilføj kalenderhandlinger"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Edit own calendar actions"
+msgstr "Rediger egne kalenderhandlinger"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Edit any calendar action"
+msgstr "Rediger enhver kalenderhandling"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Delete own calendar actions"
+msgstr "Slet egne kalenderhandlinger"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Delete any calendar action"
+msgstr "Slet enhver kalenderhandling"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "View own hive action logs"
+msgstr "Se egne stade-handlingslogge"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "View any hive action log"
+msgstr "Se enhver stade-handlingslog"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Add hive action logs"
+msgstr "Tilføj stade-handlingslogge"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Edit own hive action logs"
+msgstr "Rediger egne stade-handlingslogge"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Edit any hive action log"
+msgstr "Rediger enhver stade-handlingslog"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Delete own hive action logs"
+msgstr "Slet egne stade-handlingslogge"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Delete any hive action log"
+msgstr "Slet enhver stade-handlingslog"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "View own apiary action logs"
+msgstr "Se egne bigårds-handlingslogge"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "View any apiary action log"
+msgstr "Se enhver bigårds-handlingslog"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Add apiary action logs"
+msgstr "Tilføj bigårds-handlingslogge"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Edit own apiary action logs"
+msgstr "Rediger egne bigårds-handlingslogge"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Edit any apiary action log"
+msgstr "Rediger enhver bigårds-handlingslog"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Delete own apiary action logs"
+msgstr "Slet egne bigårds-handlingslogge"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Delete any apiary action log"
+msgstr "Slet enhver bigårds-handlingslog"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "View own inventory items"
+msgstr "Se egne lagervarer"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "View any inventory item"
+msgstr "Se enhver lagervare"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Add inventory items"
+msgstr "Tilføj lagervarer"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Edit own inventory items"
+msgstr "Rediger egne lagervarer"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Edit any inventory item"
+msgstr "Rediger enhver lagervare"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Delete own inventory items"
+msgstr "Slet egne lagervarer"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Delete any inventory item"
+msgstr "Slet enhver lagervare"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "View own inventory purchases"
+msgstr "Se egne lagerindkøb"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "View any inventory purchase"
+msgstr "Se enhver lagerindkøb"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Add inventory purchases"
+msgstr "Tilføj lagerindkøb"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Edit own inventory purchases"
+msgstr "Rediger egne lagerindkøb"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Edit any inventory purchase"
+msgstr "Rediger enhver lagerindkøb"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Delete own inventory purchases"
+msgstr "Slet egne lagerindkøb"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Delete any inventory purchase"
+msgstr "Slet enhver lagerindkøb"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "View own calendar action item requirements"
+msgstr "Se egne kalenderhandlingers vareforbrug"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "View any calendar action item requirement"
+msgstr "Se enhver kalenderhandlings vareforbrug"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Add calendar action item requirements"
+msgstr "Tilføj kalenderhandlingers vareforbrug"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Edit own calendar action item requirements"
+msgstr "Rediger egne kalenderhandlingers vareforbrug"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Edit any calendar action item requirement"
+msgstr "Rediger enhver kalenderhandlings vareforbrug"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Delete own calendar action item requirements"
+msgstr "Slet egne kalenderhandlingers vareforbrug"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Delete any calendar action item requirement"
+msgstr "Slet enhver kalenderhandlings vareforbrug"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "View own inventory usage records"
+msgstr "Se egne lagerforbrugsposter"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "View any inventory usage record"
+msgstr "Se enhver lagerforbrugspost"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Add inventory usage records"
+msgstr "Tilføj lagerforbrugsposter"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Edit own inventory usage records"
+msgstr "Rediger egne lagerforbrugsposter"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Edit any inventory usage record"
+msgstr "Rediger enhver lagerforbrugspost"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Delete own inventory usage records"
+msgstr "Slet egne lagerforbrugsposter"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Delete any inventory usage record"
+msgstr "Slet enhver lagerforbrugspost"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "View own products"
+msgstr "Se egne produkter"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "View any product"
+msgstr "Se enhver produkt"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Add products"
+msgstr "Tilføj produkter"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Edit own products"
+msgstr "Rediger egne produkter"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Edit any product"
+msgstr "Rediger enhver produkt"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Delete own products"
+msgstr "Slet egne produkter"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Delete any product"
+msgstr "Slet enhver produkt"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "View own calendar action product yields"
+msgstr "Se egne kalenderhandlingers produktudbytte"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "View any calendar action product yield"
+msgstr "Se enhver kalenderhandlings produktudbytte"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Add calendar action product yields"
+msgstr "Tilføj kalenderhandlingers produktudbytte"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Edit own calendar action product yields"
+msgstr "Rediger egne kalenderhandlingers produktudbytte"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Edit any calendar action product yield"
+msgstr "Rediger enhver kalenderhandlings produktudbytte"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Delete own calendar action product yields"
+msgstr "Slet egne kalenderhandlingers produktudbytte"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Delete any calendar action product yield"
+msgstr "Slet enhver kalenderhandlings produktudbytte"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "View own harvest yield records"
+msgstr "Se egne høstudbytteposter"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "View any harvest yield record"
+msgstr "Se enhver høstudbyttepost"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Add harvest yield records"
+msgstr "Tilføj høstudbytteposter"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Edit own harvest yield records"
+msgstr "Rediger egne høstudbytteposter"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Edit any harvest yield record"
+msgstr "Rediger enhver høstudbyttepost"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Delete own harvest yield records"
+msgstr "Slet egne høstudbytteposter"
+#: modules/contrib/hivelog/hivelog.permissions.yml:0
+msgid "Delete any harvest yield record"
+msgstr "Slet enhver høstudbyttepost"
+#: modules/contrib/hivelog/hivelog.routing.yml:0
+msgid "HiveLog - Apiaries"
+msgstr "HiveLog – Bigårde"
+#: modules/contrib/hivelog/hivelog.routing.yml:0
+msgid "Edit Apiary"
+msgstr "Rediger bigård"
+#: modules/contrib/hivelog/hivelog.routing.yml:0
+msgid "Delete Apiary"
+msgstr "Slet bigård"
+#: modules/contrib/hivelog/hivelog.routing.yml:0
+msgid "HiveLog - Hives"
+msgstr "HiveLog – Bistader"
+#: modules/contrib/hivelog/hivelog.routing.yml:0
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:151
+msgid "Add Hive"
+msgstr "Tilføj bistade"
+#: modules/contrib/hivelog/hivelog.routing.yml:0
+msgid "Edit Hive"
+msgstr "Rediger bistade"
+#: modules/contrib/hivelog/hivelog.routing.yml:0
+msgid "Delete Hive"
+msgstr "Slet bistade"
+#: modules/contrib/hivelog/hivelog.routing.yml:0
+msgid "HiveLog - Inspections"
+msgstr "HiveLog – Eftersyn"
+#: modules/contrib/hivelog/hivelog.routing.yml:0
+#: modules/contrib/hivelog/src/Controller/HiveController.php:628
+msgid "Add Inspection"
+msgstr "Tilføj eftersyn"
+#: modules/contrib/hivelog/hivelog.routing.yml:0
+msgid "Edit Inspection"
+msgstr "Rediger eftersyn"
+#: modules/contrib/hivelog/hivelog.routing.yml:0
+msgid "Delete Inspection"
+msgstr "Slet eftersyn"
+#: modules/contrib/hivelog/hivelog.routing.yml:0
+msgid "HiveLog - Queens"
+msgstr "HiveLog – Dronninger"
+#: modules/contrib/hivelog/hivelog.routing.yml:0
+#: modules/contrib/hivelog/src/Controller/HiveController.php:460
+msgid "Edit Queen"
+msgstr "Rediger dronning"
+#: modules/contrib/hivelog/hivelog.routing.yml:0
+msgid "Delete Queen"
+msgstr "Slet dronning"
+#: modules/contrib/hivelog/hivelog.routing.yml:0
+msgid "HiveLog - Queen Observations"
+msgstr "HiveLog – Dronningobservationer"
+#: modules/contrib/hivelog/hivelog.routing.yml:0
+msgid "Add Queen Observation"
+msgstr "Tilføj dronningobservation"
+#: modules/contrib/hivelog/hivelog.routing.yml:0
+msgid "Edit Queen Observation"
+msgstr "Rediger dronningobservation"
+#: modules/contrib/hivelog/hivelog.routing.yml:0
+msgid "Delete Queen Observation"
+msgstr "Slet dronningobservation"
+#: modules/contrib/hivelog/hivelog.routing.yml:0
+msgid "HiveLog - Calendar Actions"
+msgstr "HiveLog – Kalenderhandlinger"
+#: modules/contrib/hivelog/hivelog.routing.yml:0
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:287;736
+msgid "Add Calendar Action"
+msgstr "Tilføj kalenderhandling"
+#: modules/contrib/hivelog/hivelog.routing.yml:0
+msgid "Edit Calendar Action"
+msgstr "Rediger kalenderhandling"
+#: modules/contrib/hivelog/hivelog.routing.yml:0
+msgid "Delete Calendar Action"
+msgstr "Slet kalenderhandling"
+#: modules/contrib/hivelog/hivelog.routing.yml:0
+msgid "HiveLog - Hive Action Logs"
+msgstr "HiveLog – Stade-handlingslogge"
+#: modules/contrib/hivelog/hivelog.routing.yml:0
+msgid "Add Hive Action Log"
+msgstr "Tilføj stade-handlingslog"
+#: modules/contrib/hivelog/hivelog.routing.yml:0
+msgid "Edit Hive Action Log"
+msgstr "Rediger stade-handlingslog"
+#: modules/contrib/hivelog/hivelog.routing.yml:0
+msgid "Delete Hive Action Log"
+msgstr "Slet stade-handlingslog"
+#: modules/contrib/hivelog/hivelog.routing.yml:0
+msgid "HiveLog - Apiary Action Logs"
+msgstr "HiveLog – Bigårds-handlingslogge"
+#: modules/contrib/hivelog/hivelog.routing.yml:0
+msgid "Add Apiary Action Log"
+msgstr "Tilføj bigårds-handlingslog"
+#: modules/contrib/hivelog/hivelog.routing.yml:0
+msgid "Edit Apiary Action Log"
+msgstr "Rediger bigårds-handlingslog"
+#: modules/contrib/hivelog/hivelog.routing.yml:0
+msgid "Delete Apiary Action Log"
+msgstr "Slet bigårds-handlingslog"
+#: modules/contrib/hivelog/hivelog.routing.yml:0
+msgid "HiveLog - Inventory Items"
+msgstr "HiveLog – Lagervarer"
+#: modules/contrib/hivelog/hivelog.routing.yml:0;0
+#: modules/contrib/hivelog/src/InventoryItemListBuilder.php:164
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:447
+msgid "Add Inventory Item"
+msgstr "Tilføj lagervare"
+#: modules/contrib/hivelog/hivelog.routing.yml:0
+msgid "Edit Inventory Item"
+msgstr "Rediger lagervare"
+#: modules/contrib/hivelog/hivelog.routing.yml:0
+msgid "Delete Inventory Item"
+msgstr "Slet lagervare"
+#: modules/contrib/hivelog/hivelog.routing.yml:0
+msgid "HiveLog - Inventory Purchases"
+msgstr "HiveLog – Lagerindkøb"
+#: modules/contrib/hivelog/hivelog.routing.yml:0;0
+msgid "Add Inventory Purchase"
+msgstr "Tilføj lagerindkøb"
+#: modules/contrib/hivelog/hivelog.routing.yml:0
+msgid "Edit Inventory Purchase"
+msgstr "Rediger lagerindkøb"
+#: modules/contrib/hivelog/hivelog.routing.yml:0
+msgid "Delete Inventory Purchase"
+msgstr "Slet lagerindkøb"
+#: modules/contrib/hivelog/hivelog.routing.yml:0
+msgid "HiveLog - Products"
+msgstr "HiveLog – Produkter"
+#: modules/contrib/hivelog/hivelog.routing.yml:0;0
+#: modules/contrib/hivelog/src/ProductListBuilder.php:146
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:567
+msgid "Add Product"
+msgstr "Tilføj produkt"
+#: modules/contrib/hivelog/hivelog.routing.yml:0
+msgid "Edit Product"
+msgstr "Rediger produkt"
+#: modules/contrib/hivelog/hivelog.routing.yml:0
+msgid "Delete Product"
+msgstr "Slet produkt"
+#: modules/contrib/hivelog/hivelog.routing.yml:0
+#: modules/contrib/hivelog/src/Controller/CalendarActionController.php:241
+msgid "Add Required Item"
+msgstr "Tilføj påkrævet vare"
+#: modules/contrib/hivelog/hivelog.routing.yml:0
+msgid "Edit Requirement"
+msgstr "Rediger krav"
+#: modules/contrib/hivelog/hivelog.routing.yml:0
+msgid "Delete Requirement"
+msgstr "Slet krav"
+#: modules/contrib/hivelog/hivelog.routing.yml:0
+#: modules/contrib/hivelog/src/Controller/CalendarActionController.php:340
+msgid "Add Expected Yield"
+msgstr "Tilføj forventet udbytte"
+#: modules/contrib/hivelog/hivelog.routing.yml:0
+msgid "Edit Yield"
+msgstr "Rediger udbytte"
+#: modules/contrib/hivelog/hivelog.routing.yml:0
+msgid "Delete Yield"
+msgstr "Slet udbytte"
+#: modules/contrib/hivelog/src/ApiaryActionLogListBuilder.php:19
+#: modules/contrib/hivelog/src/CalendarActionListBuilder.php:25
+#: modules/contrib/hivelog/src/HiveListBuilder.php:18
+#: modules/contrib/hivelog/src/InventoryItemListBuilder.php:57
+#: modules/contrib/hivelog/src/InventoryPurchaseListBuilder.php:53
+#: modules/contrib/hivelog/src/ProductListBuilder.php:54
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:768
+#: modules/contrib/hivelog/src/Entity/Apiary.php:30
+#: modules/contrib/hivelog/src/Entity/ApiaryActionLog.php:109
+#: modules/contrib/hivelog/src/Entity/CalendarAction.php:444
+#: modules/contrib/hivelog/src/Entity/Hive.php:138
+#: modules/contrib/hivelog/src/Entity/InventoryItem.php:256
+#: modules/contrib/hivelog/src/Entity/InventoryPurchase.php:135
+#: modules/contrib/hivelog/src/Entity/Product.php:81
+msgid "Apiary"
+msgstr "Bigård"
+#: modules/contrib/hivelog/src/ApiaryActionLogListBuilder.php:20
+#: modules/contrib/hivelog/src/HiveActionLogListBuilder.php:20
+#: modules/contrib/hivelog/src/Entity/ApiaryActionLog.php:126
+#: modules/contrib/hivelog/src/Entity/CalendarAction.php:37
+#: modules/contrib/hivelog/src/Entity/CalendarActionItemRequirement.php:107
+#: modules/contrib/hivelog/src/Entity/CalendarActionProductYield.php:108
+#: modules/contrib/hivelog/src/Entity/HiveActionLog.php:121
+msgid "Calendar Action"
+msgstr "Kalenderhandling"
+#: modules/contrib/hivelog/src/ApiaryActionLogListBuilder.php:21
+#: modules/contrib/hivelog/src/HiveActionLogListBuilder.php:21
+#: modules/contrib/hivelog/src/Controller/HiveController.php:449
+#: modules/contrib/hivelog/src/Controller/InventoryReportController.php:181
+#: modules/contrib/hivelog/src/Entity/ApiaryActionLog.php:143
+#: modules/contrib/hivelog/src/Entity/HiveActionLog.php:138
+#: modules/contrib/hivelog/src/Form/HivelogCalendarFilterForm.php:92
+msgid "Year"
+msgstr "År"
+#: modules/contrib/hivelog/src/ApiaryActionLogListBuilder.php:22
+#: modules/contrib/hivelog/src/HiveActionLogListBuilder.php:22
+#: modules/contrib/hivelog/src/HiveListBuilder.php:20
+#: modules/contrib/hivelog/src/InventoryItemListBuilder.php:62
+#: modules/contrib/hivelog/src/ProductListBuilder.php:57
+#: modules/contrib/hivelog/src/QueenListBuilder.php:52
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:189;308;486;596
+#: modules/contrib/hivelog/src/Controller/HiveController.php:224;536
+#: modules/contrib/hivelog/src/Entity/ApiaryActionLog.php:161
+#: modules/contrib/hivelog/src/Entity/Hive.php:196
+#: modules/contrib/hivelog/src/Entity/HiveActionLog.php:156
+#: modules/contrib/hivelog/src/Entity/InventoryItem.php:384
+#: modules/contrib/hivelog/src/Entity/Product.php:151
+#: modules/contrib/hivelog/src/Entity/Queen.php:224
+#: modules/contrib/hivelog/src/Form/HivelogCalendarFilterForm.php:80
+#: modules/contrib/hivelog/src/Form/HivelogHiveFilterForm.php:72
+msgid "Status"
+msgstr "Status"
+#: modules/contrib/hivelog/src/ApiaryActionLogListBuilder.php:23
+#: modules/contrib/hivelog/src/HiveActionLogListBuilder.php:23
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:309
+#: modules/contrib/hivelog/src/Controller/HiveController.php:225
+#: modules/contrib/hivelog/src/Entity/ApiaryActionLog.php:183
+#: modules/contrib/hivelog/src/Entity/HiveActionLog.php:178
+msgid "Week Completed"
+msgstr "Uge gennemført"
+#: modules/contrib/hivelog/src/ApiaryActionLogListBuilder.php:42
+#: modules/contrib/hivelog/src/HiveActionLogListBuilder.php:42
+#: modules/contrib/hivelog/src/Entity/ApiaryActionLog.php:85
+#: modules/contrib/hivelog/src/Entity/HiveActionLog.php:80
+msgid "Unknown action"
+msgstr "Ukendt handling"
+#: modules/contrib/hivelog/src/ApiaryListBuilder.php:80
+msgid "CBR"
+msgstr "CBR"
+#: modules/contrib/hivelog/src/ApiaryListBuilder.php:81
+#: modules/contrib/hivelog/src/InventoryItemListBuilder.php:56
+#: modules/contrib/hivelog/src/ProductListBuilder.php:53
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:186;481;593
+#: modules/contrib/hivelog/src/Entity/Apiary.php:136
+#: modules/contrib/hivelog/src/Entity/InventoryItem.php:273
+#: modules/contrib/hivelog/src/Entity/Product.php:98
+msgid "Name"
+msgstr "Navn"
+#: modules/contrib/hivelog/src/ApiaryListBuilder.php:82
+#: modules/contrib/hivelog/src/Entity/Apiary.php:148
+msgid "Location"
+msgstr "Placering"
+#: modules/contrib/hivelog/src/ApiaryListBuilder.php:83
+#: modules/contrib/hivelog/src/Entity/Apiary.php:248
+#: modules/contrib/hivelog/src/Entity/CalendarAction.php:617
+#: modules/contrib/hivelog/src/Entity/CalendarActionItemRequirement.php:153
+#: modules/contrib/hivelog/src/Entity/CalendarActionProductYield.php:154
+#: modules/contrib/hivelog/src/Entity/HarvestYield.php:159
+#: modules/contrib/hivelog/src/Entity/Hive.php:246
+#: modules/contrib/hivelog/src/Entity/InventoryItem.php:405
+#: modules/contrib/hivelog/src/Entity/InventoryPurchase.php:253
+#: modules/contrib/hivelog/src/Entity/InventoryUsage.php:166
+#: modules/contrib/hivelog/src/Entity/Product.php:172
+#: modules/contrib/hivelog/src/Entity/Queen.php:245
+msgid "Owner"
+msgstr "Ejer"
+#: modules/contrib/hivelog/src/ApiaryListBuilder.php:160
+#: modules/contrib/hivelog/src/Entity/Apiary.php:31
+msgid "Apiaries"
+msgstr "Bigårde"
+#: modules/contrib/hivelog/src/ApiaryListBuilder.php:177
+#: modules/contrib/hivelog/src/Controller/HiveController.php:486
+msgid "View all Queens"
+msgstr "Se alle dronninger"
+#: modules/contrib/hivelog/src/ApiaryListBuilder.php:193
+#: modules/contrib/hivelog/src/InventoryItemListBuilder.php:185
+#: modules/contrib/hivelog/src/InventoryPurchaseListBuilder.php:171
+#: modules/contrib/hivelog/src/ProductListBuilder.php:161
+#: modules/contrib/hivelog/src/QueenListBuilder.php:162
+msgid "There are no @label yet."
+msgstr "Der er endnu ingen @label."
+#: modules/contrib/hivelog/src/ApiaryListBuilder.php:215
+msgid "Your CBR number: @cbr"
+msgstr "Dit CBR-nummer: @cbr"
+#: modules/contrib/hivelog/src/ApiaryListBuilder.php:229
+msgid "Sign in to record your CBR number."
+msgstr "Log ind for at registrere dit CBR-nummer."
+#: modules/contrib/hivelog/src/ApiaryListBuilder.php:1
+msgid "You have not set a CBR number yet. <a href=\"@url\">Update your profile</a> to add one."
+msgstr "Du har endnu ikke angivet et CBR-nummer. <a href=\"@url\">Opdatér din profil</a> for at tilføje et."
+#: modules/contrib/hivelog/src/CalendarActionListBuilder.php:24
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:306;772
+#: modules/contrib/hivelog/src/Controller/HiveController.php:222
+#: modules/contrib/hivelog/src/Entity/CalendarAction.php:461
+msgid "Title"
+msgstr "Titel"
+#: modules/contrib/hivelog/src/CalendarActionListBuilder.php:26
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:773
+#: modules/contrib/hivelog/src/Entity/CalendarAction.php:596
+#: modules/contrib/hivelog/src/Form/HivelogFullCalendarFilterForm.php:72
+msgid "Scope"
+msgstr "Omfang"
+#: modules/contrib/hivelog/src/CalendarActionListBuilder.php:27
+#: modules/contrib/hivelog/src/InventoryItemListBuilder.php:58
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:482;775
+#: modules/contrib/hivelog/src/Entity/CalendarAction.php:497
+#: modules/contrib/hivelog/src/Entity/InventoryItem.php:290
+#: modules/contrib/hivelog/src/Form/HivelogFullCalendarFilterForm.php:79
+msgid "Category"
+msgstr "Kategori"
+#: modules/contrib/hivelog/src/CalendarActionListBuilder.php:28
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:307;774
+#: modules/contrib/hivelog/src/Controller/HiveController.php:223
+msgid "Week(s)"
+msgstr "Uge(r)"
+#: modules/contrib/hivelog/src/CalendarActionListBuilder.php:29
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:776
+#: modules/contrib/hivelog/src/Entity/CalendarAction.php:577
+#: modules/contrib/hivelog/src/Form/HivelogFullCalendarFilterForm.php:90
+msgid "Enabled"
+msgstr "Aktiveret"
+#: modules/contrib/hivelog/src/CalendarActionListBuilder.php:55
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:329;796
+#: modules/contrib/hivelog/src/Controller/HiveController.php:245
+msgid "@start–@end"
+msgstr "@start–@end"
+#: modules/contrib/hivelog/src/CalendarActionListBuilder.php:61
+#: modules/contrib/hivelog/src/HiveInspectionListBuilder.php:35
+#: modules/contrib/hivelog/src/QueenObservationListBuilder.php:40
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:807
+#: modules/contrib/hivelog/src/Controller/CalendarActionController.php:440
+#: modules/contrib/hivelog/src/Controller/HiveController.php:602;729
+#: modules/contrib/hivelog/src/Controller/HiveInspectionController.php:326
+#: modules/contrib/hivelog/src/Controller/QueenController.php:191
+#: modules/contrib/hivelog/src/Controller/QueenObservationController.php:288
+#: modules/contrib/hivelog/src/Form/HivelogInspectionFilterForm.php:86
+#: modules/contrib/hivelog/src/Form/HivelogQueenObservationFilterForm.php:103
+msgid "Yes"
+msgstr "Ja"
+#: modules/contrib/hivelog/src/CalendarActionListBuilder.php:61
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:807
+msgid "Disabled"
+msgstr "Deaktiveret"
+#: modules/contrib/hivelog/src/HiveActionLogListBuilder.php:19
+#: modules/contrib/hivelog/src/HiveInspectionListBuilder.php:18
+#: modules/contrib/hivelog/src/HiveListBuilder.php:17
+#: modules/contrib/hivelog/src/QueenListBuilder.php:50
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:767
+#: modules/contrib/hivelog/src/Entity/Hive.php:28
+#: modules/contrib/hivelog/src/Entity/HiveActionLog.php:104
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:82
+#: modules/contrib/hivelog/src/Entity/Queen.php:208
+msgid "Hive"
+msgstr "Bistade"
+#: modules/contrib/hivelog/src/HiveInspectionListBuilder.php:17
+#: modules/contrib/hivelog/src/InventoryPurchaseListBuilder.php:54
+#: modules/contrib/hivelog/src/QueenObservationListBuilder.php:17
+#: modules/contrib/hivelog/src/Controller/HiveController.php:570;695
+#: modules/contrib/hivelog/src/Controller/QueenController.php:160
+msgid "Date"
+msgstr "Dato"
+#: modules/contrib/hivelog/src/HiveInspectionListBuilder.php:19
+#: modules/contrib/hivelog/src/Controller/HiveController.php:571
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:356
+msgid "Weight"
+msgstr "Vægt"
+#: modules/contrib/hivelog/src/HiveInspectionListBuilder.php:20
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:136
+msgid "Queen Seen"
+msgstr "Dronning set"
+#: modules/contrib/hivelog/src/HiveInspectionListBuilder.php:21
+#: modules/contrib/hivelog/src/Controller/HiveController.php:574
+msgid "Honey"
+msgstr "Honning"
+#: modules/contrib/hivelog/src/HiveInspectionListBuilder.php:22
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:493
+msgid "Inspector"
+msgstr "Inspektør"
+#: modules/contrib/hivelog/src/HiveInspectionListBuilder.php:30
+#: modules/contrib/hivelog/src/QueenObservationListBuilder.php:29
+#: modules/contrib/hivelog/src/Controller/HiveController.php:600;725
+#: modules/contrib/hivelog/src/Controller/QueenController.php:188
+msgid "N/A"
+msgstr "—"
+#: modules/contrib/hivelog/src/HiveInspectionListBuilder.php:35
+#: modules/contrib/hivelog/src/QueenObservationListBuilder.php:40
+#: modules/contrib/hivelog/src/Controller/CalendarActionController.php:440
+#: modules/contrib/hivelog/src/Controller/HiveController.php:602;729
+#: modules/contrib/hivelog/src/Controller/HiveInspectionController.php:326
+#: modules/contrib/hivelog/src/Controller/QueenController.php:191
+#: modules/contrib/hivelog/src/Controller/QueenObservationController.php:288
+#: modules/contrib/hivelog/src/Form/HivelogInspectionFilterForm.php:87
+#: modules/contrib/hivelog/src/Form/HivelogQueenObservationFilterForm.php:104
+msgid "No"
+msgstr "Nej"
+#: modules/contrib/hivelog/src/HiveListBuilder.php:19
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:187
+#: modules/contrib/hivelog/src/Controller/HiveController.php:447;536
+#: modules/contrib/hivelog/src/Entity/Queen.php:163
+#: modules/contrib/hivelog/src/Form/HivelogHiveFilterForm.php:82
+msgid "Breed"
+msgstr "Race"
+#: modules/contrib/hivelog/src/InventoryItemListBuilder.php:59
+#: modules/contrib/hivelog/src/ProductListBuilder.php:55
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:483;594
+#: modules/contrib/hivelog/src/Controller/CalendarActionController.php:193;292
+#: modules/contrib/hivelog/src/Entity/InventoryItem.php:312
+#: modules/contrib/hivelog/src/Entity/Product.php:115
+msgid "Unit"
+msgstr "Enhed"
+#: modules/contrib/hivelog/src/InventoryItemListBuilder.php:60
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:484
+#: modules/contrib/hivelog/src/Controller/InventoryReportController.php:144
+#: modules/contrib/hivelog/src/Entity/InventoryItem.php:329
+msgid "Type"
+msgstr "Type"
+#: modules/contrib/hivelog/src/InventoryItemListBuilder.php:61
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:485
+#: modules/contrib/hivelog/src/Controller/InventoryItemController.php:92
+msgid "Stock on Hand"
+msgstr "Beholdning"
+#: modules/contrib/hivelog/src/InventoryItemListBuilder.php:169
+msgid "View Purchases"
+msgstr "Se indkøb"
+#: modules/contrib/hivelog/src/InventoryPurchaseListBuilder.php:52
+#: modules/contrib/hivelog/src/Controller/CalendarActionController.php:191
+#: modules/contrib/hivelog/src/Controller/InventoryReportController.php:144
+#: modules/contrib/hivelog/src/Entity/CalendarActionItemRequirement.php:124
+#: modules/contrib/hivelog/src/Entity/InventoryPurchase.php:152
+#: modules/contrib/hivelog/src/Entity/InventoryUsage.php:114
+msgid "Item"
+msgstr "Vare"
+#: modules/contrib/hivelog/src/InventoryPurchaseListBuilder.php:55
+#: modules/contrib/hivelog/src/Controller/CalendarActionController.php:192;291
+#: modules/contrib/hivelog/src/Controller/InventoryReportController.php:144
+#: modules/contrib/hivelog/src/Entity/CalendarActionItemRequirement.php:141
+#: modules/contrib/hivelog/src/Entity/CalendarActionProductYield.php:142
+#: modules/contrib/hivelog/src/Entity/HarvestYield.php:119
+#: modules/contrib/hivelog/src/Entity/InventoryPurchase.php:179
+#: modules/contrib/hivelog/src/Entity/InventoryUsage.php:126
+msgid "Quantity"
+msgstr "Mængde"
+#: modules/contrib/hivelog/src/InventoryPurchaseListBuilder.php:56
+#: modules/contrib/hivelog/src/Entity/InventoryPurchase.php:191
+msgid "Unit Price"
+msgstr "Enhedspris"
+#: modules/contrib/hivelog/src/InventoryPurchaseListBuilder.php:57
+#: modules/contrib/hivelog/src/Entity/InventoryPurchase.php:203
+msgid "Total Cost"
+msgstr "Samlet pris"
+#: modules/contrib/hivelog/src/InventoryPurchaseListBuilder.php:58
+#: modules/contrib/hivelog/src/Entity/InventoryPurchase.php:211
+msgid "Supplier"
+msgstr "Leverandør"
+#: modules/contrib/hivelog/src/InventoryPurchaseListBuilder.php:150
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:456
+msgid "Add Purchase"
+msgstr "Tilføj indkøb"
+#: modules/contrib/hivelog/src/InventoryPurchaseListBuilder.php:155
+msgid "View Inventory Items"
+msgstr "Se lagervarer"
+#: modules/contrib/hivelog/src/ProductListBuilder.php:56
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:595
+#: modules/contrib/hivelog/src/Entity/Product.php:132
+msgid "Expected Unit Price"
+msgstr "Forventet enhedspris"
+#: modules/contrib/hivelog/src/QueenListBuilder.php:48
+#: modules/contrib/hivelog/src/QueenObservationListBuilder.php:18
+#: modules/contrib/hivelog/src/Controller/HiveController.php:424;572;696
+#: modules/contrib/hivelog/src/Entity/Queen.php:34
+#: modules/contrib/hivelog/src/Entity/QueenObservation.php:88
+#: modules/contrib/hivelog/src/Form/HivelogQueenObservationFilterForm.php:120
+msgid "Queen"
+msgstr "Dronning"
+#: modules/contrib/hivelog/src/QueenListBuilder.php:49
+#: modules/contrib/hivelog/src/Controller/HiveController.php:448
+msgid "Colour"
+msgstr "Farve"
+#: modules/contrib/hivelog/src/QueenListBuilder.php:51
+#: modules/contrib/hivelog/src/Controller/HiveController.php:450;536
+msgid "Introduced"
+msgstr "Indført"
+#: modules/contrib/hivelog/src/QueenObservationListBuilder.php:19
+#: modules/contrib/hivelog/src/Controller/HiveController.php:697
+#: modules/contrib/hivelog/src/Controller/QueenController.php:161
+#: modules/contrib/hivelog/src/Entity/QueenObservation.php:106
+#: modules/contrib/hivelog/src/Form/HivelogQueenObservationFilterForm.php:86
+msgid "Health"
+msgstr "Sundhed"
+#: modules/contrib/hivelog/src/QueenObservationListBuilder.php:20
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:188
+#: modules/contrib/hivelog/src/Controller/HiveController.php:575;698
+#: modules/contrib/hivelog/src/Controller/QueenController.php:162
+#: modules/contrib/hivelog/src/Entity/Hive.php:181
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:257
+#: modules/contrib/hivelog/src/Entity/Queen.php:178
+#: modules/contrib/hivelog/src/Entity/QueenObservation.php:119
+#: modules/contrib/hivelog/src/Form/HivelogHiveFilterForm.php:89
+#: modules/contrib/hivelog/src/Form/HivelogQueenObservationFilterForm.php:93
+msgid "Temperament"
+msgstr "Temperament"
+#: modules/contrib/hivelog/src/QueenObservationListBuilder.php:21
+#: modules/contrib/hivelog/src/Controller/HiveController.php:699
+#: modules/contrib/hivelog/src/Controller/QueenController.php:163
+#: modules/contrib/hivelog/src/Entity/QueenObservation.php:131
+#: modules/contrib/hivelog/src/Form/HivelogQueenObservationFilterForm.php:100
+msgid "Active"
+msgstr "Aktiv"
+#: modules/contrib/hivelog/src/Breadcrumb/HivelogBreadcrumbBuilder.php:79
+msgid "Home"
+msgstr "Forside"
+#: modules/contrib/hivelog/src/Controller/ApiaryActionLogController.php:112
+#: modules/contrib/hivelog/src/Controller/CalendarActionController.php:93
+#: modules/contrib/hivelog/src/Controller/HiveActionLogController.php:109
+#: modules/contrib/hivelog/src/Controller/HiveInspectionController.php:89
+#: modules/contrib/hivelog/src/Controller/InventoryItemController.php:63
+#: modules/contrib/hivelog/src/Controller/InventoryPurchaseController.php:73
+#: modules/contrib/hivelog/src/Controller/ProductController.php:63
+#: modules/contrib/hivelog/src/Controller/QueenController.php:99
+#: modules/contrib/hivelog/src/Controller/QueenObservationController.php:88
+#: modules/contrib/hivelog/src/Form/ApiaryActionLogForm.php:44
+#: modules/contrib/hivelog/src/Form/CalendarActionForm.php:33
+#: modules/contrib/hivelog/src/Form/HiveActionLogForm.php:67
+#: modules/contrib/hivelog/src/Form/HiveForm.php:31
+#: modules/contrib/hivelog/src/Form/HiveInspectionForm.php:37
+#: modules/contrib/hivelog/src/Form/InventoryItemForm.php:33
+#: modules/contrib/hivelog/src/Form/InventoryPurchaseForm.php:46
+#: modules/contrib/hivelog/src/Form/QueenObservationForm.php:37
+msgid "Overview"
+msgstr "Oversigt"
+#: modules/contrib/hivelog/src/Controller/ApiaryActionLogController.php:118
+#: modules/contrib/hivelog/src/Controller/HiveActionLogController.php:115
+#: modules/contrib/hivelog/src/Form/ApiaryActionLogForm.php:50
+#: modules/contrib/hivelog/src/Form/HiveActionLogForm.php:73
+msgid "Details"
+msgstr "Detaljer"
+#: modules/contrib/hivelog/src/Controller/ApiaryActionLogController.php:183
+#: modules/contrib/hivelog/src/Controller/CalendarActionController.php:378
+#: modules/contrib/hivelog/src/Controller/HiveActionLogController.php:185
+#: modules/contrib/hivelog/src/Controller/HiveController.php:442
+#: modules/contrib/hivelog/src/Controller/HiveInspectionController.php:254
+#: modules/contrib/hivelog/src/Controller/InventoryItemController.php:159
+#: modules/contrib/hivelog/src/Controller/InventoryPurchaseController.php:158
+#: modules/contrib/hivelog/src/Controller/ProductController.php:130
+#: modules/contrib/hivelog/src/Controller/QueenController.php:283
+#: modules/contrib/hivelog/src/Controller/QueenObservationController.php:225
+msgid "Field"
+msgstr "Felt"
+#: modules/contrib/hivelog/src/Controller/ApiaryActionLogController.php:184
+#: modules/contrib/hivelog/src/Controller/CalendarActionController.php:379
+#: modules/contrib/hivelog/src/Controller/HiveActionLogController.php:186
+#: modules/contrib/hivelog/src/Controller/HiveController.php:442
+#: modules/contrib/hivelog/src/Controller/HiveInspectionController.php:255
+#: modules/contrib/hivelog/src/Controller/InventoryItemController.php:160
+#: modules/contrib/hivelog/src/Controller/InventoryPurchaseController.php:159
+#: modules/contrib/hivelog/src/Controller/ProductController.php:131
+#: modules/contrib/hivelog/src/Controller/QueenController.php:284
+#: modules/contrib/hivelog/src/Controller/QueenObservationController.php:226
+msgid "Value"
+msgstr "Værdi"
+#: modules/contrib/hivelog/src/Controller/ApiaryActionLogController.php:225;234
+#: modules/contrib/hivelog/src/Controller/CalendarActionController.php:420;427
+#: modules/contrib/hivelog/src/Controller/HiveActionLogController.php:227;237
+#: modules/contrib/hivelog/src/Controller/HiveInspectionController.php:296;304
+#: modules/contrib/hivelog/src/Controller/InventoryItemController.php:201;208
+#: modules/contrib/hivelog/src/Controller/InventoryPurchaseController.php:200;208
+#: modules/contrib/hivelog/src/Controller/ProductController.php:172;179
+#: modules/contrib/hivelog/src/Controller/QueenController.php:325;333
+#: modules/contrib/hivelog/src/Controller/QueenObservationController.php:267;275
+msgid "—"
+msgstr "—"
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:190;311;487;597;777
+#: modules/contrib/hivelog/src/Controller/CalendarActionController.php:194;293
+#: modules/contrib/hivelog/src/Controller/HiveController.php:227;577;700
+#: modules/contrib/hivelog/src/Controller/QueenController.php:164
+msgid "Operations"
+msgstr "Handlinger"
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:229
+msgid "No hives match the current filters."
+msgstr "Ingen bistader matcher de aktuelle filtre."
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:230
+msgid "No hives have been added to this apiary yet."
+msgstr "Der er endnu ikke tilføjet bistader til denne bigård."
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:269
+#: modules/contrib/hivelog/src/Controller/HiveController.php:197
+msgid "Seasonal Calendar (current week: @week)"
+msgstr "Sæsonkalender (aktuel uge: @week)"
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:279
+#: modules/contrib/hivelog/src/Controller/HiveController.php:204
+msgid "View Full Calendar"
+msgstr "Se hele kalenderen"
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:310
+#: modules/contrib/hivelog/src/Controller/HiveController.php:226
+#: modules/contrib/hivelog/src/Controller/HiveInspectionController.php:123
+#: modules/contrib/hivelog/src/Controller/InventoryPurchaseController.php:84
+#: modules/contrib/hivelog/src/Controller/QueenController.php:117
+#: modules/contrib/hivelog/src/Controller/QueenObservationController.php:98
+#: modules/contrib/hivelog/src/Entity/Apiary.php:203
+#: modules/contrib/hivelog/src/Entity/ApiaryActionLog.php:200
+#: modules/contrib/hivelog/src/Entity/Hive.php:233
+#: modules/contrib/hivelog/src/Entity/HiveActionLog.php:195
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:475
+#: modules/contrib/hivelog/src/Entity/InventoryPurchase.php:220
+#: modules/contrib/hivelog/src/Entity/Queen.php:234
+#: modules/contrib/hivelog/src/Entity/QueenObservation.php:144
+#: modules/contrib/hivelog/src/Form/HiveInspectionForm.php:79
+#: modules/contrib/hivelog/src/Form/InventoryPurchaseForm.php:64
+#: modules/contrib/hivelog/src/Form/QueenForm.php:49
+msgid "Notes"
+msgstr "Noter"
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:315
+#: modules/contrib/hivelog/src/Controller/HiveController.php:231
+#: modules/contrib/hivelog/src/Form/HivelogCalendarFilterForm.php:82
+msgid "Unreported"
+msgstr "Ikke rapporteret"
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:316
+#: modules/contrib/hivelog/src/Controller/HiveController.php:232
+#: modules/contrib/hivelog/src/Form/HivelogCalendarFilterForm.php:83
+msgid "Done"
+msgstr "Udført"
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:317
+#: modules/contrib/hivelog/src/Controller/HiveController.php:233
+#: modules/contrib/hivelog/src/Form/HivelogCalendarFilterForm.php:84
+msgid "Ignored"
+msgstr "Ignoreret"
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:341
+#: modules/contrib/hivelog/src/Controller/HiveController.php:257
+msgid "@status (@timing)"
+msgstr "@status (@timing)"
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:355
+#: modules/contrib/hivelog/src/Controller/HiveController.php:271
+msgid "Report Done"
+msgstr "Rapportér som udført"
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:363
+#: modules/contrib/hivelog/src/Controller/HiveController.php:279
+msgid "Report Ignored"
+msgstr "Rapportér som ignoreret"
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:379
+#: modules/contrib/hivelog/src/Controller/HiveController.php:295
+msgid "View Log"
+msgstr "Se log"
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:429
+msgid "Inventory"
+msgstr "Lager"
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:439
+msgid "View Financial Report"
+msgstr "Se økonomirapport"
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:514
+#: modules/contrib/hivelog/src/Controller/InventoryItemController.php:84
+msgid "@stock (Low Stock)"
+msgstr "@stock (lav beholdning)"
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:536
+msgid "No inventory items have been added to this apiary yet."
+msgstr "Der er endnu ikke tilføjet lagervarer til denne bigård."
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:637
+msgid "No products have been added to this apiary yet."
+msgstr "Der er endnu ikke tilføjet produkter til denne bigård."
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:848;1190
+#: modules/contrib/hivelog/src/Controller/HiveController.php:1035
+msgid "No calendar actions match the current filters."
+msgstr "Ingen kalenderhandlinger matcher de aktuelle filtre."
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:849
+msgid "No calendar actions have been added to this apiary yet."
+msgstr "Der er endnu ikke tilføjet kalenderhandlinger til denne bigård."
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:947
+msgid "Full Calendar: @apiary"
+msgstr "Hele kalenderen: @apiary"
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:1181
+msgid "This apiary has no apiary-scoped calendar actions set up yet."
+msgstr "Denne bigård har endnu ingen kalenderhandlinger på bigårdsniveau."
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:1185
+msgid "No pending seasonal actions for this apiary."
+msgstr "Ingen udestående sæsonhandlinger for denne bigård."
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:1186
+msgid "No actions have been reported as done for this apiary."
+msgstr "Ingen handlinger er rapporteret som udført for denne bigård."
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:1187
+msgid "No actions have been reported as ignored for this apiary."
+msgstr "Ingen handlinger er rapporteret som ignoreret for denne bigård."
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:1217
+#: modules/contrib/hivelog/src/Controller/HiveController.php:1062
+msgid "Upcoming"
+msgstr "Kommende"
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:1220
+#: modules/contrib/hivelog/src/Controller/HiveController.php:1065
+msgid "Overdue"
+msgstr "Overskredet"
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:1222
+#: modules/contrib/hivelog/src/Controller/HiveController.php:1067
+msgid "Due now"
+msgstr "Forfalder nu"
+#: modules/contrib/hivelog/src/Controller/CalendarActionController.php:100
+#: modules/contrib/hivelog/src/Form/CalendarActionForm.php:39
+msgid "Schedule"
+msgstr "Tidsplan"
+#: modules/contrib/hivelog/src/Controller/CalendarActionController.php:105
+#: modules/contrib/hivelog/src/Entity/CalendarAction.php:478
+#: modules/contrib/hivelog/src/Form/CalendarActionForm.php:45
+msgid "Description"
+msgstr "Beskrivelse"
+#: modules/contrib/hivelog/src/Controller/CalendarActionController.php:218
+#: modules/contrib/hivelog/src/Entity/CalendarActionItemRequirement.php:75
+#: modules/contrib/hivelog/src/Entity/InventoryPurchase.php:77
+#: modules/contrib/hivelog/src/Entity/InventoryUsage.php:67
+msgid "Unknown item"
+msgstr "Ukendt vare"
+#: modules/contrib/hivelog/src/Controller/CalendarActionController.php:234
+msgid "Required Items"
+msgstr "Påkrævede varer"
+#: modules/contrib/hivelog/src/Controller/CalendarActionController.php:254
+msgid "No required items have been recorded for this calendar action yet."
+msgstr "Der er endnu ikke registreret påkrævede varer for denne kalenderhandling."
+#: modules/contrib/hivelog/src/Controller/CalendarActionController.php:290
+#: modules/contrib/hivelog/src/Entity/CalendarActionProductYield.php:125
+#: modules/contrib/hivelog/src/Entity/HarvestYield.php:107
+#: modules/contrib/hivelog/src/Entity/Product.php:37
+msgid "Product"
+msgstr "Produkt"
+#: modules/contrib/hivelog/src/Controller/CalendarActionController.php:317
+#: modules/contrib/hivelog/src/Entity/CalendarActionProductYield.php:76
+#: modules/contrib/hivelog/src/Entity/HarvestYield.php:66
+msgid "Unknown product"
+msgstr "Ukendt produkt"
+#: modules/contrib/hivelog/src/Controller/CalendarActionController.php:333
+msgid "Expected Yield"
+msgstr "Forventet udbytte"
+#: modules/contrib/hivelog/src/Controller/CalendarActionController.php:353
+msgid "No expected yield has been recorded for this calendar action yet."
+msgstr "Der er endnu ikke registreret forventet udbytte for denne kalenderhandling."
+#: modules/contrib/hivelog/src/Controller/HiveController.php:152
+msgid "Hive Activity"
+msgstr "Stadeaktivitet"
+#: modules/contrib/hivelog/src/Controller/HiveController.php:302
+msgid "View Inspection"
+msgstr "Se eftersyn"
+#: modules/contrib/hivelog/src/Controller/HiveController.php:433;438;449;450;515;522
+msgid "Not set"
+msgstr "Ikke angivet"
+#: modules/contrib/hivelog/src/Controller/HiveController.php:446;536
+#: modules/contrib/hivelog/src/Entity/Queen.php:124
+msgid "Queen ID"
+msgstr "Dronning-id"
+#: modules/contrib/hivelog/src/Controller/HiveController.php:468
+msgid "No active queen is recorded for this hive."
+msgstr "Der er ingen aktiv dronning registreret for dette bistade."
+#: modules/contrib/hivelog/src/Controller/HiveController.php:532
+msgid "Previous Queens"
+msgstr "Tidligere dronninger"
+#: modules/contrib/hivelog/src/Controller/HiveController.php:573
+msgid "Brood"
+msgstr "Yngel"
+#: modules/contrib/hivelog/src/Controller/HiveController.php:576
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:277
+msgid "Population"
+msgstr "Bestand"
+#: modules/contrib/hivelog/src/Controller/HiveController.php:643
+msgid "No inspections match the current filters."
+msgstr "Ingen eftersyn matcher de aktuelle filtre."
+#: modules/contrib/hivelog/src/Controller/HiveController.php:644
+msgid "No inspections have been recorded for this hive yet."
+msgstr "Der er endnu ikke registreret eftersyn for dette bistade."
+#: modules/contrib/hivelog/src/Controller/HiveController.php:750
+#: modules/contrib/hivelog/src/Controller/QueenController.php:138
+msgid "Add Observation"
+msgstr "Tilføj observation"
+#: modules/contrib/hivelog/src/Controller/HiveController.php:770
+msgid "No queen observations match the current filters."
+msgstr "Ingen dronningobservationer matcher de aktuelle filtre."
+#: modules/contrib/hivelog/src/Controller/HiveController.php:771
+msgid "No queen observations have been recorded for this hive yet."
+msgstr "Der er endnu ikke registreret dronningobservationer for dette bistade."
+#: modules/contrib/hivelog/src/Controller/HiveController.php:1026
+msgid "This apiary has no calendar actions set up yet."
+msgstr "Denne bigård har endnu ingen kalenderhandlinger."
+#: modules/contrib/hivelog/src/Controller/HiveController.php:1030
+msgid "No pending seasonal actions for this hive."
+msgstr "Ingen udestående sæsonhandlinger for dette bistade."
+#: modules/contrib/hivelog/src/Controller/HiveController.php:1031
+msgid "No actions have been reported as done for this hive."
+msgstr "Ingen handlinger er rapporteret som udført for dette bistade."
+#: modules/contrib/hivelog/src/Controller/HiveController.php:1032
+msgid "No actions have been reported as ignored for this hive."
+msgstr "Ingen handlinger er rapporteret som ignoreret for dette bistade."
+#: modules/contrib/hivelog/src/Controller/HiveController.php:1221
+#: modules/contrib/hivelog/src/Entity/Hive.php:215
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:447
+#: modules/contrib/hivelog/src/Entity/QueenObservation.php:155
+msgid "Pictures"
+msgstr "Billeder"
+#: modules/contrib/hivelog/src/Controller/HiveController.php:1367;1374
+msgid "Inspection weights for @year"
+msgstr "Eftersynsvægte for @year"
+#: modules/contrib/hivelog/src/Controller/HiveInspectionController.php:94
+#: modules/contrib/hivelog/src/Form/HiveInspectionForm.php:43
+msgid "External check"
+msgstr "Udvendig kontrol"
+#: modules/contrib/hivelog/src/Controller/HiveInspectionController.php:97
+#: modules/contrib/hivelog/src/Form/HiveInspectionForm.php:49
+msgid "Queen status"
+msgstr "Dronningstatus"
+#: modules/contrib/hivelog/src/Controller/HiveInspectionController.php:102
+#: modules/contrib/hivelog/src/Form/HiveInspectionForm.php:55
+msgid "Brood, honey and pollen"
+msgstr "Yngel, honning og pollen"
+#: modules/contrib/hivelog/src/Controller/HiveInspectionController.php:107
+#: modules/contrib/hivelog/src/Form/HiveInspectionForm.php:61
+msgid "Colony condition"
+msgstr "Bifamiliens tilstand"
+#: modules/contrib/hivelog/src/Controller/HiveInspectionController.php:111
+#: modules/contrib/hivelog/src/Form/HiveInspectionForm.php:67
+msgid "Varroa and disease"
+msgstr "Varroa og sygdom"
+#: modules/contrib/hivelog/src/Controller/HiveInspectionController.php:116
+#: modules/contrib/hivelog/src/Form/HiveInspectionForm.php:73
+msgid "Management"
+msgstr "Håndtering"
+#: modules/contrib/hivelog/src/Controller/HiveInspectionController.php:192
+#: modules/contrib/hivelog/src/Controller/QueenObservationController.php:196
+#: modules/contrib/hivelog/src/Form/HiveInspectionForm.php:85
+msgid "Photos"
+msgstr "Fotos"
+#: modules/contrib/hivelog/src/Controller/InventoryItemController.php:70
+#: modules/contrib/hivelog/src/Form/InventoryItemForm.php:39
+msgid "Type & Depreciation"
+msgstr "Type og afskrivning"
+#: modules/contrib/hivelog/src/Controller/InventoryItemController.php:82
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:67
+#: modules/contrib/hivelog/src/Entity/QueenObservation.php:73
+msgid "Unknown"
+msgstr "Ukendt"
+#: modules/contrib/hivelog/src/Controller/InventoryPurchaseController.php:78
+#: modules/contrib/hivelog/src/Form/InventoryPurchaseForm.php:52
+msgid "Cost"
+msgstr "Pris"
+#: modules/contrib/hivelog/src/Controller/InventoryPurchaseController.php:94
+#: modules/contrib/hivelog/src/Form/InventoryPurchaseForm.php:58
+msgid "Disposal"
+msgstr "Kassation"
+#: modules/contrib/hivelog/src/Controller/InventoryReportController.php:88;182
+msgid "Total consumable cost"
+msgstr "Samlet pris for forbrugsvarer"
+#: modules/contrib/hivelog/src/Controller/InventoryReportController.php:89;183
+msgid "Total active depreciation"
+msgstr "Samlet aktiv afskrivning"
+#: modules/contrib/hivelog/src/Controller/InventoryReportController.php:90;184
+msgid "Total cost"
+msgstr "Samlet pris"
+#: modules/contrib/hivelog/src/Controller/InventoryReportController.php:91;185
+msgid "Total potential income"
+msgstr "Samlet potentiel indtægt"
+#: modules/contrib/hivelog/src/Controller/InventoryReportController.php:92;186
+msgid "Net"
+msgstr "Netto"
+#: modules/contrib/hivelog/src/Controller/InventoryReportController.php:111
+msgid "Consumable"
+msgstr "Forbrugsvare"
+#: modules/contrib/hivelog/src/Controller/InventoryReportController.php:119
+msgid "Durable"
+msgstr "Varigt materiel"
+#: modules/contrib/hivelog/src/Controller/InventoryReportController.php:127
+msgid "Yield"
+msgstr "Udbytte"
+#: modules/contrib/hivelog/src/Controller/InventoryReportController.php:140
+msgid "Breakdown by item"
+msgstr "Fordeling pr. vare"
+#: modules/contrib/hivelog/src/Controller/InventoryReportController.php:144
+msgid "Amount"
+msgstr "Beløb"
+#: modules/contrib/hivelog/src/Controller/InventoryReportController.php:146
+msgid "No inventory cost, depreciation, or yield recorded for @year."
+msgstr "Ingen lageromkostninger, afskrivninger eller udbytte registreret for @year."
+#: modules/contrib/hivelog/src/Controller/InventoryReportController.php:176
+msgid "5-Year Trend"
+msgstr "5-års-tendens"
+#: modules/contrib/hivelog/src/Controller/InventoryReportController.php:206
+msgid "Apiary Financial Report: @apiary"
+msgstr "Økonomirapport for bigård: @apiary"
+#: modules/contrib/hivelog/src/Controller/QueenController.php:105
+#: modules/contrib/hivelog/src/Form/QueenForm.php:31
+msgid "Identity"
+msgstr "Identitet"
+#: modules/contrib/hivelog/src/Controller/QueenController.php:112
+msgid "Acquisition"
+msgstr "Anskaffelse"
+#: modules/contrib/hivelog/src/Controller/QueenController.php:131
+#: modules/contrib/hivelog/src/Controller/QueenObservationController.php:93
+msgid "Observations"
+msgstr "Observationer"
+#: modules/contrib/hivelog/src/Controller/QueenController.php:203
+msgid "No observations have been recorded for this queen yet."
+msgstr "Der er endnu ikke registreret observationer for denne dronning."
+#: modules/contrib/hivelog/src/Entity/Apiary.php:137
+msgid "The name of the apiary."
+msgstr "Bigårdens navn."
+#: modules/contrib/hivelog/src/Entity/Apiary.php:149
+msgid "Address or description of the apiary location."
+msgstr "Adresse på eller beskrivelse af bigårdens placering."
+#: modules/contrib/hivelog/src/Entity/Apiary.php:161
+msgid "Geolocation"
+msgstr "Geolokation"
+#: modules/contrib/hivelog/src/Entity/Apiary.php:162
+msgid "GPS coordinates of the apiary. Click or drag the marker on the map to set the location."
+msgstr "Bigårdens GPS-koordinater. Klik på eller træk markøren på kortet for at angive placeringen."
+#: modules/contrib/hivelog/src/Entity/Apiary.php:204
+msgid "General notes about the apiary."
+msgstr "Generelle noter om bigården."
+#: modules/contrib/hivelog/src/Entity/Apiary.php:216
+msgid "Beekeepers"
+msgstr "Biavlere"
+#: modules/contrib/hivelog/src/Entity/Apiary.php:217
+msgid "Users who are approved to manage hives and record inspections in this apiary. The apiary owner always has full access and does not need to be listed here."
+msgstr "Brugere, der er godkendt til at administrere bistader og registrere eftersyn i denne bigård. Bigårdens ejer har altid fuld adgang og behøver ikke at stå på listen her."
+#: modules/contrib/hivelog/src/Entity/Apiary.php:232
+msgid "Visibility"
+msgstr "Synlighed"
+#: modules/contrib/hivelog/src/Entity/Apiary.php:233
+msgid "Controls whether non-members can view this apiary and its hives. Private apiaries are only visible to the owner and approved beekeepers."
+msgstr "Styrer, om ikke-medlemmer kan se denne bigård og dens bistader. Private bigårde er kun synlige for ejeren og godkendte biavlere."
+#: modules/contrib/hivelog/src/Entity/Apiary.php:249
+msgid "The user who owns this apiary."
+msgstr "Brugeren, der ejer denne bigård."
+#: modules/contrib/hivelog/src/Entity/Apiary.php:262
+#: modules/contrib/hivelog/src/Entity/ApiaryActionLog.php:228
+#: modules/contrib/hivelog/src/Entity/CalendarAction.php:627
+#: modules/contrib/hivelog/src/Entity/CalendarActionItemRequirement.php:163
+#: modules/contrib/hivelog/src/Entity/CalendarActionProductYield.php:164
+#: modules/contrib/hivelog/src/Entity/HarvestYield.php:163
+#: modules/contrib/hivelog/src/Entity/Hive.php:256
+#: modules/contrib/hivelog/src/Entity/HiveActionLog.php:239
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:508
+#: modules/contrib/hivelog/src/Entity/InventoryItem.php:415
+#: modules/contrib/hivelog/src/Entity/InventoryPurchase.php:263
+#: modules/contrib/hivelog/src/Entity/InventoryUsage.php:170
+#: modules/contrib/hivelog/src/Entity/Product.php:182
+#: modules/contrib/hivelog/src/Entity/Queen.php:251
+#: modules/contrib/hivelog/src/Entity/QueenObservation.php:183
+msgid "Created"
+msgstr "Oprettet"
+#: modules/contrib/hivelog/src/Entity/Apiary.php:263
+msgid "The time the apiary was created."
+msgstr "Tidspunktet, hvor bigården blev oprettet."
+#: modules/contrib/hivelog/src/Entity/Apiary.php:266
+#: modules/contrib/hivelog/src/Entity/ApiaryActionLog.php:232
+#: modules/contrib/hivelog/src/Entity/CalendarAction.php:631
+#: modules/contrib/hivelog/src/Entity/CalendarActionItemRequirement.php:167
+#: modules/contrib/hivelog/src/Entity/CalendarActionProductYield.php:168
+#: modules/contrib/hivelog/src/Entity/HarvestYield.php:167
+#: modules/contrib/hivelog/src/Entity/Hive.php:260
+#: modules/contrib/hivelog/src/Entity/HiveActionLog.php:243
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:512
+#: modules/contrib/hivelog/src/Entity/InventoryItem.php:419
+#: modules/contrib/hivelog/src/Entity/InventoryPurchase.php:267
+#: modules/contrib/hivelog/src/Entity/InventoryUsage.php:174
+#: modules/contrib/hivelog/src/Entity/Product.php:186
+#: modules/contrib/hivelog/src/Entity/Queen.php:254
+#: modules/contrib/hivelog/src/Entity/QueenObservation.php:186
+msgid "Changed"
+msgstr "Ændret"
+#: modules/contrib/hivelog/src/Entity/Apiary.php:267
+msgid "The time the apiary was last updated."
+msgstr "Tidspunktet, hvor bigården sidst blev opdateret."
+#: modules/contrib/hivelog/src/Entity/Apiary.php:32
+msgid "apiary"
+msgstr "bigård"
+#: modules/contrib/hivelog/src/Entity/Apiary.php:33
+msgid "apiaries"
+msgstr "bigårde"
+#: modules/contrib/hivelog/src/Entity/Apiary.php:120
+msgid "Failed to seed the default starter calendar for apiary @id: @message"
+msgstr "Kunne ikke oprette startkalenderen for bigård @id: @message"
+#: modules/contrib/hivelog/src/Entity/ApiaryActionLog.php:84
+msgid "@action for @apiary (@year)"
+msgstr "@action for @apiary (@year)"
+#: modules/contrib/hivelog/src/Entity/ApiaryActionLog.php:86
+msgid "Unknown apiary"
+msgstr "Ukendt bigård"
+#: modules/contrib/hivelog/src/Entity/ApiaryActionLog.php:87
+#: modules/contrib/hivelog/src/Entity/HiveActionLog.php:82
+msgid "unknown year"
+msgstr "ukendt år"
+#: modules/contrib/hivelog/src/Entity/ApiaryActionLog.php:110
+msgid "The apiary this action was reported for."
+msgstr "Bigården, som denne handling blev rapporteret for."
+#: modules/contrib/hivelog/src/Entity/ApiaryActionLog.php:127
+#: modules/contrib/hivelog/src/Entity/HiveActionLog.php:122
+msgid "Which seasonal calendar action this log reports on."
+msgstr "Hvilken sæsonkalenderhandling denne log rapporterer om."
+#: modules/contrib/hivelog/src/Entity/ApiaryActionLog.php:144
+#: modules/contrib/hivelog/src/Entity/HiveActionLog.php:139
+msgid "Which annual occurrence of the calendar action this log is for."
+msgstr "Hvilken årlig forekomst af kalenderhandlingen denne log gælder."
+#: modules/contrib/hivelog/src/Entity/ApiaryActionLog.php:162
+#: modules/contrib/hivelog/src/Entity/HiveActionLog.php:157
+msgid "Pending means not yet reported. Done and ignored are the two reporting outcomes."
+msgstr "Udestående betyder endnu ikke rapporteret. Udført og ignoreret er de to rapporteringsresultater."
+#: modules/contrib/hivelog/src/Entity/ApiaryActionLog.php:184
+#: modules/contrib/hivelog/src/Entity/HiveActionLog.php:179
+msgid "Optional: the ISO-8601 week (1-53) this action was actually carried out. Typically left empty for \"ignored\"."
+msgstr "Valgfrit: den ISO-8601-uge (1-53), hvor denne handling faktisk blev udført. Typisk tom for \"ignoreret\"."
+#: modules/contrib/hivelog/src/Entity/ApiaryActionLog.php:201
+msgid "Free text: who did it, why an item was ignored, observations."
+msgstr "Fritekst: hvem der gjorde det, hvorfor noget blev ignoreret, observationer."
+#: modules/contrib/hivelog/src/Entity/ApiaryActionLog.php:218
+#: modules/contrib/hivelog/src/Entity/HiveActionLog.php:229
+msgid "Reported by"
+msgstr "Rapporteret af"
+#: modules/contrib/hivelog/src/Entity/ApiaryActionLog.php:219
+#: modules/contrib/hivelog/src/Entity/HiveActionLog.php:230
+msgid "The user who reported this action."
+msgstr "Brugeren, der rapporterede denne handling."
+#: modules/contrib/hivelog/src/Entity/ApiaryActionLog.php:229
+#: modules/contrib/hivelog/src/Entity/HiveActionLog.php:240
+msgid "The time the log was created."
+msgstr "Tidspunktet, hvor loggen blev oprettet."
+#: modules/contrib/hivelog/src/Entity/ApiaryActionLog.php:233
+#: modules/contrib/hivelog/src/Entity/HiveActionLog.php:244
+msgid "The time the log was last updated."
+msgstr "Tidspunktet, hvor loggen sidst blev opdateret."
+#: modules/contrib/hivelog/src/Entity/ApiaryActionLog.php:45
+#: modules/contrib/hivelog/src/Entity/HarvestYield.php:140
+#: modules/contrib/hivelog/src/Entity/InventoryUsage.php:147
+msgid "Apiary Action Log"
+msgstr "Bigårds-handlingslog"
+#: modules/contrib/hivelog/src/Entity/ApiaryActionLog.php:46
+msgid "Apiary Action Logs"
+msgstr "Bigårds-handlingslogge"
+#: modules/contrib/hivelog/src/Entity/ApiaryActionLog.php:47
+msgid "apiary action log"
+msgstr "bigårds-handlingslog"
+#: modules/contrib/hivelog/src/Entity/ApiaryActionLog.php:48
+msgid "apiary action logs"
+msgstr "bigårds-handlingslogge"
+#: modules/contrib/hivelog/src/Entity/CalendarAction.php:445
+msgid "The apiary this calendar action belongs to. Shared by every hive in the apiary."
+msgstr "Bigården, som denne kalenderhandling hører til. Deles af alle bistader i bigården."
+#: modules/contrib/hivelog/src/Entity/CalendarAction.php:462
+msgid "A short name for this action, e.g. \"Harvest Spring Honey\"."
+msgstr "Et kort navn for denne handling, f.eks. \"Høst forårshonning\"."
+#: modules/contrib/hivelog/src/Entity/CalendarAction.php:479
+msgid "The full description of the activity. Lines starting with \"- \" render as a bulleted list."
+msgstr "Den fulde beskrivelse af aktiviteten. Linjer, der begynder med \"- \", vises som en punktopstilling."
+#: modules/contrib/hivelog/src/Entity/CalendarAction.php:498
+msgid "An optional classification for this action."
+msgstr "En valgfri klassificering af denne handling."
+#: modules/contrib/hivelog/src/Entity/CalendarAction.php:523
+msgid "Week Start"
+msgstr "Startuge"
+#: modules/contrib/hivelog/src/Entity/CalendarAction.php:524
+msgid "The ISO-8601 week number (1-53) this action is due."
+msgstr "ISO-8601-ugenummeret (1-53), hvor denne handling forfalder."
+#: modules/contrib/hivelog/src/Entity/CalendarAction.php:541
+msgid "Week End"
+msgstr "Slutuge"
+#: modules/contrib/hivelog/src/Entity/CalendarAction.php:542
+msgid "Optional end of the ISO-8601 week window (1-53), if this action spans multiple weeks. Leave empty to treat it as a single week."
+msgstr "Valgfri slutning på ISO-8601-ugeintervallet (1-53), hvis handlingen strækker sig over flere uger. Lad feltet stå tomt for at behandle den som en enkelt uge."
+#: modules/contrib/hivelog/src/Entity/CalendarAction.php:558
+msgid "Recurring"
+msgstr "Gentagende"
+#: modules/contrib/hivelog/src/Entity/CalendarAction.php:559
+msgid "Whether this action recurs at the same week(s) every year."
+msgstr "Om denne handling gentages i samme uge(r) hvert år."
+#: modules/contrib/hivelog/src/Entity/CalendarAction.php:578
+msgid "Disabled actions are hidden from the apiary calendar and every hive checklist, but remain listed here for management."
+msgstr "Deaktiverede handlinger skjules fra bigårdskalenderen og alle stadelister, men vises fortsat her til administration."
+#: modules/contrib/hivelog/src/Entity/CalendarAction.php:597
+msgid "Hive-scoped actions are reported separately on every hive in the apiary. Apiary-scoped actions apply once for the whole apiary (e.g. registration renewal, site maintenance) and are reported on the apiary itself, not on any individual hive."
+msgstr "Handlinger på stadeniveau rapporteres separat på hvert bistade i bigården. Handlinger på bigårdsniveau gælder én gang for hele bigården (f.eks. fornyelse af registrering, vedligeholdelse af pladsen) og rapporteres på selve bigården, ikke på et enkelt bistade."
+#: modules/contrib/hivelog/src/Entity/CalendarAction.php:618
+msgid "The user who created this calendar action."
+msgstr "Brugeren, der oprettede denne kalenderhandling."
+#: modules/contrib/hivelog/src/Entity/CalendarAction.php:628
+msgid "The time the calendar action was created."
+msgstr "Tidspunktet, hvor kalenderhandlingen blev oprettet."
+#: modules/contrib/hivelog/src/Entity/CalendarAction.php:632
+msgid "The time the calendar action was last updated."
+msgstr "Tidspunktet, hvor kalenderhandlingen sidst blev opdateret."
+#: modules/contrib/hivelog/src/Entity/CalendarAction.php:38
+msgid "Calendar Actions"
+msgstr "Kalenderhandlinger"
+#: modules/contrib/hivelog/src/Entity/CalendarAction.php:39
+msgid "calendar action"
+msgstr "kalenderhandling"
+#: modules/contrib/hivelog/src/Entity/CalendarAction.php:40
+msgid "calendar actions"
+msgstr "kalenderhandlinger"
+#: modules/contrib/hivelog/src/Entity/CalendarActionItemRequirement.php:74
+msgid "@item × @quantity @unit"
+msgstr "@item × @quantity @unit"
+#: modules/contrib/hivelog/src/Entity/CalendarActionItemRequirement.php:108
+msgid "The calendar action this requirement belongs to."
+msgstr "Kalenderhandlingen, som dette krav hører til."
+#: modules/contrib/hivelog/src/Entity/CalendarActionItemRequirement.php:125
+msgid "The inventory item required."
+msgstr "Den påkrævede lagervare."
+#: modules/contrib/hivelog/src/Entity/CalendarActionItemRequirement.php:142
+msgid "How much of the item is typically needed — per hive for a hive-scoped action, per apiary for an apiary-scoped one — in the item's own unit."
+msgstr "Hvor meget af varen der typisk skal bruges — pr. bistade for en handling på stadeniveau, pr. bigård for en handling på bigårdsniveau — i varens egen enhed."
+#: modules/contrib/hivelog/src/Entity/CalendarActionItemRequirement.php:154
+msgid "The user who added this requirement."
+msgstr "Brugeren, der tilføjede dette krav."
+#: modules/contrib/hivelog/src/Entity/CalendarActionItemRequirement.php:164
+msgid "The time the requirement was created."
+msgstr "Tidspunktet, hvor kravet blev oprettet."
+#: modules/contrib/hivelog/src/Entity/CalendarActionItemRequirement.php:168
+msgid "The time the requirement was last updated."
+msgstr "Tidspunktet, hvor kravet sidst blev opdateret."
+#: modules/contrib/hivelog/src/Entity/CalendarActionItemRequirement.php:38
+msgid "Calendar Action Item Requirement"
+msgstr "Kalenderhandlings vareforbrug"
+#: modules/contrib/hivelog/src/Entity/CalendarActionItemRequirement.php:39
+msgid "Calendar Action Item Requirements"
+msgstr "Kalenderhandlingers vareforbrug"
+#: modules/contrib/hivelog/src/Entity/CalendarActionItemRequirement.php:40
+msgid "calendar action item requirement"
+msgstr "kalenderhandlings vareforbrug"
+#: modules/contrib/hivelog/src/Entity/CalendarActionItemRequirement.php:41
+msgid "calendar action item requirements"
+msgstr "kalenderhandlingers vareforbrug"
+#: modules/contrib/hivelog/src/Entity/CalendarActionProductYield.php:75
+msgid "@product × @quantity @unit"
+msgstr "@product × @quantity @unit"
+#: modules/contrib/hivelog/src/Entity/CalendarActionProductYield.php:109
+msgid "The calendar action this yield belongs to."
+msgstr "Kalenderhandlingen, som dette udbytte hører til."
+#: modules/contrib/hivelog/src/Entity/CalendarActionProductYield.php:126
+msgid "The product typically produced."
+msgstr "Produktet, der typisk fremstilles."
+#: modules/contrib/hivelog/src/Entity/CalendarActionProductYield.php:143
+msgid "How much of the product is typically produced — per hive for a hive-scoped action, per apiary for an apiary-scoped one — in the product's own unit."
+msgstr "Hvor meget af produktet der typisk fremstilles — pr. bistade for en handling på stadeniveau, pr. bigård for en handling på bigårdsniveau — i produktets egen enhed."
+#: modules/contrib/hivelog/src/Entity/CalendarActionProductYield.php:155
+msgid "The user who added this yield."
+msgstr "Brugeren, der tilføjede dette udbytte."
+#: modules/contrib/hivelog/src/Entity/CalendarActionProductYield.php:165
+msgid "The time the yield was created."
+msgstr "Tidspunktet, hvor udbyttet blev oprettet."
+#: modules/contrib/hivelog/src/Entity/CalendarActionProductYield.php:169
+msgid "The time the yield was last updated."
+msgstr "Tidspunktet, hvor udbyttet sidst blev opdateret."
+#: modules/contrib/hivelog/src/Entity/CalendarActionProductYield.php:39
+msgid "Calendar Action Product Yield"
+msgstr "Kalenderhandlings produktudbytte"
+#: modules/contrib/hivelog/src/Entity/CalendarActionProductYield.php:40
+msgid "Calendar Action Product Yields"
+msgstr "Kalenderhandlingers produktudbytte"
+#: modules/contrib/hivelog/src/Entity/CalendarActionProductYield.php:41
+msgid "calendar action product yield"
+msgstr "kalenderhandlings produktudbytte"
+#: modules/contrib/hivelog/src/Entity/CalendarActionProductYield.php:42
+msgid "calendar action product yields"
+msgstr "kalenderhandlingers produktudbytte"
+#: modules/contrib/hivelog/src/Entity/HarvestYield.php:65
+msgid "@product — @quantity @unit"
+msgstr "@product — @quantity @unit"
+#: modules/contrib/hivelog/src/Entity/HarvestYield.php:108
+msgid "The product that was actually produced."
+msgstr "Produktet, der faktisk blev fremstillet."
+#: modules/contrib/hivelog/src/Entity/HarvestYield.php:120
+msgid "How much of the product was actually produced, in the product's own unit."
+msgstr "Hvor meget af produktet der faktisk blev fremstillet, i produktets egen enhed."
+#: modules/contrib/hivelog/src/Entity/HarvestYield.php:129
+#: modules/contrib/hivelog/src/Entity/HiveActionLog.php:40
+#: modules/contrib/hivelog/src/Entity/InventoryUsage.php:136
+msgid "Hive Action Log"
+msgstr "Stade-handlingslog"
+#: modules/contrib/hivelog/src/Entity/HarvestYield.php:130
+msgid "The hive action log this yield was recorded against, if hive-scoped."
+msgstr "Stade-handlingsloggen, som dette udbytte blev registreret mod, hvis det er på stadeniveau."
+#: modules/contrib/hivelog/src/Entity/HarvestYield.php:141
+msgid "The apiary action log this yield was recorded against, if apiary-scoped."
+msgstr "Bigårds-handlingsloggen, som dette udbytte blev registreret mod, hvis det er på bigårdsniveau."
+#: modules/contrib/hivelog/src/Entity/HarvestYield.php:151
+msgid "Unit Price Snapshot"
+msgstr "Øjebliksbillede af enhedspris"
+#: modules/contrib/hivelog/src/Entity/HarvestYield.php:152
+msgid "The product's expected unit price at the time this yield was recorded. Never recalculated after creation."
+msgstr "Produktets forventede enhedspris på det tidspunkt, hvor udbyttet blev registreret. Genberegnes aldrig efter oprettelsen."
+#: modules/contrib/hivelog/src/Entity/HarvestYield.php:160
+msgid "The user who recorded this yield."
+msgstr "Brugeren, der registrerede dette udbytte."
+#: modules/contrib/hivelog/src/Entity/HarvestYield.php:164
+msgid "The time this yield record was created."
+msgstr "Tidspunktet, hvor udbyttеposten blev oprettet."
+#: modules/contrib/hivelog/src/Entity/HarvestYield.php:168
+msgid "The time this yield record was last updated."
+msgstr "Tidspunktet, hvor udbytteposten sidst blev opdateret."
+#: modules/contrib/hivelog/src/Entity/HarvestYield.php:39
+msgid "Harvest Yield"
+msgstr "Høstudbytte"
+#: modules/contrib/hivelog/src/Entity/HarvestYield.php:40
+msgid "Harvest Yields"
+msgstr "Høstudbytter"
+#: modules/contrib/hivelog/src/Entity/HarvestYield.php:41
+msgid "harvest yield record"
+msgstr "høstudbyttepost"
+#: modules/contrib/hivelog/src/Entity/HarvestYield.php:42
+msgid "harvest yield records"
+msgstr "høstudbytteposter"
+#: modules/contrib/hivelog/src/Entity/Hive.php:126
+msgid "Hive Name"
+msgstr "Stadenavn"
+#: modules/contrib/hivelog/src/Entity/Hive.php:127
+msgid "A name or identifier for the hive."
+msgstr "Et navn eller en identifikator for bistadet."
+#: modules/contrib/hivelog/src/Entity/Hive.php:139
+msgid "The apiary this hive belongs to."
+msgstr "Bigården, som dette bistade hører til."
+#: modules/contrib/hivelog/src/Entity/Hive.php:150
+msgid "Hive Type"
+msgstr "Stadetype"
+#: modules/contrib/hivelog/src/Entity/Hive.php:151
+msgid "The type of hive."
+msgstr "Bistadets type."
+#: modules/contrib/hivelog/src/Entity/Hive.php:167
+msgid "Hive Material"
+msgstr "Stademateriale"
+#: modules/contrib/hivelog/src/Entity/Hive.php:168
+msgid "The material the hive is made from."
+msgstr "Materialet, som bistadet er lavet af."
+#: modules/contrib/hivelog/src/Entity/Hive.php:182
+msgid "The general temperament of the colony."
+msgstr "Bifamiliens generelle temperament."
+#: modules/contrib/hivelog/src/Entity/Hive.php:197
+msgid "The current status of the hive."
+msgstr "Bistadets aktuelle status."
+#: modules/contrib/hivelog/src/Entity/Hive.php:216
+msgid "One or more pictures of the hive. The first picture is shown as a letterbox hero on the hive view page."
+msgstr "Et eller flere billeder af bistadet. Det første billede vises som et bredformatbillede øverst på bistadets visningsside."
+#: modules/contrib/hivelog/src/Entity/Hive.php:234
+msgid "General notes about the hive."
+msgstr "Generelle noter om bistadet."
+#: modules/contrib/hivelog/src/Entity/Hive.php:247
+msgid "The user who owns this hive."
+msgstr "Brugeren, der ejer dette bistade."
+#: modules/contrib/hivelog/src/Entity/Hive.php:257
+msgid "The time the hive was created."
+msgstr "Tidspunktet, hvor bistadet blev oprettet."
+#: modules/contrib/hivelog/src/Entity/Hive.php:261
+msgid "The time the hive was last updated."
+msgstr "Tidspunktet, hvor bistadet sidst blev opdateret."
+#: modules/contrib/hivelog/src/Entity/Hive.php:30
+msgid "hive"
+msgstr "bistade"
+#: modules/contrib/hivelog/src/Entity/Hive.php:31
+msgid "hives"
+msgstr "bistader"
+#: modules/contrib/hivelog/src/Entity/HiveActionLog.php:79
+msgid "@action for @hive (@year)"
+msgstr "@action for @hive (@year)"
+#: modules/contrib/hivelog/src/Entity/HiveActionLog.php:81
+msgid "Unknown hive"
+msgstr "Ukendt bistade"
+#: modules/contrib/hivelog/src/Entity/HiveActionLog.php:105
+msgid "The hive this action was reported for."
+msgstr "Bistadet, som denne handling blev rapporteret for."
+#: modules/contrib/hivelog/src/Entity/HiveActionLog.php:196
+msgid "Free text: product used, dose, why an item was ignored, observations."
+msgstr "Fritekst: anvendt produkt, dosis, hvorfor noget blev ignoreret, observationer."
+#: modules/contrib/hivelog/src/Entity/HiveActionLog.php:213
+msgid "Linked Inspection"
+msgstr "Tilknyttet eftersyn"
+#: modules/contrib/hivelog/src/Entity/HiveActionLog.php:214
+msgid "Set automatically when a \"done\" report also creates a hive inspection record. Never edited directly on this form."
+msgstr "Sættes automatisk, når en \"udført\"-rapport også opretter et stadeeftersyn. Redigeres aldrig direkte i denne formular."
+#: modules/contrib/hivelog/src/Entity/HiveActionLog.php:41
+msgid "Hive Action Logs"
+msgstr "Stade-handlingslogge"
+#: modules/contrib/hivelog/src/Entity/HiveActionLog.php:42
+msgid "hive action log"
+msgstr "stade-handlingslog"
+#: modules/contrib/hivelog/src/Entity/HiveActionLog.php:43
+msgid "hive action logs"
+msgstr "stade-handlingslogge"
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:68
+msgid "Inspection of @hive on @date"
+msgstr "Eftersyn af @hive den @date"
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:70
+#: modules/contrib/hivelog/src/Entity/InventoryPurchase.php:80
+#: modules/contrib/hivelog/src/Entity/QueenObservation.php:76
+msgid "unknown date"
+msgstr "ukendt dato"
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:83
+msgid "The hive being inspected."
+msgstr "Bistadet, der efterses."
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:99
+msgid "Inspection Date"
+msgstr "Eftersynsdato"
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:100
+msgid "The date of the inspection."
+msgstr "Datoen for eftersynet."
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:117
+msgid "External check (before opening)"
+msgstr "Udvendig kontrol (før åbning)"
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:118
+msgid "Observe flight activity at the entrance — steady traffic with pollen coming in is a good sign. Look for dead bees, signs of robbing, or wasps. Note the hive's weight by lifting the back slightly (hefting)."
+msgstr "Iagttag flyveaktiviteten ved flyvehullet — jævn trafik med pollen, der bæres ind, er et godt tegn. Hold øje med døde bier, tegn på røveri eller hvepse. Notér bistadets vægt ved at løfte let i bagenden (vejning i hånden)."
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:137
+msgid "Was the queen spotted during this inspection? You don't need to spot her every visit — evidence of her is enough. Look for eggs (single, upright in cell bottoms — confirms a laying queen within the last 3 days), young larvae, and a good brood pattern (solid, not patchy)."
+msgstr "Blev dronningen set under dette eftersyn? Du behøver ikke at se hende ved hvert besøg — tegn på hende er nok. Kig efter æg (enkeltvis, stående i bunden af cellerne — bekræfter en æglæggende dronning inden for de sidste 3 dage), unge larver og et godt yngelmønster (sammenhængende, ikke spredt)."
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:155
+msgid "Queen Cells"
+msgstr "Dronningceller"
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:156
+msgid "Were queen cells present? Look along bottom bars and frame faces. Swarm cells (bottom of frames, multiple) mean imminent swarming — act now. Supersedure cells (middle of frames, 1–3) mean they're replacing the queen. Play cups are normal and empty."
+msgstr "Var der dronningceller? Kig langs bundlisterne og tavlefladerne. Sværmceller (i bunden af tavlerne, flere) betyder forestående sværmning — grib ind nu. Omdronningsceller (midt på tavlerne, 1–3) betyder, at de er ved at skifte dronning. Spilkopper er normale og tomme."
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:174
+msgid "Eggs Seen"
+msgstr "Æg set"
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:175
+msgid "Were eggs visible (indicates queen is laying)?"
+msgstr "Var der synlige æg (tegn på, at dronningen lægger)?"
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:194
+msgid "Brood Pattern"
+msgstr "Yngelmønster"
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:195
+msgid "Quality of the brood pattern."
+msgstr "Yngelmønstrets kvalitet."
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:215
+msgid "Honey Stores"
+msgstr "Honninglager"
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:216
+msgid "Level of honey stores."
+msgstr "Niveau af honninglager."
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:236
+msgid "Pollen Stores"
+msgstr "Pollenlager"
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:237
+msgid "Level of pollen stores."
+msgstr "Niveau af pollenlager."
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:258
+msgid "Temperament observed during this inspection."
+msgstr "Temperament observeret under dette eftersyn."
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:278
+msgid "Strength of the colony population."
+msgstr "Bifamiliens styrke."
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:297
+msgid "Varroa Check"
+msgstr "Varroakontrol"
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:298
+msgid "Was a varroa mite check performed?"
+msgstr "Blev der udført en varroakontrol?"
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:316
+msgid "Varroa Count"
+msgstr "Varroaoptælling"
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:317
+msgid "Number of varroa mites found (if check was performed)."
+msgstr "Antal fundne varroamider (hvis kontrollen blev udført)."
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:332
+msgid "Disease Signs"
+msgstr "Sygdomstegn"
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:333
+msgid "Any signs of disease observed."
+msgstr "Eventuelle observerede sygdomstegn."
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:357
+msgid "Weight of the hive in kilograms."
+msgstr "Bistadets vægt i kilogram."
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:378
+msgid "Fed"
+msgstr "Fodret"
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:379
+msgid "Was the colony fed during this inspection?"
+msgstr "Blev bifamilien fodret under dette eftersyn?"
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:397
+msgid "Feed Type"
+msgstr "Fodertype"
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:398
+msgid "Type of feed given (e.g. sugar syrup, fondant)."
+msgstr "Type af foder givet (f.eks. sukkerlage, fondant)."
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:413
+msgid "Supers"
+msgstr "Honningmagasiner"
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:414
+msgid "Number of supers on the hive."
+msgstr "Antal honningmagasiner på bistadet."
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:429
+msgid "Action Taken"
+msgstr "Foretaget handling"
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:430
+msgid "Actions performed during the inspection."
+msgstr "Handlinger udført under eftersynet."
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:448
+msgid "Photos taken during this inspection."
+msgstr "Fotos taget under dette eftersyn."
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:476
+msgid "General observations and notes."
+msgstr "Generelle observationer og noter."
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:494
+msgid "The user who performed this inspection."
+msgstr "Brugeren, der udførte dette eftersyn."
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:509
+msgid "The time the inspection was recorded."
+msgstr "Tidspunktet, hvor eftersynet blev registreret."
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:513
+msgid "The time the inspection was last updated."
+msgstr "Tidspunktet, hvor eftersynet sidst blev opdateret."
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:28
+msgid "Hive Inspection"
+msgstr "Stadeeftersyn"
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:29
+msgid "Hive Inspections"
+msgstr "Stadeeftersyn"
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:30
+msgid "hive inspection"
+msgstr "stadeeftersyn"
+#: modules/contrib/hivelog/src/Entity/HiveInspection.php:31
+msgid "hive inspections"
+msgstr "stadeeftersyn"
+#: modules/contrib/hivelog/src/Entity/InventoryItem.php:257
+msgid "The apiary this inventory item belongs to."
+msgstr "Bigården, som denne lagervare hører til."
+#: modules/contrib/hivelog/src/Entity/InventoryItem.php:274
+msgid "A short name for this item, e.g. \"Granulated Sugar\" or \"Apivar Strips\"."
+msgstr "Et kort navn for denne vare, f.eks. \"Stødt sukker\" eller \"Apivar-strips\"."
+#: modules/contrib/hivelog/src/Entity/InventoryItem.php:291
+msgid "An optional classification for this item."
+msgstr "En valgfri klassificering af denne vare."
+#: modules/contrib/hivelog/src/Entity/InventoryItem.php:313
+msgid "The unit this item is measured in, e.g. \"kg\", \"L\", \"strip\", \"jar\", \"frame\". Pick one unit and use it consistently for this item — there is no unit conversion."
+msgstr "Enheden, som denne vare måles i, f.eks. \"kg\", \"L\", \"strip\", \"glas\", \"ramme\". Vælg én enhed og brug den konsekvent for denne vare — der er ingen enhedskonvertering."
+#: modules/contrib/hivelog/src/Entity/InventoryItem.php:330
+msgid "Consumable items (e.g. sugar) are used up and tracked via purchases and usage. Durable items (e.g. frames) are purchased once and depreciate over their useful life instead."
+msgstr "Forbrugsvarer (f.eks. sukker) bruges op og spores via indkøb og forbrug. Varigt materiel (f.eks. rammer) købes én gang og afskrives i stedet over dets levetid."
+#: modules/contrib/hivelog/src/Entity/InventoryItem.php:350
+msgid "Useful Life (years)"
+msgstr "Levetid (år)"
+#: modules/contrib/hivelog/src/Entity/InventoryItem.php:351
+msgid "Required for durable items: how many years this item is depreciated over."
+msgstr "Påkrævet for varigt materiel: hvor mange år varen afskrives over."
+#: modules/contrib/hivelog/src/Entity/InventoryItem.php:366
+msgid "Low Stock Threshold"
+msgstr "Grænse for lav beholdning"
+#: modules/contrib/hivelog/src/Entity/InventoryItem.php:367
+msgid "Optional, consumables only: get flagged as low stock once stock on hand falls to this level or below, in the item's own unit. Leave empty for no warning."
+msgstr "Valgfrit, kun for forbrugsvarer: markeres som lav beholdning, når beholdningen falder til dette niveau eller derunder, i varens egen enhed. Lad feltet stå tomt for ingen advarsel."
+#: modules/contrib/hivelog/src/Entity/InventoryItem.php:385
+msgid "Discontinued items are hidden from new purchase/requirement selection, but remain listed here for management."
+msgstr "Udgåede varer skjules fra valg ved nye indkøb/krav, men vises fortsat her til administration."
+#: modules/contrib/hivelog/src/Entity/InventoryItem.php:406
+msgid "The user who created this inventory item."
+msgstr "Brugeren, der oprettede denne lagervare."
+#: modules/contrib/hivelog/src/Entity/InventoryItem.php:416
+msgid "The time the inventory item was created."
+msgstr "Tidspunktet, hvor lagervaren blev oprettet."
+#: modules/contrib/hivelog/src/Entity/InventoryItem.php:420
+msgid "The time the inventory item was last updated."
+msgstr "Tidspunktet, hvor lagervaren sidst blev opdateret."
+#: modules/contrib/hivelog/src/Entity/InventoryItem.php:38
+msgid "Inventory Item"
+msgstr "Lagervare"
+#: modules/contrib/hivelog/src/Entity/InventoryItem.php:40
+msgid "inventory item"
+msgstr "lagervare"
+#: modules/contrib/hivelog/src/Entity/InventoryItem.php:41
+msgid "inventory items"
+msgstr "lagervarer"
+#: modules/contrib/hivelog/src/Entity/InventoryPurchase.php:76
+msgid "@item — @quantity @unit (@date)"
+msgstr "@item — @quantity @unit (@date)"
+#: modules/contrib/hivelog/src/Entity/InventoryPurchase.php:136
+msgid "The apiary this purchase was made for."
+msgstr "Bigården, som dette indkøb blev foretaget for."
+#: modules/contrib/hivelog/src/Entity/InventoryPurchase.php:153
+msgid "The inventory item that was purchased."
+msgstr "Lagervaren, der blev købt."
+#: modules/contrib/hivelog/src/Entity/InventoryPurchase.php:169
+#: modules/contrib/hivelog/src/Entity/Queen.php:200
+msgid "Purchase Date"
+msgstr "Indkøbsdato"
+#: modules/contrib/hivelog/src/Entity/InventoryPurchase.php:170
+msgid "The date this purchase was made."
+msgstr "Datoen, hvor dette indkøb blev foretaget."
+#: modules/contrib/hivelog/src/Entity/InventoryPurchase.php:180
+msgid "How much was bought, in the item's unit."
+msgstr "Hvor meget der blev købt, i varens enhed."
+#: modules/contrib/hivelog/src/Entity/InventoryPurchase.php:192
+msgid "Cost per unit at the time of this purchase."
+msgstr "Pris pr. enhed på tidspunktet for dette indkøb."
+#: modules/contrib/hivelog/src/Entity/InventoryPurchase.php:204
+msgid "Automatically calculated as quantity × unit price."
+msgstr "Beregnes automatisk som mængde × enhedspris."
+#: modules/contrib/hivelog/src/Entity/InventoryPurchase.php:212
+msgid "Optional: who this was bought from."
+msgstr "Valgfrit: hvem varen blev købt af."
+#: modules/contrib/hivelog/src/Entity/InventoryPurchase.php:221
+msgid "General notes about this purchase."
+msgstr "Generelle noter om dette indkøb."
+#: modules/contrib/hivelog/src/Entity/InventoryPurchase.php:232
+msgid "Disposal Date"
+msgstr "Kassationsdato"
+#: modules/contrib/hivelog/src/Entity/InventoryPurchase.php:233
+msgid "Optional, durable items only: the date this purchase was disposed of/retired/written off. Once set, it stops counting toward depreciation for years after it, even if still inside the useful-life window."
+msgstr "Valgfrit, kun for varigt materiel: datoen, hvor dette indkøb blev kasseret/udrangeret/afskrevet. Når den er sat, tæller den ikke længere med i afskrivningen for de efterfølgende år, selv om levetiden endnu ikke er udløbet."
+#: modules/contrib/hivelog/src/Entity/InventoryPurchase.php:241
+msgid "Disposal Reason"
+msgstr "Kassationsårsag"
+#: modules/contrib/hivelog/src/Entity/InventoryPurchase.php:242
+msgid "Optional: why/how this purchase was disposed of, e.g. broken, lost, retired early."
+msgstr "Valgfrit: hvorfor/hvordan dette indkøb blev kasseret, f.eks. ødelagt, mistet, udrangeret tidligt."
+#: modules/contrib/hivelog/src/Entity/InventoryPurchase.php:254
+msgid "The user who recorded this purchase."
+msgstr "Brugeren, der registrerede dette indkøb."
+#: modules/contrib/hivelog/src/Entity/InventoryPurchase.php:264
+msgid "The time the purchase record was created."
+msgstr "Tidspunktet, hvor indkøbsposten blev oprettet."
+#: modules/contrib/hivelog/src/Entity/InventoryPurchase.php:268
+msgid "The time the purchase record was last updated."
+msgstr "Tidspunktet, hvor indkøbsposten sidst blev opdateret."
+#: modules/contrib/hivelog/src/Entity/InventoryPurchase.php:36
+msgid "Inventory Purchase"
+msgstr "Lagerindkøb"
+#: modules/contrib/hivelog/src/Entity/InventoryPurchase.php:38
+msgid "inventory purchase"
+msgstr "lagerindkøb"
+#: modules/contrib/hivelog/src/Entity/InventoryPurchase.php:39
+msgid "inventory purchases"
+msgstr "lagerindkøb"
+#: modules/contrib/hivelog/src/Entity/InventoryUsage.php:66
+msgid "@item — @quantity @unit"
+msgstr "@item — @quantity @unit"
+#: modules/contrib/hivelog/src/Entity/InventoryUsage.php:115
+msgid "The consumable inventory item that was used."
+msgstr "Forbrugsvaren fra lageret, der blev anvendt."
+#: modules/contrib/hivelog/src/Entity/InventoryUsage.php:127
+msgid "How much of the item was actually used, in the item's own unit."
+msgstr "Hvor meget af varen der faktisk blev brugt, i varens egen enhed."
+#: modules/contrib/hivelog/src/Entity/InventoryUsage.php:137
+msgid "The hive action log this usage was recorded against, if hive-scoped."
+msgstr "Stade-handlingsloggen, som dette forbrug blev registreret mod, hvis det er på stadeniveau."
+#: modules/contrib/hivelog/src/Entity/InventoryUsage.php:148
+msgid "The apiary action log this usage was recorded against, if apiary-scoped."
+msgstr "Bigårds-handlingsloggen, som dette forbrug blev registreret mod, hvis det er på bigårdsniveau."
+#: modules/contrib/hivelog/src/Entity/InventoryUsage.php:158
+msgid "Unit Cost Snapshot"
+msgstr "Øjebliksbillede af enhedspris"
+#: modules/contrib/hivelog/src/Entity/InventoryUsage.php:159
+msgid "The weighted-average purchase cost per unit at the time this usage was recorded. Never recalculated after creation."
+msgstr "Den vægtede gennemsnitlige indkøbspris pr. enhed på det tidspunkt, hvor forbruget blev registreret. Genberegnes aldrig efter oprettelsen."
+#: modules/contrib/hivelog/src/Entity/InventoryUsage.php:167
+msgid "The user who recorded this usage."
+msgstr "Brugeren, der registrerede dette forbrug."
+#: modules/contrib/hivelog/src/Entity/InventoryUsage.php:171
+msgid "The time this usage record was created."
+msgstr "Tidspunktet, hvor forbrugsposten blev oprettet."
+#: modules/contrib/hivelog/src/Entity/InventoryUsage.php:175
+msgid "The time this usage record was last updated."
+msgstr "Tidspunktet, hvor forbrugsposten sidst blev opdateret."
+#: modules/contrib/hivelog/src/Entity/InventoryUsage.php:40;41
+msgid "Inventory Usage"
+msgstr "Lagerforbrug"
+#: modules/contrib/hivelog/src/Entity/InventoryUsage.php:42
+msgid "inventory usage record"
+msgstr "lagerforbrugspost"
+#: modules/contrib/hivelog/src/Entity/InventoryUsage.php:43
+msgid "inventory usage records"
+msgstr "lagerforbrugsposter"
+#: modules/contrib/hivelog/src/Entity/Product.php:82
+msgid "The apiary this product belongs to."
+msgstr "Bigården, som dette produkt hører til."
+#: modules/contrib/hivelog/src/Entity/Product.php:99
+msgid "A short name for this product, e.g. \"Honey\" or \"Beeswax\"."
+msgstr "Et kort navn for dette produkt, f.eks. \"Honning\" eller \"Bivoks\"."
+#: modules/contrib/hivelog/src/Entity/Product.php:116
+msgid "The unit this product is measured in, e.g. \"kg\", \"jar\", \"bar\". Pick one unit and use it consistently for this product — there is no unit conversion."
+msgstr "Enheden, som dette produkt måles i, f.eks. \"kg\", \"glas\", \"blok\". Vælg én enhed og brug den konsekvent for dette produkt — der er ingen enhedskonvertering."
+#: modules/contrib/hivelog/src/Entity/Product.php:133
+msgid "Your current best estimate of what a unit of this product sells for. A single editable assumption, not a sales history — potential income is computed from this figure, not from actual recorded sales."
+msgstr "Dit aktuelle bedste skøn over, hvad en enhed af dette produkt sælges for. En enkelt redigerbar antagelse, ikke en salgshistorik — den potentielle indtægt beregnes ud fra dette tal, ikke ud fra faktisk registrerede salg."
+#: modules/contrib/hivelog/src/Entity/Product.php:152
+msgid "Discontinued products are hidden from new yield-recipe selection, but remain listed here for management."
+msgstr "Udgåede produkter skjules fra valg i nye udbytteopskrifter, men vises fortsat her til administration."
+#: modules/contrib/hivelog/src/Entity/Product.php:173
+msgid "The user who created this product."
+msgstr "Brugeren, der oprettede dette produkt."
+#: modules/contrib/hivelog/src/Entity/Product.php:183
+msgid "The time the product was created."
+msgstr "Tidspunktet, hvor produktet blev oprettet."
+#: modules/contrib/hivelog/src/Entity/Product.php:187
+msgid "The time the product was last updated."
+msgstr "Tidspunktet, hvor produktet sidst blev opdateret."
+#: modules/contrib/hivelog/src/Entity/Product.php:39
+msgid "product"
+msgstr "produkt"
+#: modules/contrib/hivelog/src/Entity/Product.php:40
+msgid "products"
+msgstr "produkter"
+#: modules/contrib/hivelog/src/Entity/Queen.php:125
+msgid "A human readable identifier for this queen, e.g. Q-2026-001."
+msgstr "En læsbar identifikator for denne dronning, f.eks. Q-2026-001."
+#: modules/contrib/hivelog/src/Entity/Queen.php:133
+msgid "Origin"
+msgstr "Oprindelse"
+#: modules/contrib/hivelog/src/Entity/Queen.php:134
+msgid "Where this queen came from (breeder, swarm, supplier, ...)."
+msgstr "Hvor denne dronning kom fra (opdrætter, sværm, leverandør, ...)."
+#: modules/contrib/hivelog/src/Entity/Queen.php:141
+msgid "Queen Year"
+msgstr "Dronningår"
+#: modules/contrib/hivelog/src/Entity/Queen.php:142
+msgid "The year the queen hatched."
+msgstr "Året, dronningen klækkede."
+#: modules/contrib/hivelog/src/Entity/Queen.php:149
+msgid "Queen Colour"
+msgstr "Dronningfarve"
+#: modules/contrib/hivelog/src/Entity/Queen.php:150
+msgid "International queen marking colour."
+msgstr "International dronningemærkefarve."
+#: modules/contrib/hivelog/src/Entity/Queen.php:164
+msgid "The breed of this queen."
+msgstr "Denne dronnings race."
+#: modules/contrib/hivelog/src/Entity/Queen.php:179
+msgid "The general temperament associated with this queen."
+msgstr "Det generelle temperament, der er forbundet med denne dronning."
+#: modules/contrib/hivelog/src/Entity/Queen.php:190
+msgid "Purchase Cost"
+msgstr "Indkøbspris"
+#: modules/contrib/hivelog/src/Entity/Queen.php:191
+msgid "What this queen cost, if purchased."
+msgstr "Hvad denne dronning kostede, hvis den blev købt."
+#: modules/contrib/hivelog/src/Entity/Queen.php:201
+msgid "The date this queen was purchased, if applicable."
+msgstr "Datoen, hvor denne dronning blev købt, hvis relevant."
+#: modules/contrib/hivelog/src/Entity/Queen.php:209
+msgid "The hive this queen is currently installed in, if any."
+msgstr "Bistadet, hvor denne dronning aktuelt er indsat, hvis nogen."
+#: modules/contrib/hivelog/src/Entity/Queen.php:216
+msgid "Introduction Date"
+msgstr "Indsætningsdato"
+#: modules/contrib/hivelog/src/Entity/Queen.php:217
+msgid "The date this queen was introduced to the hive."
+msgstr "Datoen, hvor denne dronning blev indsat i bistadet."
+#: modules/contrib/hivelog/src/Entity/Queen.php:225
+msgid "Whether this queen is currently in service (active) or retired from service (inactive)."
+msgstr "Om denne dronning aktuelt er i brug (aktiv) eller taget ud af brug (inaktiv)."
+#: modules/contrib/hivelog/src/Entity/Queen.php:235
+msgid "General notes about this queen."
+msgstr "Generelle noter om denne dronning."
+#: modules/contrib/hivelog/src/Entity/Queen.php:246
+msgid "The user who owns this queen record."
+msgstr "Brugeren, der ejer denne dronningpost."
+#: modules/contrib/hivelog/src/Entity/Queen.php:252
+msgid "The time the queen record was created."
+msgstr "Tidspunktet, hvor dronningposten blev oprettet."
+#: modules/contrib/hivelog/src/Entity/Queen.php:255
+msgid "The time the queen record was last updated."
+msgstr "Tidspunktet, hvor dronningposten sidst blev opdateret."
+#: modules/contrib/hivelog/src/Entity/Queen.php:36
+msgid "queen"
+msgstr "dronning"
+#: modules/contrib/hivelog/src/Entity/Queen.php:37
+msgid "queens"
+msgstr "dronninger"
+#: modules/contrib/hivelog/src/Entity/QueenObservation.php:74
+msgid "Observation of @queen on @date"
+msgstr "Observation af @queen den @date"
+#: modules/contrib/hivelog/src/Entity/QueenObservation.php:89
+msgid "The queen being observed."
+msgstr "Dronningen, der observeres."
+#: modules/contrib/hivelog/src/Entity/QueenObservation.php:97
+msgid "Observation Date"
+msgstr "Observationsdato"
+#: modules/contrib/hivelog/src/Entity/QueenObservation.php:98
+msgid "The date of the observation."
+msgstr "Datoen for observationen."
+#: modules/contrib/hivelog/src/Entity/QueenObservation.php:107
+msgid "The queen's apparent health at the time of this observation."
+msgstr "Dronningens tilsyneladende sundhed på tidspunktet for denne observation."
+#: modules/contrib/hivelog/src/Entity/QueenObservation.php:120
+msgid "The queen's temperament as observed."
+msgstr "Dronningens temperament som observeret."
+#: modules/contrib/hivelog/src/Entity/QueenObservation.php:132
+msgid "Was the queen observed actively laying / moving on the comb?"
+msgstr "Blev dronningen observeret aktivt læggende / bevægende sig på tavlen?"
+#: modules/contrib/hivelog/src/Entity/QueenObservation.php:145
+msgid "Free-text observations about the queen."
+msgstr "Fritekstobservationer om dronningen."
+#: modules/contrib/hivelog/src/Entity/QueenObservation.php:156
+msgid "Photos taken during this queen observation."
+msgstr "Fotos taget under denne dronningobservation."
+#: modules/contrib/hivelog/src/Entity/QueenObservation.php:176
+msgid "Observer"
+msgstr "Observatør"
+#: modules/contrib/hivelog/src/Entity/QueenObservation.php:177
+msgid "The user who made this observation."
+msgstr "Brugeren, der foretog denne observation."
+#: modules/contrib/hivelog/src/Entity/QueenObservation.php:184
+msgid "The time the observation was recorded."
+msgstr "Tidspunktet, hvor observationen blev registreret."
+#: modules/contrib/hivelog/src/Entity/QueenObservation.php:187
+msgid "The time the observation was last updated."
+msgstr "Tidspunktet, hvor observationen sidst blev opdateret."
+#: modules/contrib/hivelog/src/Entity/QueenObservation.php:33
+msgid "Queen Observation"
+msgstr "Dronningobservation"
+#: modules/contrib/hivelog/src/Entity/QueenObservation.php:35
+msgid "queen observation"
+msgstr "dronningobservation"
+#: modules/contrib/hivelog/src/Entity/QueenObservation.php:36
+msgid "queen observations"
+msgstr "dronningobservationer"
+#: modules/contrib/hivelog/src/Form/ApiaryActionLogDeleteForm.php:20
+#: modules/contrib/hivelog/src/Form/HiveActionLogDeleteForm.php:20
+msgid "Are you sure you want to delete %label?"
+msgstr "Er du sikker på, at du vil slette %label?"
+#: modules/contrib/hivelog/src/Form/ApiaryActionLogDeleteForm.php:43
+#: modules/contrib/hivelog/src/Form/HiveActionLogDeleteForm.php:43
+msgid "%label has been deleted."
+msgstr "%label er blevet slettet."
+#: modules/contrib/hivelog/src/Form/ApiaryActionLogForm.php:38
+#: modules/contrib/hivelog/src/Form/HiveActionLogForm.php:61
+msgid "Action log details"
+msgstr "Detaljer for handlingslog"
+#: modules/contrib/hivelog/src/Form/ApiaryActionLogForm.php:87
+#: modules/contrib/hivelog/src/Form/HiveActionLogForm.php:110
+msgid "%label has been recorded."
+msgstr "%label er blevet registreret."
+#: modules/contrib/hivelog/src/Form/ApiaryActionLogForm.php:92
+#: modules/contrib/hivelog/src/Form/HiveActionLogForm.php:115
+msgid "%label has been updated."
+msgstr "%label er blevet opdateret."
+#: modules/contrib/hivelog/src/Form/ApiaryDeleteForm.php:18
+msgid "Are you sure you want to delete apiary %name?"
+msgstr "Er du sikker på, at du vil slette bigården %name?"
+#: modules/contrib/hivelog/src/Form/ApiaryDeleteForm.php:35
+msgid "Apiary %name has been deleted."
+msgstr "Bigården %name er blevet slettet."
+#: modules/contrib/hivelog/src/Form/ApiaryForm.php:21
+msgid "Apiary %name has been created."
+msgstr "Bigården %name er blevet oprettet."
+#: modules/contrib/hivelog/src/Form/ApiaryForm.php:26
+msgid "Apiary %name has been updated."
+msgstr "Bigården %name er blevet opdateret."
+#: modules/contrib/hivelog/src/Form/CalendarActionDeleteForm.php:20
+msgid "Are you sure you want to delete calendar action %title?"
+msgstr "Er du sikker på, at du vil slette kalenderhandlingen %title?"
+#: modules/contrib/hivelog/src/Form/CalendarActionDeleteForm.php:42
+msgid "Calendar action %title has been deleted."
+msgstr "Kalenderhandlingen %title er blevet slettet."
+#: modules/contrib/hivelog/src/Form/CalendarActionForm.php:27
+msgid "Calendar action details"
+msgstr "Detaljer for kalenderhandling"
+#: modules/contrib/hivelog/src/Form/CalendarActionForm.php:54
+msgid "Products & Yields"
+msgstr "Produkter og udbytte"
+#: modules/contrib/hivelog/src/Form/CalendarActionForm.php:89
+msgid "Required Items and Expected Yield are managed from this calendar action's own page, not this edit form."
+msgstr "Påkrævede varer og forventet udbytte administreres fra denne kalenderhandlings egen side, ikke fra denne redigeringsformular."
+#: modules/contrib/hivelog/src/Form/CalendarActionForm.php:95
+msgid "Go to Required Items & Expected Yield"
+msgstr "Gå til påkrævede varer og forventet udbytte"
+#: modules/contrib/hivelog/src/Form/CalendarActionForm.php:115
+msgid "The end week must be the same as or later than the start week."
+msgstr "Slutugen skal være den samme som eller senere end startugen."
+#: modules/contrib/hivelog/src/Form/CalendarActionForm.php:144
+msgid "Calendar action %title has been created."
+msgstr "Kalenderhandlingen %title er blevet oprettet."
+#: modules/contrib/hivelog/src/Form/CalendarActionForm.php:149
+msgid "Calendar action %title has been updated."
+msgstr "Kalenderhandlingen %title er blevet opdateret."
+#: modules/contrib/hivelog/src/Form/CalendarActionItemRequirementDeleteForm.php:20
+msgid "Are you sure you want to delete requirement %label?"
+msgstr "Er du sikker på, at du vil slette kravet %label?"
+#: modules/contrib/hivelog/src/Form/CalendarActionItemRequirementDeleteForm.php:42
+msgid "Requirement %label has been deleted."
+msgstr "Kravet %label er blevet slettet."
+#: modules/contrib/hivelog/src/Form/CalendarActionItemRequirementForm.php:48
+msgid "The selected item must belong to the same apiary as this calendar action."
+msgstr "Den valgte vare skal høre til samme bigård som denne kalenderhandling."
+#: modules/contrib/hivelog/src/Form/CalendarActionItemRequirementForm.php:79
+msgid "Requirement %label has been added."
+msgstr "Kravet %label er blevet tilføjet."
+#: modules/contrib/hivelog/src/Form/CalendarActionItemRequirementForm.php:84
+msgid "Requirement %label has been updated."
+msgstr "Kravet %label er blevet opdateret."
+#: modules/contrib/hivelog/src/Form/CalendarActionProductYieldDeleteForm.php:20
+msgid "Are you sure you want to delete yield %label?"
+msgstr "Er du sikker på, at du vil slette udbyttet %label?"
+#: modules/contrib/hivelog/src/Form/CalendarActionProductYieldDeleteForm.php:42
+msgid "Yield %label has been deleted."
+msgstr "Udbyttet %label er blevet slettet."
+#: modules/contrib/hivelog/src/Form/CalendarActionProductYieldForm.php:49
+msgid "The selected product must belong to the same apiary as this calendar action."
+msgstr "Det valgte produkt skal høre til samme bigård som denne kalenderhandling."
+#: modules/contrib/hivelog/src/Form/CalendarActionProductYieldForm.php:81
+msgid "Yield %label has been added."
+msgstr "Udbyttet %label er blevet tilføjet."
+#: modules/contrib/hivelog/src/Form/CalendarActionProductYieldForm.php:86
+msgid "Yield %label has been updated."
+msgstr "Udbyttet %label er blevet opdateret."
+#: modules/contrib/hivelog/src/Form/HarvestYieldFormTrait.php:79
+msgid "Yield Produced"
+msgstr "Fremstillet udbytte"
+#: modules/contrib/hivelog/src/Form/HarvestYieldFormTrait.php:80
+msgid "Pre-filled from the calendar action's expected yield — adjust to what was actually produced. Leave a field at 0 to record none produced."
+msgstr "Forudfyldt ud fra kalenderhandlingens forventede udbytte — tilpas til det, der faktisk blev fremstillet. Lad et felt stå på 0 for at registrere, at intet blev fremstillet."
+#: modules/contrib/hivelog/src/Form/HiveActionLogForm.php:48
+msgid "Also create a hive inspection record for this"
+msgstr "Opret også et stadeeftersyn for dette"
+#: modules/contrib/hivelog/src/Form/HiveActionLogForm.php:49
+msgid "Creates a linked inspection dated today, with a note summarising this report, that you can immediately flesh out with weight, brood, queen and other details."
+msgstr "Opretter et tilknyttet eftersyn dateret i dag, med en note der opsummerer denne rapport, som du straks kan uddybe med vægt, yngel, dronning og andre detaljer."
+#: modules/contrib/hivelog/src/Form/HiveActionLogForm.php:196
+msgid "A linked hive inspection has been created — add any further details below."
+msgstr "Et tilknyttet stadeeftersyn er blevet oprettet — tilføj eventuelle yderligere detaljer nedenfor."
+#: modules/contrib/hivelog/src/Form/HiveDeleteForm.php:18
+msgid "Are you sure you want to delete hive %name?"
+msgstr "Er du sikker på, at du vil slette bistadet %name?"
+#: modules/contrib/hivelog/src/Form/HiveDeleteForm.php:36
+msgid "Hive %name has been deleted."
+msgstr "Bistadet %name er blevet slettet."
+#: modules/contrib/hivelog/src/Form/HiveForm.php:25
+msgid "Hive details"
+msgstr "Detaljer for bistade"
+#: modules/contrib/hivelog/src/Form/HiveForm.php:37
+msgid "Equipment"
+msgstr "Udstyr"
+#: modules/contrib/hivelog/src/Form/HiveForm.php:43
+msgid "Colony"
+msgstr "Bifamilie"
+#: modules/contrib/hivelog/src/Form/HiveForm.php:49
+#: modules/contrib/hivelog/src/Form/QueenObservationForm.php:49
+msgid "Notes & photos"
+msgstr "Noter og fotos"
+#: modules/contrib/hivelog/src/Form/HiveForm.php:82
+msgid "Hive %name has been created."
+msgstr "Bistadet %name er blevet oprettet."
+#: modules/contrib/hivelog/src/Form/HiveForm.php:87
+msgid "Hive %name has been updated."
+msgstr "Bistadet %name er blevet opdateret."
+#: modules/contrib/hivelog/src/Form/HiveInspectionDeleteForm.php:18
+msgid "Are you sure you want to delete this inspection?"
+msgstr "Er du sikker på, at du vil slette dette eftersyn?"
+#: modules/contrib/hivelog/src/Form/HiveInspectionDeleteForm.php:34
+msgid "Inspection has been deleted."
+msgstr "Eftersynet er blevet slettet."
+#: modules/contrib/hivelog/src/Form/HiveInspectionForm.php:31
+msgid "Inspection sections"
+msgstr "Eftersynsafsnit"
+#: modules/contrib/hivelog/src/Form/HiveInspectionForm.php:177
+msgid "Feed type is required when the colony was fed."
+msgstr "Fodertype er påkrævet, når bifamilien blev fodret."
+#: modules/contrib/hivelog/src/Form/HiveInspectionForm.php:186
+msgid "Varroa count is required when a varroa check was performed."
+msgstr "Varroaoptælling er påkrævet, når der blev udført en varroakontrol."
+#: modules/contrib/hivelog/src/Form/HiveInspectionForm.php:257
+msgid "Inspection has been recorded."
+msgstr "Eftersynet er blevet registreret."
+#: modules/contrib/hivelog/src/Form/HiveInspectionForm.php:260
+msgid "Inspection has been updated."
+msgstr "Eftersynet er blevet opdateret."
+#: modules/contrib/hivelog/src/Form/HivelogCalendarFilterForm.php:85
+msgid "All"
+msgstr "Alle"
+#: modules/contrib/hivelog/src/Form/HivelogCalendarFilterForm.php:110
+#: modules/contrib/hivelog/src/Form/HivelogFullCalendarFilterForm.php:115
+#: modules/contrib/hivelog/src/Form/HivelogHiveFilterForm.php:114
+#: modules/contrib/hivelog/src/Form/HivelogInspectionFilterForm.php:112
+#: modules/contrib/hivelog/src/Form/HivelogQueenObservationFilterForm.php:140
+msgid "Filter"
+msgstr "Filtrér"
+#: modules/contrib/hivelog/src/Form/HivelogCalendarFilterForm.php:119
+#: modules/contrib/hivelog/src/Form/HivelogFullCalendarFilterForm.php:124
+#: modules/contrib/hivelog/src/Form/HivelogHiveFilterForm.php:123
+#: modules/contrib/hivelog/src/Form/HivelogInspectionFilterForm.php:121
+#: modules/contrib/hivelog/src/Form/HivelogQueenObservationFilterForm.php:149
+msgid "Reset"
+msgstr "Nulstil"
+#: modules/contrib/hivelog/src/Form/HivelogFullCalendarFilterForm.php:73;80;94
+#: modules/contrib/hivelog/src/Form/HivelogHiveFilterForm.php:73;83;90
+#: modules/contrib/hivelog/src/Form/HivelogInspectionFilterForm.php:85;95
+#: modules/contrib/hivelog/src/Form/HivelogQueenObservationFilterForm.php:87;94;102;114
+msgid "- Any -"
+msgstr "- Alle -"
+#: modules/contrib/hivelog/src/Form/HivelogFullCalendarFilterForm.php:92
+msgid "Enabled only"
+msgstr "Kun aktiverede"
+#: modules/contrib/hivelog/src/Form/HivelogFullCalendarFilterForm.php:93
+msgid "Disabled only"
+msgstr "Kun deaktiverede"
+#: modules/contrib/hivelog/src/Form/HivelogFullCalendarFilterForm.php:101
+msgid "Title contains"
+msgstr "Titel indeholder"
+#: modules/contrib/hivelog/src/Form/HivelogHiveFilterForm.php:96
+msgid "Name contains"
+msgstr "Navn indeholder"
+#: modules/contrib/hivelog/src/Form/HivelogInspectionFilterForm.php:71
+#: modules/contrib/hivelog/src/Form/HivelogQueenObservationFilterForm.php:74
+msgid "From"
+msgstr "Fra"
+#: modules/contrib/hivelog/src/Form/HivelogInspectionFilterForm.php:77
+#: modules/contrib/hivelog/src/Form/HivelogQueenObservationFilterForm.php:80
+msgid "To"
+msgstr "Til"
+#: modules/contrib/hivelog/src/Form/HivelogInspectionFilterForm.php:83
+msgid "Queen seen"
+msgstr "Dronning set"
+#: modules/contrib/hivelog/src/Form/HivelogInspectionFilterForm.php:94
+msgid "Brood pattern"
+msgstr "Yngelmønster"
+#: modules/contrib/hivelog/src/Form/InventoryItemDeleteForm.php:20
+msgid "Are you sure you want to delete inventory item %name?"
+msgstr "Er du sikker på, at du vil slette lagervaren %name?"
+#: modules/contrib/hivelog/src/Form/InventoryItemDeleteForm.php:78
+msgid "Inventory item %name has been deleted."
+msgstr "Lagervaren %name er blevet slettet."
+#: modules/contrib/hivelog/src/Form/InventoryItemDeleteForm.php:49
+msgid "This action cannot be undone. This item has 1 historical purchase/usage record referencing it — deleting it will make that record show as \"Unknown item\" wherever it appears."
+msgid_plural "This action cannot be undone. This item has @count historical purchase/usage records referencing it — deleting it will make those records show as \"Unknown item\" wherever they appear."
+msgstr[0] "Denne handling kan ikke fortrydes. Denne vare har 1 historisk indkøbs-/forbrugspost, der henviser til den — hvis den slettes, vil den post fremstå som »Ukendt vare« alle steder, hvor den optræder."
+msgstr[1] "Denne handling kan ikke fortrydes. Denne vare har @count historiske indkøbs-/forbrugsposter, der henviser til den — hvis den slettes, vil de poster fremstå som »Ukendt vare« alle steder, hvor de optræder."
+#: modules/contrib/hivelog/src/Form/InventoryItemForm.php:27
+msgid "Inventory item details"
+msgstr "Detaljer for lagervare"
+#: modules/contrib/hivelog/src/Form/InventoryItemForm.php:73
+msgid "Durable items must have a useful life (in years) set."
+msgstr "Varigt materiel skal have en levetid (i år) angivet."
+#: modules/contrib/hivelog/src/Form/InventoryItemForm.php:102
+msgid "Inventory item %name has been created."
+msgstr "Lagervaren %name er blevet oprettet."
+#: modules/contrib/hivelog/src/Form/InventoryItemForm.php:107
+msgid "Inventory item %name has been updated."
+msgstr "Lagervaren %name er blevet opdateret."
+#: modules/contrib/hivelog/src/Form/InventoryPurchaseDeleteForm.php:20
+msgid "Are you sure you want to delete purchase %label?"
+msgstr "Er du sikker på, at du vil slette indkøbet %label?"
+#: modules/contrib/hivelog/src/Form/InventoryPurchaseDeleteForm.php:37
+msgid "Purchase %label has been deleted."
+msgstr "Indkøbet %label er blevet slettet."
+#: modules/contrib/hivelog/src/Form/InventoryPurchaseForm.php:40
+msgid "Purchase details"
+msgstr "Detaljer for indkøb"
+#: modules/contrib/hivelog/src/Form/InventoryPurchaseForm.php:99
+msgid "The selected item must belong to the same apiary as this purchase."
+msgstr "Den valgte vare skal høre til samme bigård som dette indkøb."
+#: modules/contrib/hivelog/src/Form/InventoryPurchaseForm.php:111
+msgid "A disposal date can only be recorded for a purchase of a durable item."
+msgstr "En kassationsdato kan kun registreres for et indkøb af varigt materiel."
+#: modules/contrib/hivelog/src/Form/InventoryPurchaseForm.php:115
+msgid "The disposal date cannot be before the purchase date."
+msgstr "Kassationsdatoen kan ikke ligge før indkøbsdatoen."
+#: modules/contrib/hivelog/src/Form/InventoryPurchaseForm.php:146
+msgid "Purchase %label has been recorded."
+msgstr "Indkøbet %label er blevet registreret."
+#: modules/contrib/hivelog/src/Form/InventoryPurchaseForm.php:151
+msgid "Purchase %label has been updated."
+msgstr "Indkøbet %label er blevet opdateret."
+#: modules/contrib/hivelog/src/Form/InventoryUsageFormTrait.php:73
+msgid "Inventory Used"
+msgstr "Anvendt lager"
+#: modules/contrib/hivelog/src/Form/InventoryUsageFormTrait.php:74
+msgid "Pre-filled from the calendar action's recipe — adjust to what was actually used. Leave a field at 0 to record none used."
+msgstr "Forudfyldt ud fra kalenderhandlingens opskrift — tilpas til det, der faktisk blev brugt. Lad et felt stå på 0 for at registrere, at intet blev brugt."
+#: modules/contrib/hivelog/src/Form/ProductDeleteForm.php:19
+msgid "Are you sure you want to delete product %name?"
+msgstr "Er du sikker på, at du vil slette produktet %name?"
+#: modules/contrib/hivelog/src/Form/ProductDeleteForm.php:69
+msgid "Product %name has been deleted."
+msgstr "Produktet %name er blevet slettet."
+#: modules/contrib/hivelog/src/Form/ProductDeleteForm.php:45
+msgid "This action cannot be undone. This product has 1 historical yield record referencing it — deleting it will make that record show as \"Unknown product\" wherever it appears."
+msgid_plural "This action cannot be undone. This product has @count historical yield records referencing it — deleting it will make those records show as \"Unknown product\" wherever they appear."
+msgstr[0] "Denne handling kan ikke fortrydes. Dette produkt har 1 historisk udbyttepost, der henviser til det — hvis det slettes, vil den post fremstå som »Ukendt produkt« alle steder, hvor den optræder."
+msgstr[1] "Denne handling kan ikke fortrydes. Dette produkt har @count historiske udbytteposter, der henviser til det — hvis det slettes, vil de poster fremstå som »Ukendt produkt« alle steder, hvor de optræder."
+#: modules/contrib/hivelog/src/Form/ProductForm.php:36
+msgid "Product %name has been created."
+msgstr "Produktet %name er blevet oprettet."
+#: modules/contrib/hivelog/src/Form/ProductForm.php:41
+msgid "Product %name has been updated."
+msgstr "Produktet %name er blevet opdateret."
+#: modules/contrib/hivelog/src/Form/QueenDeleteForm.php:18
+msgid "Are you sure you want to delete queen %name?"
+msgstr "Er du sikker på, at du vil slette dronningen %name?"
+#: modules/contrib/hivelog/src/Form/QueenDeleteForm.php:36
+msgid "Queen %name has been deleted."
+msgstr "Dronningen %name er blevet slettet."
+#: modules/contrib/hivelog/src/Form/QueenForm.php:25
+msgid "Queen details"
+msgstr "Detaljer for dronning"
+#: modules/contrib/hivelog/src/Form/QueenForm.php:37
+msgid "Hive & status"
+msgstr "Bistade og status"
+#: modules/contrib/hivelog/src/Form/QueenForm.php:43
+msgid "Provenance"
+msgstr "Herkomst"
+#: modules/contrib/hivelog/src/Form/QueenForm.php:82
+msgid "Queen %name has been created."
+msgstr "Dronningen %name er blevet oprettet."
+#: modules/contrib/hivelog/src/Form/QueenForm.php:87
+msgid "Queen %name has been updated."
+msgstr "Dronningen %name er blevet opdateret."
+#: modules/contrib/hivelog/src/Form/QueenObservationDeleteForm.php:18
+msgid "Are you sure you want to delete this queen observation?"
+msgstr "Er du sikker på, at du vil slette denne dronningobservation?"
+#: modules/contrib/hivelog/src/Form/QueenObservationDeleteForm.php:36
+msgid "Queen observation has been deleted."
+msgstr "Dronningobservationen er blevet slettet."
+#: modules/contrib/hivelog/src/Form/QueenObservationForm.php:31
+msgid "Observation details"
+msgstr "Detaljer for observation"
+#: modules/contrib/hivelog/src/Form/QueenObservationForm.php:43
+msgid "Assessments"
+msgstr "Vurderinger"
+#: modules/contrib/hivelog/src/Form/QueenObservationForm.php:82
+msgid "Queen observation has been recorded."
+msgstr "Dronningobservationen er blevet registreret."
+#: modules/contrib/hivelog/src/Form/QueenObservationForm.php:85
+msgid "Queen observation has been updated."
+msgstr "Dronningobservationen er blevet opdateret."
+#: modules/contrib/hivelog/src/Plugin/EntityReferenceSelection/ApiaryScopedSelection.php:38
+msgid "Hivelog: scoped to one apiary"
+msgstr "Hivelog: afgrænset til én bigård"
