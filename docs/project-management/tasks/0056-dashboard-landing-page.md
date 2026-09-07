@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: todo
+status: in-progress
 priority: medium
 project: "[[dashboard-landing-page]]"
 area: theme
@@ -34,7 +34,7 @@ Design reference: `projects/dashboard-landing-page-mockup.html` and
 <https://claude.ai/code/artifact/62dfb1ba-8604-48b6-b9dd-e17b9eb57cd1>.
 
 ## Acceptance criteria
-- [ ] **Routing.** Implement [[0057-dashboard-information-architecture]]:
+- [x] **Routing.** Implement [[0057-dashboard-information-architecture]]:
       add the `hivelog.dashboard` route at `/hivelog` with an empty
       `DashboardController::view()`; move `entity.apiary.collection` to
       `/hivelog/apiaries` (the `Apiary` `collection` link template); the
@@ -44,6 +44,21 @@ Design reference: `projects/dashboard-landing-page-mockup.html` and
       `HivelogBreadcrumbBuilderTest` update. Confirm
       `HivelogBreadcrumbBuilder::applies()` still resolves a sane trail on
       the dashboard route itself. No redirect (ADR decision 3).
+      **Done** (branch `feature/0056-dashboard-landing-page`): new route +
+      skeleton `DashboardController::view()` (placeholder body + intro
+      link to `/hivelog/apiaries`, `user.permissions` cache context);
+      `entity.apiary.collection` and the `Apiary` `collection` link
+      template now `/hivelog/apiaries`; `hivelog.admin` menu link
+      repointed at `hivelog.dashboard` with a new `hivelog.apiaries`
+      first child (weight 0); breadcrumb root crumb → `hivelog.dashboard`
+      plus an "Apiaries" terminal crumb on the collection route.
+      `HivelogBreadcrumbBuilderTest`: new `testBuildDashboard`,
+      `testBuildApiaryCollection` updated to the 3-crumb trail, dashboard
+      route added to the `applies()` provider. `PermissionMatrixTest`
+      gains `/hivelog/apiaries` in its three path lists (status codes
+      only — no dashboard content assertions yet). Lint + full suite run
+      in CI (no local Docker/vendor); `ApiaryListBuilder` and its CBR
+      block untouched — that moves in the Shell criterion.
 - [ ] **Shell + design system.** `hivelog/dashboard` CSS library (grid,
       depends on `hivelog/responsive`, ADR-0011 breakpoints); new
       `components/stat-tile/` SDC; header strip (current-ISO-week badge +

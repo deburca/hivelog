@@ -75,6 +75,7 @@ class PermissionMatrixTest extends BrowserTestBase {
   public function testAnonymousHasNoAccess(): void {
     $paths = [
       '/hivelog',
+      '/hivelog/apiaries',
       '/hivelog/hives',
       '/hivelog/inspections',
       '/hivelog/apiary/add',
@@ -110,6 +111,8 @@ class PermissionMatrixTest extends BrowserTestBase {
 
     // View is allowed on collections and canonicals.
     $this->drupalGet('/hivelog');
+    $this->assertSession()->statusCodeEquals(200);
+    $this->drupalGet('/hivelog/apiaries');
     $this->assertSession()->statusCodeEquals(200);
     $this->drupalGet('/hivelog/apiary/' . $this->apiary->id());
     $this->assertSession()->statusCodeEquals(200);
@@ -149,6 +152,7 @@ class PermissionMatrixTest extends BrowserTestBase {
 
     $routes = [
       '/hivelog',
+      '/hivelog/apiaries',
       '/hivelog/hives',
       '/hivelog/inspections',
       '/hivelog/apiary/add',
