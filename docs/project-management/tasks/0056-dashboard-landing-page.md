@@ -115,7 +115,7 @@ Design reference: `projects/dashboard-landing-page-mockup.html` and
       are not filtered by status yet — parity with the existing
       `HiveController` checklist; a possible later refinement. No cap on
       row count yet.
-- [ ] **Stat tiles.** Apiaries · Active hives · Inspections this month ·
+- [x] **Stat tiles.** Apiaries · Active hives · Inspections this month ·
       Open seasonal tasks (with overdue sub-count) · Low-stock items ·
       Net YTD. Counts via `->count()` queries, not entity loads. Net YTD
       is a straight sum of
@@ -123,6 +123,31 @@ Design reference: `projects/dashboard-landing-page-mockup.html` and
       apiaries the user can view — no new financial logic; the tile is
       omitted for users without inventory-view access. Each tile links to
       the relevant collection / filtered view.
+      **Done** (branch `feature/0056-stat-tiles`): `computeApiaryYearTotals()`
+      made `public` (pure read-side aggregation). `DashboardController`
+      gains `class_resolver` DI + `buildStatTiles()` / `statTile()` /
+      `canSeeFinances()` / `sumNetYtd()` / `secondsUntilTomorrow()` /
+      `effectiveWeekEnd()`. `collectSeasonalAlerts()` refactored to return
+      `{alerts, open_total, open_overdue}` in one pass — `view()` calls it
+      once and feeds both the needs-attention queue and the "Open seasonal
+      tasks" tile; `buildNeedsAttention()` now takes the pre-merged alert
+      list. Tiles: Apiaries (from the loaded set) · Active hives
+      (`status = active` count) · Inspections this month
+      (`inspection_date` in the current month, hives in visible apiaries) ·
+      Open seasonal tasks (+ `N overdue` critical sub-line) · Low-stock
+      items (warning sub-line) · Net YTD (`number_format(sum, 0)`, links
+      to the single apiary's financial report or the apiary list). Links:
+      each tile → its collection (`entity.*.collection`;
+      `entity.calendar_action.collection` for Open tasks). `max-age` now
+      `min(secondsUntilNextIsoWeek(), secondsUntilTomorrow())` (the
+      month-relative count needs a daily bound). Cache: `hive` /
+      `hive_inspection` / `calendar_action` / `apiary_action_log` /
+      `hive_action_log` / `inventory_item` / `inventory_purchase` /
+      `inventory_usage` / `harvest_yield` / `product` list tags + the
+      item/product deps `computeApiaryYearTotals()` touched. `DashboardTest`
+      gains 6 kernel tests (grid render, inspections-this-month scoping,
+      open-tasks tally + overdue, low-stock count, Net YTD shown/hidden by
+      permission). phpcs clean locally.
 - [ ] **"Upcoming" + "Recent activity" widgets.** Upcoming: unreported
       seasonal actions whose `week_start` is within the next ~4 weeks,
       grouped by week, read-only. Recent activity: reverse-chronological

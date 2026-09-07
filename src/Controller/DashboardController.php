@@ -6,6 +6,7 @@ namespace Drupal\hivelog\Controller;
 
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\DependencyInjection\ClassResolverInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
@@ -29,16 +30,23 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class DashboardController extends ControllerBase {
 
   /**
+   * The class resolver, used to build InventoryReportController on demand.
+   */
+  protected ClassResolverInterface $classResolver;
+
+  /**
    * Constructs a DashboardController.
    */
   public function __construct(
     EntityTypeManagerInterface $entity_type_manager,
     AccountInterface $current_user,
+    ClassResolverInterface $class_resolver,
   ) {
     // $entityTypeManager / $currentUser are untyped properties inherited
     // from ControllerBase; assign them rather than redeclaring them.
     $this->entityTypeManager = $entity_type_manager;
     $this->currentUser = $current_user;
+    $this->classResolver = $class_resolver;
   }
 
   /**
@@ -48,6 +56,7 @@ class DashboardController extends ControllerBase {
     return new static(
       $container->get('entity_type.manager'),
       $container->get('current_user'),
+      $container->get('class_resolver'),
     );
   }
 
@@ -72,21 +81,32 @@ class DashboardController extends ControllerBase {
       $build['welcome'] = $this->buildWelcome() + ['#weight' => 0];
     }
     else {
-      $build['needs_attention'] = $this->buildNeedsAttention($cache, $apiaries) + ['#weight' => 0];
-      // Interim placeholder for the widgets still to come (criteria 4–6).
+      $current_week = (int) date('W');
+      $year = (int) date('Y');
+
+      // One seasonal pass feeds both the needs-attention queue (overdue /
+      // due rows) and the "Open seasonal tasks" tile (the open tally).
+      $seasonal = $this->collectSeasonalAlerts($apiaries, $year, $current_week, $cache);
+      $low_stock = $this->collectLowStockAlerts($apiaries, $cache);
+
+      $build['needs_attention'] = $this->buildNeedsAttention(
+        array_merge($seasonal['alerts'], $low_stock),
+        $current_week,
+      ) + ['#weight' => 0];
+      $build['stat_tiles'] = $this->buildStatTiles($cache, $apiaries, $seasonal, count($low_stock), $year) + ['#weight' => 10];
+      // Interim placeholder for the widgets still to come (criteria 5–6).
       $build['body'] = $this->buildInterimBody() + ['#weight' => 100];
     }
 
     // - user: the CBR line is per-user (not per-permission), and it also
-    //   covers the per-entity access filtering the needs-attention roll-up
-    //   does.
-    // - max-age: the header prints the current ISO week and the
-    //   needs-attention chips are week-relative, so the render must not
-    //   outlive the week boundary — matches ApiaryController /
-    //   HiveController's calendar sections.
+    //   covers the per-entity access filtering the roll-up does.
+    // - max-age: the header prints the current ISO week, the
+    //   needs-attention chips are week-relative, and "Inspections this
+    //   month" is date-relative — so the render must not outlive the
+    //   sooner of the next ISO-week boundary and the next midnight.
     $cache
       ->addCacheContexts(['user'])
-      ->setCacheMaxAge($this->secondsUntilNextIsoWeek());
+      ->setCacheMaxAge(min($this->secondsUntilNextIsoWeek(), $this->secondsUntilTomorrow()));
     $cache->applyTo($build);
 
     return $build;
@@ -218,27 +238,19 @@ class DashboardController extends ControllerBase {
   }
 
   /**
-   * Builds the "Needs attention" panel: overdue / due actions + low stock.
+   * Builds the "Needs attention" panel from pre-collected alerts.
    *
-   * Generalises ApiaryController::buildApiaryCalendarChecklist() and
-   * HiveController::buildCalendarChecklist() across every visible apiary
-   * and hive: unreported enabled CalendarActions for the current year
-   * whose timing is overdue or due-this-week, plus low-stock inventory
-   * items. Rows are ordered overdue → due-this-week → low stock.
+   * The alerts come from collectSeasonalAlerts() (overdue / due-this-week
+   * unreported CalendarActions across every visible apiary and hive) and
+   * collectLowStockAlerts() (inventory at or below its threshold). Rows
+   * are ordered overdue → due-this-week → low stock.
    *
-   * @param \Drupal\Core\Cache\CacheableMetadata $cache
-   *   Collects list cache tags and per-row entity dependencies.
-   * @param \Drupal\hivelog\Entity\Apiary[] $apiaries
-   *   The viewable apiaries, keyed by id.
+   * @param array[] $alerts
+   *   Merged, unsorted alert descriptors (see buildAttentionRow()).
+   * @param int $current_week
+   *   The current ISO week number, for the empty-state message.
    */
-  protected function buildNeedsAttention(CacheableMetadata $cache, array $apiaries): array {
-    $current_week = (int) date('W');
-    $year = (int) date('Y');
-
-    $alerts = array_merge(
-      $this->collectSeasonalAlerts($apiaries, $year, $current_week, $cache),
-      $this->collectLowStockAlerts($apiaries, $cache),
-    );
+  protected function buildNeedsAttention(array $alerts, int $current_week): array {
     usort($alerts, fn($a, $b) => $a['sort'] <=> $b['sort']);
 
     $overdue = count(array_filter($alerts, fn($a) => $a['severity'] === 'critical'));
@@ -332,7 +344,14 @@ class DashboardController extends ControllerBase {
   }
 
   /**
-   * Collects overdue / due-this-week seasonal-calendar alerts.
+   * Collects seasonal-calendar alerts and the open-task tally in one pass.
+   *
+   * Walks every enabled CalendarAction across the visible apiaries (and,
+   * for hive-scoped actions, every visible hive), skipping any already
+   * reported done / ignored for $year. Each remaining "open" action is
+   * counted (with an overdue sub-count); the subset whose window is
+   * overdue or covers the current week additionally becomes an alert row
+   * ordered overdue → due-this-week.
    *
    * @param \Drupal\hivelog\Entity\Apiary[] $apiaries
    *   Viewable apiaries keyed by id.
@@ -343,12 +362,15 @@ class DashboardController extends ControllerBase {
    * @param \Drupal\Core\Cache\CacheableMetadata $cache
    *   Collects list cache tags and per-row dependencies.
    *
-   * @return array[]
-   *   Alert descriptors (see buildAttentionRow()).
+   * @return array{alerts: array[], open_total: int, open_overdue: int}
+   *   `alerts` are the overdue / due row descriptors (see
+   *   buildAttentionRow()); `open_total` / `open_overdue` feed the
+   *   "Open seasonal tasks" stat tile.
    */
   protected function collectSeasonalAlerts(array $apiaries, int $year, int $current_week, CacheableMetadata $cache): array {
     $etm = $this->entityTypeManager;
     $apiary_ids = array_keys($apiaries);
+    $empty = ['alerts' => [], 'open_total' => 0, 'open_overdue' => 0];
 
     $action_ids = $etm->getStorage('calendar_action')->getQuery()
       ->accessCheck(TRUE)
@@ -357,14 +379,14 @@ class DashboardController extends ControllerBase {
       ->sort('week_start', 'ASC')
       ->execute();
     if (!$action_ids) {
-      return [];
+      return $empty;
     }
     $actions = array_filter(
       $etm->getStorage('calendar_action')->loadMultiple($action_ids),
       fn($action) => $action->access('view')
     );
     if (!$actions) {
-      return [];
+      return $empty;
     }
 
     $cache->addCacheTags($etm->getDefinition('calendar_action')->getListCacheTags());
@@ -376,6 +398,8 @@ class DashboardController extends ControllerBase {
     $hive_scoped = array_filter($actions, fn($a) => $a->get('scope')->value === 'hive');
 
     $alerts = [];
+    $open_total = 0;
+    $open_overdue = 0;
 
     if ($apiary_scoped) {
       $logs = $this->indexApiaryLogs($apiary_ids, array_keys($apiary_scoped), $year);
@@ -383,6 +407,10 @@ class DashboardController extends ControllerBase {
         $log = $logs[$action->id()] ?? NULL;
         if ($log && $log->get('status')->value !== 'pending') {
           continue;
+        }
+        $open_total++;
+        if ($current_week > $this->effectiveWeekEnd($action)) {
+          $open_overdue++;
         }
         $timing = $this->attentionTiming($action, $current_week);
         if (!$timing) {
@@ -430,6 +458,10 @@ class DashboardController extends ControllerBase {
             if ($log && $log->get('status')->value !== 'pending') {
               continue;
             }
+            $open_total++;
+            if ($current_week > $this->effectiveWeekEnd($action)) {
+              $open_overdue++;
+            }
             $timing = $this->attentionTiming($action, $current_week);
             if (!$timing) {
               continue;
@@ -456,7 +488,11 @@ class DashboardController extends ControllerBase {
       }
     }
 
-    return $alerts;
+    return [
+      'alerts' => $alerts,
+      'open_total' => $open_total,
+      'open_overdue' => $open_overdue,
+    ];
   }
 
   /**
@@ -606,8 +642,7 @@ class DashboardController extends ControllerBase {
    */
   protected function attentionTiming(CalendarAction $action, int $current_week): ?array {
     $week_start = (int) $action->get('week_start')->value;
-    $week_end_raw = $action->get('week_end')->value;
-    $week_end = ($week_end_raw !== NULL && $week_end_raw !== '') ? (int) $week_end_raw : $week_start;
+    $week_end = $this->effectiveWeekEnd($action);
 
     if ($current_week > $week_end) {
       $over = $current_week - $week_end;
@@ -632,11 +667,18 @@ class DashboardController extends ControllerBase {
    */
   protected function weekWindow(CalendarAction $action): string {
     $start = (int) $action->get('week_start')->value;
-    $end_raw = $action->get('week_end')->value;
-    $end = ($end_raw !== NULL && $end_raw !== '') ? (int) $end_raw : $start;
+    $end = $this->effectiveWeekEnd($action);
     return $end !== $start
       ? (string) $this->t('wk @start–@end', ['@start' => $start, '@end' => $end])
       : (string) $this->t('wk @start', ['@start' => $start]);
+  }
+
+  /**
+   * A calendar action's end week, falling back to its start week.
+   */
+  protected function effectiveWeekEnd(CalendarAction $action): int {
+    $raw = $action->get('week_end')->value;
+    return ($raw !== NULL && $raw !== '') ? (int) $raw : (int) $action->get('week_start')->value;
   }
 
   /**
@@ -685,6 +727,195 @@ class DashboardController extends ControllerBase {
     $now = new \DateTimeImmutable('now');
     $next_boundary = new \DateTimeImmutable('next monday midnight');
     return max(0, $next_boundary->getTimestamp() - $now->getTimestamp());
+  }
+
+  /**
+   * Seconds remaining until the next local midnight.
+   *
+   * Bounds the cache max-age for date-relative figures ("Inspections this
+   * month") so a cached render is refreshed at least once a day.
+   *
+   * @return int
+   *   Seconds until tomorrow, 00:00.
+   */
+  protected function secondsUntilTomorrow(): int {
+    $now = new \DateTimeImmutable('now');
+    $tomorrow = new \DateTimeImmutable('tomorrow');
+    return max(0, $tomorrow->getTimestamp() - $now->getTimestamp());
+  }
+
+  /**
+   * Builds the six stat tiles.
+   *
+   * All figures are `->count()` queries except low stock (needs
+   * isLowStock(), from the caller's earlier pass) and Net YTD (a sum of
+   * InventoryReportController::computeApiaryYearTotals() — no new
+   * financial logic). The Net YTD tile is omitted for users without
+   * inventory-view access.
+   *
+   * @param \Drupal\Core\Cache\CacheableMetadata $cache
+   *   Collects the list cache tags and per-row dependencies the tiles read.
+   * @param \Drupal\hivelog\Entity\Apiary[] $apiaries
+   *   Viewable apiaries keyed by id.
+   * @param array{alerts: array[], open_total: int, open_overdue: int} $seasonal
+   *   The seasonal pass result from collectSeasonalAlerts().
+   * @param int $low_stock_count
+   *   Number of low-stock items (count of collectLowStockAlerts()).
+   * @param int $year
+   *   The current year, for Net YTD.
+   */
+  protected function buildStatTiles(CacheableMetadata $cache, array $apiaries, array $seasonal, int $low_stock_count, int $year): array {
+    $etm = $this->entityTypeManager;
+    $apiary_ids = array_keys($apiaries);
+
+    foreach ([
+      'hive',
+      'hive_inspection',
+      'calendar_action',
+      'apiary_action_log',
+      'hive_action_log',
+      'inventory_item',
+      'inventory_purchase',
+      'inventory_usage',
+      'harvest_yield',
+      'product',
+    ] as $type) {
+      $cache->addCacheTags($etm->getDefinition($type)->getListCacheTags());
+    }
+
+    $active_hives = (int) $etm->getStorage('hive')->getQuery()
+      ->accessCheck(TRUE)
+      ->condition('apiary', $apiary_ids, 'IN')
+      ->condition('status', 'active')
+      ->count()
+      ->execute();
+
+    $hive_ids = $etm->getStorage('hive')->getQuery()
+      ->accessCheck(TRUE)
+      ->condition('apiary', $apiary_ids, 'IN')
+      ->execute();
+    $inspections_this_month = 0;
+    if ($hive_ids) {
+      $inspections_this_month = (int) $etm->getStorage('hive_inspection')->getQuery()
+        ->accessCheck(TRUE)
+        ->condition('hive', array_values($hive_ids), 'IN')
+        ->condition('inspection_date', date('Y-m-01'), '>=')
+        ->condition('inspection_date', date('Y-m-01', strtotime('first day of next month')), '<')
+        ->count()
+        ->execute();
+    }
+
+    $tiles = [
+      $this->statTile((string) count($apiaries), $this->t('Apiaries'), Url::fromRoute('entity.apiary.collection')),
+      $this->statTile((string) $active_hives, $this->t('Active hives'), Url::fromRoute('entity.hive.collection')),
+      $this->statTile((string) $inspections_this_month, $this->t('Inspections this month'), Url::fromRoute('entity.hive_inspection.collection')),
+      $this->statTile(
+        (string) $seasonal['open_total'],
+        $this->t('Open seasonal tasks'),
+        Url::fromRoute('entity.calendar_action.collection'),
+        $seasonal['open_overdue'] ? $this->t('@n overdue', ['@n' => $seasonal['open_overdue']]) : '',
+        $seasonal['open_overdue'] ? 'critical' : 'default',
+      ),
+      $this->statTile(
+        (string) $low_stock_count,
+        $this->t('Low-stock items'),
+        Url::fromRoute('entity.inventory_item.collection'),
+        '',
+        $low_stock_count ? 'warning' : 'default',
+      ),
+    ];
+
+    if ($this->canSeeFinances()) {
+      $net_url = count($apiaries) === 1
+        ? Url::fromRoute('hivelog.apiary.inventory_cost_report', ['apiary' => (int) array_key_first($apiaries)])
+        : Url::fromRoute('entity.apiary.collection');
+      $tiles[] = $this->statTile(
+        number_format($this->sumNetYtd($apiaries, $year, $cache), 0),
+        $this->t('Net YTD'),
+        $net_url,
+      );
+    }
+
+    $build = [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['hivelog-stat-tiles']],
+    ];
+    foreach ($tiles as $i => $tile) {
+      $build['tile_' . $i] = $tile;
+    }
+    return $build;
+  }
+
+  /**
+   * Builds one hivelog:stat-tile component render array.
+   *
+   * @param string $value
+   *   The pre-formatted figure.
+   * @param \Drupal\Core\StringTranslation\TranslatableMarkup $label
+   *   The tile label.
+   * @param \Drupal\Core\Url $url
+   *   Destination for the whole-tile link.
+   * @param \Drupal\Core\StringTranslation\TranslatableMarkup|string $sublabel
+   *   Optional sub-line.
+   * @param string $variant
+   *   Sub-line variant: default, critical or warning.
+   */
+  protected function statTile(string $value, $label, Url $url, $sublabel = '', string $variant = 'default'): array {
+    return [
+      '#type' => 'component',
+      '#component' => 'hivelog:stat-tile',
+      '#props' => [
+        'value' => $value,
+        'label' => (string) $label,
+        'url' => $url->toString(),
+        'sublabel' => (string) $sublabel,
+        'sublabel_variant' => $variant,
+      ],
+    ];
+  }
+
+  /**
+   * Whether the current user may see the (money) Net YTD tile.
+   *
+   * Mirrors the permission OR-set on the apiary financial report route.
+   */
+  protected function canSeeFinances(): bool {
+    return $this->currentUser->hasPermission('view any inventory item')
+      || $this->currentUser->hasPermission('view own inventory item')
+      || $this->currentUser->hasPermission('administer hivelog');
+  }
+
+  /**
+   * Sums this year's net position across the given apiaries.
+   *
+   * A straight sum of InventoryReportController::computeApiaryYearTotals()
+   * — no new financial logic. Folds every item / product the totals
+   * touched into the render's cache metadata.
+   *
+   * @param \Drupal\hivelog\Entity\Apiary[] $apiaries
+   *   Viewable apiaries keyed by id.
+   * @param int $year
+   *   The year to total.
+   * @param \Drupal\Core\Cache\CacheableMetadata $cache
+   *   Collects the item / product dependencies.
+   */
+  protected function sumNetYtd(array $apiaries, int $year, CacheableMetadata $cache): float {
+    $report = $this->classResolver->getInstanceFromDefinition(InventoryReportController::class);
+    $net = 0.0;
+    foreach ($apiaries as $apiary) {
+      $totals = $report->computeApiaryYearTotals($apiary, $year);
+      $net += $totals['net'];
+      foreach ($totals['consumables'] as $row) {
+        $cache->addCacheableDependency($row['item']);
+      }
+      foreach ($totals['depreciation'] as $row) {
+        $cache->addCacheableDependency($row['item']);
+      }
+      foreach ($totals['yields'] as $row) {
+        $cache->addCacheableDependency($row['product']);
+      }
+    }
+    return $net;
   }
 
 }
