@@ -1,0 +1,49 @@
+/**
+ * @file
+ * Styling for the hivelog:stat-tile SDC component — a compact figure tile
+ * on the dashboard. The grid that lays these out (.hivelog-stat-tiles)
+ * lives in css/hivelog.dashboard.css.
+ */
+
+.hivelog-stat-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.9rem 1rem 1rem;
+  background: #ffffff;
+  color: inherit;
+  text-decoration: none;
+}
+
+.hivelog-stat-tile:hover,
+.hivelog-stat-tile:focus {
+  background: #f9fafb;
+}
+
+.hivelog-stat-tile__value {
+  font-size: 1.6rem;
+  font-weight: 600;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.hivelog-stat-tile__label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6b7280;
+}
+
+.hivelog-stat-tile__sub {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.hivelog-stat-tile__sub--critical {
+  color: #b91c1c;
+}
+
+.hivelog-stat-tile__sub--warning {
+  color: #a4630a;
+}

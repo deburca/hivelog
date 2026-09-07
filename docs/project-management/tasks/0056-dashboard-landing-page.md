@@ -59,7 +59,7 @@ Design reference: `projects/dashboard-landing-page-mockup.html` and
       only — no dashboard content assertions yet). Lint + full suite run
       in CI (no local Docker/vendor); `ApiaryListBuilder` and its CBR
       block untouched — that moves in the Shell criterion.
-- [ ] **Shell + design system.** `hivelog/dashboard` CSS library (grid,
+- [x] **Shell + design system.** `hivelog/dashboard` CSS library (grid,
       depends on `hivelog/responsive`, ADR-0011 breakpoints); new
       `components/stat-tile/` SDC; header strip (current-ISO-week badge +
       the CBR summary line moved out of `ApiaryListBuilder::render()`);
@@ -68,6 +68,21 @@ Design reference: `projects/dashboard-landing-page-mockup.html` and
       single-column stack ≤768px. Reuse `hivelog:entity-table`,
       `hivelog:button` / `button-group`, `hivelog-list-heading` — no new
       button CSS ([[0012-action-button-design-system]]).
+      **Done** (branch `feature/0056-dashboard-shell`): `css/hivelog.dashboard.css`
+      + `dashboard` library entry (deps `hivelog/buttons` + `hivelog/responsive`);
+      `components/stat-tile/` SDC (value / label / url / sublabel /
+      sublabel_variant) with its own CSS; `DashboardController` now renders
+      the header strip (ISO-week badge via `inline_template` + the CBR
+      three-state summary, `secondsUntilNextIsoWeek()` max-age, `user`
+      cache context) and either the first-run welcome card (no visible
+      apiaries) or an interim body. CBR summary + its `userStorage` /
+      `currentUser` deps removed from `ApiaryListBuilder`; the per-row CBR
+      column and `extractCbr()` stay. Tests: new `DashboardTest` kernel
+      (welcome vs interim, week badge, CBR states, stat-tile SDC render,
+      cache metadata); `CbrFieldTest::testRenderedCaptionForCurrentUser`
+      removed (moved into `DashboardTest`), its docblock retargeted. The
+      stat-tile grid is styled but unpopulated until the Stat tiles
+      criterion.
 - [ ] **"Needs attention" widget.** Cross-apiary + cross-hive aggregation
       of unreported `enabled` `CalendarAction`s (current year) whose
       timing is overdue or due-this-week, plus `isLowStock()` items,

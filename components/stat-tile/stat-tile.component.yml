@@ -1,0 +1,47 @@
+$schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schemas/v1/metadata.schema.json
+
+name: Stat Tile
+status: stable
+description: >
+  A compact figure tile for the HiveLog dashboard: a large pre-formatted
+  value, an uppercase label, and an optional sub-line. The whole tile is a
+  link to the relevant collection or filtered view.
+
+props:
+  type: object
+  required:
+    - value
+    - label
+    - url
+  properties:
+    value:
+      type: string
+      title: Value
+      description: The figure itself, already formatted (e.g. "7", "−1,240").
+      examples:
+        - '7'
+    label:
+      type: string
+      title: Label
+      examples:
+        - Active hives
+    url:
+      type: string
+      title: URL
+      description: Destination for the whole-tile link.
+    sublabel:
+      type: string
+      title: Sub-line
+      description: Optional context under the label (e.g. "2 overdue").
+      default: ''
+    sublabel_variant:
+      type: string
+      title: Sub-line variant
+      description: 'One of: default, critical, warning — tints the sub-line.'
+      default: default
+      examples:
+        - critical
+
+libraryOverrides:
+  dependencies:
+    - hivelog/responsive

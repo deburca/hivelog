@@ -1,0 +1,8 @@
+{%- set variant = sublabel_variant|default('default') -%}
+<a href="{{ url }}" class="hivelog-stat-tile">
+  <span class="hivelog-stat-tile__value">{{ value }}</span>
+  <span class="hivelog-stat-tile__label">{{ label }}</span>
+  {%- if sublabel %}
+    <span class="hivelog-stat-tile__sub hivelog-stat-tile__sub--{{ variant }}">{{ sublabel }}</span>
+  {%- endif %}
+</a>

@@ -2,13 +2,11 @@
 
 namespace Drupal\hivelog;
 
-use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityListBuilder;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Render\RendererInterface;
-use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\user\UserInterface;
@@ -29,16 +27,6 @@ class ApiaryListBuilder extends EntityListBuilder {
   protected $limit = 20;
 
   /**
-   * The current user account.
-   */
-  protected AccountInterface $currentUser;
-
-  /**
-   * The user storage handler.
-   */
-  protected EntityStorageInterface $userStorage;
-
-  /**
    * The renderer.
    */
   protected RendererInterface $renderer;
@@ -49,13 +37,9 @@ class ApiaryListBuilder extends EntityListBuilder {
   public function __construct(
     EntityTypeInterface $entity_type,
     EntityStorageInterface $storage,
-    AccountInterface $current_user,
-    EntityStorageInterface $user_storage,
     RendererInterface $renderer,
   ) {
     parent::__construct($entity_type, $storage);
-    $this->currentUser = $current_user;
-    $this->userStorage = $user_storage;
     $this->renderer = $renderer;
   }
 
@@ -63,12 +47,9 @@ class ApiaryListBuilder extends EntityListBuilder {
    * {@inheritdoc}
    */
   public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type) {
-    $entity_type_manager = $container->get('entity_type.manager');
     return new static(
       $entity_type,
-      $entity_type_manager->getStorage($entity_type->id()),
-      $container->get('current_user'),
-      $entity_type_manager->getStorage('user'),
+      $container->get('entity_type.manager')->getStorage($entity_type->id()),
       $container->get('renderer'),
     );
   }
@@ -206,44 +187,9 @@ class ApiaryListBuilder extends EntityListBuilder {
       '#weight' => 10,
     ];
 
-    /** @var \Drupal\user\UserInterface|null $current */
-    $current = $this->userStorage->load($this->currentUser->id());
-    $cbr = $this->extractCbr($current);
-
-    if ($cbr !== '') {
-      $message = [
-        '#markup' => $this->t('Your CBR number: @cbr', ['@cbr' => $cbr]),
-      ];
-    }
-    elseif ($current) {
-      $message = [
-        '#type' => 'inline_template',
-        '#template' => '{% trans %}You have not set a CBR number yet. <a href="{{ url }}">Update your profile</a> to add one.{% endtrans %}',
-        '#context' => [
-          'url' => $current->toUrl('edit-form')->toString(),
-        ],
-      ];
-    }
-    else {
-      $message = [
-        '#markup' => $this->t('Sign in to record your CBR number.'),
-      ];
-    }
-
-    $build['cbr_summary'] = [
-      '#type' => 'container',
-      '#weight' => -100,
-      '#attributes' => ['class' => ['hivelog-cbr-summary']],
-      'message' => $message,
-    ];
-
-    $cache = CacheableMetadata::createFromRenderArray($build)
-      ->addCacheContexts(['user']);
-    if ($current) {
-      $cache->addCacheableDependency($current);
-    }
-    $cache->applyTo($build);
-
+    // The current user's CBR summary banner moved to the dashboard landing
+    // page (DashboardController, ADR-0057 / task 0056). The per-row CBR
+    // column below — the apiary owner's number — stays here.
     return $build;
   }
 

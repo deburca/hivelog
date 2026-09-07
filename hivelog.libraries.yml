@@ -71,3 +71,12 @@ activity_columns:
   dependencies:
     - hivelog/tables
     - hivelog/responsive
+
+dashboard:
+  version: 1.x
+  css:
+    component:
+      css/hivelog.dashboard.css: {}
+  dependencies:
+    - hivelog/buttons
+    - hivelog/responsive
