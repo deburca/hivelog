@@ -130,9 +130,13 @@ WHERE contains(string(project), this.file.name)
 SORT status asc, priority asc
 ```
 
-Proposed breakdown (task files not yet created — next free ID is `0056`;
-split these out with `project: "[[dashboard-landing-page]]"` when the
-project is picked up):
+- [[0056-dashboard-landing-page]] — backlog (umbrella / entry task;
+  blocked on the open questions below and the IA ADR). Its acceptance
+  criteria hold the full breakdown below; split criteria 2–8 into their
+  own `00NN` task files if the work is picked up incrementally.
+
+Breakdown (currently the acceptance criteria of
+[[0056-dashboard-landing-page]]):
 
 1. **ADR + routing skeleton** — write a decision record for the IA change
    (dashboard takes `/hivelog`, apiary collection → `/hivelog/apiaries`,
