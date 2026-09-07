@@ -21,13 +21,13 @@ recent records) so the beekeeper does not have to drill one apiary deep to
 see what needs doing. Motivated by finding 1 of
 [[navigation-and-page-layout]].
 
-**Not ready to start.** The project note's six open questions are
-unresolved and the IA change (dashboard takes `/hivelog`, apiary
-collection → `/hivelog/apiaries`, breadcrumb root) needs its own ADR
-first — see acceptance criterion 1. If the work is picked up
-incrementally, split criteria 2–8 into their own `00NN` task files (all
-`project: "[[dashboard-landing-page]]"`); this task is the umbrella /
-entry point until then.
+**Blocked on the IA ADR.** The project note's six open questions are
+resolved (see its Decisions section), but the IA change (dashboard takes
+`/hivelog`, apiary collection → `/hivelog/apiaries`, breadcrumb root)
+still needs its own ADR — acceptance criterion 1, and the first thing to
+land. If the work is picked up incrementally, split criteria 2–8 into
+their own `00NN` task files (all `project: "[[dashboard-landing-page]]"`);
+this task is the umbrella / entry point until then.
 
 Design reference: `projects/dashboard-landing-page-mockup.html` and
 <https://claude.ai/code/artifact/62dfb1ba-8604-48b6-b9dd-e17b9eb57cd1>.
@@ -36,8 +36,9 @@ Design reference: `projects/dashboard-landing-page-mockup.html` and
 - [ ] **ADR + routing.** New ADR for the IA change (dashboard takes
       `/hivelog`; `entity.apiary.collection` path → `/hivelog/apiaries`;
       breadcrumb root link `entity.apiary.collection` →
-      `hivelog.dashboard`; decide whether to ship a redirect from the old
-      path). Add the `hivelog.dashboard` route, an empty
+      `hivelog.dashboard`; no redirect — `/hivelog` stays valid as the
+      dashboard, per project decision 2). Add the `hivelog.dashboard`
+      route, an empty
       `DashboardController::view()`, the `hivelog.links.menu.yml` edits
       (dashboard as the `HiveLog` parent, **Apiaries** as first child),
       the `Apiary` `collection` link-template change, and the
@@ -69,16 +70,17 @@ Design reference: `projects/dashboard-landing-page-mockup.html` and
       Open seasonal tasks (with overdue sub-count) · Low-stock items ·
       Net YTD. Counts via `->count()` queries, not entity loads. Net YTD
       is a straight sum of
-      `InventoryReportController::computeApiaryYearTotals()` across
-      apiaries — no new financial logic. Each tile links to the relevant
-      collection / filtered view.
+      `InventoryReportController::computeApiaryYearTotals()` across the
+      apiaries the user can view — no new financial logic; the tile is
+      omitted for users without inventory-view access. Each tile links to
+      the relevant collection / filtered view.
 - [ ] **"Upcoming" + "Recent activity" widgets.** Upcoming: unreported
       seasonal actions whose `week_start` is within the next ~4 weeks,
       grouped by week, read-only. Recent activity: reverse-chronological
       merge across inspections, queen observations, action logs,
-      inventory purchases and harvest yields (capped per type before the
-      merge), each linked to its canonical page. (Recent-activity record
-      set pending open question 5.)
+      inventory purchases and harvest yields — all five record types
+      (decision 5), each capped per type before the merge, then sliced to
+      ~10, each linked to its canonical page.
 - [ ] **"Apiaries" section.** Compact apiary summary as the closing
       section (name, hive count, open-tasks badge with overdue callout,
       low-stock badge, last activity), plus "Add Apiary". Strip the CBR
@@ -95,10 +97,9 @@ Design reference: `projects/dashboard-landing-page-mockup.html` and
       render array, not just by inspection.
 - [ ] **Access.** Roll-up respects per-entity access — two users with
       different permissions must not share a cache entry, and a user sees
-      only apiaries/hives they may view. Decide dashboard permission
-      (new `access hivelog dashboard` vs reuse the existing
-      `view own apiary + view any apiary + administer hivelog` OR-set —
-      open question 6).
+      only apiaries/hives they may view. The dashboard route reuses the
+      existing `view own apiary + view any apiary + administer hivelog`
+      OR-set (decision 6) — no new permission.
 - [ ] Tests added/updated (`--group hivelog`): kernel — aggregation
       correctness, access-filtered roll-up, cache metadata, first-run and
       "all caught up" states; functional — new route + permission +
@@ -112,12 +113,13 @@ Design reference: `projects/dashboard-landing-page-mockup.html` and
   `docs/project-management/decisions/00NN-*.md`.
 - Key files (changed): `hivelog.routing.yml`, `hivelog.links.menu.yml`,
   `hivelog.libraries.yml`, `src/Entity/Apiary.php` (collection link),
-  `src/ApiaryListBuilder.php` (drop CBR block), `hivelog.permissions.yml`
-  (if a new permission is added), `src/Breadcrumb/HivelogBreadcrumbBuilder.php`
+  `src/ApiaryListBuilder.php` (drop CBR block),
+  `src/Breadcrumb/HivelogBreadcrumbBuilder.php`
   + `tests/src/Unit/Breadcrumb/HivelogBreadcrumbBuilderTest.php`.
-- No entity schema change → no update hook, **unless** open question 4
-  (inspection-cadence field) is answered yes, which would add a field to
-  `Hive` and a `hivelog_update_100NN` hook.
+  No `hivelog.permissions.yml` change — decision 6 reuses the existing
+  OR-set.
+- No entity schema change and no update hook — the inspection-cadence
+  field (project decision 4) is explicitly out of scope for 0056.
 - Follow [[0004-custom-controllers-over-view-builders]]: the dashboard is
   a custom controller assembling embedded list-builder-style tables, same
   as `ApiaryController` / `HiveController`.

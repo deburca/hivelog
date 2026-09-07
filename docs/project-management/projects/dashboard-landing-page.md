@@ -117,8 +117,9 @@ colours (critical/warning) are distinct from the module's accent.
   - Charts / sparklines on the dashboard (weight histogram etc. stay on
     the hive page).
   - Per-user dashboard customisation, widget reordering, or saved filters.
-  - "Hives overdue for inspection" — there is no expected-interval field
-    today; deferred unless a cadence is defined (open question 4).
+  - "Hives overdue for inspection" — deferred to its own later task
+    (decision 4): needs an expected-inspection-interval field on `Hive`
+    plus an update hook, out of scope for 0056.
   - Changes to how Net YTD is calculated; the tile is a straight sum of
     the existing per-apiary/year totals.
 
@@ -165,30 +166,40 @@ Breakdown (currently the acceptance criteria of
 
 No target release assigned yet — sequence via [[roadmap]].
 
-## Open questions
-- **Single- vs multi-apiary emphasis.** Most beekeepers run one apiary
-  (the 31-entry calendar is seeded per apiary). Do we design the
-  multi-apiary roll-up as a first-class case, or optimise hard for one
-  apiary and treat multi-apiary as "the same widgets, with an apiary
-  column"? Leaning the latter.
-- **The route move needs the ADR (task 1) to land first.** Moving
-  `entity.apiary.collection` off `/hivelog` changes a URL that may be
-  bookmarked and is the current breadcrumb root. Confirm: is
-  `/hivelog/apiaries` the right new path, and do we ship a redirect from
-  the old `/hivelog` apiary-list URL or just accept the break (module is
-  pre-1.0-of-this-feature)?
-- **Net YTD on the landing page.** It pulls the financial report's
-  aggregation onto the home screen. Acceptable, or keep money one level
-  down in the per-apiary report (heaviness / at-a-glance sensitivity)?
-- **"Overdue for inspection."** Worth adding an expected-inspection-
-  interval field so the dashboard can flag hives not seen in N weeks, or
-  leave that out of v1?
-- **Recent activity scope.** All five record types (inspections, queen
-  observations, action logs, purchases, harvest yields), or just
-  inspections + action logs to keep the merge cheap and focused?
-- **Permission.** New `access hivelog dashboard` permission, or reuse the
-  existing `view own apiary + view any apiary + administer hivelog`
-  OR-set that already guards `/hivelog`?
+## Decisions
+All six open questions resolved 2026-09-07; carried into
+[[0056-dashboard-landing-page]].
+
+1. **Single- vs multi-apiary emphasis — optimise for single-apiary.**
+   Most beekeepers run one apiary (the 31-entry calendar is seeded per
+   apiary). The dashboard is designed for that case; multi-apiary uses
+   the same widgets with per-row apiary attribution, not a separate
+   layout.
+2. **Route move — adopt `/hivelog/apiaries`, no redirect.** The apiary
+   collection moves to `/hivelog/apiaries`. `/hivelog` itself stays a
+   valid HiveLog page (now the dashboard, which links to Apiaries
+   prominently), so a `/hivelog` bookmark never 404s and there was never
+   a distinct apiary-list URL to preserve. The ADR (criterion 1 of 0056)
+   ratifies the path, the menu / link-template edits, and the
+   breadcrumb-root change.
+3. **Net YTD tile — ships in v1.** A sixth stat tile: a straight sum of
+   `InventoryReportController::computeApiaryYearTotals()` across the
+   apiaries the user can view, one figure, no breakdown. Gated by
+   inventory-view access — a user without it simply doesn't get the tile.
+   No new financial logic.
+4. **"Overdue for inspection" — deferred, not in 0056.** Flagging hives
+   not inspected in N weeks needs an expected-inspection-interval field
+   on `Hive` plus an update hook; that is its own later task. v1's
+   "Needs attention" covers overdue / due seasonal actions and low stock
+   only.
+5. **Recent activity — all five record types, capped per type.**
+   Inspections, queen observations, action logs, inventory purchases and
+   harvest yields; each capped before the merge, then sliced to ~10.
+6. **Permission — reuse the existing OR-set.** No new
+   `access hivelog dashboard` permission; the dashboard route keeps the
+   `view own apiary + view any apiary + administer hivelog` requirement
+   that already guards `/hivelog`. It surfaces nothing the user could not
+   already reach.
 
 ## Related decisions
 - [[navigation-and-page-layout]] (the review that motivated this project)
