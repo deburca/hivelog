@@ -167,8 +167,7 @@ class DashboardTest extends KernelTestBase {
   }
 
   /**
-   * The render declares the user cache context, the apiary list cache tag,
-   * and a max-age bounded by the ISO week boundary.
+   * Cache metadata: user context, apiary list tag, ISO-week-bounded max-age.
    */
   public function testCacheMetadata(): void {
     $user = User::create(['name' => 'cache', 'mail' => 'cache@example.com']);
