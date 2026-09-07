@@ -1,0 +1,94 @@
+/**
+ * @file
+ * Layout for the HiveLog dashboard landing page (/hivelog).
+ *
+ * Task 0056 (criterion 2), ADR-0057. Owns the dashboard's vertical rhythm,
+ * the header strip (ISO-week badge + the CBR summary line, moved here from
+ * ApiaryListBuilder) and the first-run welcome card. The stat-tile grid
+ * below is laid out here; the tile itself is styled by its SDC in
+ * components/stat-tile/. Widget-specific rules (needs-attention queue,
+ * recent activity) are added by later criteria.
+ *
+ * Breakpoints follow css/hivelog.responsive.css: single-column stack at
+ * <= 768px.
+ */
+
+.hivelog-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+/* Header strip: ISO-week badge on the left, CBR line filling the rest. */
+.hivelog-dashboard__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+}
+
+.hivelog-dashboard__week {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 0.35em 0.7em;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  background: #f9fafb;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  color: #374151;
+  white-space: nowrap;
+}
+
+/*
+ * The CBR summary reuses .hivelog-cbr-summary from hivelog.buttons.css for
+ * its look; here it just loses the block margin and grows to fill the
+ * header strip next to the week badge.
+ */
+.hivelog-dashboard__header .hivelog-cbr-summary {
+  flex: 1 1 16rem;
+  margin: 0;
+}
+
+/* First-run welcome card, shown when the user has no visible apiaries. */
+.hivelog-dashboard__welcome {
+  padding: 1.25rem 1.5rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+.hivelog-dashboard__welcome h2 {
+  margin: 0 0 0.5rem;
+}
+
+.hivelog-dashboard__welcome p {
+  max-width: 60ch;
+  margin: 0;
+  color: #374151;
+}
+
+.hivelog-dashboard__welcome-actions {
+  margin-top: 1rem;
+}
+
+/*
+ * Stat-tile grid: hairline-divided (1px gap over a light background),
+ * fills the row on desktop, one column on small screens. Populated by
+ * criterion 4.
+ */
+.hivelog-stat-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #e5e7eb;
+}
+
+@media (max-width: 768px) {
+  .hivelog-stat-tiles {
+    grid-template-columns: 1fr;
+  }
+}

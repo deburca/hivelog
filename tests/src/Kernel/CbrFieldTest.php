@@ -13,9 +13,10 @@ use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 /**
  * Tests the per-user Central Beehive Registration (CBR) number field.
  *
- * Issue #59: a CBR field lives on the user entity, is rendered on the
- * apiary collection landing page (caption + first column of each row),
- * and is editable from the standard user form.
+ * Issue #59: a CBR field lives on the user entity and is editable from the
+ * standard user form. The apiary list shows each apiary owner's CBR in its
+ * first column (covered here); the current user's own CBR summary line
+ * moved to the dashboard (see DashboardTest, ADR-0057).
  */
 #[Group('hivelog')]
 #[RunTestsInSeparateProcesses]
@@ -132,43 +133,12 @@ class CbrFieldTest extends KernelTestBase {
   }
 
   /**
-   * The landing page caption shows the current user's CBR or an invitation.
-   */
-  public function testRenderedCaptionForCurrentUser(): void {
-    $with_cbr = User::create([
-      'name' => 'caption-with',
-      'mail' => 'caption-with@example.com',
-      'cbr_number' => 'IE-9999',
-    ]);
-    $with_cbr->save();
-
-    $without_cbr = User::create([
-      'name' => 'caption-without',
-      'mail' => 'caption-without@example.com',
-    ]);
-    $without_cbr->save();
-
-    $renderer = \Drupal::service('renderer');
-
-    \Drupal::currentUser()->setAccount($with_cbr);
-    $build = \Drupal::entityTypeManager()->getListBuilder('apiary')->render();
-    $html_with = (string) $renderer->renderInIsolation($build);
-    $this->assertStringContainsString('Your CBR number: IE-9999', $html_with);
-
-    \Drupal::currentUser()->setAccount($without_cbr);
-    $build = \Drupal::entityTypeManager()->getListBuilder('apiary')->render();
-    $html_without = (string) $renderer->renderInIsolation($build);
-    $this->assertStringContainsString('have not set a CBR number yet', $html_without);
-    $this->assertStringContainsString('Update your profile', $html_without);
-  }
-
-  /**
-   * The landing page links to the queen collection.
+   * The apiary list links to the queen collection.
    *
    * Issue: the HiveLog menu moved into the front-end `main` menu
    * (`hivelog.links.menu.yml`), where the default one-level-deep menu
    * block silently hides the "Queens" child link. An explicit in-page
-   * link on the apiary landing page means the queen collection stays
+   * link on the apiary list page means the queen collection stays
    * reachable regardless of menu block configuration.
    */
   public function testLandingPageLinksToQueenCollection(): void {
