@@ -83,7 +83,7 @@ Design reference: `projects/dashboard-landing-page-mockup.html` and
       removed (moved into `DashboardTest`), its docblock retargeted. The
       stat-tile grid is styled but unpopulated until the Stat tiles
       criterion.
-- [ ] **"Needs attention" widget.** Cross-apiary + cross-hive aggregation
+- [x] **"Needs attention" widget.** Cross-apiary + cross-hive aggregation
       of unreported `enabled` `CalendarAction`s (current year) whose
       timing is overdue or due-this-week, plus `isLowStock()` items,
       ordered by severity then lateness. Each row: left severity stripe
@@ -95,6 +95,26 @@ Design reference: `projects/dashboard-landing-page-mockup.html` and
       `HiveController::buildCalendarChecklist()` /
       `pendingActionTimingLabel()`. "All caught up for week NN." empty
       state.
+      **Done** (branch `feature/0056-needs-attention`): `DashboardController`
+      gains `buildNeedsAttention()` + `collectSeasonalAlerts()` (apiary- and
+      hive-scoped, one row per hive for hive-scoped) + `collectLowStockAlerts()`
+      (active items only, discontinued excluded) + `attentionTiming()` /
+      `weekWindow()` / `attentionContext()` helpers. Rows: severity-stripe
+      container + mono chip + apiary/hive `toLink()` context + a single
+      "Report done" / "Add purchase" `hivelog:button` (safe GET to the
+      scoped add-form with `?status=done`). `.hivelog-attention*` styles
+      added to `css/hivelog.dashboard.css`. `view()` shows the panel
+      whenever the user has a visible apiary (before the interim body).
+      Cache: `calendar_action` / `apiary_action_log` / `hive_action_log` /
+      `hive` / `inventory_item` / `inventory_purchase` / `inventory_usage`
+      list tags + per-row deps; `user` context + ISO-week max-age already
+      from criterion 2. `DashboardTest` gains 9 kernel tests (caught-up,
+      overdue apiary action, due-this-week, upcoming hidden, reported
+      hidden, hive-scoped per-hive, low stock, discontinued excluded,
+      cache tags). phpcs clean locally (Drupal + DrupalPractice). Hives
+      are not filtered by status yet — parity with the existing
+      `HiveController` checklist; a possible later refinement. No cap on
+      row count yet.
 - [ ] **Stat tiles.** Apiaries · Active hives · Inspections this month ·
       Open seasonal tasks (with overdue sub-count) · Low-stock items ·
       Net YTD. Counts via `->count()` queries, not entity loads. Net YTD

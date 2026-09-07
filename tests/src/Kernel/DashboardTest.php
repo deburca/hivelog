@@ -6,17 +6,21 @@ namespace Drupal\Tests\hivelog\Kernel;
 
 use Drupal\hivelog\Controller\DashboardController;
 use Drupal\hivelog\Entity\Apiary;
+use Drupal\hivelog\Entity\ApiaryActionLog;
+use Drupal\hivelog\Entity\CalendarAction;
+use Drupal\hivelog\Entity\Hive;
+use Drupal\hivelog\Entity\InventoryItem;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\user\Entity\User;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * Tests the dashboard landing page controller shell (task 0056, ADR-0057).
+ * Tests the dashboard landing page controller (task 0056, ADR-0057).
  *
- * Covers criterion 2: the header strip (ISO-week badge + the CBR summary
- * line moved off ApiaryListBuilder), the first-run welcome state, and the
- * render's cache metadata.
+ * Covers criterion 2 (the shell: header strip, welcome state, stat-tile
+ * SDC) and criterion 3 (the "Needs attention" widget: overdue / due
+ * seasonal actions plus low-stock items).
  */
 #[Group('hivelog')]
 #[RunTestsInSeparateProcesses]
@@ -49,6 +53,12 @@ class DashboardTest extends KernelTestBase {
     $this->installEntitySchema('hive_inspection');
     $this->installEntitySchema('queen');
     $this->installEntitySchema('queen_observation');
+    $this->installEntitySchema('calendar_action');
+    $this->installEntitySchema('hive_action_log');
+    $this->installEntitySchema('apiary_action_log');
+    $this->installEntitySchema('inventory_item');
+    $this->installEntitySchema('inventory_purchase');
+    $this->installEntitySchema('inventory_usage');
     $this->installSchema('file', ['file_usage']);
   }
 
@@ -68,12 +78,51 @@ class DashboardTest extends KernelTestBase {
   }
 
   /**
+   * Creates a user and makes it the current account.
+   *
+   * The first user created in a kernel test is uid 1 (the superuser), so
+   * the dashboard's per-entity access filtering lets it see every apiary.
+   */
+  private function makeCurrentUser(): User {
+    $user = User::create([
+      'name' => $this->randomMachineName(),
+      'mail' => $this->randomMachineName() . '@example.com',
+    ]);
+    $user->save();
+    \Drupal::currentUser()->setAccount($user);
+    return $user;
+  }
+
+  /**
+   * Deletes the 31 calendar actions Apiary::postSave() seeds on insert.
+   */
+  private function clearSeededCalendarActions(): void {
+    $storage = \Drupal::entityTypeManager()->getStorage('calendar_action');
+    if ($all = $storage->loadMultiple()) {
+      $storage->delete($all);
+    }
+  }
+
+  /**
+   * The current ISO week, or skips the test when a "past week" can't exist.
+   */
+  private function weekOrSkipEdge(): int {
+    $week = (int) date('W');
+    if ($week < 2) {
+      $this->markTestSkipped('An overdue action cannot be constructed in ISO week 1.');
+    }
+    return $week;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Shell (criterion 2).
+  // ---------------------------------------------------------------------------
+
+  /**
    * With no visible apiaries the dashboard shows the first-run welcome card.
    */
   public function testFirstRunWelcomeState(): void {
-    $user = User::create(['name' => 'newbie', 'mail' => 'newbie@example.com']);
-    $user->save();
-    \Drupal::currentUser()->setAccount($user);
+    $this->makeCurrentUser();
 
     $html = $this->renderBuild($this->controller()->view());
 
@@ -81,20 +130,20 @@ class DashboardTest extends KernelTestBase {
     $this->assertStringContainsString('31-entry seasonal calendar', $html);
     $this->assertStringContainsString('/hivelog/apiary/add', $html);
     $this->assertStringNotContainsString('Go to Apiaries', $html);
+    $this->assertStringNotContainsString('Needs attention', $html);
   }
 
   /**
-   * With at least one visible apiary the interim body replaces the welcome.
+   * With at least one visible apiary the welcome is replaced by the widgets.
    */
-  public function testInterimBodyWhenApiariesExist(): void {
-    $user = User::create(['name' => 'keeper', 'mail' => 'keeper@example.com']);
-    $user->save();
-    \Drupal::currentUser()->setAccount($user);
+  public function testWidgetsShownWhenApiariesExist(): void {
+    $user = $this->makeCurrentUser();
     Apiary::create(['name' => 'Home Apiary', 'uid' => $user->id()])->save();
 
     $html = $this->renderBuild($this->controller()->view());
 
     $this->assertStringNotContainsString('Welcome to HiveLog', $html);
+    $this->assertStringContainsString('Needs attention', $html);
     $this->assertStringContainsString('Go to Apiaries', $html);
   }
 
@@ -102,9 +151,7 @@ class DashboardTest extends KernelTestBase {
    * The header strip prints the current ISO week and year.
    */
   public function testHeaderShowsCurrentWeek(): void {
-    $user = User::create(['name' => 'weeker', 'mail' => 'weeker@example.com']);
-    $user->save();
-    \Drupal::currentUser()->setAccount($user);
+    $this->makeCurrentUser();
 
     $html = $this->renderBuild($this->controller()->view());
 
@@ -170,9 +217,7 @@ class DashboardTest extends KernelTestBase {
    * Cache metadata: user context, apiary list tag, ISO-week-bounded max-age.
    */
   public function testCacheMetadata(): void {
-    $user = User::create(['name' => 'cache', 'mail' => 'cache@example.com']);
-    $user->save();
-    \Drupal::currentUser()->setAccount($user);
+    $this->makeCurrentUser();
 
     $build = $this->controller()->view();
 
@@ -180,6 +225,248 @@ class DashboardTest extends KernelTestBase {
     $this->assertContains('apiary_list', $build['#cache']['tags']);
     $this->assertGreaterThan(0, $build['#cache']['max-age']);
     $this->assertLessThanOrEqual(7 * 24 * 3600, $build['#cache']['max-age']);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Needs attention (criterion 3).
+  // ---------------------------------------------------------------------------
+
+  /**
+   * With nothing overdue / due / low the panel shows the caught-up message.
+   */
+  public function testNeedsAttentionAllCaughtUp(): void {
+    $user = $this->makeCurrentUser();
+    Apiary::create(['name' => 'Quiet Apiary', 'uid' => $user->id()])->save();
+    $this->clearSeededCalendarActions();
+
+    $html = $this->renderBuild($this->controller()->view());
+
+    $this->assertStringContainsString('Needs attention', $html);
+    $this->assertStringContainsString('All caught up for week ' . ((int) date('W')), $html);
+  }
+
+  /**
+   * An overdue, unreported apiary-scoped action becomes a critical row.
+   */
+  public function testOverdueApiaryActionAppears(): void {
+    $week = $this->weekOrSkipEdge();
+    $user = $this->makeCurrentUser();
+    $apiary = Apiary::create(['name' => 'Ravnholt', 'uid' => $user->id()]);
+    $apiary->save();
+    $this->clearSeededCalendarActions();
+
+    CalendarAction::create([
+      'apiary' => $apiary->id(),
+      'title' => 'Wasp defence check',
+      'description' => 'Reduce entrances.',
+      'week_start' => max(1, $week - 4),
+      'week_end' => $week - 1,
+      'scope' => 'apiary',
+    ])->save();
+
+    $html = $this->renderBuild($this->controller()->view());
+
+    $this->assertStringContainsString('Wasp defence check', $html);
+    $this->assertStringContainsString('hivelog-attention__row--critical', $html);
+    $this->assertStringContainsString('Overdue', $html);
+    $this->assertStringNotContainsString('All caught up', $html);
+    $this->assertStringContainsString('/log/add?status=done', $html);
+  }
+
+  /**
+   * An action whose window covers the current week becomes a warning row.
+   */
+  public function testDueThisWeekActionAppears(): void {
+    $week = (int) date('W');
+    $user = $this->makeCurrentUser();
+    $apiary = Apiary::create(['name' => 'Ravnholt', 'uid' => $user->id()]);
+    $apiary->save();
+    $this->clearSeededCalendarActions();
+
+    CalendarAction::create([
+      'apiary' => $apiary->id(),
+      'title' => 'Feed winter stores',
+      'description' => 'Syrup.',
+      'week_start' => $week,
+      'week_end' => $week,
+      'scope' => 'apiary',
+    ])->save();
+
+    $html = $this->renderBuild($this->controller()->view());
+
+    $this->assertStringContainsString('Feed winter stores', $html);
+    $this->assertStringContainsString('hivelog-attention__row--warning', $html);
+    $this->assertStringContainsString('Due wk ' . $week, $html);
+  }
+
+  /**
+   * An action whose window is still ahead is not shown.
+   */
+  public function testUpcomingActionHidden(): void {
+    $week = (int) date('W');
+    if ($week > 51) {
+      $this->markTestSkipped('A future week cannot be constructed near week 53.');
+    }
+    $user = $this->makeCurrentUser();
+    $apiary = Apiary::create(['name' => 'Ravnholt', 'uid' => $user->id()]);
+    $apiary->save();
+    $this->clearSeededCalendarActions();
+
+    CalendarAction::create([
+      'apiary' => $apiary->id(),
+      'title' => 'Mouse guards fitted',
+      'description' => 'Later.',
+      'week_start' => $week + 2,
+      'week_end' => $week + 2,
+      'scope' => 'apiary',
+    ])->save();
+
+    $html = $this->renderBuild($this->controller()->view());
+
+    $this->assertStringNotContainsString('Mouse guards fitted', $html);
+    $this->assertStringContainsString('All caught up', $html);
+  }
+
+  /**
+   * An action already reported "done" for this year is not shown.
+   */
+  public function testReportedActionDoesNotAppear(): void {
+    $week = $this->weekOrSkipEdge();
+    $user = $this->makeCurrentUser();
+    $apiary = Apiary::create(['name' => 'Ravnholt', 'uid' => $user->id()]);
+    $apiary->save();
+    $this->clearSeededCalendarActions();
+
+    $action = CalendarAction::create([
+      'apiary' => $apiary->id(),
+      'title' => 'Varroa autumn treatment',
+      'description' => 'Formic.',
+      'week_start' => max(1, $week - 3),
+      'week_end' => $week - 1,
+      'scope' => 'apiary',
+    ]);
+    $action->save();
+
+    ApiaryActionLog::create([
+      'apiary' => $apiary->id(),
+      'calendar_action' => $action->id(),
+      'year' => (int) date('Y'),
+      'status' => 'done',
+    ])->save();
+
+    $html = $this->renderBuild($this->controller()->view());
+
+    $this->assertStringNotContainsString('Varroa autumn treatment', $html);
+    $this->assertStringContainsString('All caught up', $html);
+  }
+
+  /**
+   * An overdue hive-scoped action produces one row per hive in the apiary.
+   */
+  public function testHiveScopedOverdueAppearsPerHive(): void {
+    $week = $this->weekOrSkipEdge();
+    $user = $this->makeCurrentUser();
+    $apiary = Apiary::create(['name' => 'Sondermarken', 'uid' => $user->id()]);
+    $apiary->save();
+    $this->clearSeededCalendarActions();
+
+    Hive::create(['name' => 'Hive S-1', 'apiary' => $apiary->id(), 'status' => 'active'])->save();
+    Hive::create(['name' => 'Hive S-2', 'apiary' => $apiary->id(), 'status' => 'active'])->save();
+
+    CalendarAction::create([
+      'apiary' => $apiary->id(),
+      'title' => 'Autumn weight check',
+      'description' => 'Heft each hive.',
+      'week_start' => max(1, $week - 3),
+      'week_end' => $week - 1,
+      'scope' => 'hive',
+    ])->save();
+
+    $html = $this->renderBuild($this->controller()->view());
+
+    $this->assertSame(2, substr_count($html, 'hivelog-attention__row-title">Autumn weight check'));
+    $this->assertStringContainsString('Hive S-1', $html);
+    $this->assertStringContainsString('Hive S-2', $html);
+    $this->assertStringContainsString('/hivelog/hive/', $html);
+  }
+
+  /**
+   * A consumable item at or below its threshold becomes a low-stock row.
+   */
+  public function testLowStockItemAppears(): void {
+    $user = $this->makeCurrentUser();
+    $apiary = Apiary::create(['name' => 'Store Apiary', 'uid' => $user->id()]);
+    $apiary->save();
+    $this->clearSeededCalendarActions();
+
+    InventoryItem::create([
+      'apiary' => $apiary->id(),
+      'name' => 'Formic acid pads',
+      'unit' => 'pad',
+      'low_stock_threshold' => 10,
+    ])->save();
+
+    $html = $this->renderBuild($this->controller()->view());
+
+    $this->assertStringContainsString('Formic acid pads', $html);
+    $this->assertStringContainsString('Low stock', $html);
+    $this->assertStringContainsString('reorder at 10', $html);
+    $this->assertStringContainsString('/inventory-purchase/add', $html);
+  }
+
+  /**
+   * A discontinued item is never surfaced as low stock.
+   */
+  public function testDiscontinuedLowStockItemExcluded(): void {
+    $user = $this->makeCurrentUser();
+    $apiary = Apiary::create(['name' => 'Store Apiary', 'uid' => $user->id()]);
+    $apiary->save();
+    $this->clearSeededCalendarActions();
+
+    InventoryItem::create([
+      'apiary' => $apiary->id(),
+      'name' => 'Old smoker fuel',
+      'unit' => 'kg',
+      'low_stock_threshold' => 5,
+      'status' => 'discontinued',
+    ])->save();
+
+    $html = $this->renderBuild($this->controller()->view());
+
+    $this->assertStringNotContainsString('Old smoker fuel', $html);
+    $this->assertStringContainsString('All caught up', $html);
+  }
+
+  /**
+   * The needs-attention roll-up declares the list cache tags it reads.
+   */
+  public function testNeedsAttentionCacheTags(): void {
+    $user = $this->makeCurrentUser();
+    $apiary = Apiary::create(['name' => 'Tagged Apiary', 'uid' => $user->id()]);
+    $apiary->save();
+    $this->clearSeededCalendarActions();
+
+    CalendarAction::create([
+      'apiary' => $apiary->id(),
+      'title' => 'Any enabled action',
+      'description' => 'Desc.',
+      'week_start' => 10,
+      'scope' => 'apiary',
+    ])->save();
+    InventoryItem::create([
+      'apiary' => $apiary->id(),
+      'name' => 'Tracked item',
+      'unit' => 'kg',
+      'low_stock_threshold' => 1,
+    ])->save();
+
+    $tags = $this->controller()->view()['#cache']['tags'];
+
+    $this->assertContains('calendar_action_list', $tags);
+    $this->assertContains('apiary_action_log_list', $tags);
+    $this->assertContains('hive_action_log_list', $tags);
+    $this->assertContains('inventory_item_list', $tags);
+    $this->assertContains('inventory_purchase_list', $tags);
   }
 
 }

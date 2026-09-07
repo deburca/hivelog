@@ -92,3 +92,115 @@
     grid-template-columns: 1fr;
   }
 }
+
+/*
+ * "Needs attention" — the priority queue. A panel of rows, each with a
+ * left severity stripe (critical / warning) and a mono status chip.
+ * Criterion 3.
+ */
+.hivelog-attention {
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+.hivelog-attention__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.75rem;
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.hivelog-attention__heading {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.hivelog-attention__count {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.hivelog-attention__empty {
+  margin: 0;
+  padding: 1rem;
+  color: #6b7280;
+}
+
+.hivelog-attention__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.9rem;
+  padding: 0.7rem 1rem 0.7rem 1.25rem;
+  border-bottom: 1px solid #e5e7eb;
+  border-left: 4px solid #9ca3af;
+}
+
+.hivelog-attention__row:last-child {
+  border-bottom: 0;
+}
+
+.hivelog-attention__row--critical {
+  border-left-color: #b91c1c;
+}
+
+.hivelog-attention__row--warning {
+  border-left-color: #a4630a;
+}
+
+.hivelog-attention__chip {
+  flex: 0 0 auto;
+  padding: 0.15rem 0.4rem;
+  border-radius: 3px;
+  background: #f3f4f6;
+  color: #374151;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.hivelog-attention__chip--critical {
+  background: #fdeceb;
+  color: #b91c1c;
+}
+
+.hivelog-attention__chip--warning {
+  background: #f7ecd9;
+  color: #a4630a;
+}
+
+.hivelog-attention__body {
+  flex: 1 1 18rem;
+  min-width: 0;
+}
+
+.hivelog-attention__row-title {
+  font-weight: 600;
+}
+
+.hivelog-attention__ctx {
+  display: block;
+  margin-top: 0.1rem;
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.hivelog-attention__ctx a {
+  color: #6b7280;
+}
+
+.hivelog-attention__action {
+  flex: 0 0 auto;
+}
+
+@media (max-width: 768px) {
+  .hivelog-attention__row {
+    align-items: flex-start;
+  }
+}
