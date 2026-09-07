@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: backlog
+status: todo
 priority: medium
 project: "[[dashboard-landing-page]]"
 area: theme
@@ -21,30 +21,29 @@ recent records) so the beekeeper does not have to drill one apiary deep to
 see what needs doing. Motivated by finding 1 of
 [[navigation-and-page-layout]].
 
-**Blocked on the IA ADR.** The project note's six open questions are
-resolved (see its Decisions section), but the IA change (dashboard takes
-`/hivelog`, apiary collection → `/hivelog/apiaries`, breadcrumb root)
-still needs its own ADR — acceptance criterion 1, and the first thing to
-land. If the work is picked up incrementally, split criteria 2–8 into
-their own `00NN` task files (all `project: "[[dashboard-landing-page]]"`);
-this task is the umbrella / entry point until then.
+**Design settled.** The six open questions are resolved (see the project
+note's Decisions section) and the IA decision is captured in
+[[0057-dashboard-information-architecture]] (accepted). Acceptance
+criterion 1 lands that ADR's routing / menu / breadcrumb changes and
+should go first. If the work is picked up incrementally, split criteria
+2–8 into their own `00NN` task files (all
+`project: "[[dashboard-landing-page]]"`); this task is the umbrella /
+entry point until then.
 
 Design reference: `projects/dashboard-landing-page-mockup.html` and
 <https://claude.ai/code/artifact/62dfb1ba-8604-48b6-b9dd-e17b9eb57cd1>.
 
 ## Acceptance criteria
-- [ ] **ADR + routing.** New ADR for the IA change (dashboard takes
-      `/hivelog`; `entity.apiary.collection` path → `/hivelog/apiaries`;
-      breadcrumb root link `entity.apiary.collection` →
-      `hivelog.dashboard`; no redirect — `/hivelog` stays valid as the
-      dashboard, per project decision 2). Add the `hivelog.dashboard`
-      route, an empty
-      `DashboardController::view()`, the `hivelog.links.menu.yml` edits
-      (dashboard as the `HiveLog` parent, **Apiaries** as first child),
-      the `Apiary` `collection` link-template change, and the
-      breadcrumb-root change with its `HivelogBreadcrumbBuilderTest`
-      update. Confirm `HivelogBreadcrumbBuilder::applies()` still resolves
-      a sane trail on the dashboard route itself.
+- [ ] **Routing.** Implement [[0057-dashboard-information-architecture]]:
+      add the `hivelog.dashboard` route at `/hivelog` with an empty
+      `DashboardController::view()`; move `entity.apiary.collection` to
+      `/hivelog/apiaries` (the `Apiary` `collection` link template); the
+      `hivelog.links.menu.yml` edits (dashboard as the `HiveLog` parent,
+      **Apiaries** as first child); and the breadcrumb-root change
+      (`entity.apiary.collection` → `hivelog.dashboard`) with its
+      `HivelogBreadcrumbBuilderTest` update. Confirm
+      `HivelogBreadcrumbBuilder::applies()` still resolves a sane trail on
+      the dashboard route itself. No redirect (ADR decision 3).
 - [ ] **Shell + design system.** `hivelog/dashboard` CSS library (grid,
       depends on `hivelog/responsive`, ADR-0011 breakpoints); new
       `components/stat-tile/` SDC; header strip (current-ISO-week badge +
@@ -130,5 +129,5 @@ Design reference: `projects/dashboard-landing-page-mockup.html` and
 
 ## Related
 - Project:: [[dashboard-landing-page]]
-- Decisions:: [[navigation-and-page-layout]], [[0004-custom-controllers-over-view-builders]], [[0005-sdc-component-library]], [[0009-render-cacheability-discipline]], [[0011-responsive-design-strategy]], [[0012-action-button-design-system]], [[0013-breadcrumb-policy]], [[0025-seasonal-calendar-and-hive-action-tracking]]
+- Decisions:: [[0057-dashboard-information-architecture]], [[navigation-and-page-layout]], [[0004-custom-controllers-over-view-builders]], [[0005-sdc-component-library]], [[0009-render-cacheability-discipline]], [[0011-responsive-design-strategy]], [[0012-action-button-design-system]], [[0013-breadcrumb-policy]], [[0025-seasonal-calendar-and-hive-action-tracking]]
 - Commits::
