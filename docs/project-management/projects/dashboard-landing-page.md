@@ -139,12 +139,11 @@ SORT status asc, priority asc
 Breakdown (currently the acceptance criteria of
 [[0056-dashboard-landing-page]]):
 
-1. **ADR + routing skeleton** — write a decision record for the IA change
-   (dashboard takes `/hivelog`, apiary collection → `/hivelog/apiaries`,
-   breadcrumb root link, whether a redirect from the old path is needed);
-   add `hivelog.dashboard` route, an empty `DashboardController::view()`,
-   the menu-tree edits, and the breadcrumb-root change with its unit-test
-   update. Depends on nothing; blocks the rest.
+1. **Routing** — land [[0057-dashboard-information-architecture]]:
+   `hivelog.dashboard` route at `/hivelog` + an empty
+   `DashboardController::view()`; apiary collection → `/hivelog/apiaries`;
+   the menu-tree edits; the breadcrumb-root change with its unit-test
+   update. No redirect. Depends on nothing; blocks the rest.
 2. **Dashboard shell + design system** — `hivelog/dashboard` CSS library,
    `stat-tile` SDC, the header strip (week badge + relocated CBR line),
    first-run welcome state, responsive stack. Depends on 1.
@@ -215,4 +214,5 @@ All six open questions resolved 2026-09-07; carried into
   and "Upcoming" reuse its checklist mechanism; this project revisits that
   project's "dashboard alerts — out of scope" deferral, for pull-on-open
   surfacing only, not push notifications)
-- **New ADR to be written** (task 1): the `/hivelog` IA change.
+- [[0057-dashboard-information-architecture]] (the `/hivelog` IA change;
+  amends [[0013-breadcrumb-policy]]'s root-crumb target)
