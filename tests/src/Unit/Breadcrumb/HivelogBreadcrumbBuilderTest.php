@@ -171,6 +171,7 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
    */
   public static function hivelogCustomRouteProvider(): array {
     return [
+      'dashboard'             => ['hivelog.dashboard'],
       'hive add'              => ['hivelog.hive.add'],
       'inspection add'        => ['hivelog.inspection.add'],
       'queen add'             => ['hivelog.queen.add'],
@@ -289,10 +290,13 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   // -------------------------------------------------------------------------
 
   /**
-   * Apiary collection: no entity parameters → 3 base links only.
+   * Dashboard landing page: trail is Home › HiveLog only.
+   *
+   * "HiveLog" is the terminal crumb (a self-link the theme renders as
+   * plain text). ADR-0057.
    */
-  public function testBuildApiaryCollection(): void {
-    $route_match = $this->createRouteMatch('entity.apiary.collection');
+  public function testBuildDashboard(): void {
+    $route_match = $this->createRouteMatch('hivelog.dashboard');
     $route_match->method('getParameter')->willReturn(NULL);
 
     $breadcrumb = $this->builder->build($route_match);
@@ -302,7 +306,30 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $this->assertEquals('Home', (string) $links[0]->getText());
     $this->assertEquals('<front>', $links[0]->getUrl()->getRouteName());
     $this->assertEquals('HiveLog', (string) $links[1]->getText());
-    $this->assertEquals('entity.apiary.collection', $links[1]->getUrl()->getRouteName());
+    $this->assertEquals('hivelog.dashboard', $links[1]->getUrl()->getRouteName());
+    $this->assertContains('route', $breadcrumb->getCacheContexts());
+  }
+
+  /**
+   * Apiary collection: Home › HiveLog › Apiaries.
+   *
+   * "HiveLog" links to the dashboard (ADR-0057); "Apiaries" is the
+   * collection page's own terminal crumb.
+   */
+  public function testBuildApiaryCollection(): void {
+    $route_match = $this->createRouteMatch('entity.apiary.collection');
+    $route_match->method('getParameter')->willReturn(NULL);
+
+    $breadcrumb = $this->builder->build($route_match);
+    $links = $breadcrumb->getLinks();
+
+    $this->assertCount(3, $links);
+    $this->assertEquals('Home', (string) $links[0]->getText());
+    $this->assertEquals('<front>', $links[0]->getUrl()->getRouteName());
+    $this->assertEquals('HiveLog', (string) $links[1]->getText());
+    $this->assertEquals('hivelog.dashboard', $links[1]->getUrl()->getRouteName());
+    $this->assertEquals('Apiaries', (string) $links[2]->getText());
+    $this->assertEquals('entity.apiary.collection', $links[2]->getUrl()->getRouteName());
     $this->assertContains('route', $breadcrumb->getCacheContexts());
   }
 

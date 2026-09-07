@@ -1,9 +1,16 @@
 hivelog.admin:
   title: 'HiveLog'
   description: 'Manage apiaries, hives, and inspections.'
-  route_name: entity.apiary.collection
+  route_name: hivelog.dashboard
   menu_name: main
   weight: 10
+
+hivelog.apiaries:
+  title: 'Apiaries'
+  description: 'View all apiaries.'
+  route_name: entity.apiary.collection
+  parent: hivelog.admin
+  weight: 0
 
 hivelog.hives:
   title: 'Hives'

@@ -55,7 +55,7 @@ use Drupal\user\EntityOwnerTrait;
     'add-form' => '/hivelog/apiary/add',
     'edit-form' => '/hivelog/apiary/{apiary}/edit',
     'delete-form' => '/hivelog/apiary/{apiary}/delete',
-    'collection' => '/hivelog',
+    'collection' => '/hivelog/apiaries',
   ],
 )]
 class Apiary extends ContentEntityBase implements EntityChangedInterface, EntityOwnerInterface {

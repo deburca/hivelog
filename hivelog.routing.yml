@@ -1,6 +1,17 @@
+# Dashboard landing page. Takes /hivelog; the apiary collection moves to
+# /hivelog/apiaries. See ADR-0057 and task 0056 (criterion 1). No redirect
+# from the old path — /hivelog stays valid, it just renders the dashboard.
+hivelog.dashboard:
+  path: '/hivelog'
+  defaults:
+    _controller: '\Drupal\hivelog\Controller\DashboardController::view'
+    _title: 'HiveLog'
+  requirements:
+    _permission: 'view own apiary+view any apiary+administer hivelog'
+
 # Apiary routes.
 entity.apiary.collection:
-  path: '/hivelog'
+  path: '/hivelog/apiaries'
   defaults:
     _entity_list: 'apiary'
     _title: 'HiveLog - Apiaries'

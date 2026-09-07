@@ -61,7 +61,8 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
       || str_starts_with($route_name, 'entity.calendar_action.')
       || str_starts_with($route_name, 'entity.hive_action_log.')
       || str_starts_with($route_name, 'entity.apiary_action_log.')
-      // Covers hivelog.calendar_action.add, hivelog.hive_action_log.add,
+      // Covers hivelog.dashboard (the landing page, ADR-0057),
+      // hivelog.calendar_action.add, hivelog.hive_action_log.add,
       // hivelog.apiary_action_log.add, and
       // hivelog.apiary.calendar_action.collection (the Full Calendar page)
       // too — all are real pages (forms/views), not non-page endpoints.
@@ -74,12 +75,19 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
   public function build(RouteMatchInterface $route_match): Breadcrumb {
     $breadcrumb = new Breadcrumb();
     $breadcrumb->addCacheContexts(['route']);
-
-    // Home > HiveLog.
-    $breadcrumb->addLink(Link::createFromRoute($this->t('Home'), '<front>'));
-    $breadcrumb->addLink(Link::createFromRoute($this->t('HiveLog'), 'entity.apiary.collection'));
-
     $route_name = $route_match->getRouteName();
+
+    // Home > HiveLog. "HiveLog" links to the dashboard landing page
+    // (ADR-0057); on the dashboard route itself it is the terminal crumb,
+    // which the theme renders as plain text.
+    $breadcrumb->addLink(Link::createFromRoute($this->t('Home'), '<front>'));
+    $breadcrumb->addLink(Link::createFromRoute($this->t('HiveLog'), 'hivelog.dashboard'));
+
+    // Apiary collection: "HiveLog" now points at the dashboard, so the
+    // apiary list needs its own terminal crumb (ADR-0057).
+    if ($route_name === 'entity.apiary.collection') {
+      $breadcrumb->addLink(Link::createFromRoute($this->t('Apiaries'), 'entity.apiary.collection'));
+    }
 
     // Apiary-level routes: add the apiary crumb. On canonical pages the apiary
     // label becomes the terminal crumb (rendered as plain text by the theme);
