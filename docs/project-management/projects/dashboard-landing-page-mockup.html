@@ -88,12 +88,12 @@
   .menu .sib a{color:var(--ink-muted);}
 
   /* --- masthead --- */
-  header.mast{display:flex; flex-wrap:wrap; align-items:flex-start; justify-content:space-between; gap:16px;}
-  .brand{display:flex; align-items:center; gap:11px;}
-  .hex{width:28px; height:28px; color:var(--accent); flex:0 0 auto;}
-  .brand h1{font:600 24px/1 "Fraunces", Georgia, serif; letter-spacing:.005em;}
-  .brand .sub{font-size:12.5px; color:var(--ink-muted); margin-top:4px;}
-  .mast-right{display:flex; flex-wrap:wrap; align-items:center; gap:9px;}
+  header.mast{display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:16px;}
+  .brand{display:flex; align-items:center; gap:14px;}
+  .hex{width:56px; height:56px; color:var(--accent); flex:0 0 auto;}
+  .brand h1{font:600 26px/1 "Fraunces", Georgia, serif; letter-spacing:.005em;}
+  .brand .sub{font-size:12.5px; color:var(--ink-muted); margin-top:5px;}
+  .mast-right{display:flex; flex-wrap:wrap; align-items:center; gap:9px; margin-left:auto;}
   .badge{
     font:500 12px/1 "IBM Plex Mono", monospace; font-variant-numeric:tabular-nums;
     color:var(--ink-muted); background:var(--surface);
@@ -107,7 +107,6 @@
     border-radius:4px; padding:6px 8px;
   }
 
-  .actions{display:flex; flex-wrap:wrap; gap:9px; margin:18px 0 4px;}
   .btn{
     font:500 13px/1 "IBM Plex Sans", sans-serif;
     display:inline-flex; align-items:center; gap:7px;
@@ -119,13 +118,10 @@
   .btn-primary{background:var(--accent); border-color:var(--accent); color:var(--on-accent);}
   .btn-primary:hover{background:var(--accent-hover);}
   .btn-sm{padding:6px 10px; font-size:12px;}
-  .btn .plus{font-size:14px; line-height:1; margin-top:-1px;}
   .btn:focus-visible, a:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:3px;}
 
   main{display:flex; flex-direction:column; gap:26px; margin-top:24px;}
 
-  .h-row{display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:11px;}
-  .h-row h2{font:600 17px/1.2 "Fraunces", Georgia, serif;}
   .h-meta{font:400 12px/1 "IBM Plex Mono", monospace; color:var(--ink-muted); flex:0 0 auto;}
 
   /* --- needs attention --- */
@@ -171,7 +167,11 @@
     gap:1px; background:var(--hairline);
     border:1px solid var(--hairline); border-radius:var(--radius); overflow:hidden;
   }
-  .tile{background:var(--surface); padding:14px 15px 15px; display:flex; flex-direction:column; gap:5px;}
+  .tile{
+    background:var(--surface); padding:14px 15px 15px; display:flex; flex-direction:column; gap:5px;
+    color:inherit; text-decoration:none; transition:background .12s;
+  }
+  .tile:hover{background:var(--surface-2); text-decoration:none;}
   .tile-num{font:500 27px/1 "IBM Plex Mono", monospace; font-variant-numeric:tabular-nums; letter-spacing:-.01em;}
   .tile-label{font:600 11px/1.3 "IBM Plex Sans", sans-serif; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-faint);}
   .tile-sub{font:400 11.5px/1.3 "IBM Plex Mono", monospace; color:var(--ink-muted);}
@@ -180,7 +180,7 @@
 
   /* --- split: upcoming + recent --- */
   .split{display:grid; grid-template-columns:1fr 1fr; gap:22px;}
-  .block h2{font:600 17px/1.2 "Fraunces", Georgia, serif;}
+  .block h2{font:600 17px/1.2 "Fraunces", Georgia, serif; margin-bottom:8px;}
   .list{margin-top:4px;}
   .u-item, .r-item{
     display:flex; gap:12px; padding:9px 0; font-size:13.5px; line-height:1.45;
@@ -191,27 +191,12 @@
   .when{font:400 11.5px/1.5 "IBM Plex Mono", monospace; color:var(--ink-faint); flex:0 0 60px;}
   .u-item .u-body .where, .r-item .r-body .where{color:var(--ink-faint);}
 
-  /* --- apiaries --- */
-  .table-wrap{overflow-x:auto; border:1px solid var(--hairline); border-radius:var(--radius); background:var(--surface);}
-  table{border-collapse:collapse; width:100%; font-size:13.5px; min-width:560px;}
-  th{
-    text-align:left; font:600 10.5px/1 "IBM Plex Sans", sans-serif;
-    text-transform:uppercase; letter-spacing:.07em; color:var(--ink-faint);
-    padding:11px 14px; border-bottom:1px solid var(--hairline); background:var(--surface-2);
-  }
-  td{padding:12px 14px; border-bottom:1px solid var(--hairline);}
-  tr:last-child td{border-bottom:0;}
-  td.num, th.num{font-family:"IBM Plex Mono", monospace; font-variant-numeric:tabular-nums; text-align:right;}
-  .apy-name{font-weight:600;}
-  .dash{color:var(--ink-faint);}
-  td .ops{display:flex; gap:10px; font-size:12px;}
-
   .foot{
     font-size:12px; color:var(--ink-faint); line-height:1.65;
     border-top:1px solid var(--hairline); padding-top:14px; margin-top:6px;
   }
 
-  @media (max-width:860px){ .split{grid-template-columns:1fr;} }
+  @media (max-width:768px){ .split{grid-template-columns:1fr;} }
   @media (prefers-reduced-motion:reduce){ *{transition:none !important;} }
 </style>
 
@@ -231,26 +216,20 @@
   <header class="mast">
     <div class="brand">
       <svg class="hex" viewBox="0 0 24 24" aria-hidden="true">
-        <path fill="currentColor" opacity=".16" d="M12 1.5l9 5.196v10.392L12 22.5l-9-5.196V6.696z"/>
-        <path fill="none" stroke="currentColor" stroke-width="1.6" d="M12 3.27l7.5 4.33v8.66L12 20.59l-7.5-4.33V7.6z"/>
+        <path fill="currentColor" opacity=".16" d="M12 2.6l8.15 4.7v9.4L12 21.4 3.85 16.7V7.3z"/>
+        <path fill="none" stroke="currentColor" stroke-width="1.6" d="M12 4.1l6.85 3.95v7.9L12 19.9l-6.85-3.95v-7.9z"/>
       </svg>
       <div>
         <h1>HiveLog</h1>
-        <div class="sub">Apiary &amp; hive logbook &mdash; every apiary you keep</div>
+        <div class="sub">Apiary and hive logbook</div>
       </div>
     </div>
     <div class="mast-right">
       <span class="badge mono">Week <b>37</b> &middot; 2026</span>
-      <span class="badge mono">CBR <b>4471&#8209;092</b> &#10003;</span>
+      <span class="badge">Your CBR number: <b class="mono">4471&#8209;092</b></span>
       <span class="pill-mock">Design mockup</span>
     </div>
   </header>
-
-  <div class="actions">
-    <button type="button" class="btn btn-primary"><span class="plus">+</span> Add apiary</button>
-    <button type="button" class="btn">Log inspection</button>
-    <button type="button" class="btn">Seasonal calendar</button>
-  </div>
 
   <main>
 
@@ -258,41 +237,32 @@
     <section class="panel" aria-labelledby="attn-h">
       <div class="panel-head">
         <h2 id="attn-h">Needs attention</h2>
-        <span class="h-meta">6 items &middot; 2 overdue</span>
-      </div>
-
-      <div class="arow crit">
-        <span class="chip crit">Overdue 1 wk</span>
-        <div class="a-main">
-          <div class="a-title">Wasp defence &mdash; reduce entrances</div>
-          <div class="a-ctx"><a href="#">S&oslash;ndermarken</a> &rsaquo; <a href="#">Hive S&#8209;2</a> &middot; hive-scoped &middot; planned wk 30&ndash;36</div>
-        </div>
-        <button type="button" class="btn btn-sm btn-primary">Report done</button>
+        <span class="h-meta">6 to review &middot; 2 overdue</span>
       </div>
 
       <div class="arow crit">
         <span class="chip crit">Overdue 2 wk</span>
         <div class="a-main">
           <div class="a-title">Autumn varroa treatment &mdash; formic acid</div>
-          <div class="a-ctx"><a href="#">Ravnholt Home</a> &rsaquo; <a href="#">Hive H&#8209;4</a> &middot; hive-scoped &middot; planned wk 33&ndash;37</div>
+          <div class="a-ctx"><a href="#">Ravnholt Home</a> &rsaquo; <a href="#">Hive H&#8209;4</a> &middot; wk 33&ndash;37</div>
         </div>
         <button type="button" class="btn btn-sm btn-primary">Report done</button>
       </div>
 
       <div class="arow crit">
-        <span class="chip crit">Low stock</span>
+        <span class="chip crit">Overdue 1 wk</span>
         <div class="a-main">
-          <div class="a-title">Formic acid 60% pads &mdash; 2 left</div>
-          <div class="a-ctx"><a href="#">S&oslash;ndermarken</a> inventory &middot; reorder level 10 &middot; needed for varroa treatment</div>
+          <div class="a-title">Wasp defence &mdash; reduce entrances</div>
+          <div class="a-ctx"><a href="#">S&oslash;ndermarken</a> &rsaquo; <a href="#">Hive S&#8209;2</a> &middot; wk 30&ndash;36</div>
         </div>
-        <button type="button" class="btn btn-sm btn-primary">Add purchase</button>
+        <button type="button" class="btn btn-sm btn-primary">Report done</button>
       </div>
 
       <div class="arow warn">
         <span class="chip warn">Due wk 37</span>
         <div class="a-main">
           <div class="a-title">Unite weak colonies</div>
-          <div class="a-ctx"><a href="#">Ravnholt Home</a> &rsaquo; <a href="#">Hive H&#8209;3</a> &middot; hive-scoped &middot; planned wk 35&ndash;38</div>
+          <div class="a-ctx"><a href="#">Ravnholt Home</a> &rsaquo; <a href="#">Hive H&#8209;3</a> &middot; wk 35&ndash;38</div>
         </div>
         <button type="button" class="btn btn-sm btn-primary">Report done</button>
       </div>
@@ -301,7 +271,7 @@
         <span class="chip warn">Due wk 37</span>
         <div class="a-main">
           <div class="a-title">Feed winter stores &mdash; syrup</div>
-          <div class="a-ctx"><a href="#">S&oslash;ndermarken</a> &middot; apiary-scoped &middot; planned wk 36&ndash;40</div>
+          <div class="a-ctx"><a href="#">S&oslash;ndermarken</a> &middot; wk 36&ndash;40</div>
         </div>
         <button type="button" class="btn btn-sm btn-primary">Report done</button>
       </div>
@@ -310,123 +280,92 @@
         <span class="chip warn">Due wk 37</span>
         <div class="a-main">
           <div class="a-title">Autumn hive weight check</div>
-          <div class="a-ctx">5 hives across <a href="#">Ravnholt Home</a> and <a href="#">S&oslash;ndermarken</a> &middot; hive-scoped &middot; target &ge; 18 kg stores</div>
+          <div class="a-ctx"><a href="#">Ravnholt Home</a> &rsaquo; <a href="#">Hive H&#8209;1</a> &middot; wk 36&ndash;39</div>
         </div>
-        <button type="button" class="btn btn-sm">Log inspection</button>
+        <button type="button" class="btn btn-sm btn-primary">Report done</button>
+      </div>
+
+      <div class="arow warn">
+        <span class="chip warn">Low stock</span>
+        <div class="a-main">
+          <div class="a-title">Formic acid 60% pads</div>
+          <div class="a-ctx"><a href="#">S&oslash;ndermarken</a> &middot; 2 pad on hand &middot; reorder at 10</div>
+        </div>
+        <button type="button" class="btn btn-sm btn-primary">Add purchase</button>
       </div>
     </section>
 
     <!-- STAT TILES -->
     <section aria-label="Summary figures">
       <div class="tiles">
-        <div class="tile">
+        <a class="tile" href="#">
           <span class="tile-num">2</span>
           <span class="tile-label">Apiaries</span>
-          <span class="tile-sub"><a href="#">View all</a></span>
-        </div>
-        <div class="tile">
+        </a>
+        <a class="tile" href="#">
           <span class="tile-num">7</span>
           <span class="tile-label">Active hives</span>
-          <span class="tile-sub">+1 this month</span>
-        </div>
-        <div class="tile">
+        </a>
+        <a class="tile" href="#">
           <span class="tile-num">4</span>
-          <span class="tile-label">Inspections &mdash; Sep</span>
-          <span class="tile-sub">last: today</span>
-        </div>
-        <div class="tile">
+          <span class="tile-label">Inspections this month</span>
+        </a>
+        <a class="tile" href="#">
           <span class="tile-num">11</span>
           <span class="tile-label">Open seasonal tasks</span>
           <span class="tile-sub crit">2 overdue</span>
-        </div>
-        <div class="tile">
-          <span class="tile-num">2</span>
+        </a>
+        <a class="tile" href="#">
+          <span class="tile-num">1</span>
           <span class="tile-label">Low-stock items</span>
-          <span class="tile-sub warn">reorder now</span>
-        </div>
-        <div class="tile">
+        </a>
+        <a class="tile" href="#">
           <span class="tile-num">&minus;1,240</span>
-          <span class="tile-label">Net YTD &middot; kr</span>
-          <span class="tile-sub">harvest unsold</span>
-        </div>
+          <span class="tile-label">Net YTD</span>
+        </a>
       </div>
     </section>
 
     <!-- UPCOMING + RECENT -->
     <section class="split">
       <div class="block" aria-labelledby="up-h">
-        <div class="h-row"><h2 id="up-h">Upcoming</h2><span class="h-meta">weeks 38&ndash;44</span></div>
+        <h2 id="up-h">Upcoming</h2>
         <div class="list">
-          <div class="u-item"><span class="wk mono">WK 38</span><div class="u-body">Unite weak colonies &mdash; window closes <span class="where">&middot; Ravnholt Home</span></div></div>
-          <div class="u-item"><span class="wk mono">WK 39</span><div class="u-body">Autumn hive weight check <span class="where">&middot; both apiaries</span></div></div>
-          <div class="u-item"><span class="wk mono">WK 40</span><div class="u-body">Fit mouse guards <span class="where">&middot; all 7 hives</span></div></div>
-          <div class="u-item"><span class="wk mono">WK 40</span><div class="u-body">Feed winter stores &mdash; window closes <span class="where">&middot; both apiaries</span></div></div>
-          <div class="u-item"><span class="wk mono">WK 41</span><div class="u-body">Final brood check before winter <span class="where">&middot; all hives</span></div></div>
-          <div class="u-item"><span class="wk mono">WK 44</span><div class="u-body">CBR annual renewal <span class="where">&middot; account &middot; apiary-scoped</span></div></div>
+          <div class="u-item"><span class="wk mono">Wk 38</span><div class="u-body"><a href="#">Unite weak colonies</a> <span class="where">&middot; Ravnholt Home</span></div></div>
+          <div class="u-item"><span class="wk mono">Wk 39</span><div class="u-body"><a href="#">Autumn hive weight check</a> <span class="where">&middot; Ravnholt Home</span></div></div>
+          <div class="u-item"><span class="wk mono">Wk 40</span><div class="u-body"><a href="#">Fit mouse guards</a> <span class="where">&middot; S&oslash;ndermarken</span></div></div>
+          <div class="u-item"><span class="wk mono">Wk 40</span><div class="u-body"><a href="#">Feed winter stores &mdash; syrup</a> <span class="where">&middot; S&oslash;ndermarken</span></div></div>
+          <div class="u-item"><span class="wk mono">Wk 41</span><div class="u-body"><a href="#">Final brood check before winter</a> <span class="where">&middot; Ravnholt Home</span></div></div>
         </div>
       </div>
 
       <div class="block" aria-labelledby="rec-h">
-        <div class="h-row"><h2 id="rec-h">Recent activity</h2><span class="h-meta">last 7</span></div>
+        <h2 id="rec-h">Recent activity</h2>
         <div class="list">
-          <div class="r-item"><span class="when mono">14:20</span><div class="r-body">Inspection &mdash; <a href="#">Ravnholt Home &rsaquo; H&#8209;1</a><span class="where"> &middot; queenright, 6 frames brood, stores light</span></div></div>
-          <div class="r-item"><span class="when mono">11:05</span><div class="r-body">Harvest yield &mdash; 14.2 kg honey <a href="#">&middot; S&oslash;ndermarken</a></div></div>
-          <div class="r-item"><span class="when mono">Yest.</span><div class="r-body">Purchase &mdash; 20 &times; formic acid pads <span class="where">&middot; 640 kr</span></div></div>
-          <div class="r-item"><span class="when mono">2 Sep</span><div class="r-body">Queen observation &mdash; <a href="#">Q&#8209;2024&#8209;07</a> (green) <span class="where">&middot; calm, laying well &middot; H&#8209;2</span></div></div>
-          <div class="r-item"><span class="when mono">1 Sep</span><div class="r-body">Action log &mdash; &ldquo;Summer harvest &mdash; extract&rdquo; reported done <span class="where">&middot; Ravnholt Home</span></div></div>
-          <div class="r-item"><span class="when mono">30 Aug</span><div class="r-body">Inspection &mdash; <a href="#">S&oslash;ndermarken &rsaquo; S&#8209;3</a></div></div>
-          <div class="r-item"><span class="when mono">29 Aug</span><div class="r-body">Hive <a href="#">S&#8209;3</a> added <span class="where">&middot; S&oslash;ndermarken</span></div></div>
+          <div class="r-item"><span class="when mono">8 Sep</span><div class="r-body">Inspection &mdash; <a href="#">Ravnholt Home &rsaquo; H&#8209;1 &mdash; 8 Sep 2026</a></div></div>
+          <div class="r-item"><span class="when mono">8 Sep</span><div class="r-body">Harvest yield &mdash; <a href="#">14.2 kg Honey</a></div></div>
+          <div class="r-item"><span class="when mono">7 Sep</span><div class="r-body">Purchase &mdash; <a href="#">20 &times; Formic acid 60% pads</a></div></div>
+          <div class="r-item"><span class="when mono">2 Sep</span><div class="r-body">Queen observation &mdash; <a href="#">Q&#8209;2024&#8209;07 &mdash; 2 Sep 2026</a></div></div>
+          <div class="r-item"><span class="when mono">1 Sep</span><div class="r-body">Action log &mdash; <a href="#">Summer harvest &mdash; extract</a></div></div>
+          <div class="r-item"><span class="when mono">30 Aug</span><div class="r-body">Inspection &mdash; <a href="#">S&oslash;ndermarken &rsaquo; S&#8209;3 &mdash; 30 Aug 2026</a></div></div>
         </div>
       </div>
     </section>
 
-    <!-- APIARIES -->
-    <section aria-labelledby="apy-h">
-      <div class="h-row">
-        <h2 id="apy-h">Apiaries</h2>
-        <button type="button" class="btn btn-sm"><span class="plus">+</span> Add apiary</button>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th scope="col">Apiary</th>
-              <th scope="col" class="num">Hives</th>
-              <th scope="col">Open tasks</th>
-              <th scope="col">Low stock</th>
-              <th scope="col">Last activity</th>
-              <th scope="col">&nbsp;</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><a class="apy-name" href="#">Ravnholt Home</a></td>
-              <td class="num">4</td>
-              <td>6 &middot; <span style="color:var(--critical)">1 overdue</span></td>
-              <td><span class="dash">&mdash;</span></td>
-              <td>Today</td>
-              <td><span class="ops"><a href="#">Calendar</a><a href="#">Report</a></span></td>
-            </tr>
-            <tr>
-              <td><a class="apy-name" href="#">S&oslash;ndermarken</a></td>
-              <td class="num">3</td>
-              <td>5 &middot; <span style="color:var(--critical)">1 overdue</span></td>
-              <td><span class="chip warn">2 items</span></td>
-              <td>Today</td>
-              <td><span class="ops"><a href="#">Calendar</a><a href="#">Report</a></span></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
     <p class="foot">
-      Design mockup for the proposed <span class="mono">/hivelog</span> dashboard &mdash; it shows the layout, the
-      priority model (severity stripe + status chip, summary before detail) and the widget set only. Apiaries, hives,
+      Design mockup for the shipped <span class="mono">/hivelog</span> dashboard &mdash; it shows the layout, the
+      priority model (severity stripe + status chip, summary before detail) and the widget set. Apiaries, hives,
       tasks, stock levels and figures are illustrative, not live data. Queen-marking colour (2024 &rarr; green), ISO
-      week numbering, the CBR renewal and the seasonal-calendar week ranges follow the module&rsquo;s real conventions.
-      Under this proposal the apiary list moves to <span class="mono">/hivelog/apiaries</span> and this page takes
-      <span class="mono">/hivelog</span>.
+      week numbering, the CBR line and the seasonal-calendar week ranges follow the module&rsquo;s real conventions.
+      The apiary list is now at <span class="mono">/hivelog/apiaries</span>, reached from the <b>Apiaries</b> tile
+      (with a single apiary the tile links straight to it); the <b>Net YTD</b> tile links to that apiary&rsquo;s
+      financial report, or, with more than one, the combined all-apiaries report at
+      <span class="mono">/hivelog/apiaries/financial-report</span>. The closing per-apiary summary table shown in
+      earlier drafts was dropped as redundant with the Apiaries tile (task 0058).
+      <br><br>
+      The Fraunces / IBM&nbsp;Plex type and beeswax / pine-green palette are this mockup&rsquo;s own visual proposal.
+      The shipped module is theme-neutral &mdash; it inherits the active admin theme&rsquo;s typography and keeps to
+      its own hex palette &mdash; so the live page carries this structure, not this styling.
     </p>
 
   </main>
