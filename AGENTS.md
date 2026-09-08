@@ -292,10 +292,12 @@ the module stays palette-free). The supported surface:
   only fires for a library a controller attaches directly, so it reaches
   the dashboard but not the `EntityListBuilder` collections.
 
-The reference implementation is the **beeswax** theme
-(`drupal/beeswax`, kbg default): `src/hivelog.css` redefines the
-`--hivelog-*` tokens from its own `--bw-*` palette and adds only the
-handful of rules the token surface does not yet cover.
+The reference implementation is the **beeswax** theme — Packagist package
+**`deburca/beeswax`** (repo `github.com/deburca/beeswax`), kbg's default
+theme. `src/hivelog.css` redefines the `--hivelog-*` tokens from its own
+`--bw-*` palette and adds only the handful of rules the token surface
+does not yet cover. beeswax `1.0.x` expects hivelog `>= 1.8.3` (the
+`--hivelog-*` surface tokens and `hivelog_preprocess_html()`).
 
 ### Services
 
