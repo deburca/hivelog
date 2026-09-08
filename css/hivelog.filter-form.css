@@ -29,8 +29,9 @@
   margin: 0;
 }
 
-/* Explicit, high-contrast colour against the filter row's var(--hivelog-surface-2)
-   background (see .hivelog-filter-form above). Admin themes (e.g. Gin)
+/* Explicit, high-contrast colour against the filter row's tinted
+   --hivelog-surface-2 background (see .hivelog-filter-form above). Admin
+   themes (e.g. Gin)
    often render unfocused field labels in a low-contrast "muted" tone
    that's legible against a plain white page background but disappears
    against this row's light grey one — only becoming visible once the
