@@ -5,12 +5,11 @@ declare(strict_types=1);
 namespace Drupal\hivelog;
 
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\EntityListBuilder;
 
 /**
  * Provides a list builder for Hive Action Log entities.
  */
-class HiveActionLogListBuilder extends EntityListBuilder {
+class HiveActionLogListBuilder extends HivelogListBuilder {
 
   /**
    * {@inheritdoc}

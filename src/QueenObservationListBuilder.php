@@ -3,12 +3,11 @@
 namespace Drupal\hivelog;
 
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\EntityListBuilder;
 
 /**
  * Provides a list builder for Queen Observation entities.
  */
-class QueenObservationListBuilder extends EntityListBuilder {
+class QueenObservationListBuilder extends HivelogListBuilder {
 
   /**
    * {@inheritdoc}

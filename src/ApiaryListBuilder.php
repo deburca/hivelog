@@ -3,7 +3,6 @@
 namespace Drupal\hivelog;
 
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\EntityListBuilder;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Render\RendererInterface;
@@ -15,7 +14,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * Provides a list builder for Apiary entities.
  */
-class ApiaryListBuilder extends EntityListBuilder {
+class ApiaryListBuilder extends HivelogListBuilder {
 
   use StringTranslationTrait;
 
@@ -77,26 +76,7 @@ class ApiaryListBuilder extends EntityListBuilder {
       : '';
     $row['owner'] = $owner ? $owner->getDisplayName() : '';
 
-    // Build operations as plain button links instead of the default
-    // dropbutton widget returned by parent::buildRow().
-    $buttons = [];
-    if ($entity->access('update') && $entity->hasLinkTemplate('edit-form')) {
-      $buttons[] = ['label' => (string) $this->t('Edit'), 'url' => $entity->toUrl('edit-form')->toString()];
-    }
-    if ($entity->access('delete') && $entity->hasLinkTemplate('delete-form')) {
-      $buttons[] = [
-        'label' => (string) $this->t('Delete'),
-        'url' => $entity->toUrl('delete-form')->toString(),
-        'variant' => 'danger',
-      ];
-    }
-    $row['operations']['data'] = [
-      '#type' => 'component',
-      '#component' => 'hivelog:button-group',
-      '#props' => [
-        'buttons' => $buttons,
-      ],
-    ];
+    $row['operations']['data'] = $this->buildOperations($entity);
 
     return $row;
   }

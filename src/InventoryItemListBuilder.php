@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Drupal\hivelog;
 
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\EntityListBuilder;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Render\RendererInterface;
@@ -23,7 +22,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * site's front-end main menu where that block isn't guaranteed to be
  * placed.
  */
-class InventoryItemListBuilder extends EntityListBuilder {
+class InventoryItemListBuilder extends HivelogListBuilder {
 
   /**
    * The renderer.
@@ -92,24 +91,7 @@ class InventoryItemListBuilder extends EntityListBuilder {
     $status = $entity->get('status')->value;
     $row['status'] = $entity->get('status')->getSetting('allowed_values')[$status] ?? $status;
 
-    $buttons = [];
-    if ($entity->access('update') && $entity->hasLinkTemplate('edit-form')) {
-      $buttons[] = ['label' => (string) $this->t('Edit'), 'url' => $entity->toUrl('edit-form')->toString()];
-    }
-    if ($entity->access('delete') && $entity->hasLinkTemplate('delete-form')) {
-      $buttons[] = [
-        'label' => (string) $this->t('Delete'),
-        'url' => $entity->toUrl('delete-form')->toString(),
-        'variant' => 'danger',
-      ];
-    }
-    $row['operations']['data'] = [
-      '#type' => 'component',
-      '#component' => 'hivelog:button-group',
-      '#props' => [
-        'buttons' => $buttons,
-      ],
-    ];
+    $row['operations']['data'] = $this->buildOperations($entity);
 
     return $row;
   }

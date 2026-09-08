@@ -4,6 +4,14 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\hivelog\Kernel;
 
+use Drupal\hivelog\Entity\Apiary;
+use Drupal\hivelog\Entity\Hive;
+use Drupal\hivelog\Entity\HiveInspection;
+use Drupal\hivelog\Entity\InventoryItem;
+use Drupal\hivelog\Entity\Product;
+use Drupal\hivelog\Entity\Queen;
+use Drupal\hivelog\Entity\QueenObservation;
+use Drupal\hivelog\HivelogListBuilder;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\user\Entity\User;
 use PHPUnit\Framework\Attributes\Group;
@@ -45,6 +53,7 @@ class ListCollectionTitleTest extends KernelTestBase {
     $this->installEntitySchema('file');
     $this->installEntitySchema('apiary');
     $this->installEntitySchema('hive');
+    $this->installEntitySchema('hive_inspection');
     $this->installEntitySchema('calendar_action');
     $this->installEntitySchema('calendar_action_item_requirement');
     $this->installEntitySchema('hive_action_log');
@@ -100,6 +109,52 @@ class ListCollectionTitleTest extends KernelTestBase {
       $this->assertStringContainsString('hivelog-list-heading', $html, $entity_type);
       $this->assertStringContainsString('hivelog-list-heading__action', $html, $entity_type);
       $this->assertStringNotContainsString('hivelog-list-heading__title', $html, $entity_type);
+    }
+  }
+
+  /**
+   * Every HiveLog list builder shares the button-group operations base.
+   */
+  public function testAllListBuildersExtendHivelogBase(): void {
+    $types = [
+      'apiary', 'hive', 'hive_inspection', 'queen', 'queen_observation',
+      'calendar_action', 'hive_action_log', 'apiary_action_log',
+      'inventory_item', 'inventory_purchase', 'product',
+    ];
+    foreach ($types as $entity_type) {
+      $this->assertInstanceOf(
+        HivelogListBuilder::class,
+        \Drupal::entityTypeManager()->getListBuilder($entity_type),
+        $entity_type,
+      );
+    }
+  }
+
+  /**
+   * The operations column renders a button-group, not core's dropbutton.
+   */
+  public function testOperationsRenderAsButtonGroupNotDropbutton(): void {
+    $renderer = \Drupal::service('renderer');
+
+    $apiary = Apiary::create(['name' => 'Ravnholt Home', 'uid' => 1]);
+    $apiary->save();
+    $hive = Hive::create(['name' => 'H-1', 'apiary' => $apiary->id(), 'status' => 'active']);
+    $hive->save();
+    HiveInspection::create(['hive' => $hive->id(), 'inspection_date' => '2026-09-01'])->save();
+    $queen = Queen::create(['name' => 'Q-1', 'hive' => $hive->id()]);
+    $queen->save();
+    QueenObservation::create(['queen' => $queen->id(), 'observation_date' => '2026-09-01'])->save();
+    InventoryItem::create(['apiary' => $apiary->id(), 'name' => 'Pads', 'unit' => 'pad'])->save();
+    Product::create(['apiary' => $apiary->id(), 'name' => 'Honey', 'unit' => 'kg'])->save();
+
+    // `hive`, `hive_inspection`, `queen_observation` used core's dropbutton
+    // before task 0068; `calendar_action` is seeded by Apiary::postSave().
+    foreach (['hive', 'hive_inspection', 'queen', 'queen_observation', 'calendar_action', 'inventory_item', 'product'] as $entity_type) {
+      $build = \Drupal::entityTypeManager()->getListBuilder($entity_type)->render();
+      $html = (string) $renderer->renderInIsolation($build);
+
+      $this->assertStringContainsString('hivelog-button-group', $html, $entity_type);
+      $this->assertStringNotContainsString('dropbutton', $html, $entity_type);
     }
   }
 
