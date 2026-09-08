@@ -1,11 +1,12 @@
 ---
 type: task
 tags: [hivelog/task]
-status: doing
+status: done
 priority: low
 project: "[[hivelog-visual-identity]]"
 area: theme
 created: 2026-09-08
+completed: 2026-09-08
 branch: feature/0062-module-themeability-tokens
 release: 1.8.3
 depends-on: ["[[0061-beeswax-hivelog-skin]]"]
@@ -44,25 +45,20 @@ blocked-by:
       (`#b3261e`→`#b91c1c` on the danger count; `#e0e0e0`/`#eef0f2`/`#e5e5e5`
       →`#e5e7eb` on 1px rules; `#fafafa`→`#f9fafb` on the filter panel).
       No structural change; nothing else moves on a stock theme.
-- [ ] **beeswax drops its copies — RELEASE-GATED.** The module side
-      shipped in **hivelog 1.8.3** (PR #136, commit `92acc3f`). This
-      step unblocks once **cms2 pins hivelog to `1.8.3`** — until then
-      kbg still runs `1.8.2`, whose CSS hard-codes the hex and has no
-      body-class hook, so removing beeswax's
-      `ThemeHooks::preprocessHtml()` `hivelog-page` add or its
-      per-selector colour rules would regress the live skin. After the
-      cms2 pin, in `deburca/beeswax`:
-        1. delete the `hivelog-page` block from
-           `src/Hook/ThemeHooks.php::preprocessHtml()`;
-        2. replace the colour-only restatements in `src/hivelog.css` with
-           one `body.hivelog-page { --hivelog-surface: var(--bw-surface);
-           --hivelog-ink: var(--bw-ink); --hivelog-hairline: var(--bw-hairline);
-           --hivelog-critical: var(--bw-critical); … }` token-bridge block,
-           keeping only the rules the token surface can't express
-           (layout, mono type, Tom Select, vertical-tabs, `#1a1a1a`
-           filter label).
-      The interim double `hivelog-page` class is harmless (the selector
-      matches either way).
+- [x] **beeswax dropped its copies** (`deburca/beeswax` `a8d4401`, after
+      cms2 pinned hivelog to `1.8.3` in `83af952`):
+        1. `ThemeHooks::preprocessHtml()` no longer adds `hivelog-page` —
+           `hivelog_preprocess_html()` is the only source now (verified on
+           kbg: one `hivelog-page`, not two).
+        2. ~40 colour-only selector restatements in `src/hivelog.css`
+           replaced by one `body.hivelog-page { --hivelog-surface:
+           var(--bw-surface); … }` bridge block (13 tokens). Kept: the
+           type rules, layout, additive `:hover` affordances the module
+           has none of, Tom Select, vertical-tabs, and the deliberate
+           deviations — pine hexagon (vs `--hivelog-warning`), muted
+           white week badge, fainter stat-tile label, pine "upcoming"
+           week number, forced filter-label colour (over the module's
+           `#1a1a1a`). `src/hivelog.css` −122 / +69 lines.
 
 ## Context
 [[0060-visual-identity-in-site-theme]] keeps the HiveLog look in the
@@ -110,13 +106,17 @@ actually painful — token surface only, no brand styling in the module
       5 documented sub-perceptual consolidations move.
 
 ## Implementation notes
-- Keep it minimal and token-only. Anything that looks like "the module
-  now has a brand" is out of scope by [[0060]].
-- If 0061 ends up needing nothing here, close this as *wontfix* with a
-  one-line note rather than inventing work.
+- Token-only, no brand in the module ([[0060]]).
+- `.hivelog-cbr-summary` (in `css/hivelog.buttons.css`) still hard-codes
+  `#d1d5db` / `#f9fafb` — buttons.css was out of scope here, so beeswax
+  still restates that one block. Fold it into the token surface if a
+  future pass touches buttons.css.
+- `css/hivelog.map.css`, `.images.css`, `.weight-histogram.css` are not
+  tokenised on purpose — chart / media internals, not themed chrome.
 
 ## Related
 - Project:: [[hivelog-visual-identity]]
 - Decisions:: [[0060-visual-identity-in-site-theme]], [[0012-action-button-design-system]], [[0009-render-cacheability-discipline]]
 - Depends on:: [[0061-beeswax-hivelog-skin]]
-- Commits::
+- Commits:: `92acc3f` (PR #136, module side, 1.8.3); beeswax `a8d4401`
+  (token bridge + drop copy); cms2 `83af952` (pin 1.8.3)
