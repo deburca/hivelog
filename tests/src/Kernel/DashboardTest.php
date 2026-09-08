@@ -320,24 +320,22 @@ class DashboardTest extends KernelTestBase {
   }
 
   /**
-   * An action whose window is still ahead is not shown.
+   * A far-future action is in neither "Needs attention" nor "Upcoming".
    */
   public function testUpcomingActionHidden(): void {
-    $week = (int) date('W');
-    if ($week > 51) {
-      $this->markTestSkipped('A future week cannot be constructed near week 53.');
-    }
+    $week = $this->weekOrSkipLateYear();
     $user = $this->makeCurrentUser();
     $apiary = Apiary::create(['name' => 'Ravnholt', 'uid' => $user->id()]);
     $apiary->save();
     $this->clearSeededCalendarActions();
 
+    // Six weeks out — past the 4-week "Upcoming" window and not yet due.
     CalendarAction::create([
       'apiary' => $apiary->id(),
       'title' => 'Mouse guards fitted',
       'description' => 'Later.',
-      'week_start' => $week + 2,
-      'week_end' => $week + 2,
+      'week_start' => $week + 6,
+      'week_end' => $week + 6,
       'scope' => 'apiary',
     ])->save();
 
@@ -345,6 +343,7 @@ class DashboardTest extends KernelTestBase {
 
     $this->assertStringNotContainsString('Mouse guards fitted', $html);
     $this->assertStringContainsString('All caught up', $html);
+    $this->assertStringContainsString('Nothing scheduled for the next four weeks', $html);
   }
 
   /**
@@ -376,7 +375,9 @@ class DashboardTest extends KernelTestBase {
 
     $html = $this->renderBuild($this->controller()->view());
 
-    $this->assertStringNotContainsString('Varroa autumn treatment', $html);
+    // Gone from the needs-attention queue (its action-log echoes the title
+    // in "Recent activity", so check the row markup, not the bare title).
+    $this->assertStringNotContainsString('hivelog-attention__row-title">Varroa autumn treatment', $html);
     $this->assertStringContainsString('All caught up', $html);
   }
 
@@ -699,7 +700,9 @@ class DashboardTest extends KernelTestBase {
 
     $html = $this->renderBuild($this->controller()->view());
 
-    $this->assertStringNotContainsString('CBR renewal', $html);
+    // No upcoming rows at all (the action-log still echoes the title in
+    // "Recent activity", so assert on the row markup, not the title).
+    $this->assertStringNotContainsString('hivelog-upcoming__row', $html);
     $this->assertStringContainsString('Nothing scheduled for the next four weeks', $html);
   }
 
