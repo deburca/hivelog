@@ -14,7 +14,7 @@ entity.apiary.collection:
   path: '/hivelog/apiaries'
   defaults:
     _entity_list: 'apiary'
-    _title: 'HiveLog - Apiaries'
+    _title: 'Apiaries'
   requirements:
     _permission: 'view own apiary+view any apiary+administer hivelog'
 
@@ -67,7 +67,7 @@ entity.hive.collection:
   path: '/hivelog/hives'
   defaults:
     _entity_list: 'hive'
-    _title: 'HiveLog - Hives'
+    _title: 'Hives'
   requirements:
     _permission: 'view own hive+view any hive+administer hivelog'
 
@@ -124,7 +124,7 @@ entity.hive_inspection.collection:
   path: '/hivelog/inspections'
   defaults:
     _entity_list: 'hive_inspection'
-    _title: 'HiveLog - Inspections'
+    _title: 'Inspections'
   requirements:
     _permission: 'view own hive inspection+view any hive inspection+administer hivelog'
 
@@ -181,7 +181,7 @@ entity.queen.collection:
   path: '/hivelog/queens'
   defaults:
     _entity_list: 'queen'
-    _title: 'HiveLog - Queens'
+    _title: 'Queens'
   requirements:
     _permission: 'view own queen+view any queen+administer hivelog'
 
@@ -246,7 +246,7 @@ entity.queen_observation.collection:
   path: '/hivelog/queen-observations'
   defaults:
     _entity_list: 'queen_observation'
-    _title: 'HiveLog - Queen Observations'
+    _title: 'Queen Observations'
   requirements:
     _permission: 'view own queen observation+view any queen observation+administer hivelog'
 
@@ -303,7 +303,7 @@ entity.calendar_action.collection:
   path: '/hivelog/calendar-actions'
   defaults:
     _entity_list: 'calendar_action'
-    _title: 'HiveLog - Calendar Actions'
+    _title: 'Calendar Actions'
   requirements:
     _permission: 'view own calendar action+view any calendar action+administer hivelog'
 
@@ -360,7 +360,7 @@ entity.hive_action_log.collection:
   path: '/hivelog/hive-action-logs'
   defaults:
     _entity_list: 'hive_action_log'
-    _title: 'HiveLog - Hive Action Logs'
+    _title: 'Hive Action Logs'
   requirements:
     _permission: 'view own hive action log+view any hive action log+administer hivelog'
 
@@ -419,7 +419,7 @@ entity.apiary_action_log.collection:
   path: '/hivelog/apiary-action-logs'
   defaults:
     _entity_list: 'apiary_action_log'
-    _title: 'HiveLog - Apiary Action Logs'
+    _title: 'Apiary Action Logs'
   requirements:
     _permission: 'view own apiary action log+view any apiary action log+administer hivelog'
 
@@ -524,7 +524,7 @@ entity.inventory_item.collection:
   path: '/hivelog/inventory-items'
   defaults:
     _entity_list: 'inventory_item'
-    _title: 'HiveLog - Inventory Items'
+    _title: 'Inventory Items'
   requirements:
     _permission: 'view own inventory item+view any inventory item+administer hivelog'
 
@@ -589,7 +589,7 @@ entity.inventory_purchase.collection:
   path: '/hivelog/inventory-purchases'
   defaults:
     _entity_list: 'inventory_purchase'
-    _title: 'HiveLog - Inventory Purchases'
+    _title: 'Inventory Purchases'
   requirements:
     _permission: 'view own inventory purchase+view any inventory purchase+administer hivelog'
 
@@ -654,7 +654,7 @@ entity.product.collection:
   path: '/hivelog/products'
   defaults:
     _entity_list: 'product'
-    _title: 'HiveLog - Products'
+    _title: 'Products'
   requirements:
     _permission: 'view own product+view any product+administer hivelog'
 
