@@ -86,14 +86,17 @@ Mercury starterkit facts:
         `hivelog.apiaries.financial_report`; the year-selector
         `hivelog:button-group`; the "All apiaries" total row.
   - [ ] Filter forms, list headings, breadcrumb trail.
-- [ ] **Wire it up** in `beeswax.info.yml` via `libraries-extend`: one
-      beeswax library per module library it decorates (`hivelog/dashboard`,
-      `hivelog/tables`, `hivelog/buttons`, `hivelog/forms`,
-      `hivelog/filter_form`, `hivelog/activity-columns`). No route
-      sniffing.
-- [ ] **kbg default.** Set `system.theme` `default: beeswax` (config
-      export in the cms2 repo), keep `admin: gin`. `npm run build`,
-      `ddev drush cr`.
+- [x] **Wire it up.** `src/hivelog.css` added to the theme's `global`
+      library (`css: theme:`, after `theme.css`). `libraries-extend` was
+      tried first but only fires for a library a controller attaches
+      directly — it reached the dashboard but not the entity-list pages,
+      which pull hivelog CSS only through the `hivelog:entity-table` SDC's
+      transitive deps. Global load + `.hivelog-*` scoping is reliable.
+      See ADR-0060 point 3.
+- [x] **kbg default.** `beeswax` enabled and set as `system.theme`
+      `default` (`admin` stays `gin`) via drush; **still needs a config
+      export** in the cms2 / verdigris repo to persist. `npm run build`
+      only if `src/main.css` changes (it hasn't).
 - [ ] **Verify** every surface in the list above against the mockup on
       `kragebaekgaard.ddev.site`, light and dark, at desktop and ≤768px.
 - [ ] Feed anything that needed a module change back to
@@ -101,9 +104,14 @@ Mercury starterkit facts:
       from the theme.
 
 ## Implementation notes
-- Prefer decorating via `libraries-extend` + token overrides; only write
-  a per-selector rule where the module hard-codes a colour that isn't a
-  token yet (those are the candidates for [[0062]]).
+- The skin is one global sheet (`src/hivelog.css`) + the `--hivelog-btn-*`
+  token override; write a per-selector rule only where the module
+  hard-codes a colour that isn't a token yet (those are the candidates
+  for [[0062]]).
+- `libraries-extend` does **not** reach libraries pulled in only as
+  transitive dependencies (e.g. via an SDC's `libraryOverrides`
+  dependencies) — that is why the skin loads from `global`, not via
+  `libraries-extend`.
 - The module's `@media` breakpoints are 768 / 480px
   ([[0011-responsive-design-strategy]]); keep the skin on the same
   breakpoints.

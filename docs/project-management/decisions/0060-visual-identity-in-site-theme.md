@@ -34,11 +34,9 @@ Forces:
   `--hivelog-btn-*` custom properties on `:root`
   ([[0012-action-button-design-system]]); a theme that redefines those
   tokens re-skins every button with no module change.
-- The module's CSS libraries are cleanly separated and named
-  (`hivelog/dashboard`, `hivelog/tables`, `hivelog/buttons`,
-  `hivelog/forms`, `hivelog/filter_form`, …), so a theme can
-  `libraries-extend` each one to append a skin sheet exactly where the
-  module's own CSS loads.
+- The module's CSS uses hard-coded hex for most non-button colours, so a
+  theme skin restates a handful of `.hivelog-*` selectors to recolour
+  them; the `--hivelog-btn-*` token layer already spares it the buttons.
 - The module is distributed on its own (`git@github.com:deburca/hivelog`)
   and installed on sites other than kbg; those sites must keep working on
   their own themes with no beeswax assets.
@@ -54,10 +52,20 @@ Forces:
    / IBM Plex faces and the beeswax / pine palette (light + dark), and a
    **HiveLog skin** that covers every module surface — dashboard, list
    pages, canonical pages, financial reports — to match the mockup.
-3. **The skin attaches via `libraries-extend`**, one beeswax library per
-   module library it needs to decorate, plus a `--hivelog-btn-*` token
-   override block. No `hook_page_attachments` route-sniffing; the skin
-   loads wherever and only where the module's CSS already loads.
+3. **The skin loads from the theme's `global` library**, as a single
+   plain-CSS sheet of `.hivelog-*`-scoped rules plus a `--hivelog-btn-*`
+   token override. It sits in the `theme` CSS group, so it always lands
+   after the module's own `component`-group CSS. No
+   `hook_page_attachments` route-sniffing.
+
+   > Originally specified as `libraries-extend` over each module CSS
+   > library. In practice `libraries-extend` only fires for a library a
+   > controller **attaches directly** — the dashboard attaches
+   > `hivelog/dashboard`, so it worked there, but the entity-list pages
+   > pull hivelog's CSS only transitively through the
+   > `hivelog:entity-table` SDC's dependencies, which `libraries-extend`
+   > does not reach. Loading globally is reliable; the `.hivelog-*`
+   > scoping keeps it inert on non-HiveLog pages.
 4. **The module may add themeability affordances** — but only token
    surface, never brand styling: tokenising the dashboard / report /
    attention colours the way buttons are already tokenised, and at most a
@@ -72,7 +80,7 @@ Forces:
 - Positive:
   - The module stays portable and theme-neutral; the identity is opt-in
     per site by installing/enabling a theme.
-  - `libraries-extend` + token overrides mean most of the skin is CSS
+  - A single global sheet + token overrides mean most of the skin is CSS
     against existing classes — little or no module change.
   - kbg gets one coherent look across every HiveLog page, including the
     financial reports, without the module taking on font hosting or a

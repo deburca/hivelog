@@ -70,13 +70,15 @@ Gin):
 - **In scope**
   - `beeswax` theme: Fraunces / IBM Plex faces (self-hosted woff2), the
     beeswax / pine palette mapped onto the theme's design tokens, and a
-    HiveLog skin that covers every surface above — attached by
-    `libraries-extend` over the module's CSS libraries (`hivelog/dashboard`,
-    `hivelog/tables`, `hivelog/buttons`, `hivelog/forms`,
-    `hivelog/filter_form`, `hivelog/activity-columns`) plus a
-    `--hivelog-btn-*` token override. Light + dark.
-  - Set `beeswax` as the kbg site's default theme; build
-    (`npm run build`); verify against the running site.
+    HiveLog skin (`src/hivelog.css`) that covers every surface above —
+    loaded from the theme's `global` library (`.hivelog-*`-scoped, in the
+    `theme` CSS group so it lands after the module's CSS) plus a
+    `--hivelog-btn-*` token override. Light + dark. (`libraries-extend`
+    was tried but does not reach libraries pulled in only transitively,
+    e.g. via the `hivelog:entity-table` SDC — see
+    [[0060-visual-identity-in-site-theme]].)
+  - Set `beeswax` as the kbg site's default theme; verify against the
+    running site.
   - Module-side themeability only where the skin genuinely needs it —
     tokenising the dashboard / report / attention colours the way buttons
     are already tokenised, and any page-level hook the theme requires.
