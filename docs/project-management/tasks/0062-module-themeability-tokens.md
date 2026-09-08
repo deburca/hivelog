@@ -107,10 +107,9 @@ actually painful — token surface only, no brand styling in the module
 
 ## Implementation notes
 - Token-only, no brand in the module ([[0060]]).
-- `.hivelog-cbr-summary` (in `css/hivelog.buttons.css`) still hard-codes
-  `#d1d5db` / `#f9fafb` — buttons.css was out of scope here, so beeswax
-  still restates that one block. Fold it into the token surface if a
-  future pass touches buttons.css.
+- `.hivelog-cbr-summary` (in `css/hivelog.buttons.css`) was out of scope
+  here — buttons.css wasn't touched. Folded into the token surface by
+  [[0070-tokenise-cbr-summary]].
 - `css/hivelog.map.css`, `.images.css`, `.weight-histogram.css` are not
   tokenised on purpose — chart / media internals, not themed chrome.
 
