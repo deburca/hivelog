@@ -1,13 +1,13 @@
 ---
 type: task
 tags: [hivelog/task]
-status: review
+status: done
 priority: low
 project:
 area: ui
 created: 2026-09-08
 branch: feature/0069-remove-previous-queens-block
-release:
+release: 1.8.2
 depends-on:
 blocked-by:
 ---
@@ -46,4 +46,5 @@ block is redundant.
 
 ## Related
 - Decisions:: [[0026-breed-moves-to-queen]]
-- Commits::
+- Commits:: dd30a2c (PR #135)
+- Release:: [[1.8.2]]
