@@ -127,7 +127,9 @@ requires a corresponding update hook (see `hivelog.install`).
   is NOT stored on the hive (see `Queen` below); `Hive::getActiveQueen()`
   resolves the active queen via a reverse lookup on `queen.hive`, and
   `Hive::getQueens()` resolves every queen (active or retired) ever linked
-  to the hive, most recent first, for the hive page's queen history.
+  to the hive, most recent first, so the hive page can aggregate queen
+  observations across the whole hive lifetime (the hive page shows no
+  standalone "previous queens" list — "View all Queens" covers that).
 - `HiveInspection` — references a `Hive` and carries the full inspection
   payload (external check, queen, brood, stores, health, management, notes).
 - `Queen` — references a `Hive` via `hive` entity_reference (optional).
@@ -138,7 +140,8 @@ requires a corresponding update hook (see `hivelog.install`).
   constant (international queen marking convention) AND enforces the
   "one active queen per hive" invariant by demoting any previously active
   queen on the same hive to `inactive` — her `hive` reference is left
-  intact so she still shows up in the hive's queen history.
+  intact so her observations still aggregate onto the hive page and she
+  stays listed under "View all Queens".
 - `QueenObservation` — references a `Queen` via `queen` entity_reference
   (required). Captures point-in-time queen-specific notes separate from
   hive-level inspections: `observation_date`, `health` (excellent / good /
