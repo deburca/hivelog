@@ -130,12 +130,6 @@ class ProductListBuilder extends EntityListBuilder {
       '#type' => 'container',
       '#attributes' => ['class' => ['hivelog-list-heading']],
       '#weight' => -90,
-      'title' => [
-        '#type' => 'html_tag',
-        '#tag' => 'h3',
-        '#value' => $this->t('Products'),
-        '#attributes' => ['class' => ['hivelog-list-heading__title']],
-      ],
       'actions' => [
         '#type' => 'container',
         '#attributes' => ['class' => ['hivelog-list-heading__action']],
