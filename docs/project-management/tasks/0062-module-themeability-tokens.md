@@ -7,7 +7,7 @@ project: "[[hivelog-visual-identity]]"
 area: theme
 created: 2026-09-08
 branch: feature/0062-module-themeability-tokens
-release:
+release: 1.8.3
 depends-on: ["[[0061-beeswax-hivelog-skin]]"]
 blocked-by:
 ---
@@ -44,13 +44,14 @@ blocked-by:
       (`#b3261e`→`#b91c1c` on the danger count; `#e0e0e0`/`#eef0f2`/`#e5e5e5`
       →`#e5e7eb` on 1px rules; `#fafafa`→`#f9fafb` on the filter panel).
       No structural change; nothing else moves on a stock theme.
-- [ ] **beeswax drops its copies — RELEASE-GATED.** Blocked until a
-      hivelog release carries this branch (tokens + `hivelog_preprocess_html`)
-      and cms2 is pinned to it: kbg runs hivelog `1.8.2`, whose CSS still
-      hard-codes the hex and has no body-class hook, so removing
-      beeswax's `ThemeHooks::preprocessHtml()` `hivelog-page` add or its
-      per-selector colour rules now would regress the live skin. After
-      the bump, in `deburca/beeswax`:
+- [ ] **beeswax drops its copies — RELEASE-GATED.** The module side
+      shipped in **hivelog 1.8.3** (PR #136, commit `92acc3f`). This
+      step unblocks once **cms2 pins hivelog to `1.8.3`** — until then
+      kbg still runs `1.8.2`, whose CSS hard-codes the hex and has no
+      body-class hook, so removing beeswax's
+      `ThemeHooks::preprocessHtml()` `hivelog-page` add or its
+      per-selector colour rules would regress the live skin. After the
+      cms2 pin, in `deburca/beeswax`:
         1. delete the `hivelog-page` block from
            `src/Hook/ThemeHooks.php::preprocessHtml()`;
         2. replace the colour-only restatements in `src/hivelog.css` with
