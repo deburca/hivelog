@@ -7,7 +7,7 @@ project: "[[hivelog-visual-identity]]"
 area: theme
 created: 2026-09-08
 branch: feature/0070-tokenise-cbr-summary
-release:
+release: 1.8.4
 depends-on: ["[[0062-module-themeability-tokens]]"]
 blocked-by:
 ---
@@ -43,8 +43,9 @@ are already in scope — no library change needed.
       (`ddev exec … modules/contrib/hivelog/tests/src/Kernel/DashboardTest.php`)
       — 36 tests, 879 assertions, OK (4 pre-existing geofield
       deprecations, unrelated). CSS-only change, no render-array impact.
-- [ ] PR against `main`, squash-merge once CI is green (lint +
-      Kernel/Unit are the hard gates; phpstan + Functional are advisory).
+- [x] PR against `main`, squash-merged once CI was green (lint +
+      Kernel/Unit are the hard gates; phpstan + Functional are advisory)
+      — PR #137, merge commit `5058d0c`. Shipped in release 1.8.4.
 
 ## Then: beeswax + release
 Mirrors how [[0062-module-themeability-tokens]] finished.
