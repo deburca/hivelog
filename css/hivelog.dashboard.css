@@ -19,11 +19,38 @@
   gap: 1.75rem;
 }
 
-/* Header strip: ISO-week badge on the left, CBR line filling the rest. */
+/*
+ * Masthead. The hexagon mark + "HiveLog" wordmark are injected into the
+ * theme's page-title <h1> by DashboardController::title(); the subtitle
+ * line sits just under it. Small negative top margin pulls the subtitle
+ * up toward the <h1> the theme renders above the block.
+ */
+.hivelog-masthead__mark {
+  display: inline-flex;
+  vertical-align: -0.28em;
+  margin-right: 0.4rem;
+  color: #a4630a;
+}
+
+.hivelog-masthead__word {
+  vertical-align: middle;
+}
+
+.hivelog-masthead__sub {
+  margin: -0.35rem 0 0;
+  color: #6b7280;
+  font-size: 0.95rem;
+}
+
+/*
+ * Header strip: ISO-week badge and CBR line, pushed to the right so they
+ * sit opposite the masthead.
+ */
 .hivelog-dashboard__header {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: flex-end;
   gap: 0.5rem 1rem;
 }
 
@@ -42,11 +69,12 @@
 
 /*
  * The CBR summary reuses .hivelog-cbr-summary from hivelog.buttons.css for
- * its look; here it just loses the block margin and grows to fill the
- * header strip next to the week badge.
+ * its look; here it just loses the block margin and sizes to its content
+ * so it sits at the right next to the week badge.
  */
 .hivelog-dashboard__header .hivelog-cbr-summary {
-  flex: 1 1 16rem;
+  flex: 0 1 auto;
+  max-width: 32rem;
   margin: 0;
 }
 
@@ -109,6 +137,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
+  justify-content: space-between;
   gap: 0.35rem 0.75rem;
   padding: 0.8rem 1rem;
   border-bottom: 1px solid #e5e7eb;
@@ -120,8 +149,17 @@
 }
 
 .hivelog-attention__count {
+  margin-left: auto;
   font-size: 0.85rem;
-  color: #6b7280;
+  font-weight: 600;
+}
+
+.hivelog-attention__count--warning {
+  color: #a4630a;
+}
+
+.hivelog-attention__count--danger {
+  color: #b3261e;
 }
 
 .hivelog-attention__empty {

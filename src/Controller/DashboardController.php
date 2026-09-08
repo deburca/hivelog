@@ -10,6 +10,7 @@ use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\DependencyInjection\ClassResolverInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Render\Markup;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
 use Drupal\hivelog\Entity\Apiary;
@@ -73,6 +74,24 @@ class DashboardController extends ControllerBase {
   }
 
   /**
+   * Page title: a hexagon mark plus the "HiveLog" wordmark.
+   *
+   * Returned as safe markup so the SVG survives into the theme's <h1>;
+   * the "Apiary & hive logbook" subtitle is a separate element rendered
+   * by view() just below it.
+   */
+  public function title(): Markup {
+    return Markup::create(
+      '<span class="hivelog-masthead__mark" aria-hidden="true">'
+      . '<svg viewBox="0 0 24 24" width="24" height="24">'
+      . '<path fill="currentColor" opacity=".16" d="M12 2.6l8.15 4.7v9.4L12 21.4 3.85 16.7V7.3z"/>'
+      . '<path fill="none" stroke="currentColor" stroke-width="1.6" d="M12 4.1l6.85 3.95v7.9L12 19.9l-6.85-3.95v-7.9z"/>'
+      . '</svg></span>'
+      . '<span class="hivelog-masthead__word">' . $this->t('HiveLog') . '</span>'
+    );
+  }
+
+  /**
    * Renders the dashboard landing page.
    */
   public function view(): array {
@@ -82,6 +101,13 @@ class DashboardController extends ControllerBase {
       '#type' => 'container',
       '#attributes' => ['class' => ['hivelog-dashboard']],
       '#attached' => ['library' => ['hivelog/dashboard']],
+      'subtitle' => [
+        '#type' => 'html_tag',
+        '#tag' => 'p',
+        '#attributes' => ['class' => ['hivelog-masthead__sub']],
+        '#value' => $this->t('Apiary and hive logbook'),
+        '#weight' => -30,
+      ],
       'header' => $this->buildHeader($cache) + ['#weight' => -10],
     ];
 
@@ -451,7 +477,12 @@ class DashboardController extends ControllerBase {
     $panel['header']['count'] = [
       '#type' => 'html_tag',
       '#tag' => 'span',
-      '#attributes' => ['class' => ['hivelog-attention__count']],
+      '#attributes' => [
+        'class' => [
+          'hivelog-attention__count',
+          $overdue ? 'hivelog-attention__count--danger' : 'hivelog-attention__count--warning',
+        ],
+      ],
       '#value' => $overdue
         ? $this->t('@total to review · @overdue overdue', ['@total' => count($alerts), '@overdue' => $overdue])
         : $this->formatPlural(count($alerts), '@count item to review', '@count items to review'),

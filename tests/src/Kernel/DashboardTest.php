@@ -180,6 +180,30 @@ class DashboardTest extends KernelTestBase {
   }
 
   /**
+   * The page title carries the hexagon mark and "HiveLog" wordmark.
+   */
+  public function testTitleMarkup(): void {
+    $markup = (string) $this->controller()->title();
+
+    $this->assertStringContainsString('hivelog-masthead__mark', $markup);
+    $this->assertStringContainsString('<svg', $markup);
+    $this->assertStringContainsString('hivelog-masthead__word', $markup);
+    $this->assertStringContainsString('HiveLog', $markup);
+  }
+
+  /**
+   * The masthead subtitle renders under the header strip.
+   */
+  public function testMastheadSubtitle(): void {
+    $this->makeCurrentUser();
+
+    $html = $this->renderBuild($this->controller()->view());
+
+    $this->assertStringContainsString('hivelog-masthead__sub', $html);
+    $this->assertStringContainsString('Apiary and hive logbook', $html);
+  }
+
+  /**
    * The CBR summary line renders its three states from the dashboard.
    */
   public function testCbrSummaryStates(): void {
@@ -388,6 +412,8 @@ class DashboardTest extends KernelTestBase {
     $this->assertStringContainsString('Overdue', $html);
     $this->assertStringNotContainsString('All caught up', $html);
     $this->assertStringContainsString('/log/add?status=done', $html);
+    // Overdue → the header count reads in the danger colour.
+    $this->assertStringContainsString('hivelog-attention__count--danger', $html);
   }
 
   /**
@@ -414,6 +440,9 @@ class DashboardTest extends KernelTestBase {
     $this->assertStringContainsString('Feed winter stores', $html);
     $this->assertStringContainsString('hivelog-attention__row--warning', $html);
     $this->assertStringContainsString('Due wk ' . $week, $html);
+    // Nothing overdue → the header count reads in the warning colour.
+    $this->assertStringContainsString('hivelog-attention__count--warning', $html);
+    $this->assertStringNotContainsString('hivelog-attention__count--danger', $html);
   }
 
   /**

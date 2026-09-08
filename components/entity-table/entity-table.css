@@ -2,11 +2,30 @@
  * @file
  * Styling for the hivelog:entity-table SDC component.
  *
- * Appearance is driven by framework utility classes declared in
- * entity-table.twig. The theme build scans this component directory and
- * includes whichever framework classes it recognises (DaisyUI `table`,
- * Tailwind utilities, etc.) in its compiled output.
+ * entity-table.twig also carries framework utility classes (DaisyUI
+ * `table`, Tailwind `w-full` …) for themes that compile them. The
+ * low-specificity baseline below gives the table readable borders,
+ * padding and header emphasis on every other theme (Claro, Gin, stark,
+ * and custom admin themes) — a framework theme's own `.table` rules layer
+ * on top of it.
  */
+.hivelog-entity-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.hivelog-entity-table th,
+.hivelog-entity-table td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid #e0e0e0;
+  text-align: left;
+  vertical-align: top;
+}
+
+.hivelog-entity-table thead th {
+  border-bottom: 2px solid #ccc;
+  font-weight: 600;
+}
 
 /**
  * Responsive: collapse the table into stacked, labelled cards on small screens
