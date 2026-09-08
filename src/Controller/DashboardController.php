@@ -856,9 +856,11 @@ class DashboardController extends ControllerBase {
     ];
 
     if ($this->canSeeFinances()) {
+      // One apiary: straight to its financial report. More than one:
+      // the combined all-apiaries report (task 0059).
       $net_url = count($apiaries) === 1
         ? Url::fromRoute('hivelog.apiary.inventory_cost_report', ['apiary' => (int) array_key_first($apiaries)])
-        : Url::fromRoute('entity.apiary.collection');
+        : Url::fromRoute('hivelog.apiaries.financial_report');
       $tiles[] = $this->statTile(
         number_format($this->sumNetYtd($apiaries, $year, $cache), 0),
         $this->t('Net YTD'),

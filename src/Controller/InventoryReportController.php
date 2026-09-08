@@ -7,6 +7,7 @@ namespace Drupal\hivelog\Controller;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Link;
 use Drupal\Core\Url;
 use Drupal\hivelog\Entity\Apiary;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -78,7 +79,7 @@ class InventoryReportController extends ControllerBase {
       '#type' => 'component',
       '#component' => 'hivelog:button-group',
       '#weight' => 1,
-      '#props' => ['buttons' => $this->buildYearSelectorButtons($apiary, $year)],
+      '#props' => ['buttons' => $this->buildYearSelectorButtons('hivelog.apiary.inventory_cost_report', ['apiary' => $apiary->id()], $year)],
     ];
 
     $build['summary'] = [
@@ -207,6 +208,128 @@ class InventoryReportController extends ControllerBase {
   }
 
   /**
+   * Builds the combined financial report across every viewable apiary.
+   *
+   * Runs `computeApiaryYearTotals()` once per apiary the current user may
+   * view and sums the result into one summary (a row per apiary plus an
+   * "All apiaries" total) and one 5-year trend. Each apiary row links to
+   * that apiary's own per-item report for the drill-down. This is the
+   * dashboard "Net YTD" tile's destination when more than one apiary is
+   * visible (see DashboardController::buildStatTiles()); with exactly one
+   * the tile points straight at that apiary's `costReport()` instead.
+   *
+   * No `_entity_access` on the route: like `costReport()` it is a
+   * read-side aggregation gated by a global permission, and it only ever
+   * iterates apiaries that pass `access('view')` here.
+   */
+  public function combinedReport(): array {
+    $year = $this->extractReportYear();
+    $apiaries = $this->viewableApiaries();
+
+    $cache = (new CacheableMetadata())
+      ->addCacheContexts(['url.query_args:year', 'user.permissions'])
+      ->addCacheTags($this->entityTypeManager->getDefinition('apiary')->getListCacheTags())
+      ->addCacheTags($this->entityTypeManager->getDefinition('inventory_purchase')->getListCacheTags())
+      ->addCacheTags($this->entityTypeManager->getDefinition('inventory_usage')->getListCacheTags())
+      ->addCacheTags($this->entityTypeManager->getDefinition('harvest_yield')->getListCacheTags());
+
+    $build = [];
+    $build['year_selector'] = [
+      '#type' => 'component',
+      '#component' => 'hivelog:button-group',
+      '#weight' => 1,
+      '#props' => ['buttons' => $this->buildYearSelectorButtons('hivelog.apiaries.financial_report', [], $year)],
+    ];
+
+    $rows = [];
+    $sum = ['consumable' => 0.0, 'depreciation' => 0.0, 'cost' => 0.0, 'income' => 0.0, 'net' => 0.0];
+    foreach ($apiaries as $apiary) {
+      $cache->addCacheableDependency($apiary);
+      $totals = $this->computeApiaryYearTotals($apiary, $year);
+      $this->addTotalsCacheDependencies($totals, $cache);
+
+      $rows[] = [
+        Link::fromTextAndUrl(
+          $apiary->label(),
+          Url::fromRoute('hivelog.apiary.inventory_cost_report', ['apiary' => $apiary->id()], ['query' => ['year' => $year]]),
+        )->toString(),
+        number_format($totals['consumable_total'], 2),
+        number_format($totals['depreciation_total'], 2),
+        number_format($totals['cost_total'], 2),
+        number_format($totals['income_total'], 2),
+        number_format($totals['net'], 2),
+      ];
+
+      $sum['consumable'] += $totals['consumable_total'];
+      $sum['depreciation'] += $totals['depreciation_total'];
+      $sum['cost'] += $totals['cost_total'];
+      $sum['income'] += $totals['income_total'];
+      $sum['net'] += $totals['net'];
+    }
+
+    if ($rows) {
+      $rows[] = [
+        ['data' => $this->t('All apiaries'), 'header' => TRUE],
+        ['data' => number_format($sum['consumable'], 2), 'header' => TRUE],
+        ['data' => number_format($sum['depreciation'], 2), 'header' => TRUE],
+        ['data' => number_format($sum['cost'], 2), 'header' => TRUE],
+        ['data' => number_format($sum['income'], 2), 'header' => TRUE],
+        ['data' => number_format($sum['net'], 2), 'header' => TRUE],
+      ];
+    }
+
+    $build['summary'] = [
+      '#type' => 'table',
+      '#weight' => 2,
+      '#header' => [
+        $this->t('Apiary'),
+        $this->t('Total consumable cost'),
+        $this->t('Total active depreciation'),
+        $this->t('Total cost'),
+        $this->t('Total potential income'),
+        $this->t('Net'),
+      ],
+      '#rows' => $rows,
+      '#empty' => $this->t('No apiaries to report on.'),
+      '#attributes' => ['class' => ['hivelog-inventory-report-table']],
+      '#attached' => ['library' => ['hivelog/tables']],
+    ];
+
+    [$trend_rows, $trend_dependencies] = $this->buildCombinedTrendRows($apiaries);
+    $build['trend'] = [
+      '#type' => 'container',
+      '#weight' => 3,
+      '#attributes' => ['class' => ['hivelog-inventory-report-trend']],
+      'heading' => [
+        '#type' => 'html_tag',
+        '#tag' => 'h3',
+        '#value' => $this->t('5-Year Trend'),
+      ],
+      'table' => [
+        '#type' => 'table',
+        '#header' => [
+          $this->t('Year'),
+          $this->t('Total consumable cost'),
+          $this->t('Total active depreciation'),
+          $this->t('Total cost'),
+          $this->t('Total potential income'),
+          $this->t('Net'),
+        ],
+        '#rows' => $trend_rows,
+        '#attributes' => ['class' => ['hivelog-inventory-report-table']],
+        '#attached' => ['library' => ['hivelog/tables']],
+      ],
+    ];
+    foreach ($trend_dependencies as $dependency) {
+      $cache->addCacheableDependency($dependency);
+    }
+
+    $cache->applyTo($build);
+
+    return $build;
+  }
+
+  /**
    * Computes every cost/income total for one apiary/year.
    *
    * Shared by `costReport()`'s single-year summary and `buildTrendRows()`'s
@@ -290,6 +413,99 @@ class InventoryReportController extends ControllerBase {
   }
 
   /**
+   * Builds the combined 5-year trend rows summed across every apiary.
+   *
+   * The multi-apiary counterpart of `buildTrendRows()`: for each of the
+   * current year and the five before it, sums `computeApiaryYearTotals()`
+   * over every given apiary into one row. Covers the real calendar years
+   * regardless of the ±1 year selector, and keeps a zeroed row for a
+   * year with no activity anywhere, exactly like the per-apiary version.
+   *
+   * @param \Drupal\hivelog\Entity\Apiary[] $apiaries
+   *   The apiaries to sum over (already access-filtered).
+   *
+   * @return array{0: array<int, array<int, string>>, 1: array<\Drupal\Core\Cache\CacheableDependencyInterface>}
+   *   A tuple of the table's `#rows` and every item/product entity
+   *   encountered, for the caller to fold into its own cache metadata.
+   */
+  protected function buildCombinedTrendRows(array $apiaries): array {
+    $current_year = (int) date('Y');
+    $rows = [];
+    $cache_dependencies = [];
+
+    for ($year = $current_year - 5; $year <= $current_year; $year++) {
+      $consumable = $depreciation = $cost = $income = $net = 0.0;
+      foreach ($apiaries as $apiary) {
+        $totals = $this->computeApiaryYearTotals($apiary, $year);
+        $consumable += $totals['consumable_total'];
+        $depreciation += $totals['depreciation_total'];
+        $cost += $totals['cost_total'];
+        $income += $totals['income_total'];
+        $net += $totals['net'];
+        $this->addTotalsCacheDependencies($totals, $cache_dependencies);
+      }
+      $rows[] = [
+        (string) $year,
+        number_format($consumable, 2),
+        number_format($depreciation, 2),
+        number_format($cost, 2),
+        number_format($income, 2),
+        number_format($net, 2),
+      ];
+    }
+
+    return [$rows, $cache_dependencies];
+  }
+
+  /**
+   * Folds a `computeApiaryYearTotals()` result's entities into a collector.
+   *
+   * The item / product entities behind a totals result are its cache
+   * dependencies; every caller needs the same three loops, so they live
+   * here once.
+   *
+   * @param array $totals
+   *   A `computeApiaryYearTotals()` return value.
+   * @param \Drupal\Core\Cache\CacheableMetadata|array $collector
+   *   Either a CacheableMetadata to add dependencies to, or an array to
+   *   append entities to (for callers that return a dependency list).
+   */
+  protected function addTotalsCacheDependencies(array $totals, CacheableMetadata|array &$collector): void {
+    foreach (['consumables', 'depreciation', 'yields'] as $group) {
+      $key = $group === 'yields' ? 'product' : 'item';
+      foreach ($totals[$group] as $row) {
+        if ($collector instanceof CacheableMetadata) {
+          $collector->addCacheableDependency($row[$key]);
+        }
+        else {
+          $collector[] = $row[$key];
+        }
+      }
+    }
+  }
+
+  /**
+   * Loads every apiary the current user may view, keyed by id.
+   *
+   * Mirrors DashboardController::viewableApiaries() — an access-checked
+   * query plus a per-entity `access('view')` filter — so the combined
+   * report and the "Net YTD" tile that links to it always cover the same
+   * set.
+   *
+   * @return \Drupal\hivelog\Entity\Apiary[]
+   *   Viewable apiaries keyed by entity id.
+   */
+  protected function viewableApiaries(): array {
+    $storage = $this->entityTypeManager->getStorage('apiary');
+    $ids = $storage->getQuery()->accessCheck(TRUE)->execute();
+    $apiaries = $ids ? $storage->loadMultiple($ids) : [];
+    return array_filter(
+      $apiaries,
+      fn($apiary) => $apiary->access('view', $this->currentUser()),
+    );
+  }
+
+  /**
    * Extracts the selected report year from the request, clamped to ±1.
    *
    * Matches HiveController::extractCalendarFilters()'s year-clamping
@@ -309,14 +525,27 @@ class InventoryReportController extends ControllerBase {
 
   /**
    * Builds the previous/current/next year selector buttons.
+   *
+   * Route-agnostic so both the per-apiary report
+   * (hivelog.apiary.inventory_cost_report, with an {apiary} param) and
+   * the combined report (hivelog.apiaries.financial_report, no params)
+   * can reuse it — each keeps its own `?year=` query.
+   *
+   * @param string $route
+   *   The report route to link back to.
+   * @param array $route_params
+   *   Route parameters (the per-apiary report's `apiary`; empty for the
+   *   combined report).
+   * @param int $selected_year
+   *   The currently selected year, rendered as the primary button.
    */
-  protected function buildYearSelectorButtons(Apiary $apiary, int $selected_year): array {
+  protected function buildYearSelectorButtons(string $route, array $route_params, int $selected_year): array {
     $current_year = (int) date('Y');
     $buttons = [];
     foreach ([$current_year - 1, $current_year, $current_year + 1] as $year) {
       $buttons[] = [
         'label' => (string) $year,
-        'url' => Url::fromRoute('hivelog.apiary.inventory_cost_report', ['apiary' => $apiary->id()], ['query' => ['year' => $year]])->toString(),
+        'url' => Url::fromRoute($route, $route_params, ['query' => ['year' => $year]])->toString(),
         'variant' => $year === $selected_year ? 'primary' : 'default',
       ];
     }
