@@ -23,9 +23,8 @@ use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 /**
  * Tests the dashboard landing page controller (task 0056, ADR-0057).
  *
- * Covers criteria 2–6: the shell, the "Needs attention" widget, the six
- * stat tiles, the "Upcoming" / "Recent activity" split, and the closing
- * "Apiaries" section.
+ * Covers the shell, the "Needs attention" widget, the six stat tiles, and
+ * the "Upcoming" / "Recent activity" split.
  */
 #[Group('hivelog')]
 #[RunTestsInSeparateProcesses]
@@ -163,8 +162,35 @@ class DashboardTest extends KernelTestBase {
 
     $this->assertStringNotContainsString('Welcome to HiveLog', $html);
     $this->assertStringContainsString('Needs attention', $html);
-    $this->assertStringContainsString('Add Apiary', $html);
-    $this->assertStringContainsString('Home Apiary', $html);
+    $this->assertStringContainsString('hivelog-stat-tiles', $html);
+    $this->assertStringContainsString('Recent activity', $html);
+  }
+
+  /**
+   * The "Apiaries" tile links straight to the apiary when there is one.
+   */
+  public function testApiariesTileLinksToSingleApiary(): void {
+    $user = $this->makeCurrentUser();
+    $apiary = Apiary::create(['name' => 'Only One', 'uid' => $user->id()]);
+    $apiary->save();
+
+    $html = $this->renderBuild($this->controller()->view());
+
+    $this->assertStringContainsString('href="/hivelog/apiary/' . $apiary->id() . '"', $html);
+    $this->assertStringNotContainsString('href="/hivelog/apiaries"', $html);
+  }
+
+  /**
+   * With more than one apiary the tile links to the collection.
+   */
+  public function testApiariesTileLinksToCollectionWhenMany(): void {
+    $user = $this->makeCurrentUser();
+    Apiary::create(['name' => 'A1', 'uid' => $user->id()])->save();
+    Apiary::create(['name' => 'A2', 'uid' => $user->id()])->save();
+
+    $html = $this->renderBuild($this->controller()->view());
+
+    $this->assertStringContainsString('href="/hivelog/apiaries"', $html);
   }
 
   /**
@@ -177,6 +203,30 @@ class DashboardTest extends KernelTestBase {
 
     $this->assertStringContainsString('<strong>' . ((int) date('W')) . '</strong>', $html);
     $this->assertStringContainsString((string) ((int) date('Y')), $html);
+  }
+
+  /**
+   * The page title carries the hexagon mark and "HiveLog" wordmark.
+   */
+  public function testTitleMarkup(): void {
+    $markup = (string) $this->controller()->title();
+
+    $this->assertStringContainsString('hivelog-masthead__mark', $markup);
+    $this->assertStringContainsString('<svg', $markup);
+    $this->assertStringContainsString('hivelog-masthead__word', $markup);
+    $this->assertStringContainsString('HiveLog', $markup);
+  }
+
+  /**
+   * The masthead subtitle renders under the header strip.
+   */
+  public function testMastheadSubtitle(): void {
+    $this->makeCurrentUser();
+
+    $html = $this->renderBuild($this->controller()->view());
+
+    $this->assertStringContainsString('hivelog-masthead__sub', $html);
+    $this->assertStringContainsString('Apiary and hive logbook', $html);
   }
 
   /**
@@ -388,6 +438,8 @@ class DashboardTest extends KernelTestBase {
     $this->assertStringContainsString('Overdue', $html);
     $this->assertStringNotContainsString('All caught up', $html);
     $this->assertStringContainsString('/log/add?status=done', $html);
+    // Overdue → the header count reads in the danger colour.
+    $this->assertStringContainsString('hivelog-attention__count--danger', $html);
   }
 
   /**
@@ -414,6 +466,9 @@ class DashboardTest extends KernelTestBase {
     $this->assertStringContainsString('Feed winter stores', $html);
     $this->assertStringContainsString('hivelog-attention__row--warning', $html);
     $this->assertStringContainsString('Due wk ' . $week, $html);
+    // Nothing overdue → the header count reads in the warning colour.
+    $this->assertStringContainsString('hivelog-attention__count--warning', $html);
+    $this->assertStringNotContainsString('hivelog-attention__count--danger', $html);
   }
 
   /**
@@ -913,120 +968,6 @@ class DashboardTest extends KernelTestBase {
     $this->assertContains('queen_observation_list', $tags);
     $this->assertContains('inventory_purchase_list', $tags);
     $this->assertContains('harvest_yield_list', $tags);
-  }
-
-  // ---------------------------------------------------------------------------
-  // Apiaries section (criterion 6).
-  // ---------------------------------------------------------------------------
-
-  /**
-   * The closing section shows one row per apiary with its hive count.
-   */
-  public function testApiariesSectionShowsPerApiaryRows(): void {
-    $user = $this->makeCurrentUser();
-    $a = Apiary::create(['name' => 'Ravnholt Home', 'uid' => $user->id()]);
-    $a->save();
-    $b = Apiary::create(['name' => 'Sondermarken', 'uid' => $user->id()]);
-    $b->save();
-    $this->clearSeededCalendarActions();
-    Hive::create(['name' => 'H1', 'apiary' => $a->id(), 'status' => 'active'])->save();
-    Hive::create(['name' => 'H2', 'apiary' => $a->id(), 'status' => 'active'])->save();
-
-    $html = $this->renderBuild($this->controller()->view());
-
-    $this->assertStringContainsString('Ravnholt Home', $html);
-    $this->assertStringContainsString('Sondermarken', $html);
-    $this->assertStringContainsString('Add Apiary', $html);
-    $this->assertStringContainsString('/hivelog/apiary/add', $html);
-    // Ravnholt has two hives, Sondermarken none.
-    $this->assertStringContainsString('data-label="Hives">2<', $html);
-    $this->assertStringContainsString('data-label="Hives">0<', $html);
-  }
-
-  /**
-   * The "Open tasks" cell shows the count and an overdue callout.
-   */
-  public function testApiariesSectionOpenTasksOverdue(): void {
-    $week = $this->weekOrSkipEdge();
-    $user = $this->makeCurrentUser();
-    $apiary = Apiary::create(['name' => 'A1', 'uid' => $user->id()]);
-    $apiary->save();
-    $this->clearSeededCalendarActions();
-
-    CalendarAction::create([
-      'apiary' => $apiary->id(),
-      'title' => 'Overdue',
-      'description' => 'x',
-      'week_start' => max(1, $week - 3),
-      'week_end' => $week - 1,
-      'scope' => 'apiary',
-    ])->save();
-    CalendarAction::create([
-      'apiary' => $apiary->id(),
-      'title' => 'Due now',
-      'description' => 'x',
-      'week_start' => $week,
-      'week_end' => $week,
-      'scope' => 'apiary',
-    ])->save();
-
-    $html = $this->renderBuild($this->controller()->view());
-
-    $this->assertStringContainsString('data-label="Open tasks">2 (1 overdue)<', $html);
-  }
-
-  /**
-   * The "Low stock" cell shows a count or an em-dash.
-   */
-  public function testApiariesSectionLowStockCell(): void {
-    $user = $this->makeCurrentUser();
-    $with = Apiary::create(['name' => 'With Stock Issue', 'uid' => $user->id()]);
-    $with->save();
-    $without = Apiary::create(['name' => 'All Good', 'uid' => $user->id()]);
-    $without->save();
-    $this->clearSeededCalendarActions();
-
-    InventoryItem::create([
-      'apiary' => $with->id(),
-      'name' => 'Pads',
-      'unit' => 'pad',
-      'low_stock_threshold' => 10,
-    ])->save();
-
-    $html = $this->renderBuild($this->controller()->view());
-
-    $this->assertStringContainsString('data-label="Low stock">1<', $html);
-    $this->assertStringContainsString('data-label="Low stock">—<', $html);
-  }
-
-  /**
-   * The "Last activity" cell shows a date when there is a recent inspection.
-   */
-  public function testApiariesSectionLastActivity(): void {
-    $user = $this->makeCurrentUser();
-    $apiary = Apiary::create(['name' => 'A1', 'uid' => $user->id()]);
-    $apiary->save();
-    $this->clearSeededCalendarActions();
-    $hive = Hive::create(['name' => 'H1', 'apiary' => $apiary->id(), 'status' => 'active']);
-    $hive->save();
-    HiveInspection::create(['hive' => $hive->id(), 'inspection_date' => date('Y-m-d')])->save();
-
-    $html = $this->renderBuild($this->controller()->view());
-
-    $this->assertStringContainsString('data-label="Last activity">' . date('j M') . '<', $html);
-  }
-
-  /**
-   * With no activity at all the "Last activity" cell is an em-dash.
-   */
-  public function testApiariesSectionLastActivityEmpty(): void {
-    $user = $this->makeCurrentUser();
-    Apiary::create(['name' => 'Quiet', 'uid' => $user->id()])->save();
-    $this->clearSeededCalendarActions();
-
-    $html = $this->renderBuild($this->controller()->view());
-
-    $this->assertStringContainsString('data-label="Last activity">—<', $html);
   }
 
 }

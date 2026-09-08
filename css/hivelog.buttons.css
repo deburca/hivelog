@@ -12,14 +12,16 @@
  * emits only semantic class names; it does not duplicate any value from here.
  *
  * Context wrappers that trigger HiveLog button styling:
- *   .hivelog-list-heading               heading rows (Add X actions)
- *   .hivelog-filter-form__actions       filter form Filter / Reset buttons
- *   .hivelog-inspection-actions         inspection canonical page actions
- *   .hivelog-queen-actions              queen canonical page actions
- *   .hivelog-queen-observation-actions  observation canonical page actions
- *   .hivelog-entity-form .form-actions  add / edit entity forms
- *   .hivelog-table-actions              table row operations cells
- *   .hivelog-button-group               grouped button clusters (View/Edit/Delete)
+ *   .hivelog-list-heading                heading rows (Add X actions)
+ *   .hivelog-filter-form__actions        filter form Filter / Reset buttons
+ *   .hivelog-inspection-actions          inspection canonical page actions
+ *   .hivelog-queen-actions               queen canonical page actions
+ *   .hivelog-queen-observation-actions   observation canonical page actions
+ *   .hivelog-entity-form .form-actions   add / edit entity forms
+ *   .hivelog-table-actions               table row operations cells
+ *   .hivelog-button-group                grouped button clusters (View/Edit/Delete)
+ *   .hivelog-attention__row              dashboard "Needs attention" row actions
+ *   .hivelog-dashboard__welcome-actions  dashboard first-run welcome card
  */
 
 /* ------------------------------------------------------------------
@@ -40,7 +42,9 @@
   .hivelog-queen-observation-actions,
   .hivelog-entity-form .form-actions,
   .hivelog-table-actions,
-  .hivelog-button-group
+  .hivelog-button-group,
+  .hivelog-attention__row,
+  .hivelog-dashboard__welcome-actions
 ) .button {
   display: inline-block;
   padding: var(--hivelog-btn-padding);
@@ -64,7 +68,9 @@
   .hivelog-queen-actions,
   .hivelog-queen-observation-actions,
   .hivelog-entity-form .form-actions,
-  .hivelog-table-actions
+  .hivelog-table-actions,
+  .hivelog-attention__row,
+  .hivelog-dashboard__welcome-actions
 ) .button {
   margin-right: 0.5em;
 }
@@ -77,7 +83,9 @@
   .hivelog-queen-observation-actions,
   .hivelog-entity-form .form-actions,
   .hivelog-table-actions,
-  .hivelog-button-group
+  .hivelog-button-group,
+  .hivelog-attention__row,
+  .hivelog-dashboard__welcome-actions
 ) .button:hover {
   background-color: var(--hivelog-btn-bg-hover);
   border-color: var(--hivelog-btn-border-hover);
@@ -92,7 +100,9 @@
   .hivelog-queen-observation-actions,
   .hivelog-entity-form .form-actions,
   .hivelog-table-actions,
-  .hivelog-button-group
+  .hivelog-button-group,
+  .hivelog-attention__row,
+  .hivelog-dashboard__welcome-actions
 ) .button--primary {
   background-color: var(--hivelog-btn-primary-bg);
   border-color: var(--hivelog-btn-primary-border);
@@ -107,7 +117,9 @@
   .hivelog-queen-observation-actions,
   .hivelog-entity-form .form-actions,
   .hivelog-table-actions,
-  .hivelog-button-group
+  .hivelog-button-group,
+  .hivelog-attention__row,
+  .hivelog-dashboard__welcome-actions
 ) .button--primary:hover {
   background-color: var(--hivelog-btn-primary-bg-hover);
   border-color: var(--hivelog-btn-primary-border-hover);
@@ -122,7 +134,9 @@
   .hivelog-queen-observation-actions,
   .hivelog-entity-form .form-actions,
   .hivelog-table-actions,
-  .hivelog-button-group
+  .hivelog-button-group,
+  .hivelog-attention__row,
+  .hivelog-dashboard__welcome-actions
 ) .button--danger {
   background-color: var(--hivelog-btn-danger-bg);
   border-color: var(--hivelog-btn-danger-border);
@@ -137,7 +151,9 @@
   .hivelog-queen-observation-actions,
   .hivelog-entity-form .form-actions,
   .hivelog-table-actions,
-  .hivelog-button-group
+  .hivelog-button-group,
+  .hivelog-attention__row,
+  .hivelog-dashboard__welcome-actions
 ) .button--danger:hover {
   background-color: var(--hivelog-btn-danger-bg-hover);
   border-color: var(--hivelog-btn-danger-border-hover);

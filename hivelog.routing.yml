@@ -5,7 +5,7 @@ hivelog.dashboard:
   path: '/hivelog'
   defaults:
     _controller: '\Drupal\hivelog\Controller\DashboardController::view'
-    _title: 'HiveLog'
+    _title_callback: '\Drupal\hivelog\Controller\DashboardController::title'
   requirements:
     _permission: 'view own apiary+view any apiary+administer hivelog'
 
