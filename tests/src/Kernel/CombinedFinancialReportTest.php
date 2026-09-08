@@ -147,6 +147,32 @@ class CombinedFinancialReportTest extends KernelTestBase {
   }
 
   /**
+   * The summary marks its label column and tags the total row for styling.
+   */
+  public function testSummaryTableAlignmentHooks(): void {
+    $this->makeAdmin();
+    $year = (int) date('Y');
+    $apiary = Apiary::create(['name' => 'Only One']);
+    $apiary->save();
+    $this->addOneYearDurable($apiary, 'Extractor', $year, 100);
+
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(InventoryReportController::class);
+    $build = $controller->combinedReport();
+
+    // The figure columns get their leading label column left-aligned via
+    // this modifier (see css/hivelog.tables.css).
+    $this->assertContains('hivelog-inventory-report-table--labelled', $build['summary']['#attributes']['class']);
+
+    // The "All apiaries" row is plain cells (not header => TRUE) with a
+    // class carrying the emphasis, so its typeface matches the data rows.
+    $total = end($build['summary']['#rows']);
+    $this->assertContains('hivelog-inventory-report-total', $total['class']);
+    $this->assertSame('All apiaries', (string) $total['data'][0]);
+    $this->assertSame('-100.00', $total['data'][5]);
+  }
+
+  /**
    * Each apiary row links to that apiary's own per-item report.
    */
   public function testApiaryRowsLinkToPerApiaryReport(): void {
