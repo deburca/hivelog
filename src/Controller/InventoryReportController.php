@@ -211,7 +211,10 @@ class InventoryReportController extends ControllerBase {
    *
    * Shared by `costReport()`'s single-year summary and `buildTrendRows()`'s
    * multi-year loop, so the two never drift out of sync on how a total is
-   * derived.
+   * derived. Also called by `DashboardController` for the dashboard's
+   * "Net YTD" stat tile (a straight sum of `['net']` across apiaries) —
+   * hence `public`; it is a pure read-side aggregation with no side
+   * effects.
    *
    * @return array
    *   The three breakdown arrays (`consumables`, `depreciation`, `yields`,
@@ -220,7 +223,7 @@ class InventoryReportController extends ControllerBase {
    *   them (`consumable_total`, `depreciation_total`, `income_total`,
    *   `cost_total`, `net`), all as floats.
    */
-  protected function computeApiaryYearTotals(Apiary $apiary, int $year): array {
+  public function computeApiaryYearTotals(Apiary $apiary, int $year): array {
     $consumables = $this->consumableCostBreakdown($apiary, $year);
     $depreciation = $this->depreciationBreakdown($apiary, $year);
     $yields = $this->yieldBreakdown($apiary, $year);

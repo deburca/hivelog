@@ -9,8 +9,10 @@ use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\ApiaryActionLog;
 use Drupal\hivelog\Entity\CalendarAction;
 use Drupal\hivelog\Entity\Hive;
+use Drupal\hivelog\Entity\HiveInspection;
 use Drupal\hivelog\Entity\InventoryItem;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
@@ -18,9 +20,8 @@ use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 /**
  * Tests the dashboard landing page controller (task 0056, ADR-0057).
  *
- * Covers criterion 2 (the shell: header strip, welcome state, stat-tile
- * SDC) and criterion 3 (the "Needs attention" widget: overdue / due
- * seasonal actions plus low-stock items).
+ * Covers criterion 2 (the shell), criterion 3 (the "Needs attention"
+ * widget) and criterion 4 (the six stat tiles).
  */
 #[Group('hivelog')]
 #[RunTestsInSeparateProcesses]
@@ -56,9 +57,11 @@ class DashboardTest extends KernelTestBase {
     $this->installEntitySchema('calendar_action');
     $this->installEntitySchema('hive_action_log');
     $this->installEntitySchema('apiary_action_log');
+    $this->installEntitySchema('product');
     $this->installEntitySchema('inventory_item');
     $this->installEntitySchema('inventory_purchase');
     $this->installEntitySchema('inventory_usage');
+    $this->installEntitySchema('harvest_yield');
     $this->installSchema('file', ['file_usage']);
   }
 
@@ -435,6 +438,152 @@ class DashboardTest extends KernelTestBase {
 
     $this->assertStringNotContainsString('Old smoker fuel', $html);
     $this->assertStringContainsString('All caught up', $html);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Stat tiles (criterion 4).
+  // ---------------------------------------------------------------------------
+
+  /**
+   * The tile grid renders with the apiary and active-hive counts.
+   */
+  public function testStatTilesGridRenders(): void {
+    $user = $this->makeCurrentUser();
+    $apiary = Apiary::create(['name' => 'A1', 'uid' => $user->id()]);
+    $apiary->save();
+    $this->clearSeededCalendarActions();
+    Hive::create(['name' => 'H1', 'apiary' => $apiary->id(), 'status' => 'active'])->save();
+    Hive::create(['name' => 'H2', 'apiary' => $apiary->id(), 'status' => 'active'])->save();
+    Hive::create(['name' => 'H3', 'apiary' => $apiary->id(), 'status' => 'inactive'])->save();
+
+    $html = $this->renderBuild($this->controller()->view());
+
+    $this->assertStringContainsString('hivelog-stat-tiles', $html);
+    $this->assertStringContainsString('Apiaries', $html);
+    $this->assertStringContainsString('Active hives', $html);
+    // 1 apiary; 2 active hives (H3 is inactive).
+    $this->assertStringContainsString('hivelog-stat-tile__value">1<', $html);
+    $this->assertStringContainsString('hivelog-stat-tile__value">2<', $html);
+  }
+
+  /**
+   * Counts "Inspections this month" over the current calendar month only.
+   */
+  public function testInspectionsThisMonthTile(): void {
+    $user = $this->makeCurrentUser();
+    $apiary = Apiary::create(['name' => 'A1', 'uid' => $user->id()]);
+    $apiary->save();
+    $this->clearSeededCalendarActions();
+    Hive::create(['name' => 'H1', 'apiary' => $apiary->id(), 'status' => 'active'])->save();
+    $hive = Hive::create(['name' => 'H2', 'apiary' => $apiary->id(), 'status' => 'active']);
+    $hive->save();
+
+    HiveInspection::create(['hive' => $hive->id(), 'inspection_date' => date('Y-m-15')])->save();
+    HiveInspection::create([
+      'hive' => $hive->id(),
+      'inspection_date' => date('Y-m-15', strtotime('first day of last month')),
+    ])->save();
+
+    $html = $this->renderBuild($this->controller()->view());
+
+    $this->assertStringContainsString('Inspections this month', $html);
+    // Apiaries "1" + Inspections this month "1"; last month's is excluded.
+    $this->assertSame(2, substr_count($html, 'hivelog-stat-tile__value">1<'));
+  }
+
+  /**
+   * Tallies open seasonal actions and the overdue subset for the tile.
+   */
+  public function testOpenSeasonalTasksTile(): void {
+    $week = $this->weekOrSkipEdge();
+    $user = $this->makeCurrentUser();
+    $apiary = Apiary::create(['name' => 'A1', 'uid' => $user->id()]);
+    $apiary->save();
+    $this->clearSeededCalendarActions();
+
+    CalendarAction::create([
+      'apiary' => $apiary->id(),
+      'title' => 'Overdue task',
+      'description' => 'x',
+      'week_start' => max(1, $week - 3),
+      'week_end' => $week - 1,
+      'scope' => 'apiary',
+    ])->save();
+    CalendarAction::create([
+      'apiary' => $apiary->id(),
+      'title' => 'Later task',
+      'description' => 'x',
+      'week_start' => min(53, $week + 3),
+      'scope' => 'apiary',
+    ])->save();
+
+    $html = $this->renderBuild($this->controller()->view());
+
+    $this->assertStringContainsString('Open seasonal tasks', $html);
+    $this->assertStringContainsString('hivelog-stat-tile__value">2<', $html);
+    $this->assertStringContainsString('1 overdue', $html);
+    $this->assertStringContainsString('hivelog-stat-tile__sub--critical', $html);
+  }
+
+  /**
+   * Counts inventory items at or below their low-stock threshold.
+   */
+  public function testLowStockTile(): void {
+    $user = $this->makeCurrentUser();
+    $apiary = Apiary::create(['name' => 'A1', 'uid' => $user->id()]);
+    $apiary->save();
+    $this->clearSeededCalendarActions();
+
+    InventoryItem::create(['apiary' => $apiary->id(), 'name' => 'Pads', 'unit' => 'pad', 'low_stock_threshold' => 10])->save();
+    InventoryItem::create(['apiary' => $apiary->id(), 'name' => 'Syrup', 'unit' => 'kg', 'low_stock_threshold' => 5])->save();
+
+    $html = $this->renderBuild($this->controller()->view());
+
+    $this->assertStringContainsString('Low-stock items', $html);
+    $this->assertStringContainsString('hivelog-stat-tile__value">2<', $html);
+  }
+
+  /**
+   * The Net YTD tile is shown to a user with inventory-view access.
+   */
+  public function testNetYtdTileShownForPermittedUser(): void {
+    $user = $this->makeCurrentUser();
+    $apiary = Apiary::create(['name' => 'A1', 'uid' => $user->id()]);
+    $apiary->save();
+    $this->clearSeededCalendarActions();
+
+    $this->assertStringContainsString('Net YTD', $this->renderBuild($this->controller()->view()));
+  }
+
+  /**
+   * The Net YTD tile is hidden from a user without inventory-view access.
+   */
+  public function testNetYtdTileHiddenWithoutInventoryPermission(): void {
+    // The first user is uid 1 (superuser) — not the account under test.
+    User::create(['name' => 'root', 'mail' => 'root@example.com'])->save();
+
+    $role = Role::create(['id' => 'apiary_viewer', 'label' => 'Apiary viewer']);
+    $role->grantPermission('view any apiary');
+    $role->grantPermission('view any hive');
+    $role->grantPermission('view any hive inspection');
+    $role->grantPermission('view any calendar action');
+    $role->save();
+
+    $viewer = User::create(['name' => 'viewer', 'mail' => 'viewer@example.com']);
+    $viewer->save();
+    $viewer->addRole('apiary_viewer');
+    $viewer->save();
+    \Drupal::currentUser()->setAccount($viewer);
+
+    $apiary = Apiary::create(['name' => 'Shared Apiary']);
+    $apiary->save();
+    $this->clearSeededCalendarActions();
+
+    $html = $this->renderBuild($this->controller()->view());
+
+    $this->assertStringContainsString('hivelog-stat-tiles', $html);
+    $this->assertStringContainsString('Apiaries', $html);
+    $this->assertStringNotContainsString('Net YTD', $html);
   }
 
   /**
