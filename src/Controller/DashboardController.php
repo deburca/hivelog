@@ -6,7 +6,9 @@ namespace Drupal\hivelog\Controller;
 
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\DependencyInjection\ClassResolverInterface;
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
@@ -35,18 +37,25 @@ class DashboardController extends ControllerBase {
   protected ClassResolverInterface $classResolver;
 
   /**
+   * The date formatter, for the "Recent activity" timestamps.
+   */
+  protected DateFormatterInterface $dateFormatter;
+
+  /**
    * Constructs a DashboardController.
    */
   public function __construct(
     EntityTypeManagerInterface $entity_type_manager,
     AccountInterface $current_user,
     ClassResolverInterface $class_resolver,
+    DateFormatterInterface $date_formatter,
   ) {
     // $entityTypeManager / $currentUser are untyped properties inherited
     // from ControllerBase; assign them rather than redeclaring them.
     $this->entityTypeManager = $entity_type_manager;
     $this->currentUser = $current_user;
     $this->classResolver = $class_resolver;
+    $this->dateFormatter = $date_formatter;
   }
 
   /**
@@ -57,6 +66,7 @@ class DashboardController extends ControllerBase {
       $container->get('entity_type.manager'),
       $container->get('current_user'),
       $container->get('class_resolver'),
+      $container->get('date.formatter'),
     );
   }
 
@@ -94,7 +104,14 @@ class DashboardController extends ControllerBase {
         $current_week,
       ) + ['#weight' => 0];
       $build['stat_tiles'] = $this->buildStatTiles($cache, $apiaries, $seasonal, count($low_stock), $year) + ['#weight' => 10];
-      // Interim placeholder for the widgets still to come (criteria 5–6).
+      $build['activity'] = [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['hivelog-dashboard__split']],
+        '#weight' => 20,
+        'upcoming' => $this->buildUpcoming($cache, $apiaries, $year, $current_week),
+        'recent' => $this->buildRecentActivity($cache),
+      ];
+      // Interim placeholder for the apiaries summary still to come (criterion 6).
       $build['body'] = $this->buildInterimBody() + ['#weight' => 100];
     }
 
@@ -916,6 +933,245 @@ class DashboardController extends ControllerBase {
       }
     }
     return $net;
+  }
+
+  /**
+   * Builds the read-only "Upcoming" look-ahead (next four weeks).
+   *
+   * Lists enabled CalendarActions whose start week falls in
+   * [current_week + 1, current_week + 4], one row per action (hive-scoped
+   * actions are not fanned out — this is a forward plan, not a checklist).
+   * Apiary-scoped actions already reported done / ignored for the year are
+   * dropped. No wraparound past week 53.
+   *
+   * @param \Drupal\Core\Cache\CacheableMetadata $cache
+   *   Collects list cache tags and per-row dependencies.
+   * @param \Drupal\hivelog\Entity\Apiary[] $apiaries
+   *   Viewable apiaries keyed by id.
+   * @param int $year
+   *   The current year, for the reported-status check.
+   * @param int $current_week
+   *   The current ISO week number.
+   */
+  protected function buildUpcoming(CacheableMetadata $cache, array $apiaries, int $year, int $current_week): array {
+    $etm = $this->entityTypeManager;
+    $apiary_ids = array_keys($apiaries);
+
+    $cache->addCacheTags($etm->getDefinition('calendar_action')->getListCacheTags());
+    $cache->addCacheTags($etm->getDefinition('apiary_action_log')->getListCacheTags());
+
+    $block = [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['hivelog-upcoming']],
+      'heading' => [
+        '#type' => 'html_tag',
+        '#tag' => 'h2',
+        '#attributes' => ['class' => ['hivelog-dashboard__block-heading']],
+        '#value' => $this->t('Upcoming'),
+      ],
+    ];
+
+    $from = $current_week + 1;
+    $to = min($current_week + 4, 53);
+    $rows = [];
+
+    if ($from <= 53) {
+      $action_ids = $etm->getStorage('calendar_action')->getQuery()
+        ->accessCheck(TRUE)
+        ->condition('apiary', $apiary_ids, 'IN')
+        ->condition('enabled', TRUE)
+        ->condition('week_start', $from, '>=')
+        ->condition('week_start', $to, '<=')
+        ->sort('week_start', 'ASC')
+        ->execute();
+      $actions = $action_ids ? array_filter(
+        $etm->getStorage('calendar_action')->loadMultiple($action_ids),
+        fn($action) => $action->access('view')
+      ) : [];
+
+      $reported = $this->reportedApiaryActionIds($apiary_ids, $actions, $year);
+
+      foreach ($actions as $action) {
+        if ($action->get('scope')->value === 'apiary' && isset($reported[$action->id()])) {
+          continue;
+        }
+        $cache->addCacheableDependency($action);
+        $apiary = $apiaries[(int) $action->get('apiary')->target_id];
+        $rows[] = [
+          '#type' => 'inline_template',
+          '#template' => '<div class="hivelog-upcoming__row"><span class="hivelog-upcoming__wk">{{ wk }}</span><span class="hivelog-upcoming__text">{{ title }} <span class="hivelog-upcoming__where">· {{ apiary }}</span></span></div>',
+          '#context' => [
+            'wk' => $this->t('Wk @n', ['@n' => (int) $action->get('week_start')->value]),
+            'title' => $action->toLink()->toRenderable(),
+            'apiary' => $apiary->label(),
+          ],
+        ];
+      }
+    }
+
+    if (!$rows) {
+      $block['empty'] = [
+        '#type' => 'html_tag',
+        '#tag' => 'p',
+        '#attributes' => ['class' => ['hivelog-dashboard__block-empty']],
+        '#value' => $this->t('Nothing scheduled for the next four weeks.'),
+      ];
+      return $block;
+    }
+    foreach ($rows as $i => $row) {
+      $block['row_' . $i] = $row;
+    }
+    return $block;
+  }
+
+  /**
+   * Returns the ids of apiary-scoped actions reported done / ignored for a year.
+   *
+   * @param int[] $apiary_ids
+   *   Apiary ids to match.
+   * @param \Drupal\hivelog\Entity\CalendarAction[] $actions
+   *   The candidate actions (only the apiary-scoped ones are checked).
+   * @param int $year
+   *   The reporting year.
+   *
+   * @return array<int|string, true>
+   *   A set keyed by calendar-action id.
+   */
+  protected function reportedApiaryActionIds(array $apiary_ids, array $actions, int $year): array {
+    $scoped_ids = [];
+    foreach ($actions as $action) {
+      if ($action->get('scope')->value === 'apiary') {
+        $scoped_ids[] = $action->id();
+      }
+    }
+    if (!$scoped_ids) {
+      return [];
+    }
+
+    $log_ids = $this->entityTypeManager->getStorage('apiary_action_log')->getQuery()
+      ->accessCheck(TRUE)
+      ->condition('apiary', $apiary_ids, 'IN')
+      ->condition('calendar_action', $scoped_ids, 'IN')
+      ->condition('year', $year)
+      ->condition('status', ['done', 'ignored'], 'IN')
+      ->execute();
+
+    $reported = [];
+    foreach ($log_ids ? $this->entityTypeManager->getStorage('apiary_action_log')->loadMultiple($log_ids) : [] as $log) {
+      /** @var \Drupal\hivelog\Entity\ApiaryActionLog $log */
+      $reported[$log->get('calendar_action')->target_id] = TRUE;
+    }
+    return $reported;
+  }
+
+  /**
+   * Builds the "Recent activity" list.
+   *
+   * Merges the most recent rows (by `created`) of six record types —
+   * inspections, queen observations, hive and apiary action logs,
+   * inventory purchases and harvest yields (project decision 5) — capped
+   * at ten per type, then sliced to the ten newest overall. Each row
+   * links to its canonical page (harvest yields, which have none, link to
+   * the action log they belong to).
+   *
+   * @param \Drupal\Core\Cache\CacheableMetadata $cache
+   *   Collects list cache tags and per-row dependencies.
+   */
+  protected function buildRecentActivity(CacheableMetadata $cache): array {
+    $etm = $this->entityTypeManager;
+    $cap = 10;
+
+    $nouns = [
+      'hive_inspection' => $this->t('Inspection'),
+      'queen_observation' => $this->t('Queen observation'),
+      'hive_action_log' => $this->t('Action log'),
+      'apiary_action_log' => $this->t('Action log'),
+      'inventory_purchase' => $this->t('Purchase'),
+      'harvest_yield' => $this->t('Harvest yield'),
+    ];
+
+    $entries = [];
+    foreach ($nouns as $type => $noun) {
+      $cache->addCacheTags($etm->getDefinition($type)->getListCacheTags());
+      $ids = $etm->getStorage($type)->getQuery()
+        ->accessCheck(TRUE)
+        ->sort('created', 'DESC')
+        ->range(0, $cap)
+        ->execute();
+      if (!$ids) {
+        continue;
+      }
+      foreach ($etm->getStorage($type)->loadMultiple($ids) as $entity) {
+        /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
+        if (!$entity->access('view')) {
+          continue;
+        }
+        $cache->addCacheableDependency($entity);
+        $entries[] = [
+          'created' => (int) $entity->get('created')->value,
+          'noun' => $noun,
+          'label' => $entity->label(),
+          'url' => $this->recentActivityUrl($entity),
+        ];
+      }
+    }
+
+    usort($entries, fn($a, $b) => $b['created'] <=> $a['created']);
+    $entries = array_slice($entries, 0, 10);
+
+    $block = [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['hivelog-recent']],
+      'heading' => [
+        '#type' => 'html_tag',
+        '#tag' => 'h2',
+        '#attributes' => ['class' => ['hivelog-dashboard__block-heading']],
+        '#value' => $this->t('Recent activity'),
+      ],
+    ];
+
+    if (!$entries) {
+      $block['empty'] = [
+        '#type' => 'html_tag',
+        '#tag' => 'p',
+        '#attributes' => ['class' => ['hivelog-dashboard__block-empty']],
+        '#value' => $this->t('No activity recorded yet.'),
+      ];
+      return $block;
+    }
+
+    foreach ($entries as $i => $entry) {
+      $block['row_' . $i] = [
+        '#type' => 'inline_template',
+        '#template' => '<div class="hivelog-recent__row"><span class="hivelog-recent__when">{{ when }}</span><span class="hivelog-recent__text">{{ noun }} — {% if link %}{{ link }}{% else %}{{ label }}{% endif %}</span></div>',
+        '#context' => [
+          'when' => $this->dateFormatter->format($entry['created'], 'custom', 'j M'),
+          'noun' => $entry['noun'],
+          'link' => $entry['url'] ? ['#type' => 'link', '#title' => $entry['label'], '#url' => $entry['url']] : NULL,
+          'label' => $entry['label'],
+        ],
+      ];
+    }
+    return $block;
+  }
+
+  /**
+   * Resolves a recent-activity row's link.
+   *
+   * Most types have a canonical route; harvest yields do not, so they
+   * link to the action log they belong to.
+   */
+  protected function recentActivityUrl(ContentEntityInterface $entity): ?Url {
+    if ($entity->hasLinkTemplate('canonical')) {
+      return $entity->toUrl('canonical');
+    }
+    if ($entity->hasField('hive_action_log')) {
+      $log = $entity->get('hive_action_log')->entity ?? $entity->get('apiary_action_log')->entity;
+      if ($log) {
+        return $log->toUrl('canonical');
+      }
+    }
+    return NULL;
   }
 
 }

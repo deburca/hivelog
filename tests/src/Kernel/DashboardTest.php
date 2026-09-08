@@ -8,9 +8,12 @@ use Drupal\hivelog\Controller\DashboardController;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\ApiaryActionLog;
 use Drupal\hivelog\Entity\CalendarAction;
+use Drupal\hivelog\Entity\HarvestYield;
 use Drupal\hivelog\Entity\Hive;
 use Drupal\hivelog\Entity\HiveInspection;
 use Drupal\hivelog\Entity\InventoryItem;
+use Drupal\hivelog\Entity\InventoryPurchase;
+use Drupal\hivelog\Entity\Product;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
@@ -21,7 +24,8 @@ use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
  * Tests the dashboard landing page controller (task 0056, ADR-0057).
  *
  * Covers criterion 2 (the shell), criterion 3 (the "Needs attention"
- * widget) and criterion 4 (the six stat tiles).
+ * widget), criterion 4 (the six stat tiles) and criterion 5 (the
+ * "Upcoming" and "Recent activity" widgets).
  */
 #[Group('hivelog')]
 #[RunTestsInSeparateProcesses]
@@ -113,6 +117,19 @@ class DashboardTest extends KernelTestBase {
     $week = (int) date('W');
     if ($week < 2) {
       $this->markTestSkipped('An overdue action cannot be constructed in ISO week 1.');
+    }
+    return $week;
+  }
+
+  /**
+   * The current ISO week, or skips when too little of the year remains.
+   *
+   * The "Upcoming" tests need real week numbers a few weeks ahead of now.
+   */
+  private function weekOrSkipLateYear(): int {
+    $week = (int) date('W');
+    if ($week > 45) {
+      $this->markTestSkipped('Not enough weeks left in the year for the look-ahead tests.');
     }
     return $week;
   }
@@ -303,24 +320,22 @@ class DashboardTest extends KernelTestBase {
   }
 
   /**
-   * An action whose window is still ahead is not shown.
+   * A far-future action is in neither "Needs attention" nor "Upcoming".
    */
   public function testUpcomingActionHidden(): void {
-    $week = (int) date('W');
-    if ($week > 51) {
-      $this->markTestSkipped('A future week cannot be constructed near week 53.');
-    }
+    $week = $this->weekOrSkipLateYear();
     $user = $this->makeCurrentUser();
     $apiary = Apiary::create(['name' => 'Ravnholt', 'uid' => $user->id()]);
     $apiary->save();
     $this->clearSeededCalendarActions();
 
+    // Six weeks out — past the 4-week "Upcoming" window and not yet due.
     CalendarAction::create([
       'apiary' => $apiary->id(),
       'title' => 'Mouse guards fitted',
       'description' => 'Later.',
-      'week_start' => $week + 2,
-      'week_end' => $week + 2,
+      'week_start' => $week + 6,
+      'week_end' => $week + 6,
       'scope' => 'apiary',
     ])->save();
 
@@ -328,6 +343,7 @@ class DashboardTest extends KernelTestBase {
 
     $this->assertStringNotContainsString('Mouse guards fitted', $html);
     $this->assertStringContainsString('All caught up', $html);
+    $this->assertStringContainsString('Nothing scheduled for the next four weeks', $html);
   }
 
   /**
@@ -359,7 +375,9 @@ class DashboardTest extends KernelTestBase {
 
     $html = $this->renderBuild($this->controller()->view());
 
-    $this->assertStringNotContainsString('Varroa autumn treatment', $html);
+    // Gone from the needs-attention queue (its action-log echoes the title
+    // in "Recent activity", so check the row markup, not the bare title).
+    $this->assertStringNotContainsString('hivelog-attention__row-title">Varroa autumn treatment', $html);
     $this->assertStringContainsString('All caught up', $html);
   }
 
@@ -616,6 +634,188 @@ class DashboardTest extends KernelTestBase {
     $this->assertContains('hive_action_log_list', $tags);
     $this->assertContains('inventory_item_list', $tags);
     $this->assertContains('inventory_purchase_list', $tags);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Upcoming + Recent activity (criterion 5).
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Lists "Upcoming" actions starting in the next four weeks, not beyond.
+   */
+  public function testUpcomingShowsActionsInWindow(): void {
+    $week = $this->weekOrSkipLateYear();
+    $user = $this->makeCurrentUser();
+    $apiary = Apiary::create(['name' => 'A1', 'uid' => $user->id()]);
+    $apiary->save();
+    $this->clearSeededCalendarActions();
+
+    CalendarAction::create([
+      'apiary' => $apiary->id(),
+      'title' => 'Fit mouse guards',
+      'description' => 'x',
+      'week_start' => $week + 2,
+      'scope' => 'apiary',
+    ])->save();
+    CalendarAction::create([
+      'apiary' => $apiary->id(),
+      'title' => 'Winter oxalic treatment',
+      'description' => 'x',
+      'week_start' => $week + 8,
+      'scope' => 'apiary',
+    ])->save();
+
+    $html = $this->renderBuild($this->controller()->view());
+
+    $this->assertStringContainsString('Upcoming', $html);
+    $this->assertStringContainsString('Fit mouse guards', $html);
+    $this->assertStringContainsString('Wk ' . ($week + 2), $html);
+    $this->assertStringNotContainsString('Winter oxalic treatment', $html);
+  }
+
+  /**
+   * An apiary-scoped action already reported for the year drops off "Upcoming".
+   */
+  public function testUpcomingSkipsReportedApiaryAction(): void {
+    $week = $this->weekOrSkipLateYear();
+    $user = $this->makeCurrentUser();
+    $apiary = Apiary::create(['name' => 'A1', 'uid' => $user->id()]);
+    $apiary->save();
+    $this->clearSeededCalendarActions();
+
+    $action = CalendarAction::create([
+      'apiary' => $apiary->id(),
+      'title' => 'CBR renewal',
+      'description' => 'x',
+      'week_start' => $week + 3,
+      'scope' => 'apiary',
+    ]);
+    $action->save();
+    ApiaryActionLog::create([
+      'apiary' => $apiary->id(),
+      'calendar_action' => $action->id(),
+      'year' => (int) date('Y'),
+      'status' => 'done',
+    ])->save();
+
+    $html = $this->renderBuild($this->controller()->view());
+
+    // No upcoming rows at all (the action-log still echoes the title in
+    // "Recent activity", so assert on the row markup, not the title).
+    $this->assertStringNotContainsString('hivelog-upcoming__row', $html);
+    $this->assertStringContainsString('Nothing scheduled for the next four weeks', $html);
+  }
+
+  /**
+   * Shows the "Upcoming" empty state when the window is clear.
+   */
+  public function testUpcomingEmptyState(): void {
+    $user = $this->makeCurrentUser();
+    $apiary = Apiary::create(['name' => 'A1', 'uid' => $user->id()]);
+    $apiary->save();
+    $this->clearSeededCalendarActions();
+
+    $html = $this->renderBuild($this->controller()->view());
+
+    $this->assertStringContainsString('Nothing scheduled for the next four weeks', $html);
+  }
+
+  /**
+   * Merges "Recent activity" record types, newest first, linking each row.
+   */
+  public function testRecentActivityMergesTypesNewestFirst(): void {
+    $user = $this->makeCurrentUser();
+    $apiary = Apiary::create(['name' => 'A1', 'uid' => $user->id()]);
+    $apiary->save();
+    $this->clearSeededCalendarActions();
+    $hive = Hive::create(['name' => 'H1', 'apiary' => $apiary->id(), 'status' => 'active']);
+    $hive->save();
+
+    $inspection = HiveInspection::create(['hive' => $hive->id(), 'inspection_date' => date('Y-m-d')]);
+    $inspection->set('created', time() - 500);
+    $inspection->save();
+
+    $item = InventoryItem::create(['apiary' => $apiary->id(), 'name' => 'Pads', 'unit' => 'pad']);
+    $item->save();
+    $purchase = InventoryPurchase::create([
+      'apiary' => $apiary->id(),
+      'item' => $item->id(),
+      'purchase_date' => date('Y-m-d'),
+      'quantity' => 20,
+      'unit_price' => 1.5,
+    ]);
+    $purchase->set('created', time() - 50);
+    $purchase->save();
+
+    $html = $this->renderBuild($this->controller()->view());
+
+    $this->assertStringContainsString('Recent activity', $html);
+    $this->assertStringContainsString('/hivelog/inspection/' . $inspection->id(), $html);
+    $this->assertStringContainsString('/hivelog/inventory-purchase/' . $purchase->id(), $html);
+    // The newer purchase row precedes the older inspection row.
+    $this->assertLessThan(
+      strpos($html, '/hivelog/inspection/' . $inspection->id()),
+      strpos($html, '/hivelog/inventory-purchase/' . $purchase->id()),
+    );
+  }
+
+  /**
+   * A harvest yield (no canonical route) links to its owning action log.
+   */
+  public function testRecentActivityHarvestYieldLinksToLog(): void {
+    $user = $this->makeCurrentUser();
+    $apiary = Apiary::create(['name' => 'A1', 'uid' => $user->id()]);
+    $apiary->save();
+    $this->clearSeededCalendarActions();
+
+    $action = CalendarAction::create([
+      'apiary' => $apiary->id(),
+      'title' => 'Summer harvest',
+      'description' => 'x',
+      'week_start' => 25,
+      'scope' => 'apiary',
+    ]);
+    $action->save();
+    $log = ApiaryActionLog::create([
+      'apiary' => $apiary->id(),
+      'calendar_action' => $action->id(),
+      'year' => (int) date('Y'),
+      'status' => 'done',
+    ]);
+    $log->save();
+    $product = Product::create([
+      'apiary' => $apiary->id(),
+      'name' => 'Honey',
+      'unit' => 'kg',
+      'expected_unit_price' => 10,
+    ]);
+    $product->save();
+    HarvestYield::create([
+      'product' => $product->id(),
+      'quantity' => 14.2,
+      'apiary_action_log' => $log->id(),
+    ])->save();
+
+    $html = $this->renderBuild($this->controller()->view());
+
+    $this->assertStringContainsString('Harvest yield', $html);
+    $this->assertStringContainsString('/hivelog/apiary-action-log/' . $log->id(), $html);
+  }
+
+  /**
+   * The upcoming / recent widgets declare the list cache tags they read.
+   */
+  public function testUpcomingRecentCacheTags(): void {
+    $user = $this->makeCurrentUser();
+    Apiary::create(['name' => 'A1', 'uid' => $user->id()])->save();
+
+    $tags = $this->controller()->view()['#cache']['tags'];
+
+    $this->assertContains('calendar_action_list', $tags);
+    $this->assertContains('hive_inspection_list', $tags);
+    $this->assertContains('queen_observation_list', $tags);
+    $this->assertContains('inventory_purchase_list', $tags);
+    $this->assertContains('harvest_yield_list', $tags);
   }
 
 }

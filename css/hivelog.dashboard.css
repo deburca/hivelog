@@ -204,3 +204,55 @@
     align-items: flex-start;
   }
 }
+
+/*
+ * "Upcoming" (next four weeks) and "Recent activity" — two read-only
+ * blocks side by side on desktop, stacked on small screens. Criterion 5.
+ */
+.hivelog-dashboard__split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .hivelog-dashboard__split {
+    grid-template-columns: 1fr;
+  }
+}
+
+.hivelog-dashboard__block-heading {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+
+.hivelog-dashboard__block-empty {
+  margin: 0;
+  color: #6b7280;
+}
+
+.hivelog-upcoming__row,
+.hivelog-recent__row {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.4rem 0;
+  border-top: 1px solid #eef0f2;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.hivelog-upcoming__wk,
+.hivelog-recent__when {
+  flex: 0 0 3.25rem;
+  color: #6b7280;
+  font-variant-numeric: tabular-nums;
+}
+
+.hivelog-upcoming__text,
+.hivelog-recent__text {
+  min-width: 0;
+}
+
+.hivelog-upcoming__where {
+  color: #9ca3af;
+}
