@@ -6,7 +6,7 @@ priority: low
 project:
 area: navigation
 created: 2026-09-08
-branch: feature/0064-consistent-list-page-breadcrumbs
+branch: feature/0064-consistent-list-breadcrumbs
 release:
 depends-on:
 blocked-by:
