@@ -290,7 +290,8 @@ or removes the underlying usage/yield records.
 
 | Path                                          | Description            |
 |-----------------------------------------------|-------------------------|
-| `/hivelog`                              | Apiary list            |
+| `/hivelog`                              | Dashboard (needs-attention, stat tiles, upcoming / recent) |
+| `/hivelog/apiaries`                     | Apiary list            |
 | `/hivelog/apiary/add`                   | Add apiary              |
 | `/hivelog/apiary/{id}`                  | View apiary             |
 | `/hivelog/apiary/{id}/edit`             | Edit apiary             |
@@ -373,6 +374,7 @@ or removes the underlying usage/yield records.
 | `/hivelog/calendar-action-requirement/{id}/edit` | Edit item requirement |
 | `/hivelog/calendar-action-requirement/{id}/delete` | Delete item requirement |
 | `/hivelog/apiary/{id}/inventory/cost-report` | Apiary cost/income report |
+| `/hivelog/apiaries/financial-report`    | Combined cost/income report across all apiaries |
 
 **Products / harvest yield**
 
