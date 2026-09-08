@@ -17,13 +17,13 @@
 .hivelog-entity-table th,
 .hivelog-entity-table td {
   padding: 0.5rem 0.75rem;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--hivelog-hairline);
   text-align: left;
   vertical-align: top;
 }
 
 .hivelog-entity-table thead th {
-  border-bottom: 2px solid #ccc;
+  border-bottom: 2px solid var(--hivelog-rule);
   font-weight: 600;
 }
 
@@ -62,7 +62,7 @@
   .hivelog-entity-table tr {
     margin-bottom: var(--hivelog-gap, 1rem);
     padding: var(--hivelog-gap-tight, 0.5rem) var(--hivelog-mobile-gutter, 0.75rem);
-    border: 1px solid #e0e0e0;
+    border: 1px solid var(--hivelog-hairline);
     border-radius: 4px;
   }
 
@@ -81,7 +81,7 @@
     content: attr(data-label);
     font-weight: 600;
     text-align: left;
-    color: #374151;
+    color: var(--hivelog-ink);
   }
 
   /* Empty-state cell spans the card without a label. */

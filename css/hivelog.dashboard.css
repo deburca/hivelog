@@ -29,7 +29,7 @@
   display: inline-flex;
   margin-right: 0.5rem;
   vertical-align: middle;
-  color: #a4630a;
+  color: var(--hivelog-warning);
 }
 
 .hivelog-masthead__word {
@@ -38,7 +38,7 @@
 
 .hivelog-masthead__sub {
   margin: -0.35rem 0 0;
-  color: #6b7280;
+  color: var(--hivelog-ink-muted);
   font-size: 0.95rem;
 }
 
@@ -58,12 +58,12 @@
   flex: 0 0 auto;
   margin: 0;
   padding: 0.35em 0.7em;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--hivelog-border);
   border-radius: 4px;
-  background: #f9fafb;
+  background: var(--hivelog-surface-2);
   font-size: 0.85rem;
   font-variant-numeric: tabular-nums;
-  color: #374151;
+  color: var(--hivelog-ink);
   white-space: nowrap;
 }
 
@@ -81,9 +81,9 @@
 /* First-run welcome card, shown when the user has no visible apiaries. */
 .hivelog-dashboard__welcome {
   padding: 1.25rem 1.5rem;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--hivelog-hairline);
   border-radius: 6px;
-  background: #ffffff;
+  background: var(--hivelog-surface);
 }
 
 .hivelog-dashboard__welcome h2 {
@@ -93,7 +93,7 @@
 .hivelog-dashboard__welcome p {
   max-width: 60ch;
   margin: 0;
-  color: #374151;
+  color: var(--hivelog-ink);
 }
 
 .hivelog-dashboard__welcome-actions {
@@ -110,9 +110,9 @@
   grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
   gap: 1px;
   overflow: hidden;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--hivelog-hairline);
   border-radius: 6px;
-  background: #e5e7eb;
+  background: var(--hivelog-hairline);
 }
 
 @media (max-width: 768px) {
@@ -128,9 +128,9 @@
  */
 .hivelog-attention {
   overflow: hidden;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--hivelog-hairline);
   border-radius: 6px;
-  background: #ffffff;
+  background: var(--hivelog-surface);
 }
 
 .hivelog-attention__header {
@@ -140,7 +140,7 @@
   justify-content: space-between;
   gap: 0.35rem 0.75rem;
   padding: 0.8rem 1rem;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--hivelog-hairline);
 }
 
 .hivelog-attention__heading {
@@ -155,17 +155,17 @@
 }
 
 .hivelog-attention__count--warning {
-  color: #a4630a;
+  color: var(--hivelog-warning);
 }
 
 .hivelog-attention__count--danger {
-  color: #b3261e;
+  color: var(--hivelog-critical);
 }
 
 .hivelog-attention__empty {
   margin: 0;
   padding: 1rem;
-  color: #6b7280;
+  color: var(--hivelog-ink-muted);
 }
 
 .hivelog-attention__row {
@@ -174,8 +174,8 @@
   align-items: center;
   gap: 0.4rem 0.9rem;
   padding: 0.7rem 1rem 0.7rem 1.25rem;
-  border-bottom: 1px solid #e5e7eb;
-  border-left: 4px solid #9ca3af;
+  border-bottom: 1px solid var(--hivelog-hairline);
+  border-left: 4px solid var(--hivelog-ink-faint);
 }
 
 .hivelog-attention__row:last-child {
@@ -183,19 +183,19 @@
 }
 
 .hivelog-attention__row--critical {
-  border-left-color: #b91c1c;
+  border-left-color: var(--hivelog-critical);
 }
 
 .hivelog-attention__row--warning {
-  border-left-color: #a4630a;
+  border-left-color: var(--hivelog-warning);
 }
 
 .hivelog-attention__chip {
   flex: 0 0 auto;
   padding: 0.15rem 0.4rem;
   border-radius: 3px;
-  background: #f3f4f6;
-  color: #374151;
+  background: var(--hivelog-ground);
+  color: var(--hivelog-ink);
   font-size: 0.7rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -204,13 +204,13 @@
 }
 
 .hivelog-attention__chip--critical {
-  background: #fdeceb;
-  color: #b91c1c;
+  background: var(--hivelog-critical-tint);
+  color: var(--hivelog-critical);
 }
 
 .hivelog-attention__chip--warning {
-  background: #f7ecd9;
-  color: #a4630a;
+  background: var(--hivelog-warning-tint);
+  color: var(--hivelog-warning);
 }
 
 .hivelog-attention__body {
@@ -226,11 +226,11 @@
   display: block;
   margin-top: 0.1rem;
   font-size: 0.85rem;
-  color: #6b7280;
+  color: var(--hivelog-ink-muted);
 }
 
 .hivelog-attention__ctx a {
-  color: #6b7280;
+  color: var(--hivelog-ink-muted);
 }
 
 .hivelog-attention__action {
@@ -266,7 +266,7 @@
 
 .hivelog-dashboard__block-empty {
   margin: 0;
-  color: #6b7280;
+  color: var(--hivelog-ink-muted);
 }
 
 .hivelog-upcoming__row,
@@ -274,7 +274,7 @@
   display: flex;
   gap: 0.75rem;
   padding: 0.4rem 0;
-  border-top: 1px solid #eef0f2;
+  border-top: 1px solid var(--hivelog-hairline);
   font-size: 0.9rem;
   line-height: 1.4;
 }
@@ -282,7 +282,7 @@
 .hivelog-upcoming__wk,
 .hivelog-recent__when {
   flex: 0 0 3.25rem;
-  color: #6b7280;
+  color: var(--hivelog-ink-muted);
   font-variant-numeric: tabular-nums;
 }
 
@@ -292,5 +292,5 @@
 }
 
 .hivelog-upcoming__where {
-  color: #9ca3af;
+  color: var(--hivelog-ink-faint);
 }

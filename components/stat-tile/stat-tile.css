@@ -10,14 +10,14 @@
   flex-direction: column;
   gap: 0.25rem;
   padding: 0.9rem 1rem 1rem;
-  background: #ffffff;
+  background: var(--hivelog-surface);
   color: inherit;
   text-decoration: none;
 }
 
 .hivelog-stat-tile:hover,
 .hivelog-stat-tile:focus {
-  background: #f9fafb;
+  background: var(--hivelog-surface-2);
 }
 
 .hivelog-stat-tile__value {
@@ -32,18 +32,18 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: #6b7280;
+  color: var(--hivelog-ink-muted);
 }
 
 .hivelog-stat-tile__sub {
   font-size: 0.8rem;
-  color: #6b7280;
+  color: var(--hivelog-ink-muted);
 }
 
 .hivelog-stat-tile__sub--critical {
-  color: #b91c1c;
+  color: var(--hivelog-critical);
 }
 
 .hivelog-stat-tile__sub--warning {
-  color: #a4630a;
+  color: var(--hivelog-warning);
 }
