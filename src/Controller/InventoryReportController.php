@@ -268,13 +268,19 @@ class InventoryReportController extends ControllerBase {
     }
 
     if ($rows) {
+      // Plain cells (not header => TRUE) so the total row keeps the same
+      // typeface and alignment as the data rows; the row class carries
+      // the emphasis (see css/hivelog.tables.css).
       $rows[] = [
-        ['data' => $this->t('All apiaries'), 'header' => TRUE],
-        ['data' => number_format($sum['consumable'], 2), 'header' => TRUE],
-        ['data' => number_format($sum['depreciation'], 2), 'header' => TRUE],
-        ['data' => number_format($sum['cost'], 2), 'header' => TRUE],
-        ['data' => number_format($sum['income'], 2), 'header' => TRUE],
-        ['data' => number_format($sum['net'], 2), 'header' => TRUE],
+        'class' => ['hivelog-inventory-report-total'],
+        'data' => [
+          $this->t('All apiaries'),
+          number_format($sum['consumable'], 2),
+          number_format($sum['depreciation'], 2),
+          number_format($sum['cost'], 2),
+          number_format($sum['income'], 2),
+          number_format($sum['net'], 2),
+        ],
       ];
     }
 
@@ -291,7 +297,11 @@ class InventoryReportController extends ControllerBase {
       ],
       '#rows' => $rows,
       '#empty' => $this->t('No apiaries to report on.'),
-      '#attributes' => ['class' => ['hivelog-inventory-report-table']],
+      // `--labelled`: the first column is a text label (apiary name), so
+      // css/hivelog.tables.css keeps it left-aligned while every figure
+      // column is right-aligned. The per-apiary report's summary has no
+      // label column and omits this modifier.
+      '#attributes' => ['class' => ['hivelog-inventory-report-table', 'hivelog-inventory-report-table--labelled']],
       '#attached' => ['library' => ['hivelog/tables']],
     ];
 

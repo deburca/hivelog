@@ -63,6 +63,58 @@
   text-align: left;
 }
 
+/* ------------------------------------------------------------------
+   Financial report tables (per-apiary + combined). Amounts are
+   right-aligned with tabular numerals so the figures line up down each
+   column; the leading text column (apiary name / year) stays left.
+   Selectors include `thead th` where needed to outrank the generic
+   "left-align titles" rule above.
+------------------------------------------------------------------ */
+.hivelog-inventory-report-table th,
+.hivelog-inventory-report-table td,
+.hivelog-inventory-report-table thead th {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* `--labelled` summary (apiary name in column 1) and the trend tables
+   (Year in column 1) keep that first column left-aligned. */
+.hivelog-inventory-report-table--labelled th:first-child,
+.hivelog-inventory-report-table--labelled td:first-child,
+.hivelog-inventory-report-table--labelled thead th:first-child,
+.hivelog-inventory-report-trend .hivelog-inventory-report-table th:first-child,
+.hivelog-inventory-report-trend .hivelog-inventory-report-table td:first-child,
+.hivelog-inventory-report-trend .hivelog-inventory-report-table thead th:first-child {
+  text-align: left;
+}
+
+/* Breakdown table: Item / Type / Quantity are text — only the last
+   column (Amount) is a figure. */
+.hivelog-inventory-report-breakdown .hivelog-inventory-report-table th,
+.hivelog-inventory-report-breakdown .hivelog-inventory-report-table td,
+.hivelog-inventory-report-breakdown .hivelog-inventory-report-table thead th {
+  text-align: left;
+}
+
+.hivelog-inventory-report-breakdown .hivelog-inventory-report-table th:last-child,
+.hivelog-inventory-report-breakdown .hivelog-inventory-report-table td:last-child,
+.hivelog-inventory-report-breakdown .hivelog-inventory-report-table thead th:last-child {
+  text-align: right;
+}
+
+/* "All apiaries" total row on the combined report: same typeface as the
+   data rows (plain cells, not <th>), emphasised with weight + a rule. */
+.hivelog-inventory-report-total td {
+  font-weight: 600;
+  border-top: 2px solid #ccc;
+}
+
+/* Space the breakdown / trend sections off from the summary above. */
+.hivelog-inventory-report-breakdown,
+.hivelog-inventory-report-trend {
+  margin-top: 1.5rem;
+}
+
 /* Space the "Previous Queens" history block off from the current queen's
    details table above it on the hive view page. */
 .hivelog-queen-history {
