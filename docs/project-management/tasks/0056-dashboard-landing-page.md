@@ -148,13 +148,36 @@ Design reference: `projects/dashboard-landing-page-mockup.html` and
       gains 6 kernel tests (grid render, inspections-this-month scoping,
       open-tasks tally + overdue, low-stock count, Net YTD shown/hidden by
       permission). phpcs clean locally.
-- [ ] **"Upcoming" + "Recent activity" widgets.** Upcoming: unreported
+- [x] **"Upcoming" + "Recent activity" widgets.** Upcoming: unreported
       seasonal actions whose `week_start` is within the next ~4 weeks,
       grouped by week, read-only. Recent activity: reverse-chronological
       merge across inspections, queen observations, action logs,
       inventory purchases and harvest yields — all five record types
       (decision 5), each capped per type before the merge, then sliced to
       ~10, each linked to its canonical page.
+      **Done** (branch `feature/0056-upcoming-recent`): `DashboardController`
+      gains `date.formatter` DI + `buildUpcoming()` /
+      `reportedApiaryActionIds()` / `buildRecentActivity()` /
+      `recentActivityUrl()`. `view()` renders an `activity` split
+      container (`.hivelog-dashboard__split`, 2-col → 1-col ≤768px) after
+      the stat tiles. **Upcoming:** enabled `CalendarAction`s with
+      `week_start` in `[week+1, min(week+4, 53)]`, one row per action
+      (hive-scoped not fanned out — it's a forward plan), apiary-scoped
+      ones already reported done/ignored this year dropped; each row is
+      `Wk NN` + linked title + apiary name; no year wraparound; empty
+      state "Nothing scheduled for the next four weeks." **Recent
+      activity:** 6 record types (inspection, queen observation, hive +
+      apiary action log, purchase, harvest yield) queried newest-first
+      `->range(0, 10)` per type, `->access('view')`-filtered, merged by
+      `created` desc, sliced to 10; each row is `j M` date + noun + link
+      (harvest yields, which have no canonical route, link to their owning
+      action log). New `.hivelog-upcoming*` / `.hivelog-recent*` CSS.
+      Cache: `calendar_action` / `apiary_action_log` / `hive_inspection` /
+      `queen_observation` / `hive_action_log` / `inventory_purchase` /
+      `harvest_yield` list tags + per-row deps. `DashboardTest` gains 6
+      kernel tests (window in/out, reported-skip, empty state, merge +
+      ordering + linking, harvest-yield fallback link, cache tags). phpcs
+      clean locally.
 - [ ] **"Apiaries" section.** Compact apiary summary as the closing
       section (name, hive count, open-tasks badge with overdue callout,
       low-stock badge, last activity), plus "Add Apiary". Strip the CBR
