@@ -1,11 +1,40 @@
 ---
 type: project
 tags: [hivelog/project]
-status: active
+status: done
 target:
 created: 2026-09-08
+completed: 2026-09-08
 ---
 # Project: HiveLog visual identity (themed presentation)
+
+## Outcome
+Done. Every HiveLog surface on kbg — `/hivelog` dashboard through the
+financial reports, list pages, canonical pages and entity edit forms —
+now carries the Fraunces / IBM Plex + beeswax / pine identity, light and
+dark, realised entirely in the **beeswax** site theme
+(`drupal/beeswax`, kbg default via `config/kbg/sync/system.theme.yml`).
+
+- **[[0061-beeswax-hivelog-skin]]** — the theme: self-hosted Fraunces /
+  IBM Plex Sans / IBM Plex Mono; the `--bw-*` palette on `:root` / `.dark`
+  in `src/theme.css`; `src/hivelog.css` skin loaded from the theme's
+  `global` library (not `libraries-extend` — it doesn't reach the module
+  CSS the entity-list SDCs pull in transitively); `--hivelog-btn-*` token
+  override; Tom Select filter selects; vertical-tabs skin;
+  `ThemeHooks` scoping.
+- **[[0062-module-themeability-tokens]]** — the module (hivelog 1.8.3):
+  a `--hivelog-*` surface / ink / line / severity token surface on
+  `:root` (values unchanged on a stock theme), consumed by the
+  dashboard / tables / filter-form / forms / stat-tile / entity-table
+  CSS; `hivelog_preprocess_html()` adds the `hivelog-page` body class on
+  every `/hivelog…` route. beeswax then collapsed its ~40 colour-only
+  restatements to a single `body.hivelog-page { --hivelog-*: var(--bw-*) }`
+  bridge block and dropped its own body-class copy. "Theming HiveLog"
+  section added to `AGENTS.md`.
+
+Carried forward (small, not blocking): `.hivelog-cbr-summary` in
+`css/hivelog.buttons.css` still hard-codes two greys — fold into the
+token surface next time buttons.css is touched.
 
 ## Goal
 Give the HiveLog UI on the kbg site a single, coherent visual identity —
