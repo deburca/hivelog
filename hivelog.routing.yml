@@ -506,6 +506,19 @@ hivelog.apiary.inventory_cost_report:
       apiary:
         type: entity:apiary
 
+# Combined financial report across every apiary the user may view (task
+# 0059). Same read-side aggregation as the per-apiary report above, run
+# once per viewable apiary and summed; it is the dashboard "Net YTD"
+# tile's target when more than one apiary is visible. Global permission
+# only, matching hivelog.apiary.inventory_cost_report.
+hivelog.apiaries.financial_report:
+  path: '/hivelog/apiaries/financial-report'
+  defaults:
+    _controller: '\Drupal\hivelog\Controller\InventoryReportController::combinedReport'
+    _title: 'Financial Report: All Apiaries'
+  requirements:
+    _permission: 'view own inventory item+view any inventory item+administer hivelog'
+
 # Inventory item routes.
 entity.inventory_item.collection:
   path: '/hivelog/inventory-items'

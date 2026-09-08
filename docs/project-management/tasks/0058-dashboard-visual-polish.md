@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: review
+status: done
 priority: medium
 project: "[[dashboard-landing-page]]"
 area: theme
@@ -92,4 +92,5 @@ module's own existing hex palette only, no new tokens or fonts.
 ## Related
 - Project:: [[dashboard-landing-page]]
 - Decisions:: [[0057-dashboard-information-architecture]], [[0011-responsive-design-strategy]], [[0012-action-button-design-system]], [[0005-sdc-component-library]]
-- Commits::
+- Follow-on:: [[0059-combined-financial-report]] (Net YTD tile's multi-apiary target)
+- Commits:: 7f9fc96 (squash-merge, PR #125)

@@ -726,6 +726,35 @@ class DashboardTest extends KernelTestBase {
   }
 
   /**
+   * With one apiary the Net YTD tile links to that apiary's report.
+   */
+  public function testNetYtdTileLinksToSingleApiaryReport(): void {
+    $user = $this->makeCurrentUser();
+    $apiary = Apiary::create(['name' => 'Only One', 'uid' => $user->id()]);
+    $apiary->save();
+    $this->clearSeededCalendarActions();
+
+    $html = $this->renderBuild($this->controller()->view());
+
+    $this->assertStringContainsString('href="/hivelog/apiary/' . $apiary->id() . '/inventory/cost-report"', $html);
+    $this->assertStringNotContainsString('/hivelog/apiaries/financial-report', $html);
+  }
+
+  /**
+   * With more than one apiary the Net YTD tile links to the combined report.
+   */
+  public function testNetYtdTileLinksToCombinedReportWhenMany(): void {
+    $user = $this->makeCurrentUser();
+    Apiary::create(['name' => 'A1', 'uid' => $user->id()])->save();
+    Apiary::create(['name' => 'A2', 'uid' => $user->id()])->save();
+    $this->clearSeededCalendarActions();
+
+    $html = $this->renderBuild($this->controller()->view());
+
+    $this->assertStringContainsString('href="/hivelog/apiaries/financial-report"', $html);
+  }
+
+  /**
    * The Net YTD tile is hidden from a user without inventory-view access.
    */
   public function testNetYtdTileHiddenWithoutInventoryPermission(): void {
