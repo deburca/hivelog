@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Drupal\hivelog;
 
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\EntityListBuilder;
 
 /**
  * Provides a list builder for Calendar Action entities.
@@ -15,7 +14,7 @@ use Drupal\Core\Entity\EntityListBuilder;
  * calendar action that isn't currently appearing on the apiary/hive
  * views.
  */
-class CalendarActionListBuilder extends EntityListBuilder {
+class CalendarActionListBuilder extends HivelogListBuilder {
 
   /**
    * {@inheritdoc}

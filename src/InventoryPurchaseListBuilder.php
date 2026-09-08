@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Drupal\hivelog;
 
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\EntityListBuilder;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Render\RendererInterface;
@@ -19,7 +18,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * own "Add Purchase" heading — see InventoryItemListBuilder for the full
  * rationale (mirrors ApiaryListBuilder/QueenListBuilder).
  */
-class InventoryPurchaseListBuilder extends EntityListBuilder {
+class InventoryPurchaseListBuilder extends HivelogListBuilder {
 
   /**
    * The renderer.
@@ -78,24 +77,7 @@ class InventoryPurchaseListBuilder extends EntityListBuilder {
     $row['total_cost'] = $entity->get('total_cost')->value ?? '';
     $row['supplier'] = $entity->get('supplier')->value ?? '';
 
-    $buttons = [];
-    if ($entity->access('update') && $entity->hasLinkTemplate('edit-form')) {
-      $buttons[] = ['label' => (string) $this->t('Edit'), 'url' => $entity->toUrl('edit-form')->toString()];
-    }
-    if ($entity->access('delete') && $entity->hasLinkTemplate('delete-form')) {
-      $buttons[] = [
-        'label' => (string) $this->t('Delete'),
-        'url' => $entity->toUrl('delete-form')->toString(),
-        'variant' => 'danger',
-      ];
-    }
-    $row['operations']['data'] = [
-      '#type' => 'component',
-      '#component' => 'hivelog:button-group',
-      '#props' => [
-        'buttons' => $buttons,
-      ],
-    ];
+    $row['operations']['data'] = $this->buildOperations($entity);
 
     return $row;
   }

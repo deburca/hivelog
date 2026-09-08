@@ -3,12 +3,11 @@
 namespace Drupal\hivelog;
 
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\EntityListBuilder;
 
 /**
  * Provides a list builder for Hive entities.
  */
-class HiveListBuilder extends EntityListBuilder {
+class HiveListBuilder extends HivelogListBuilder {
 
   /**
    * {@inheritdoc}

@@ -200,6 +200,16 @@ HiveInspection and QueenObservation have no context-free add route at all
 scoped add route above), so their collection pages have no add button by
 design, with or without menu chrome.
 
+All eleven list builders extend `HivelogListBuilder` (task 0068), whose
+`buildOperations()` renders the row Operations column as a
+`hivelog:button-group` cluster (Edit + Delete, Delete in the danger
+variant) instead of core's collapsed dropbutton — matching the flat
+action buttons on the canonical pages and the dashboard (ADR-0012). The
+SDC-table builders call `$this->buildOperations($entity)` for the cell;
+the ones on core's `#type => 'table'` inherit it via
+`EntityListBuilder::buildRow()`. A new list builder should extend
+`HivelogListBuilder`, never `EntityListBuilder` directly.
+
 ### CSS and components
 
 CSS libraries are declared in `hivelog.libraries.yml`. All libraries depend
