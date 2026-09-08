@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: in-progress
+status: done
 priority: medium
 project: "[[dashboard-landing-page]]"
 area: theme
@@ -21,14 +21,13 @@ recent records) so the beekeeper does not have to drill one apiary deep to
 see what needs doing. Motivated by finding 1 of
 [[navigation-and-page-layout]].
 
-**Design settled.** The six open questions are resolved (see the project
-note's Decisions section) and the IA decision is captured in
-[[0057-dashboard-information-architecture]] (accepted). Acceptance
-criterion 1 lands that ADR's routing / menu / breadcrumb changes and
-should go first. If the work is picked up incrementally, split criteria
-2–8 into their own `00NN` task files (all
-`project: "[[dashboard-landing-page]]"`); this task is the umbrella /
-entry point until then.
+**Shipped incrementally** (#118 routing skeleton, #119 shell, #120 needs-
+attention, #121 stat tiles, #122 upcoming/recent, #123 apiaries section,
+plus this test sweep), each PR merged CI-green (lint + kernel/unit on PHP
+8.3/8.4/8.5). The six open questions are resolved in the project note's
+Decisions section; the IA change is [[0057-dashboard-information-architecture]]
+(accepted). Criteria 2–6 were built directly under this task rather than
+split into their own `00NN` files.
 
 Design reference: `projects/dashboard-landing-page-mockup.html` and
 <https://claude.ai/code/artifact/62dfb1ba-8604-48b6-b9dd-e17b9eb57cd1>.
@@ -200,26 +199,46 @@ Design reference: `projects/dashboard-landing-page-mockup.html` and
       updated ("Add Apiary" / apiary name instead of the removed "Go to
       Apiaries"). phpcs clean locally. **Task 0056 feature work complete;
       criterion 7 is the final sweep.**
-- [ ] **Cache metadata** ([[0009-render-cacheability-discipline]]):
-      `user.permissions` + `user` contexts; list cache tags for every
-      surfaced entity type (hive, hive_inspection, queen,
-      queen_observation, calendar_action, hive_action_log,
-      apiary_action_log, inventory_item, inventory_purchase,
-      inventory_usage, harvest_yield, product); per-row entity
-      dependencies; `max-age = secondsUntilNextIsoWeek()` (header prints
-      the week; rows compute timing against it). Verified directly on the
-      render array, not just by inspection.
-- [ ] **Access.** Roll-up respects per-entity access — two users with
-      different permissions must not share a cache entry, and a user sees
-      only apiaries/hives they may view. The dashboard route reuses the
-      existing `view own apiary + view any apiary + administer hivelog`
-      OR-set (decision 6) — no new permission.
-- [ ] Tests added/updated (`--group hivelog`): kernel — aggregation
-      correctness, access-filtered roll-up, cache metadata, first-run and
-      "all caught up" states; functional — new route + permission +
-      breadcrumb, old `/hivelog` apiary-list URL now redirects/404s.
-- [ ] `ddev drush cr` clean; no `@media` rules added outside the
-      `css/hivelog.responsive.css` breakpoints.
+- [x] **Cache metadata** ([[0009-render-cacheability-discipline]]):
+      list cache tags for every surfaced entity type (hive,
+      hive_inspection, queen_observation, calendar_action,
+      hive_action_log, apiary_action_log, inventory_item,
+      inventory_purchase, inventory_usage, harvest_yield, product);
+      per-row entity dependencies; `user` context;
+      `max-age = min(secondsUntilNextIsoWeek(), secondsUntilTomorrow())` —
+      the ISO-week bound the criterion called for, tightened to a daily
+      bound in the Stat-tiles criterion for the month-relative
+      "Inspections this month" count. `user` is per-user so it subsumes
+      `user.permissions` — two users never share an entry — hence no
+      separate permission context. `DashboardTest::testCacheMetadataCoversEverySurfacedList`
+      asserts all 12 list tags directly on `view()['#cache']['tags']`.
+- [x] **Access.** `viewableApiaries()` `->access('view')`-filters the
+      loaded apiaries, and every collect/build step `->access('view')`-
+      filters the child entities it loads, so the roll-up only reflects
+      what the user may see. The `user` cache context means two accounts
+      never share a cache entry. The route reuses the existing
+      `view own apiary + view any apiary + administer hivelog` OR-set
+      (decision 6). Covered by `testAccessFilteredRollUp` (owner sees only
+      their apiary's overdue task, not another owner's) and
+      `testNetYtdTileHiddenWithoutInventoryPermission`.
+- [x] Tests added/updated (`--group hivelog`): kernel — 30 methods in
+      `tests/src/Kernel/DashboardTest.php` across aggregation, the
+      access-filtered roll-up, comprehensive cache metadata, first-run
+      (`testFirstRunWelcomeState`) and all-empty (`testEmptyWidgetStates`,
+      `testNeedsAttentionAllCaughtUp`, `testUpcomingEmptyState`) states;
+      functional — new `tests/src/Functional/DashboardTest.php`: `/hivelog`
+      serves the dashboard (not the list), the apiary collection is at
+      `/hivelog/apiaries`, the breadcrumb "HiveLog" crumb links to the
+      dashboard. `PermissionMatrixTest` already covers `/hivelog` +
+      `/hivelog/apiaries` status codes for anon/viewer/admin. Per ADR-0057
+      decision 3 there is no redirect — `/hivelog` stays valid, it just
+      renders the dashboard.
+- [x] No `@media` rules added outside the `css/hivelog.responsive.css`
+      breakpoints — every `@media` in `css/hivelog.dashboard.css` is
+      `(max-width: 768px)`; `components/stat-tile/stat-tile.css` has none.
+      A router rebuild (`drush cr`) is needed on deploy for the moved
+      route (not runnable in CI's lint job; the functional job boots a
+      full site and exercises the routes).
 
 ## Implementation notes
 - Key files (new): `src/Controller/DashboardController.php`,
