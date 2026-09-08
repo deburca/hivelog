@@ -250,6 +250,16 @@ routes under `/hivelog/...` make sure `applies()` still matches them — and
 explicitly exclude any non-page routes (e.g. file-download endpoints) so
 they do not get an incorrect breadcrumb.
 
+Every hivelog *list / report* page ends its trail with the page's own name as
+a terminal crumb (a self-link the theme renders as plain text), so all such
+pages read `Home › HiveLog › <Name>` consistently — the flat collections and
+the cross-apiary report via a `$leaf_pages` map in `build()`, the per-apiary
+report and full-calendar pages via a `$apiary_page_crumbs` map after the
+apiary ancestor link. Add a new collection / report route to the relevant map
+so it does not stop at `Home › HiveLog`. (The inventory-item / -purchase /
+product collections are *not* matched by `applies()` and get the same shape
+from the menu breadcrumb instead — keep them consistent if that ever changes.)
+
 The priority of 1004 is intentional — it must exceed the `easy_breadcrumb`
 module's priority of 1003, which is commonly installed on Drupal sites and
 uses a catch-all `applies()`. If the hivelog builder does not outrank it,

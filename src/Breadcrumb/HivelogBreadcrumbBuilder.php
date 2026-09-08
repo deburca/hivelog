@@ -83,10 +83,27 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
     $breadcrumb->addLink(Link::createFromRoute($this->t('Home'), '<front>'));
     $breadcrumb->addLink(Link::createFromRoute($this->t('HiveLog'), 'hivelog.dashboard'));
 
-    // Apiary collection: "HiveLog" now points at the dashboard, so the
-    // apiary list needs its own terminal crumb (ADR-0057).
-    if ($route_name === 'entity.apiary.collection') {
-      $breadcrumb->addLink(Link::createFromRoute($this->t('Apiaries'), 'entity.apiary.collection'));
+    // Collection listings and the cross-apiary report page carry no
+    // entity-ancestor chain: "HiveLog" points at the dashboard (ADR-0057),
+    // so each needs its own terminal crumb — the page's own name, a
+    // self-link the theme renders as plain text. Every hivelog list page
+    // gets the same "Home › HiveLog › <Name>" shape this way, matching
+    // what the menu breadcrumb gives the collections that are not routed
+    // through this builder.
+    $leaf_pages = [
+      'entity.apiary.collection' => $this->t('Apiaries'),
+      'entity.hive.collection' => $this->t('Hives'),
+      'entity.hive_inspection.collection' => $this->t('Inspections'),
+      'entity.queen.collection' => $this->t('Queens'),
+      'entity.queen_observation.collection' => $this->t('Queen Observations'),
+      'entity.calendar_action.collection' => $this->t('Calendar Actions'),
+      'entity.hive_action_log.collection' => $this->t('Hive Action Logs'),
+      'entity.apiary_action_log.collection' => $this->t('Apiary Action Logs'),
+      'hivelog.apiaries.financial_report' => $this->t('Financial Report: All Apiaries'),
+    ];
+    if (isset($leaf_pages[$route_name])) {
+      $breadcrumb->addLink(Link::createFromRoute($leaf_pages[$route_name], $route_name));
+      return $breadcrumb;
     }
 
     // Apiary-level routes: add the apiary crumb. On canonical pages the apiary
@@ -96,6 +113,18 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
     if ($apiary && is_object($apiary)) {
       $breadcrumb->addCacheableDependency($apiary);
       $breadcrumb->addLink(Link::createFromRoute($apiary->label(), 'entity.apiary.canonical', ['apiary' => $apiary->id()]));
+
+      // Apiary-scoped pages that are not the canonical page itself add a
+      // terminal crumb naming the page, so the trail ends with the page's
+      // own name rather than a linked apiary label.
+      $apiary_page_crumbs = [
+        'hivelog.apiary.inventory_cost_report' => $this->t('Financial Report'),
+        'hivelog.apiary.calendar_action.collection' => $this->t('Calendar'),
+      ];
+      if (isset($apiary_page_crumbs[$route_name])) {
+        $breadcrumb->addLink(Link::createFromRoute($apiary_page_crumbs[$route_name], $route_name, ['apiary' => $apiary->id()]));
+        return $breadcrumb;
+      }
     }
 
     // Hive-level routes: add apiary ancestor link then hive crumb.

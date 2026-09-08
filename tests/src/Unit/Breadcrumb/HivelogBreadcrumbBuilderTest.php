@@ -334,6 +334,78 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
+   * Every list / report page that has no entity chain ends Home › HiveLog › <own name>.
+   */
+  #[DataProvider('leafPageProvider')]
+  public function testBuildLeafPageTerminalCrumb(string $route_name, string $expected_text): void {
+    $route_match = $this->createRouteMatch($route_name);
+    $route_match->method('getParameter')->willReturn(NULL);
+
+    $links = $this->builder->build($route_match)->getLinks();
+
+    $this->assertCount(3, $links);
+    $this->assertEquals('HiveLog', (string) $links[1]->getText());
+    $this->assertEquals('hivelog.dashboard', $links[1]->getUrl()->getRouteName());
+    $this->assertEquals($expected_text, (string) $links[2]->getText());
+    $this->assertEquals($route_name, $links[2]->getUrl()->getRouteName());
+  }
+
+  /**
+   * Data provider: leaf list / report routes and their terminal crumb text.
+   */
+  public static function leafPageProvider(): array {
+    return [
+      'hives' => ['entity.hive.collection', 'Hives'],
+      'inspections' => ['entity.hive_inspection.collection', 'Inspections'],
+      'queens' => ['entity.queen.collection', 'Queens'],
+      'queen observations' => ['entity.queen_observation.collection', 'Queen Observations'],
+      'calendar actions' => ['entity.calendar_action.collection', 'Calendar Actions'],
+      'hive action logs' => ['entity.hive_action_log.collection', 'Hive Action Logs'],
+      'apiary action logs' => ['entity.apiary_action_log.collection', 'Apiary Action Logs'],
+      'combined financial report' => ['hivelog.apiaries.financial_report', 'Financial Report: All Apiaries'],
+    ];
+  }
+
+  /**
+   * Per-apiary financial report: Home › HiveLog › <Apiary> › Financial Report.
+   */
+  public function testBuildApiaryFinancialReport(): void {
+    $apiary = $this->createApiaryMock(3, 'Ravnholt Home');
+    $route_match = $this->createRouteMatch('hivelog.apiary.inventory_cost_report');
+    $route_match->method('getParameter')->willReturnMap([
+      ['apiary', $apiary],
+      ['hive', NULL],
+    ]);
+
+    $links = $this->builder->build($route_match)->getLinks();
+
+    $this->assertCount(4, $links);
+    $this->assertEquals('Ravnholt Home', (string) $links[2]->getText());
+    $this->assertEquals('entity.apiary.canonical', $links[2]->getUrl()->getRouteName());
+    $this->assertEquals('Financial Report', (string) $links[3]->getText());
+    $this->assertEquals('hivelog.apiary.inventory_cost_report', $links[3]->getUrl()->getRouteName());
+  }
+
+  /**
+   * Full-calendar page: Home › HiveLog › <Apiary> › Calendar.
+   */
+  public function testBuildFullCalendarTerminalCrumb(): void {
+    $apiary = $this->createApiaryMock(4, 'Søndermarken');
+    $route_match = $this->createRouteMatch('hivelog.apiary.calendar_action.collection');
+    $route_match->method('getParameter')->willReturnMap([
+      ['apiary', $apiary],
+      ['hive', NULL],
+    ]);
+
+    $links = $this->builder->build($route_match)->getLinks();
+
+    $this->assertCount(4, $links);
+    $this->assertEquals('Søndermarken', (string) $links[2]->getText());
+    $this->assertEquals('Calendar', (string) $links[3]->getText());
+    $this->assertEquals('hivelog.apiary.calendar_action.collection', $links[3]->getUrl()->getRouteName());
+  }
+
+  /**
    * Apiary canonical: apiary label is the terminal crumb (rendered as plain text by the theme via loop.last).
    *
    * Home and HiveLog are navigable ancestors.
