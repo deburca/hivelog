@@ -41,11 +41,9 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
   public function applies(RouteMatchInterface $route_match, ?CacheableMetadata $cacheable_metadata = NULL): bool {
     $route_name = $route_match->getRouteName();
 
-    // Explicitly exclude non-page hivelog.* routes that must not receive a
-    // breadcrumb (e.g. file-download endpoints). Add new exclusions here
-    // whenever a non-page hivelog.* route is introduced, and keep this list
+    // Explicitly exclude non-page routes under /hivelog that must not
+    // receive a breadcrumb (e.g. file-download endpoints). Keep this list
     // in sync with hivelog.routing.yml (see AGENTS.md).
-    // Task 0001 (queen observation CSV export) will add 'hivelog.queen.observations_csv'.
     $non_page_routes = [
       'hivelog.queen.observations_csv',
     ];
@@ -53,20 +51,14 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
       return FALSE;
     }
 
-    return str_starts_with($route_name, 'entity.apiary.')
-      || str_starts_with($route_name, 'entity.hive.')
-      || str_starts_with($route_name, 'entity.hive_inspection.')
-      || str_starts_with($route_name, 'entity.queen.')
-      || str_starts_with($route_name, 'entity.queen_observation.')
-      || str_starts_with($route_name, 'entity.calendar_action.')
-      || str_starts_with($route_name, 'entity.hive_action_log.')
-      || str_starts_with($route_name, 'entity.apiary_action_log.')
-      // Covers hivelog.dashboard (the landing page, ADR-0057),
-      // hivelog.calendar_action.add, hivelog.hive_action_log.add,
-      // hivelog.apiary_action_log.add, and
-      // hivelog.apiary.calendar_action.collection (the Full Calendar page)
-      // too — all are real pages (forms/views), not non-page endpoints.
-      || str_starts_with($route_name, 'hivelog.');
+    // Every page whose path is under /hivelog — the module's own entity
+    // routes, the hivelog.* controllers, and bolt-on routes such as
+    // Layout Builder overrides (layout_builder.overrides.<entity>.*). A
+    // path match keeps this exhaustive without a per-route-name allow
+    // list that drifts as routes are added (task 0067).
+    $route = $route_match->getRouteObject();
+    $path = $route ? $route->getPath() : '';
+    return $path === '/hivelog' || str_starts_with($path, '/hivelog/');
   }
 
   /**
@@ -90,7 +82,7 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
     // gets the same "Home › HiveLog › <Name>" shape this way, matching
     // what the menu breadcrumb gives the collections that are not routed
     // through this builder.
-    $leaf_pages = [
+    $collections = [
       'entity.apiary.collection' => $this->t('Apiaries'),
       'entity.hive.collection' => $this->t('Hives'),
       'entity.hive_inspection.collection' => $this->t('Inspections'),
@@ -99,10 +91,29 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
       'entity.calendar_action.collection' => $this->t('Calendar Actions'),
       'entity.hive_action_log.collection' => $this->t('Hive Action Logs'),
       'entity.apiary_action_log.collection' => $this->t('Apiary Action Logs'),
+      'entity.inventory_item.collection' => $this->t('Inventory Items'),
+      'entity.inventory_purchase.collection' => $this->t('Inventory Purchases'),
+      'entity.product.collection' => $this->t('Products'),
+    ];
+
+    // Collection listings + the combined report: their own name is the
+    // terminal crumb (a self-link the theme renders as plain text).
+    $leaf_pages = $collections + [
       'hivelog.apiaries.financial_report' => $this->t('Financial Report: All Apiaries'),
     ];
     if (isset($leaf_pages[$route_name])) {
       $breadcrumb->addLink(Link::createFromRoute($leaf_pages[$route_name], $route_name));
+      return $breadcrumb;
+    }
+
+    // Site-wide "add" forms (entity.<type>.add_form, no parent in the
+    // path) hang off their collection: Home › HiveLog › <Plural>.
+    if (preg_match('/^entity\.([a-z_]+)\.add_form$/', $route_name, $m)
+      && isset($collections["entity.{$m[1]}.collection"])) {
+      $breadcrumb->addLink(Link::createFromRoute(
+        $collections["entity.{$m[1]}.collection"],
+        "entity.{$m[1]}.collection",
+      ));
       return $breadcrumb;
     }
 
@@ -199,14 +210,15 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
     }
 
     // Calendar action routes: add apiary ancestor link then calendar action
-    // crumb. Guarded to the entity's own CRUD routes (rather than just
-    // checking the parameter is present) because
-    // hivelog.hive_action_log.add also carries a `calendar_action` route
-    // parameter — identifying which action is being logged, not "this page
-    // is about a calendar action" — and must not gain a duplicate/incorrect
-    // crumb from this block; the hive block below handles that route.
+    // crumb. Fires wherever a `calendar_action` route parameter identifies
+    // the page's subject — its own CRUD + Layout Builder routes, and the
+    // requirement / yield "add" forms nested under it — but NOT the
+    // hive/apiary action-log "add" routes, which carry `calendar_action`
+    // only to say which action is being logged (they thread via the
+    // hive / apiary instead).
     $calendar_action = $route_match->getParameter('calendar_action');
-    if ($calendar_action && is_object($calendar_action) && str_starts_with($route_name, 'entity.calendar_action.')) {
+    if ($calendar_action && is_object($calendar_action)
+      && !in_array($route_name, ['hivelog.hive_action_log.add', 'hivelog.apiary_action_log.add'], TRUE)) {
       $breadcrumb->addCacheableDependency($calendar_action);
       $calendar_action_apiary = $calendar_action->get('apiary')->entity;
       if ($calendar_action_apiary) {
@@ -245,6 +257,47 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
         $breadcrumb->addLink(Link::createFromRoute($log_apiary->label(), 'entity.apiary.canonical', ['apiary' => $log_apiary->id()]));
       }
       $breadcrumb->addLink(Link::createFromRoute($apiary_action_log->label(), 'entity.apiary_action_log.canonical', ['apiary_action_log' => $apiary_action_log->id()]));
+    }
+
+    // Inventory item / inventory purchase / product routes — each
+    // references its apiary directly (like apiary_action_log). Covers the
+    // canonical / edit / delete / Layout Builder routes for all three.
+    foreach ([
+      'inventory_item' => 'entity.inventory_item.canonical',
+      'inventory_purchase' => 'entity.inventory_purchase.canonical',
+      'product' => 'entity.product.canonical',
+    ] as $param => $canonical_route) {
+      $entity = $route_match->getParameter($param);
+      if ($entity && is_object($entity)) {
+        $breadcrumb->addCacheableDependency($entity);
+        $entity_apiary = $entity->get('apiary')->entity;
+        if ($entity_apiary) {
+          $breadcrumb->addCacheableDependency($entity_apiary);
+          $breadcrumb->addLink(Link::createFromRoute($entity_apiary->label(), 'entity.apiary.canonical', ['apiary' => $entity_apiary->id()]));
+        }
+        $breadcrumb->addLink(Link::createFromRoute($entity->label(), $canonical_route, [$param => $entity->id()]));
+      }
+    }
+
+    // Calendar-action requirement / yield edit + delete routes: thread
+    // Apiary → Calendar action, then a non-linked terminal (these
+    // sub-entities have no canonical page of their own).
+    foreach (['calendar_action_item_requirement', 'calendar_action_product_yield'] as $param) {
+      $sub = $route_match->getParameter($param);
+      if ($sub && is_object($sub)) {
+        $breadcrumb->addCacheableDependency($sub);
+        $sub_action = $sub->get('calendar_action')->entity;
+        if ($sub_action) {
+          $breadcrumb->addCacheableDependency($sub_action);
+          $sub_apiary = $sub_action->get('apiary')->entity;
+          if ($sub_apiary) {
+            $breadcrumb->addCacheableDependency($sub_apiary);
+            $breadcrumb->addLink(Link::createFromRoute($sub_apiary->label(), 'entity.apiary.canonical', ['apiary' => $sub_apiary->id()]));
+          }
+          $breadcrumb->addLink(Link::createFromRoute($sub_action->label(), 'entity.calendar_action.canonical', ['calendar_action' => $sub_action->id()]));
+        }
+        $breadcrumb->addLink(Link::createFromRoute($sub->label(), '<nolink>'));
+      }
     }
 
     return $breadcrumb;
