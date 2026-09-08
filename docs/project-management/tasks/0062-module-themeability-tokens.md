@@ -1,17 +1,46 @@
 ---
 type: task
 tags: [hivelog/task]
-status: todo
+status: doing
 priority: low
 project: "[[hivelog-visual-identity]]"
 area: theme
 created: 2026-09-08
-branch:
+branch: feature/0062-module-themeability-tokens
 release:
 depends-on: ["[[0061-beeswax-hivelog-skin]]"]
 blocked-by:
 ---
 # Task: Module themeability — tokens + page hook for the skin
+
+## Progress
+- [x] **Token surface.** `--hivelog-*` surface / ink / line / severity
+      properties on `:root` in `css/hivelog.responsive.css` (the base
+      library every other one depends on), stock values = the hex they
+      replaced. `#e0e0e0` / `#eef0f2` → `--hivelog-hairline` and
+      `#b3261e` → `--hivelog-critical` consolidated (sub-perceptual on
+      1px rules / small text); noted in the `:root` comment.
+- [x] **Conversions.** `css/hivelog.dashboard.css`,
+      `css/hivelog.tables.css`, `css/hivelog.filter-form.css`,
+      `css/hivelog.forms.css`, `components/stat-tile/stat-tile.css`,
+      `components/entity-table/entity-table.css` now consume the tokens.
+      `#1a1a1a` on `.hivelog-filter-form label` left literal on purpose
+      (deliberate a11y contrast override; the skin still restates that
+      one selector). `hivelog.weight-histogram.css` / `.images.css` /
+      `.map.css` out of scope — the skin doesn't reskin them.
+- [x] **`hivelog_preprocess_html()`.** Adds `hivelog-page` on any route
+      whose path is under `/hivelog` (path-match, like the breadcrumb
+      builder). phpcs clean; `DashboardTest` + `ListCollectionTitleTest`
+      green (40 tests, 1029 assertions).
+- [ ] **beeswax drops its copy.** Remove `hivelog-page` from
+      `src/Hook/ThemeHooks.php::preprocessHtml()`; collapse the skin's
+      colour-only restatements in `src/hivelog.css` to `--hivelog-*`
+      redefinitions where they now just re-hex a tokenised property.
+- [ ] **AGENTS.md "Theming HiveLog" section** — stable class names, the
+      `--hivelog-*` token list, the `global`-library / `libraries-extend`
+      seam.
+- [ ] **Stock before/after render diff** — dashboard, a list page, a
+      report on Claro/stark; confirm no visual change.
 
 ## Context
 [[0060-visual-identity-in-site-theme]] keeps the HiveLog look in the
