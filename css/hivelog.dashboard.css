@@ -27,8 +27,8 @@
  */
 .hivelog-masthead__mark {
   display: inline-flex;
-  vertical-align: -0.28em;
-  margin-right: 0.4rem;
+  margin-right: 0.5rem;
+  vertical-align: middle;
   color: #a4630a;
 }
 
@@ -293,21 +293,4 @@
 
 .hivelog-upcoming__where {
   color: #9ca3af;
-}
-
-/*
- * Closing "Apiaries" section: a heading row (title + Add Apiary) above a
- * compact per-apiary summary table. Criterion 6.
- */
-.hivelog-dashboard__section-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem 1rem;
-  margin-bottom: 0.5rem;
-}
-
-.hivelog-dashboard__section-head .hivelog-dashboard__block-heading {
-  margin: 0;
 }

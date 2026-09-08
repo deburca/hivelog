@@ -21,7 +21,6 @@
  *   .hivelog-table-actions               table row operations cells
  *   .hivelog-button-group                grouped button clusters (View/Edit/Delete)
  *   .hivelog-attention__row              dashboard "Needs attention" row actions
- *   .hivelog-dashboard__section-head     dashboard section headings (Add Apiary)
  *   .hivelog-dashboard__welcome-actions  dashboard first-run welcome card
  */
 
@@ -45,7 +44,6 @@
   .hivelog-table-actions,
   .hivelog-button-group,
   .hivelog-attention__row,
-  .hivelog-dashboard__section-head,
   .hivelog-dashboard__welcome-actions
 ) .button {
   display: inline-block;
@@ -72,7 +70,6 @@
   .hivelog-entity-form .form-actions,
   .hivelog-table-actions,
   .hivelog-attention__row,
-  .hivelog-dashboard__section-head,
   .hivelog-dashboard__welcome-actions
 ) .button {
   margin-right: 0.5em;
@@ -88,7 +85,6 @@
   .hivelog-table-actions,
   .hivelog-button-group,
   .hivelog-attention__row,
-  .hivelog-dashboard__section-head,
   .hivelog-dashboard__welcome-actions
 ) .button:hover {
   background-color: var(--hivelog-btn-bg-hover);
@@ -106,7 +102,6 @@
   .hivelog-table-actions,
   .hivelog-button-group,
   .hivelog-attention__row,
-  .hivelog-dashboard__section-head,
   .hivelog-dashboard__welcome-actions
 ) .button--primary {
   background-color: var(--hivelog-btn-primary-bg);
@@ -124,7 +119,6 @@
   .hivelog-table-actions,
   .hivelog-button-group,
   .hivelog-attention__row,
-  .hivelog-dashboard__section-head,
   .hivelog-dashboard__welcome-actions
 ) .button--primary:hover {
   background-color: var(--hivelog-btn-primary-bg-hover);
@@ -142,7 +136,6 @@
   .hivelog-table-actions,
   .hivelog-button-group,
   .hivelog-attention__row,
-  .hivelog-dashboard__section-head,
   .hivelog-dashboard__welcome-actions
 ) .button--danger {
   background-color: var(--hivelog-btn-danger-bg);
@@ -160,7 +153,6 @@
   .hivelog-table-actions,
   .hivelog-button-group,
   .hivelog-attention__row,
-  .hivelog-dashboard__section-head,
   .hivelog-dashboard__welcome-actions
 ) .button--danger:hover {
   background-color: var(--hivelog-btn-danger-bg-hover);
