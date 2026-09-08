@@ -75,12 +75,7 @@ class InventoryReportController extends ControllerBase {
     // buttons of its own (the year selector is its own row below), so it
     // would have done nothing but restate the route's own page title
     // (costReportTitle()) as a second, redundant heading.
-    $build['year_selector'] = [
-      '#type' => 'component',
-      '#component' => 'hivelog:button-group',
-      '#weight' => 1,
-      '#props' => ['buttons' => $this->buildYearSelectorButtons('hivelog.apiary.inventory_cost_report', ['apiary' => $apiary->id()], $year)],
-    ];
+    $build['year_selector'] = $this->yearSelector('hivelog.apiary.inventory_cost_report', ['apiary' => $apiary->id()], $year);
 
     $build['summary'] = [
       '#type' => 'table',
@@ -234,12 +229,7 @@ class InventoryReportController extends ControllerBase {
       ->addCacheTags($this->entityTypeManager->getDefinition('harvest_yield')->getListCacheTags());
 
     $build = [];
-    $build['year_selector'] = [
-      '#type' => 'component',
-      '#component' => 'hivelog:button-group',
-      '#weight' => 1,
-      '#props' => ['buttons' => $this->buildYearSelectorButtons('hivelog.apiaries.financial_report', [], $year)],
-    ];
+    $build['year_selector'] = $this->yearSelector('hivelog.apiaries.financial_report', [], $year);
 
     $rows = [];
     $sum = ['consumable' => 0.0, 'depreciation' => 0.0, 'cost' => 0.0, 'income' => 0.0, 'net' => 0.0];
@@ -531,6 +521,39 @@ class InventoryReportController extends ControllerBase {
       $year = $current_year;
     }
     return $year;
+  }
+
+  /**
+   * Wraps the year-selector button group in a right-floated heading row.
+   *
+   * Reuses `.hivelog-list-heading` / `__action` (css/hivelog.buttons.css)
+   * so the selector sits at the top-right with vertical breathing room,
+   * matching the "Add …" bar on the collection pages.
+   *
+   * @param string $route
+   *   The report route to link back to.
+   * @param array $route_params
+   *   Route parameters (the per-apiary report's `apiary`; empty for the
+   *   combined report).
+   * @param int $selected_year
+   *   The currently selected year.
+   */
+  protected function yearSelector(string $route, array $route_params, int $selected_year): array {
+    return [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['hivelog-list-heading']],
+      '#weight' => 1,
+      'actions' => [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['hivelog-list-heading__action']],
+        'group' => [
+          '#type' => 'component',
+          '#component' => 'hivelog:button-group',
+          '#props' => ['buttons' => $this->buildYearSelectorButtons($route, $route_params, $selected_year)],
+        ],
+      ],
+      '#attached' => ['library' => ['hivelog/buttons']],
+    ];
   }
 
   /**

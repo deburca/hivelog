@@ -216,6 +216,49 @@
 }
 
 /* ------------------------------------------------------------------
+   List / report heading row — the "Add X" action bar (and the report
+   pages' year selector) that sits above a collection table.
+
+   Lives here, not in hivelog.filter-form.css, because a list builder
+   attaches only hivelog/buttons for this row and most collection pages
+   have no filter form. Since task 0063 removed the redundant <h3>
+   title, the row is normally just the action bar: justify-content plus
+   margin-left:auto float it to the right whether or not a title is
+   present (canonical-page section headings still use __title), and the
+   vertical margin gives it breathing room like the dashboard header.
+------------------------------------------------------------------ */
+.hivelog-list-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  margin: 1.5rem 0;
+}
+
+.hivelog-list-heading__title {
+  margin: 0;
+}
+
+.hivelog-list-heading__action {
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .hivelog-list-heading {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .hivelog-list-heading__action {
+    align-self: flex-start;
+    margin-left: 0;
+    white-space: normal;
+  }
+}
+
+/* ------------------------------------------------------------------
    CBR summary banner — unrelated to buttons but lives in this library
    because it shares the same page contexts.
 ------------------------------------------------------------------ */

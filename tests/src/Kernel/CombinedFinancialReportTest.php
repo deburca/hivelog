@@ -173,6 +173,23 @@ class CombinedFinancialReportTest extends KernelTestBase {
   }
 
   /**
+   * The year selector sits in a right-floated heading row.
+   */
+  public function testYearSelectorSitsInFloatedHeadingRow(): void {
+    $this->makeAdmin();
+    Apiary::create(['name' => 'A'])->save();
+
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(InventoryReportController::class);
+    $selector = $controller->combinedReport()['year_selector'];
+
+    $this->assertContains('hivelog-list-heading', $selector['#attributes']['class']);
+    $this->assertContains('hivelog-list-heading__action', $selector['actions']['#attributes']['class']);
+    $this->assertSame('hivelog:button-group', $selector['actions']['group']['#component']);
+    $this->assertContains('hivelog/buttons', $selector['#attached']['library']);
+  }
+
+  /**
    * Each apiary row links to that apiary's own per-item report.
    */
   public function testApiaryRowsLinkToPerApiaryReport(): void {

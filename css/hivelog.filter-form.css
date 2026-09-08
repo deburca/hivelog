@@ -1,27 +1,11 @@
 /**
  * @file
- * Styling for the embedded child-list heading row (title + Add action)
- * and the filter form that sits on its own row below it.
+ * Styling for the filter form that sits on its own row below a
+ * collection's heading. The heading row itself
+ * (.hivelog-list-heading / __title / __action) is laid out in
+ * css/hivelog.buttons.css — a list page attaches hivelog/buttons for
+ * that row even when it has no filter form.
  */
-
-/* Heading row: list title on the left, Add action button on the right. */
-.hivelog-list-heading {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: center;
-  gap: 0.5rem 1rem;
-  margin: 1rem 0 0.5rem;
-}
-
-.hivelog-list-heading__title {
-  margin: 0;
-}
-
-.hivelog-list-heading__action {
-  margin: 0 0 0 auto;
-  white-space: nowrap;
-}
 
 .hivelog-filter-form {
   display: flex;
@@ -74,20 +58,10 @@
   margin: 0;
 }
 
-/* Responsive: stack the heading and filter form on small screens (task 0004
-   convention, ADR-0011). Desktop (>768px) keeps the single-row layout. */
+/* Responsive: stack the filter form on small screens (task 0004
+   convention, ADR-0011). Desktop (>768px) keeps the single-row layout.
+   The heading row's own responsive rules are in css/hivelog.buttons.css. */
 @media (max-width: 768px) {
-  /* Heading: title above, action below at its natural width. */
-  .hivelog-list-heading {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .hivelog-list-heading__action {
-    align-self: flex-start;
-    white-space: normal;
-  }
-
   /* Filter form: single full-width column. */
   .hivelog-filter-form {
     flex-direction: column;
