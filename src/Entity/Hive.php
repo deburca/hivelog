@@ -93,9 +93,10 @@ class Hive extends ContentEntityBase implements EntityChangedInterface, EntityOw
    *
    * Unlike getActiveQueen(), this includes retired (inactive) queens —
    * Queen::preSave() keeps a demoted queen's `hive` reference intact
-   * specifically so this history remains resolvable. Used by the hive view
-   * page to show past queens and to aggregate queen observations across
-   * the hive's whole lifetime, not just the current occupant.
+   * specifically so this history remains resolvable. Used to aggregate
+   * queen observations across the hive's whole lifetime (not just the
+   * current occupant) and to populate the observation filter's queen
+   * options.
    *
    * @return \Drupal\hivelog\Entity\Queen[]
    *   Queens linked to this hive, sorted by introduction date descending

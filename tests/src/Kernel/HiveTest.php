@@ -796,9 +796,10 @@ class HiveTest extends KernelTestBase {
     $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
     $this->assertStringContainsString('2023-07-01', $html);
 
-    // The retired queen shows up in the "Previous Queens" history too.
-    $this->assertStringContainsString('Previous Queens', $html);
+    // The retired queen still appears — as the "Queen" link on its
+    // observation row (the hive page has no "Previous Queens" block).
     $this->assertStringContainsString('Q-first', $html);
+    $this->assertStringNotContainsString('Previous Queens', $html);
   }
 
   /**

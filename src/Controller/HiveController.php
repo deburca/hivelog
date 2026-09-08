@@ -404,10 +404,8 @@ class HiveController extends ControllerBase {
    *
    * When an active queen is present, summarise its key attributes and
    * expose View / Edit links. Otherwise, invite the user to add a queen
-   * via the hive-scoped add route. Either way, any other queens the hive
-   * has previously had are listed below as history (see
-   * Hive::getQueens()) so retiring a queen doesn't erase it from the
-   * hive's story.
+   * via the hive-scoped add route. A "View all Queens" link covers a
+   * hive's retired queens — that history is not repeated here.
    *
    * @param \Drupal\hivelog\Entity\Hive $hive
    *   The hive being rendered.
@@ -489,56 +487,7 @@ class HiveController extends ControllerBase {
       ],
     ];
 
-    $history = array_values(array_filter(
-      $hive->getQueens(),
-      fn(Queen $candidate) => !$queen || $candidate->id() !== $queen->id()
-    ));
-    if ($history) {
-      $section['history'] = $this->buildQueenHistorySection($history);
-    }
-
     return $section;
-  }
-
-  /**
-   * Builds the "Previous Queens" history table shown below the queen section.
-   *
-   * @param \Drupal\hivelog\Entity\Queen[] $queens
-   *   Non-current queens the hive has had, most recent first.
-   */
-  protected function buildQueenHistorySection(array $queens): array {
-    $rows = [];
-    foreach ($queens as $queen) {
-      $breed = $queen->get('breed')->value;
-      $breed_label = $breed
-        ? ($queen->get('breed')->getSetting('allowed_values')[$breed] ?? $breed)
-        : $this->t('Not set');
-      $status = $queen->get('status')->value;
-      $status_label = $queen->get('status')->getSetting('allowed_values')[$status] ?? $status;
-      $rows[] = [
-        $queen->toLink()->toString(),
-        $breed_label,
-        $status_label,
-        $queen->get('introduction_date')->value ?: $this->t('Not set'),
-      ];
-    }
-
-    return [
-      '#type' => 'container',
-      '#attributes' => ['class' => ['hivelog-queen-history']],
-      'heading' => [
-        '#type' => 'html_tag',
-        '#tag' => 'h4',
-        '#value' => $this->t('Previous Queens'),
-      ],
-      'table' => [
-        '#type' => 'table',
-        '#header' => [$this->t('Queen ID'), $this->t('Breed'), $this->t('Status'), $this->t('Introduced')],
-        '#rows' => $rows,
-        '#attributes' => ['class' => ['hivelog-queen-table']],
-        '#attached' => ['library' => ['hivelog/tables']],
-      ],
-    ];
   }
 
   /**
