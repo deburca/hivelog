@@ -1,11 +1,12 @@
 ---
 type: task
 tags: [hivelog/task]
-status: in-progress
+status: done
 priority: low
 project: "[[hivelog-visual-identity]]"
 area: theme
 created: 2026-09-08
+completed: 2026-09-08
 branch: feature/0070-tokenise-cbr-summary
 release: 1.8.4
 depends-on: ["[[0062-module-themeability-tokens]]"]
@@ -47,31 +48,31 @@ are already in scope — no library change needed.
       Kernel/Unit are the hard gates; phpstan + Functional are advisory)
       — PR #137, merge commit `5058d0c`. Shipped in release 1.8.4.
 
-## Then: beeswax + release
-Mirrors how [[0062-module-themeability-tokens]] finished.
+## Then: beeswax + release — done
+Mirrored how [[0062-module-themeability-tokens]] finished.
 
-1. Cut a hivelog release: bump `hivelog.info.yml`, add
-   `docs/project-management/releases/X.Y.Z.md`, tag, `gh release create`.
-   Pin cms2 to it.
-2. In beeswax (`/Users/paddy/Development/beeswax`, `deburca/beeswax`),
-   `src/hivelog.css` has an explicit `.hivelog-cbr-summary` block
-   restating border / border-radius / background / color in `--bw-*`
-   terms — redundant once the module reads `--hivelog-border` /
-   `--hivelog-surface-2`, because the `body.hivelog-page { --hivelog-*:
-   var(--bw-*) }` bridge already maps both
-   (`--hivelog-border: var(--bw-hairline)`,
-   `--hivelog-surface-2: var(--bw-surface-2)`), and
-   `--hivelog-btn-primary-bg` already resolves to `--bw-accent`. Delete
-   the border/background/`a` colour rules; keep only anything genuinely
-   additive (box-shadow, a radius the module doesn't set).
-3. Commit + push beeswax, tag `1.0.2`, `gh release create` on
-   `deburca/beeswax`.
-4. cms2: `ddev composer update deburca/beeswax hivelog/hivelog`,
-   `ddev drush cr`, verify the dashboard renders (authenticated:
-   `ddev drush uli`, curl `/hivelog`), commit `composer.json` /
-   `composer.lock`.
-5. Close this task (`status: done`, record the commits). This clears
-   the last carry-forward from the `hivelog-visual-identity` project.
+1. [x] hivelog release **1.8.4** — `hivelog.info.yml` bumped,
+   `docs/project-management/releases/1.8.4.md` added, tag `1.8.4` +
+   GitHub release. cms2 pinned (`hivelog/hivelog: 1.8.4`, commit
+   `c37d599`); dashboard verified rendering under beeswax.
+2. [x] beeswax **1.0.2** (`deburca/beeswax`, commit `429e959`) —
+   dropped the `.hivelog-cbr-summary` `border` / `background` and the
+   `.hivelog-cbr-summary a` colour restatements. The
+   `body.hivelog-page` token bridge already maps
+   `--hivelog-border: var(--bw-hairline)`,
+   `--hivelog-surface-2: var(--bw-surface-2)` and
+   `--hivelog-btn-primary-bg: var(--bw-accent)`. Kept: `border-radius:
+   6px` and `color: var(--bw-ink-muted)` — the module still hard-codes
+   a 4px radius and `color: #374151` for that block, so those two stay
+   as genuine deviations.
+3. [x] Tag `1.0.2` + GitHub release on `deburca/beeswax`.
+4. [x] cms2 — `ddev composer update deburca/beeswax hivelog/hivelog`,
+   `ddev drush cr`; authenticated `/hivelog` fetch returns 200 with the
+   CBR summary, `hivelog-page` body class and stat tiles rendering.
+   `composer.lock` committed (`4bae395`); `hivelog` pin bump was
+   `c37d599`.
+5. [x] Task closed. Clears the last carry-forward from the
+   `hivelog-visual-identity` project.
 
 ## Implementation notes
 - Token-only, no brand in the module ([[0060-visual-identity-in-site-theme]]).
@@ -81,4 +82,6 @@ Mirrors how [[0062-module-themeability-tokens]] finished.
 - Project:: [[hivelog-visual-identity]]
 - Follows:: [[0062-module-themeability-tokens]]
 - Decisions:: [[0060-visual-identity-in-site-theme]], [[0012-action-button-design-system]]
-- Commits::
+- Commits:: `5058d0c` (PR #137, module side, css tokenisation); `4c9adf9`
+  (release 1.8.4); beeswax `429e959` (1.0.2 — drop restatement); cms2
+  `c37d599` (pin hivelog 1.8.4) + `4bae395` (update beeswax 1.0.2)

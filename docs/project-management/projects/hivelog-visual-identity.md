@@ -32,9 +32,11 @@ dark, realised entirely in the **beeswax** site theme
   bridge block and dropped its own body-class copy. "Theming HiveLog"
   section added to `AGENTS.md`.
 
-Carried forward (small, not blocking): `.hivelog-cbr-summary` in
-`css/hivelog.buttons.css` still hard-codes two greys — fold into the
-token surface next time buttons.css is touched.
+- **[[0070-tokenise-cbr-summary]]** — the last carry-forward from 0062:
+  `.hivelog-cbr-summary` in `css/hivelog.buttons.css` now reads
+  `--hivelog-border` / `--hivelog-surface-2` (hivelog 1.8.4, no stock
+  visual change); beeswax 1.0.2 dropped its matching restatement, cms2
+  pinned to both. Nothing else outstanding.
 
 ## Goal
 Give the HiveLog UI on the kbg site a single, coherent visual identity —
