@@ -1,12 +1,13 @@
 ---
 type: task
 tags: [hivelog/task]
-status: todo
+status: done
 priority: medium
 project: "[[hivelog-visual-identity]]"
 area: theme
 created: 2026-09-08
-branch:
+completed: 2026-09-08
+branch: (beeswax repo — deburca/beeswax main)
 release:
 depends-on:
 blocked-by:
@@ -14,8 +15,29 @@ blocked-by:
 # Task: beeswax theme — HiveLog visual skin
 
 > **Repo:** this work lands in the **cms2 / `verdigris`** project
-> (`web/themes/custom/beeswax`), not the hivelog module repo. Only this
-> tracking note and [[0062-module-themeability-tokens]] live here.
+> (`web/themes/custom/beeswax`, published as `drupal/beeswax`), not the
+> hivelog module repo. Only this tracking note and
+> [[0062-module-themeability-tokens]] live here.
+
+## Outcome
+Done. `beeswax` (Mercury 1.0.5 starterkit) carries the full
+Fraunces / IBM Plex + beeswax / pine identity and is the kbg default
+theme (`config/kbg/sync/system.theme.yml` → `default: beeswax`,
+committed). The skin is one plain sheet — `src/hivelog.css`, loaded
+from the theme's `global` library — plus the `--hivelog-btn-*` token
+override block, `src/fonts.css` (self-hosted woff2), the `--bw-*` /
+`--font-*` palette in `src/theme.css`, `src/tom-select.css` +
+`lib/hivelog-filter-select.js` for the filter selects, and
+`src/Hook/ThemeHooks.php::preprocessHtml()` adding the `hivelog-page`
+body class on `/hivelog…` paths. Every surface below was themed and
+verified on `kragebaekgaard.ddev.site`, light and dark, incrementally
+across the follow-up requests (dashboard → attention → tiles → split →
+entity tables → financial reports → filter forms → list headings →
+breadcrumbs → Tom Select → vertical tabs).
+
+Two things that needed the module rather than the theme were fed to
+[[0062-module-themeability-tokens]]: tokenising the non-button HiveLog
+colours, and moving the `hivelog-page` body class into the module.
 
 ## Context
 [[0060-visual-identity-in-site-theme]]: the HiveLog look lives in a site
@@ -38,54 +60,54 @@ Mercury starterkit facts:
   **default** theme. `beeswax` must become the kbg default.
 
 ## Acceptance criteria
-- [ ] **Fix location.** Move
+- [x] **Fix location.** Move
       `web/web/themes/custom/beeswax` → `web/themes/custom/beeswax`
       (`dr generate-theme --path` is relative to the Drupal root, so the
       theme was written one level too deep). `ddev drush cr` and confirm
       it appears on `admin/appearance`.
-- [ ] **Faces.** Replace Outfit / Inter with **Fraunces** (serif display),
+- [x] **Faces.** Replace Outfit / Inter with **Fraunces** (serif display),
       **IBM Plex Sans** (body / UI), **IBM Plex Mono** (numbers, chips,
       badges), self-hosted woff2 under `fonts/`. Update `src/fonts.css`
       (`@font-face`, `unicode-range`, `font-display: swap`) and the
       `--font-sans` / `--font-serif` / `--font-mono` / `--font-body`
       values in `src/theme.css`. Body = IBM Plex Sans; a heading /
       wordmark utility uses Fraunces.
-- [ ] **Palette.** Map the mockup's beeswax / pine values (see the table
+- [x] **Palette.** Map the mockup's beeswax / pine values (see the table
       in [[hivelog-visual-identity]]) onto the theme's `:root` and
       `.dark` token blocks — ground/surface/surface-2 → background / card
       / muted, ink → foreground, pine → primary & accent, critical →
       destructive, plus hairline / warning as their own vars. Keep the
       rest of Mercury's scale.
-- [ ] **`--hivelog-btn-*` override.** A `:root` block in the skin sheet
+- [x] **`--hivelog-btn-*` override.** A `:root` block in the skin sheet
       redefining the module's button tokens
       ([[0012-action-button-design-system]]) to the beeswax palette
       (default = surface-2 / ink, primary = pine, danger = critical) so
       every HiveLog button re-skins with no per-selector rules.
-- [ ] **HiveLog skin sheet(s).** Plain CSS targeting the module's classes,
+- [x] **HiveLog skin sheet(s).** Plain CSS targeting the module's classes,
       matching the mockup surface by surface:
-  - [ ] Dashboard shell + masthead — `.hivelog-dashboard`,
+  - [x] Dashboard shell + masthead — `.hivelog-dashboard`,
         `.hivelog-masthead__mark` (pine hexagon), `__word` (Fraunces),
         `__sub`; `.hivelog-dashboard__header` right-aligned strip,
         `.hivelog-dashboard__week` (mono badge), `.hivelog-cbr-summary`.
-  - [ ] "Needs attention" — `.hivelog-attention` panel + shadow,
+  - [x] "Needs attention" — `.hivelog-attention` panel + shadow,
         `__header` / `__count` (`--danger` / `--warning`), `__row`
         severity stripes, `__chip` (`--critical` / `--warning`, mono,
         uppercase), `__row-title`, `__ctx`.
-  - [ ] Stat tiles — `.hivelog-stat-tiles` hairline grid, the
+  - [x] Stat tiles — `.hivelog-stat-tiles` hairline grid, the
         `hivelog:stat-tile` SDC (`__value` mono, `__label` uppercase +
         tracking, `__sublabel` `--critical` / `--warning`).
-  - [ ] Upcoming / Recent — `.hivelog-dashboard__split`,
+  - [x] Upcoming / Recent — `.hivelog-dashboard__split`,
         `.hivelog-upcoming__*`, `.hivelog-recent__*` (mono wk / date
         columns, hairline row rules).
-  - [ ] Entity tables — the `hivelog:entity-table` SDC and
+  - [x] Entity tables — the `hivelog:entity-table` SDC and
         `hivelog/tables` detail tables: header emphasis, hairline rows,
         mono numerics, surface-2 header fill.
-  - [ ] Financial reports — `hivelog-inventory-report-table` /
+  - [x] Financial reports — `hivelog-inventory-report-table` /
         `-breakdown` / `-trend` on both
         `hivelog.apiary.inventory_cost_report` and
         `hivelog.apiaries.financial_report`; the year-selector
         `hivelog:button-group`; the "All apiaries" total row.
-  - [ ] Filter forms, list headings, breadcrumb trail.
+  - [x] Filter forms, list headings, breadcrumb trail.
 - [x] **Wire it up.** `src/hivelog.css` added to the theme's `global`
       library (`css: theme:`, after `theme.css`). `libraries-extend` was
       tried first but only fires for a library a controller attaches
@@ -105,9 +127,9 @@ Mercury starterkit facts:
       `default` (`admin` stays `gin`) via drush; **still needs a config
       export** in the cms2 / verdigris repo to persist. `npm run build`
       only if `src/main.css` changes (it hasn't).
-- [ ] **Verify** every surface in the list above against the mockup on
+- [x] **Verify** every surface in the list above against the mockup on
       `kragebaekgaard.ddev.site`, light and dark, at desktop and ≤768px.
-- [ ] Feed anything that needed a module change back to
+- [x] Feed anything that needed a module change back to
       [[0062-module-themeability-tokens]] rather than patching the module
       from the theme.
 
@@ -134,4 +156,6 @@ Mercury starterkit facts:
 - Decisions:: [[0060-visual-identity-in-site-theme]], [[0011-responsive-design-strategy]], [[0012-action-button-design-system]], [[0005-sdc-component-library]]
 - Follows:: [[0058-dashboard-visual-polish]], [[0059-combined-financial-report]]
 - Feeds:: [[0062-module-themeability-tokens]]
-- Commits::
+- Commits:: deburca/beeswax `b9e47be`…`e2a2210` (skin, fonts, palette,
+  filter-form, Tom Select, vertical tabs); hivelog PR #128 (ADR-0060
+  + this note); cms2 `config/kbg/sync/system.theme.yml`

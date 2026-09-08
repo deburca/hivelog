@@ -252,6 +252,51 @@ and compact sizing (`--hivelog-btn-compact-padding-*` tokens with a
 in `css/hivelog.buttons.css`. See ADR-0012 and ADR-0024 in
 `docs/project-management/decisions/`.
 
+### Theming HiveLog
+
+The module ships a complete, neutral look that works on any admin theme.
+A site theme recolours it by **redefining CSS custom properties**, never by
+restating the module's selectors (ADR-0060 — the brand lives in the theme,
+the module stays palette-free). The supported surface:
+
+- **Button tokens** — `--hivelog-btn-*` on `:root` in
+  `css/hivelog.responsive.css` (ADR-0012). `default` / `primary` / `danger`
+  backgrounds, borders, hover shades, sizing. `button.twig` emits only
+  semantic classes and consumes these.
+- **Surface / ink / line / severity tokens** — `--hivelog-*` on `:root` in
+  `css/hivelog.responsive.css` (task 0062):
+  `--hivelog-surface`, `--hivelog-surface-2`, `--hivelog-ground`,
+  `--hivelog-ink`, `--hivelog-ink-muted`, `--hivelog-ink-faint`,
+  `--hivelog-hairline`, `--hivelog-border`, `--hivelog-rule`,
+  `--hivelog-critical` / `--hivelog-critical-tint`,
+  `--hivelog-warning` / `--hivelog-warning-tint`.
+  Consumed by `css/hivelog.dashboard.css`, `css/hivelog.tables.css`,
+  `css/hivelog.filter-form.css`, `css/hivelog.forms.css` and the
+  `stat-tile` / `entity-table` SDC stylesheets. `css/hivelog.map.css`,
+  `.images.css` and `.weight-histogram.css` are not tokenised (chart /
+  media internals, not part of the themed chrome).
+- **Stable class names** — the `.hivelog-*` BEM classes on the dashboard
+  (`__masthead`, `__attention`, `__stat-tiles`, `__split`, …), the
+  `hivelog-inventory-report-table` / `-breakdown` / `-trend` report
+  tables, `.hivelog-filter-form`, `.hivelog-list-heading` and the SDC
+  roots (`.hivelog-entity-table`, `.hivelog-stat-tile`,
+  `.hivelog-button-group`). Treat these as API; renames go through a task.
+- **`hivelog-page` body class** — `hivelog_preprocess_html()` adds it on
+  every route whose path is under `/hivelog` (path match, because the
+  plain `entity.<type>.collection` routes are not named `hivelog.*` —
+  same gap `HivelogBreadcrumbBuilder` handles). A theme can scope
+  whole-page rules to `body.hivelog-page` without its own preprocess
+  hook. Themes still need a way to *attach* their skin sheet on the
+  collection pages (those carry no hivelog library): load it from the
+  theme's `global` library, not via `libraries-extend` — `libraries-extend`
+  only fires for a library a controller attaches directly, so it reaches
+  the dashboard but not the `EntityListBuilder` collections.
+
+The reference implementation is the **beeswax** theme
+(`drupal/beeswax`, kbg default): `src/hivelog.css` redefines the
+`--hivelog-*` tokens from its own `--bw-*` palette and adds only the
+handful of rules the token surface does not yet cover.
+
 ### Services
 
 Only one service is registered (`hivelog.services.yml`):

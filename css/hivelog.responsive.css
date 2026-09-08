@@ -41,6 +41,49 @@
   --hivelog-bp-wide: 1024px;
 
   /*
+   * Surface / ink / line tokens (ADR-0060, task 0062).
+   *
+   * The non-button HiveLog colours, lifted to :root so a site theme can
+   * recolour the dashboard, "needs attention" queue, stat tiles, the
+   * upcoming/recent split, entity tables and the financial-report tables
+   * by redefining ~a dozen properties instead of restating the module's
+   * selectors (as the beeswax skin had to for task 0061).
+   *
+   * Stock values match the hard-coded hex they replaced. Five
+   * near-duplicate values were consolidated to a shared token:
+   *   #e0e0e0, #eef0f2, #e5e5e5  -> --hivelog-hairline (#e5e7eb)
+   *   #fafafa                    -> --hivelog-surface-2 (#f9fafb)
+   *   #b3261e                    -> --hivelog-critical (#b91c1c)
+   * each a sub-perceptual few units on a 1px rule, a tint, or small
+   * text. No brand styling lives in the module — themes own the palette.
+   *
+   * Semantic roles:
+   *   surface      panels, cards, table body
+   *   surface-2    table-header fill, stat-tile hover
+   *   ground       neutral chip / inset fill
+   *   ink          primary readable text on panels
+   *   ink-muted    secondary text, meta columns
+   *   ink-faint    faint text, the default (non-severity) row stripe
+   *   hairline     1px dividers and panel borders
+   *   border       heavier control border (week badge, mobile cards)
+   *   rule         table thead underline (2px)
+   *   critical / warning + *-tint   the two severity pairs
+   */
+  --hivelog-surface:       #ffffff;
+  --hivelog-surface-2:     #f9fafb;
+  --hivelog-ground:        #f3f4f6;
+  --hivelog-ink:           #374151;
+  --hivelog-ink-muted:     #6b7280;
+  --hivelog-ink-faint:     #9ca3af;
+  --hivelog-hairline:      #e5e7eb;
+  --hivelog-border:        #d1d5db;
+  --hivelog-rule:          #ccc;
+  --hivelog-critical:      #b91c1c;
+  --hivelog-critical-tint: #fdeceb;
+  --hivelog-warning:       #a4630a;
+  --hivelog-warning-tint:  #f7ecd9;
+
+  /*
    * Button design tokens (ADR-0012, task 0010).
    *
    * css/hivelog.buttons.css is the single source of truth for button

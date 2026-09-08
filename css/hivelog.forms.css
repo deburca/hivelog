@@ -48,7 +48,7 @@
 .hivelog-entity-form .form-item .description {
   margin-top: 0.25rem;
   font-size: 0.85rem;
-  color: #6b7280;
+  color: var(--hivelog-ink-muted);
 }
 
 /* ------------------------------------------------------------------
@@ -93,7 +93,7 @@
 .hivelog-entity-form .form-actions {
   margin-top: 1.5rem;
   padding-top: 1rem;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--hivelog-hairline);
 }
 
 /* ------------------------------------------------------------------
