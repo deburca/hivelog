@@ -1,7 +1,7 @@
 ---
 type: project
 tags: [hivelog/project]
-status: planning
+status: done
 target:
 created: 2026-09-07
 ---
@@ -131,13 +131,12 @@ WHERE contains(string(project), this.file.name)
 SORT status asc, priority asc
 ```
 
-- [[0056-dashboard-landing-page]] — backlog (umbrella / entry task;
-  blocked on the open questions below and the IA ADR). Its acceptance
-  criteria hold the full breakdown below; split criteria 2–8 into their
-  own `00NN` task files if the work is picked up incrementally.
+- [[0056-dashboard-landing-page]] — **done**. Built directly under the
+  one task (not split) and shipped in seven CI-green PRs (#118–#123 plus
+  the test sweep); every acceptance criterion is checked off.
+  [[0057-dashboard-information-architecture]] is accepted.
 
-Breakdown (currently the acceptance criteria of
-[[0056-dashboard-landing-page]]):
+Breakdown (the acceptance criteria of [[0056-dashboard-landing-page]]):
 
 1. **Routing** — land [[0057-dashboard-information-architecture]]:
    `hivelog.dashboard` route at `/hivelog` + an empty

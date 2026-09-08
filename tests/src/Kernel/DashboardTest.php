@@ -234,7 +234,7 @@ class DashboardTest extends KernelTestBase {
   }
 
   /**
-   * Cache metadata: user context, apiary list tag, ISO-week-bounded max-age.
+   * Cache metadata: user context, apiary list tag, day-bounded max-age.
    */
   public function testCacheMetadata(): void {
     $this->makeCurrentUser();
@@ -244,7 +244,104 @@ class DashboardTest extends KernelTestBase {
     $this->assertContains('user', $build['#cache']['contexts']);
     $this->assertContains('apiary_list', $build['#cache']['tags']);
     $this->assertGreaterThan(0, $build['#cache']['max-age']);
-    $this->assertLessThanOrEqual(7 * 24 * 3600, $build['#cache']['max-age']);
+    // min(next ISO week, next midnight) — never more than a day out.
+    $this->assertLessThanOrEqual(24 * 3600, $build['#cache']['max-age']);
+  }
+
+  /**
+   * The render declares a list cache tag for every entity type it surfaces.
+   *
+   * `user` (per-user) subsumes `user.permissions`, so two users never
+   * share a cache entry — no separate permission context is needed.
+   */
+  public function testCacheMetadataCoversEverySurfacedList(): void {
+    $user = $this->makeCurrentUser();
+    Apiary::create(['name' => 'A1', 'uid' => $user->id()])->save();
+
+    $tags = $this->controller()->view()['#cache']['tags'];
+
+    foreach ([
+      'apiary_list',
+      'hive_list',
+      'hive_inspection_list',
+      'queen_observation_list',
+      'calendar_action_list',
+      'apiary_action_log_list',
+      'hive_action_log_list',
+      'inventory_item_list',
+      'inventory_purchase_list',
+      'inventory_usage_list',
+      'harvest_yield_list',
+      'product_list',
+    ] as $tag) {
+      $this->assertContains($tag, $tags, "missing cache tag: $tag");
+    }
+  }
+
+  /**
+   * The roll-up only reflects apiaries the current user may view.
+   */
+  public function testAccessFilteredRollUp(): void {
+    $week = $this->weekOrSkipEdge();
+
+    // The uid-1 superuser is a placeholder, not the account under test.
+    User::create(['name' => 'root', 'mail' => 'root@example.com'])->save();
+
+    $role = Role::create(['id' => 'owner_only', 'label' => 'Owner only']);
+    $role->grantPermission('view own apiary');
+    $role->grantPermission('view own calendar action');
+    $role->save();
+
+    $me = User::create(['name' => 'me', 'mail' => 'me@example.com']);
+    $me->save();
+    $me->addRole('owner_only');
+    $me->save();
+    $other = User::create(['name' => 'other', 'mail' => 'other@example.com']);
+    $other->save();
+
+    \Drupal::currentUser()->setAccount($other);
+    $theirs = Apiary::create(['name' => 'Their Apiary', 'uid' => $other->id()]);
+    $theirs->save();
+
+    \Drupal::currentUser()->setAccount($me);
+    $mine = Apiary::create(['name' => 'My Apiary', 'uid' => $me->id()]);
+    $mine->save();
+
+    // Both apiary saves seeded a starter calendar; clear the lot, then
+    // add exactly one overdue action per apiary.
+    $this->clearSeededCalendarActions();
+    foreach ([$mine->id() => 'My overdue task', $theirs->id() => 'Their overdue task'] as $apiary_id => $title) {
+      CalendarAction::create([
+        'apiary' => $apiary_id,
+        'title' => $title,
+        'description' => 'x',
+        'week_start' => max(1, $week - 3),
+        'week_end' => $week - 1,
+        'scope' => 'apiary',
+      ])->save();
+    }
+
+    $html = $this->renderBuild($this->controller()->view());
+
+    $this->assertStringContainsString('My overdue task', $html);
+    $this->assertStringContainsString('My Apiary', $html);
+    $this->assertStringNotContainsString('Their overdue task', $html);
+    $this->assertStringNotContainsString('Their Apiary', $html);
+  }
+
+  /**
+   * Every widget shows its own empty state when there is nothing to show.
+   */
+  public function testEmptyWidgetStates(): void {
+    $user = $this->makeCurrentUser();
+    Apiary::create(['name' => 'Quiet Apiary', 'uid' => $user->id()])->save();
+    $this->clearSeededCalendarActions();
+
+    $html = $this->renderBuild($this->controller()->view());
+
+    $this->assertStringContainsString('All caught up for week ' . ((int) date('W')), $html);
+    $this->assertStringContainsString('Nothing scheduled for the next four weeks', $html);
+    $this->assertStringContainsString('No activity recorded yet', $html);
   }
 
   // ---------------------------------------------------------------------------
