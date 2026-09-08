@@ -21,13 +21,15 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * The HiveLog dashboard — the module's landing page at /hivelog.
  *
- * See ADR-0057 and task 0056. Criterion 2 builds the shell: the header
- * strip (current ISO week + the CBR summary line, moved here from
- * ApiaryListBuilder) and the first-run welcome state. The operational
- * widgets — needs-attention queue, stat tiles, upcoming, recent activity,
- * apiaries summary — are added by criteria 3–6; the stat-tile SDC and the
- * hivelog/dashboard CSS library land here so those criteria only add
- * markup.
+ * See ADR-0057 and task 0056. view() renders, in order: the header strip
+ * (current ISO week + the CBR summary line, moved here from
+ * ApiaryListBuilder), and then either the first-run welcome card (no
+ * visible apiaries) or the operational widgets — the "Needs attention"
+ * queue, the six stat tiles, the "Upcoming" / "Recent activity" split,
+ * and the closing "Apiaries" summary. One seasonal pass
+ * (collectSeasonalAlerts()) feeds the queue, the "Open seasonal tasks"
+ * tile and the apiaries section; low stock (collectLowStockAlerts())
+ * likewise.
  */
 class DashboardController extends ControllerBase {
 
@@ -100,10 +102,10 @@ class DashboardController extends ControllerBase {
       $low_stock = $this->collectLowStockAlerts($apiaries, $cache);
 
       $build['needs_attention'] = $this->buildNeedsAttention(
-        array_merge($seasonal['alerts'], $low_stock),
+        array_merge($seasonal['alerts'], $low_stock['alerts']),
         $current_week,
       ) + ['#weight' => 0];
-      $build['stat_tiles'] = $this->buildStatTiles($cache, $apiaries, $seasonal, count($low_stock), $year) + ['#weight' => 10];
+      $build['stat_tiles'] = $this->buildStatTiles($cache, $apiaries, $seasonal, count($low_stock['alerts']), $year) + ['#weight' => 10];
       $build['activity'] = [
         '#type' => 'container',
         '#attributes' => ['class' => ['hivelog-dashboard__split']],
@@ -111,8 +113,12 @@ class DashboardController extends ControllerBase {
         'upcoming' => $this->buildUpcoming($cache, $apiaries, $year, $current_week),
         'recent' => $this->buildRecentActivity($cache),
       ];
-      // Interim placeholder for the apiaries summary still to come (criterion 6).
-      $build['body'] = $this->buildInterimBody() + ['#weight' => 100];
+      $build['apiaries_section'] = $this->buildApiariesSection(
+        $cache,
+        $apiaries,
+        $seasonal['by_apiary'],
+        $low_stock['by_apiary'],
+      ) + ['#weight' => 40];
     }
 
     // - user: the CBR line is per-user (not per-permission), and it also
@@ -233,25 +239,170 @@ class DashboardController extends ControllerBase {
   }
 
   /**
-   * Builds the interim body shown until the real widgets land (criteria 3–6).
+   * Builds the closing "Apiaries" section: one compact row per apiary.
+   *
+   * Columns: name (linked), hive count, open seasonal tasks (with an
+   * overdue callout), low-stock item count, and the date of the most
+   * recent inspection or action log. Plus an "Add Apiary" action.
+   *
+   * @param \Drupal\Core\Cache\CacheableMetadata $cache
+   *   Collects list cache tags and per-row dependencies.
+   * @param \Drupal\hivelog\Entity\Apiary[] $apiaries
+   *   Viewable apiaries keyed by id.
+   * @param array<int, array{open: int, overdue: int}> $open_by_apiary
+   *   Open seasonal-task tallies from collectSeasonalAlerts().
+   * @param array<int, int> $low_stock_by_apiary
+   *   Low-stock counts from collectLowStockAlerts().
    */
-  protected function buildInterimBody(): array {
+  protected function buildApiariesSection(CacheableMetadata $cache, array $apiaries, array $open_by_apiary, array $low_stock_by_apiary): array {
+    $etm = $this->entityTypeManager;
+    $apiary_ids = array_keys($apiaries);
+
+    $cache->addCacheTags($etm->getDefinition('hive')->getListCacheTags());
+    $cache->addCacheTags($etm->getDefinition('hive_inspection')->getListCacheTags());
+    $cache->addCacheTags($etm->getDefinition('apiary_action_log')->getListCacheTags());
+    $cache->addCacheTags($etm->getDefinition('hive_action_log')->getListCacheTags());
+
+    $hive_counts = array_fill_keys($apiary_ids, 0);
+    $hive_ids = $etm->getStorage('hive')->getQuery()
+      ->accessCheck(TRUE)
+      ->condition('apiary', $apiary_ids, 'IN')
+      ->execute();
+    $hive_apiary = [];
+    foreach ($hive_ids ? $etm->getStorage('hive')->loadMultiple($hive_ids) : [] as $hive) {
+      $aid = (int) $hive->get('apiary')->target_id;
+      $hive_counts[$aid]++;
+      $hive_apiary[(int) $hive->id()] = $aid;
+    }
+
+    $last_activity = $this->lastActivityByApiary($apiary_ids, array_keys($hive_apiary), $hive_apiary);
+
+    $rows = [];
+    foreach ($apiaries as $id => $apiary) {
+      $cache->addCacheableDependency($apiary);
+      $open = $open_by_apiary[$id]['open'] ?? 0;
+      $overdue = $open_by_apiary[$id]['overdue'] ?? 0;
+      $low = $low_stock_by_apiary[$id] ?? 0;
+
+      $rows[] = [
+        'cells' => [
+          $apiary->toLink()->toString(),
+          (string) ($hive_counts[$id] ?? 0),
+          $overdue
+            ? (string) $this->t('@open (@overdue overdue)', ['@open' => $open, '@overdue' => $overdue])
+            : (string) $open,
+          $low ? (string) $low : '—',
+          isset($last_activity[$id])
+            ? $this->dateFormatter->format($last_activity[$id], 'custom', 'j M')
+            : '—',
+        ],
+      ];
+    }
+
     return [
       '#type' => 'container',
-      'intro' => [
-        '#type' => 'html_tag',
-        '#tag' => 'p',
-        '#value' => $this->t('Stat tiles, an upcoming view and recent activity are coming next. For now, the rest lives in the menu.'),
+      '#attributes' => ['class' => ['hivelog-dashboard__section']],
+      'head' => [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['hivelog-dashboard__section-head']],
+        'heading' => [
+          '#type' => 'html_tag',
+          '#tag' => 'h2',
+          '#attributes' => ['class' => ['hivelog-dashboard__block-heading']],
+          '#value' => $this->t('Apiaries'),
+        ],
+        'add' => [
+          '#type' => 'component',
+          '#component' => 'hivelog:button',
+          '#props' => [
+            'label' => (string) $this->t('Add Apiary'),
+            'url' => Url::fromRoute('entity.apiary.add_form')->toString(),
+            'variant' => 'primary',
+          ],
+        ],
       ],
-      'apiaries' => [
+      'table' => [
         '#type' => 'component',
-        '#component' => 'hivelog:button',
+        '#component' => 'hivelog:entity-table',
         '#props' => [
-          'label' => (string) $this->t('Go to Apiaries'),
-          'url' => Url::fromRoute('entity.apiary.collection')->toString(),
+          'headers' => [
+            (string) $this->t('Apiary'),
+            (string) $this->t('Hives'),
+            (string) $this->t('Open tasks'),
+            (string) $this->t('Low stock'),
+            (string) $this->t('Last activity'),
+          ],
+          'rows' => $rows,
+          'empty_message' => (string) $this->t('No apiaries yet.'),
         ],
       ],
     ];
+  }
+
+  /**
+   * Most-recent-activity timestamp per apiary (inspection date or log time).
+   *
+   * @param int[] $apiary_ids
+   *   Apiary ids to cover.
+   * @param int[] $hive_ids
+   *   Every visible hive id across those apiaries.
+   * @param array<int, int> $hive_apiary
+   *   Map of hive id → apiary id.
+   *
+   * @return array<int, int>
+   *   Apiary id → the newest activity timestamp (only apiaries with any).
+   */
+  protected function lastActivityByApiary(array $apiary_ids, array $hive_ids, array $hive_apiary): array {
+    $etm = $this->entityTypeManager;
+    $limit = max(20, count($apiary_ids) * 10);
+    $last = [];
+
+    $note = static function (array &$last, int $apiary_id, int $ts): void {
+      if (!isset($last[$apiary_id]) || $ts > $last[$apiary_id]) {
+        $last[$apiary_id] = $ts;
+      }
+    };
+
+    if ($hive_ids) {
+      $ins_ids = $etm->getStorage('hive_inspection')->getQuery()
+        ->accessCheck(TRUE)
+        ->condition('hive', $hive_ids, 'IN')
+        ->sort('inspection_date', 'DESC')
+        ->range(0, $limit)
+        ->execute();
+      foreach ($ins_ids ? $etm->getStorage('hive_inspection')->loadMultiple($ins_ids) : [] as $inspection) {
+        $aid = $hive_apiary[(int) $inspection->get('hive')->target_id] ?? NULL;
+        $date = (string) $inspection->get('inspection_date')->value;
+        if ($aid !== NULL && $date !== '') {
+          $note($last, $aid, (int) strtotime($date));
+        }
+      }
+
+      $hlog_ids = $etm->getStorage('hive_action_log')->getQuery()
+        ->accessCheck(TRUE)
+        ->condition('hive', $hive_ids, 'IN')
+        ->sort('created', 'DESC')
+        ->range(0, $limit)
+        ->execute();
+      foreach ($hlog_ids ? $etm->getStorage('hive_action_log')->loadMultiple($hlog_ids) : [] as $log) {
+        $aid = $hive_apiary[(int) $log->get('hive')->target_id] ?? NULL;
+        if ($aid !== NULL) {
+          $note($last, $aid, (int) $log->get('created')->value);
+        }
+      }
+    }
+
+    $alog_ids = $etm->getStorage('apiary_action_log')->getQuery()
+      ->accessCheck(TRUE)
+      ->condition('apiary', $apiary_ids, 'IN')
+      ->sort('created', 'DESC')
+      ->range(0, $limit)
+      ->execute();
+    foreach ($alog_ids ? $etm->getStorage('apiary_action_log')->loadMultiple($alog_ids) : [] as $log) {
+      $note($last, (int) $log->get('apiary')->target_id, (int) $log->get('created')->value);
+    }
+
+    return $last;
   }
 
   /**
@@ -379,15 +530,17 @@ class DashboardController extends ControllerBase {
    * @param \Drupal\Core\Cache\CacheableMetadata $cache
    *   Collects list cache tags and per-row dependencies.
    *
-   * @return array{alerts: array[], open_total: int, open_overdue: int}
+   * @return array{alerts: array[], open_total: int, open_overdue: int, by_apiary: array<int, array{open: int, overdue: int}>}
    *   `alerts` are the overdue / due row descriptors (see
    *   buildAttentionRow()); `open_total` / `open_overdue` feed the
-   *   "Open seasonal tasks" stat tile.
+   *   "Open seasonal tasks" stat tile; `by_apiary` (keyed by apiary id)
+   *   feeds the closing "Apiaries" section.
    */
   protected function collectSeasonalAlerts(array $apiaries, int $year, int $current_week, CacheableMetadata $cache): array {
     $etm = $this->entityTypeManager;
     $apiary_ids = array_keys($apiaries);
-    $empty = ['alerts' => [], 'open_total' => 0, 'open_overdue' => 0];
+    $by_apiary = array_fill_keys($apiary_ids, ['open' => 0, 'overdue' => 0]);
+    $empty = ['alerts' => [], 'open_total' => 0, 'open_overdue' => 0, 'by_apiary' => $by_apiary];
 
     $action_ids = $etm->getStorage('calendar_action')->getQuery()
       ->accessCheck(TRUE)
@@ -425,9 +578,12 @@ class DashboardController extends ControllerBase {
         if ($log && $log->get('status')->value !== 'pending') {
           continue;
         }
+        $apiary_id = (int) $action->get('apiary')->target_id;
         $open_total++;
+        $by_apiary[$apiary_id]['open']++;
         if ($current_week > $this->effectiveWeekEnd($action)) {
           $open_overdue++;
+          $by_apiary[$apiary_id]['overdue']++;
         }
         $timing = $this->attentionTiming($action, $current_week);
         if (!$timing) {
@@ -437,7 +593,7 @@ class DashboardController extends ControllerBase {
         if ($log) {
           $cache->addCacheableDependency($log);
         }
-        $apiary = $apiaries[(int) $action->get('apiary')->target_id];
+        $apiary = $apiaries[$apiary_id];
         $alerts[] = [
           'severity' => $timing['severity'],
           'chip' => $timing['chip'],
@@ -476,8 +632,10 @@ class DashboardController extends ControllerBase {
               continue;
             }
             $open_total++;
+            $by_apiary[$hive_apiary_id]['open']++;
             if ($current_week > $this->effectiveWeekEnd($action)) {
               $open_overdue++;
+              $by_apiary[$hive_apiary_id]['overdue']++;
             }
             $timing = $this->attentionTiming($action, $current_week);
             if (!$timing) {
@@ -509,6 +667,7 @@ class DashboardController extends ControllerBase {
       'alerts' => $alerts,
       'open_total' => $open_total,
       'open_overdue' => $open_overdue,
+      'by_apiary' => $by_apiary,
     ];
   }
 
@@ -520,12 +679,16 @@ class DashboardController extends ControllerBase {
    * @param \Drupal\Core\Cache\CacheableMetadata $cache
    *   Collects list cache tags and per-row dependencies.
    *
-   * @return array[]
-   *   Alert descriptors (see buildAttentionRow()).
+   * @return array{alerts: array[], by_apiary: array<int, int>}
+   *   `alerts` are the row descriptors (see buildAttentionRow());
+   *   `by_apiary` is the low-stock count keyed by apiary id, for the
+   *   closing "Apiaries" section.
    */
   protected function collectLowStockAlerts(array $apiaries, CacheableMetadata $cache): array {
     $etm = $this->entityTypeManager;
     $apiary_ids = array_keys($apiaries);
+    $by_apiary = array_fill_keys($apiary_ids, 0);
+    $empty = ['alerts' => [], 'by_apiary' => $by_apiary];
 
     $ids = $etm->getStorage('inventory_item')->getQuery()
       ->accessCheck(TRUE)
@@ -535,14 +698,14 @@ class DashboardController extends ControllerBase {
       ->sort('name', 'ASC')
       ->execute();
     if (!$ids) {
-      return [];
+      return $empty;
     }
     $items = array_filter(
       $etm->getStorage('inventory_item')->loadMultiple($ids),
       fn($item) => $item->access('view')
     );
     if (!$items) {
-      return [];
+      return $empty;
     }
 
     // Stock on hand is derived from purchases minus usage, so a purchase
@@ -558,7 +721,9 @@ class DashboardController extends ControllerBase {
         continue;
       }
       $cache->addCacheableDependency($item);
-      $apiary = $apiaries[(int) $item->get('apiary')->target_id];
+      $apiary_id = (int) $item->get('apiary')->target_id;
+      $by_apiary[$apiary_id]++;
+      $apiary = $apiaries[$apiary_id];
       $stock = $item->getStockOnHand();
       $detail = $this->t('@stock @unit on hand · reorder at @threshold', [
         '@stock' => $this->trimDecimal($stock ?? 0.0),
@@ -576,7 +741,7 @@ class DashboardController extends ControllerBase {
       ];
     }
 
-    return $alerts;
+    return ['alerts' => $alerts, 'by_apiary' => $by_apiary];
   }
 
   /**

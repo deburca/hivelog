@@ -80,3 +80,4 @@ dashboard:
   dependencies:
     - hivelog/buttons
     - hivelog/responsive
+    - hivelog/tables

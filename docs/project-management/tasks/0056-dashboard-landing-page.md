@@ -178,11 +178,28 @@ Design reference: `projects/dashboard-landing-page-mockup.html` and
       kernel tests (window in/out, reported-skip, empty state, merge +
       ordering + linking, harvest-yield fallback link, cache tags). phpcs
       clean locally.
-- [ ] **"Apiaries" section.** Compact apiary summary as the closing
+- [x] **"Apiaries" section.** Compact apiary summary as the closing
       section (name, hive count, open-tasks badge with overdue callout,
       low-stock badge, last activity), plus "Add Apiary". Strip the CBR
       block from `ApiaryListBuilder::render()` (now only heading + table
       at `/hivelog/apiaries`).
+      **Done** (branch `feature/0056-apiaries-section`): the CBR strip
+      already landed in the Shell criterion. `collectSeasonalAlerts()` /
+      `collectLowStockAlerts()` now also return a per-apiary tally
+      (`by_apiary`) from the same pass. New `buildApiariesSection()` +
+      `lastActivityByApiary()` render a `hivelog:entity-table` — one row
+      per visible apiary: linked name · hive count · open tasks
+      (`N (M overdue)`) · low-stock count or `—` · most recent inspection
+      date / action-log time or `—` — under a heading with an "Add
+      Apiary" primary button. `hivelog/dashboard` library gains a
+      `hivelog/tables` dep; `.hivelog-dashboard__section-head` CSS added.
+      `buildInterimBody()` removed; `view()` renders the section at weight
+      40. `DashboardTest` gains 5 kernel tests (per-apiary rows + hive
+      counts, open-tasks overdue callout, low-stock cell, last-activity
+      date, last-activity empty); `testWidgetsShownWhenApiariesExist`
+      updated ("Add Apiary" / apiary name instead of the removed "Go to
+      Apiaries"). phpcs clean locally. **Task 0056 feature work complete;
+      criterion 7 is the final sweep.**
 - [ ] **Cache metadata** ([[0009-render-cacheability-discipline]]):
       `user.permissions` + `user` contexts; list cache tags for every
       surfaced entity type (hive, hive_inspection, queen,
