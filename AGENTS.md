@@ -243,22 +243,32 @@ in `css/hivelog.buttons.css`. See ADR-0012 and ADR-0024 in
 
 Only one service is registered (`hivelog.services.yml`):
 `hivelog.breadcrumb` — a `BreadcrumbBuilder` with priority **1004** that produces
-the Apiary → Hive → … trail on any hivelog route. `applies()` matches by
-route-name prefix (`entity.apiary.`, `entity.hive.`, `entity.hive_inspection.`,
-`entity.queen.`, `entity.queen_observation.`, `hivelog.`). When adding new
-routes under `/hivelog/...` make sure `applies()` still matches them — and
-explicitly exclude any non-page routes (e.g. file-download endpoints) so
-they do not get an incorrect breadcrumb.
+the Apiary → Hive → … trail on any hivelog route. Since task 0067 `applies()`
+matches **by path**: every route whose path is `/hivelog` or under `/hivelog/`
+(the module's own entity routes, the `hivelog.*` controllers, and bolt-on
+routes such as `layout_builder.overrides.<entity>.*`), minus an explicit
+`$non_page_routes` exclusion list for file-download endpoints. New routes under
+`/hivelog/...` are covered automatically; only add a `$non_page_routes` entry
+for a route that must NOT get a breadcrumb.
 
-Every hivelog *list / report* page ends its trail with the page's own name as
-a terminal crumb (a self-link the theme renders as plain text), so all such
-pages read `Home › HiveLog › <Name>` consistently — the flat collections and
-the cross-apiary report via a `$leaf_pages` map in `build()`, the per-apiary
-report and full-calendar pages via a `$apiary_page_crumbs` map after the
-apiary ancestor link. Add a new collection / report route to the relevant map
-so it does not stop at `Home › HiveLog`. (The inventory-item / -purchase /
-product collections are *not* matched by `applies()` and get the same shape
-from the menu breadcrumb instead — keep them consistent if that ever changes.)
+`build()` shape:
+- **Collections + the combined report** end with their own name as a terminal
+  crumb (`$leaf_pages` map): `Home › HiveLog › <Plural>`.
+- **Site-wide `entity.<type>.add_form`** (no parent in the path) hang off their
+  collection: `Home › HiveLog › <Plural>`.
+- **Canonical / edit / delete / Layout Builder** pages thread the entity's
+  ancestor chain to the apiary, ending with the entity's own label:
+  `Home › HiveLog › <Apiary> [› <Hive> …] › <Entity>`. A missing ancestor
+  (deleted apiary, unassigned queen) just shortens the trail.
+- **Per-apiary report / full-calendar** add a named terminal after the apiary
+  link (`$apiary_page_crumbs` map).
+- **Calendar-action requirement / yield** edit-delete pages thread
+  `Apiary → Calendar action → <sub-entity>` with a non-linked (`<nolink>`)
+  terminal (these have no canonical page).
+
+Adding a new hivelog entity type: give it a `build()` block that resolves its
+`apiary` (directly or via its parent) and adds its `entity.<type>.canonical`
+crumb — mirror the `product` / `inventory_item` / `inventory_purchase` loop.
 
 The priority of 1004 is intentional — it must exceed the `easy_breadcrumb`
 module's priority of 1003, which is commonly installed on Drupal sites and

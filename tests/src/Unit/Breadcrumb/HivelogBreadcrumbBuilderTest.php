@@ -8,6 +8,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\hivelog\Breadcrumb\HivelogBreadcrumbBuilder;
 use Drupal\Tests\UnitTestCase;
+use Symfony\Component\Routing\Route;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -362,8 +363,172 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
       'calendar actions' => ['entity.calendar_action.collection', 'Calendar Actions'],
       'hive action logs' => ['entity.hive_action_log.collection', 'Hive Action Logs'],
       'apiary action logs' => ['entity.apiary_action_log.collection', 'Apiary Action Logs'],
+      'inventory items' => ['entity.inventory_item.collection', 'Inventory Items'],
+      'inventory purchases' => ['entity.inventory_purchase.collection', 'Inventory Purchases'],
+      'products' => ['entity.product.collection', 'Products'],
       'combined financial report' => ['hivelog.apiaries.financial_report', 'Financial Report: All Apiaries'],
     ];
+  }
+
+  /**
+   * Site-wide add forms hang off their collection: Home › HiveLog › <Plural>.
+   */
+  #[DataProvider('addFormProvider')]
+  public function testBuildAddFormThreadsToCollection(string $route_name, string $collection_route, string $text): void {
+    $route_match = $this->createRouteMatch($route_name);
+    $route_match->method('getParameter')->willReturn(NULL);
+
+    $links = $this->builder->build($route_match)->getLinks();
+
+    $this->assertCount(3, $links);
+    $this->assertEquals($text, (string) $links[2]->getText());
+    $this->assertEquals($collection_route, $links[2]->getUrl()->getRouteName());
+  }
+
+  /**
+   * Data provider: global add-form routes → their collection crumb.
+   */
+  public static function addFormProvider(): array {
+    return [
+      'apiary' => [
+        'entity.apiary.add_form', 'entity.apiary.collection', 'Apiaries',
+      ],
+      'inventory item' => [
+        'entity.inventory_item.add_form',
+        'entity.inventory_item.collection',
+        'Inventory Items',
+      ],
+      'inventory purchase' => [
+        'entity.inventory_purchase.add_form',
+        'entity.inventory_purchase.collection',
+        'Inventory Purchases',
+      ],
+      'product' => [
+        'entity.product.add_form', 'entity.product.collection', 'Products',
+      ],
+    ];
+  }
+
+  /**
+   * Inventory item / purchase / product canonical: Home › HiveLog › <Apiary> › <Entity>.
+   */
+  #[DataProvider('apiaryScopedEntityProvider')]
+  public function testBuildApiaryScopedEntityCanonical(string $entity_type, string $param, string $canonical_route): void {
+    $apiary = $this->createApiaryMock(7, 'Ravnholt Home');
+    $entity = $this->createApiaryScopedMock($entity_type, 12, 'Honey', $apiary);
+    $route_match = $this->createRouteMatch($canonical_route);
+    $route_match->method('getParameter')->willReturnMap([
+      ['apiary', NULL],
+      ['hive', NULL],
+      [$param, $entity],
+    ]);
+
+    $breadcrumb = $this->builder->build($route_match);
+    $links = $breadcrumb->getLinks();
+
+    $this->assertCount(4, $links);
+    $this->assertEquals('Ravnholt Home', (string) $links[2]->getText());
+    $this->assertEquals('entity.apiary.canonical', $links[2]->getUrl()->getRouteName());
+    $this->assertEquals('Honey', (string) $links[3]->getText());
+    $this->assertEquals($canonical_route, $links[3]->getUrl()->getRouteName());
+    $this->assertContains("$entity_type:12", $breadcrumb->getCacheTags());
+    $this->assertContains('apiary:7', $breadcrumb->getCacheTags());
+  }
+
+  /**
+   * Data provider: the three apiary-scoped catalog / ledger entities.
+   */
+  public static function apiaryScopedEntityProvider(): array {
+    return [
+      'inventory item' => ['inventory_item', 'inventory_item', 'entity.inventory_item.canonical'],
+      'inventory purchase' => ['inventory_purchase', 'inventory_purchase', 'entity.inventory_purchase.canonical'],
+      'product' => ['product', 'product', 'entity.product.canonical'],
+    ];
+  }
+
+  /**
+   * A product's Layout Builder override page still threads the full trail.
+   */
+  public function testBuildLayoutBuilderRouteThreadsEntityTrail(): void {
+    $apiary = $this->createApiaryMock(7, 'Ravnholt Home');
+    $product = $this->createApiaryScopedMock('product', 12, 'Honey', $apiary);
+    $route_match = $this->createRouteMatch('layout_builder.overrides.product.view', '/hivelog/product/12/layout');
+    $route_match->method('getParameter')->willReturnMap([
+      ['apiary', NULL],
+      ['hive', NULL],
+      ['product', $product],
+    ]);
+
+    $this->assertTrue($this->builder->applies($route_match));
+    $links = $this->builder->build($route_match)->getLinks();
+    $this->assertCount(4, $links);
+    $this->assertEquals('Honey', (string) $links[3]->getText());
+  }
+
+  /**
+   * Requirement / yield edit: Home › HiveLog › <Apiary> › <Action> › <Sub>.
+   */
+  #[DataProvider('calendarActionSubEntityProvider')]
+  public function testBuildCalendarActionSubEntityEdit(string $entity_type, string $param, string $route_name): void {
+    $apiary = $this->createApiaryMock(1, 'Home Apiary');
+    $action = $this->createCalendarActionMock(40, 'Feed winter stores', $apiary);
+    $sub = $this->createSubEntityMock($entity_type, 5, 'Syrup × 6 kg', $action);
+    $route_match = $this->createRouteMatch($route_name);
+    $route_match->method('getParameter')->willReturnMap([
+      ['apiary', NULL],
+      ['hive', NULL],
+      ['calendar_action', NULL],
+      [$param, $sub],
+    ]);
+
+    $links = $this->builder->build($route_match)->getLinks();
+
+    $this->assertCount(5, $links);
+    $this->assertEquals('Home Apiary', (string) $links[2]->getText());
+    $this->assertEquals('Feed winter stores', (string) $links[3]->getText());
+    $this->assertEquals('entity.calendar_action.canonical', $links[3]->getUrl()->getRouteName());
+    $this->assertEquals('Syrup × 6 kg', (string) $links[4]->getText());
+    $this->assertFalse($links[4]->getUrl()->isRouted() && $links[4]->getUrl()->getRouteName() !== '<nolink>');
+  }
+
+  /**
+   * Data provider: the two calendar-action sub-entities (edit routes).
+   */
+  public static function calendarActionSubEntityProvider(): array {
+    return [
+      'requirement' => [
+        'calendar_action_item_requirement',
+        'calendar_action_item_requirement',
+        'entity.calendar_action_item_requirement.edit_form',
+      ],
+      'yield' => [
+        'calendar_action_product_yield',
+        'calendar_action_product_yield',
+        'entity.calendar_action_product_yield.edit_form',
+      ],
+    ];
+  }
+
+  /**
+   * The requirement "add" form (nested under a calendar action) threads it.
+   */
+  public function testBuildRequirementAddThreadsCalendarAction(): void {
+    $apiary = $this->createApiaryMock(1, 'Home Apiary');
+    $action = $this->createCalendarActionMock(40, 'Feed winter stores', $apiary);
+    $route_match = $this->createRouteMatch('hivelog.calendar_action_item_requirement.add');
+    $route_match->method('getParameter')->willReturnMap([
+      ['apiary', NULL],
+      ['hive', NULL],
+      ['hive_action_log', NULL],
+      ['apiary_action_log', NULL],
+      ['calendar_action', $action],
+    ]);
+
+    $links = $this->builder->build($route_match)->getLinks();
+
+    $this->assertCount(4, $links);
+    $this->assertEquals('Feed winter stores', (string) $links[3]->getText());
+    $this->assertEquals('entity.calendar_action.canonical', $links[3]->getUrl()->getRouteName());
   }
 
   /**
@@ -1246,9 +1411,22 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   /**
    * Creates a mock RouteMatchInterface for the given route name.
    */
-  private function createRouteMatch(string $route_name): RouteMatchInterface {
+  private function createRouteMatch(string $route_name, ?string $path = NULL): RouteMatchInterface {
+    if ($path === NULL) {
+      // applies() now matches on the route's path; give unrelated routes a
+      // path outside /hivelog and everything else a path inside it.
+      $unrelated = [
+        '<front>' => '/',
+        'entity.node.canonical' => '/node/1',
+        'user.login' => '/user/login',
+        'system.admin_structure' => '/admin/structure',
+        'user.register' => '/user/register',
+      ];
+      $path = $unrelated[$route_name] ?? '/hivelog/_test';
+    }
     $route_match = $this->createMock(RouteMatchInterface::class);
     $route_match->method('getRouteName')->willReturn($route_name);
+    $route_match->method('getRouteObject')->willReturn(new Route($path));
     return $route_match;
   }
 
@@ -1407,6 +1585,42 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $log->method('get')->with('apiary')->willReturn($apiary_ref);
 
     return $log;
+  }
+
+  /**
+   * Creates a mock apiary-scoped entity (inventory item / purchase / product).
+   */
+  private function createApiaryScopedMock(string $entity_type_id, int $id, string $label, ContentEntityInterface $apiary): ContentEntityInterface {
+    $entity = $this->createMock(ContentEntityInterface::class);
+    $entity->method('id')->willReturn($id);
+    $entity->method('label')->willReturn($label);
+    $entity->method('getCacheTags')->willReturn(["$entity_type_id:$id"]);
+    $entity->method('getCacheContexts')->willReturn([]);
+    $entity->method('getCacheMaxAge')->willReturn(-1);
+
+    $apiary_ref = new \stdClass();
+    $apiary_ref->entity = $apiary;
+    $entity->method('get')->with('apiary')->willReturn($apiary_ref);
+
+    return $entity;
+  }
+
+  /**
+   * Creates a mock calendar-action sub-entity (requirement / yield).
+   */
+  private function createSubEntityMock(string $entity_type_id, int $id, string $label, ContentEntityInterface $calendar_action): ContentEntityInterface {
+    $entity = $this->createMock(ContentEntityInterface::class);
+    $entity->method('id')->willReturn($id);
+    $entity->method('label')->willReturn($label);
+    $entity->method('getCacheTags')->willReturn(["$entity_type_id:$id"]);
+    $entity->method('getCacheContexts')->willReturn([]);
+    $entity->method('getCacheMaxAge')->willReturn(-1);
+
+    $action_ref = new \stdClass();
+    $action_ref->entity = $calendar_action;
+    $entity->method('get')->with('calendar_action')->willReturn($action_ref);
+
+    return $entity;
   }
 
 }
