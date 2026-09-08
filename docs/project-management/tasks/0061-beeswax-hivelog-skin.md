@@ -89,10 +89,18 @@ Mercury starterkit facts:
 - [x] **Wire it up.** `src/hivelog.css` added to the theme's `global`
       library (`css: theme:`, after `theme.css`). `libraries-extend` was
       tried first but only fires for a library a controller attaches
-      directly — it reached the dashboard but not the entity-list pages,
-      which pull hivelog CSS only through the `hivelog:entity-table` SDC's
-      transitive deps. Global load + `.hivelog-*` scoping is reliable.
+      directly — it reached the dashboard but not the entity-list pages.
       See ADR-0060 point 3.
+- [x] **Page-level scope.** The plain entity-list collections
+      (`/hivelog/hives`, `/hivelog/inspections`,
+      `/hivelog/calendar-actions`, …) use a core `EntityListBuilder`, so
+      the markup is a bare `<table class="responsive-enabled">` with **no
+      `.hivelog-*` class and no hivelog CSS library**. beeswax's
+      `ThemeHooks::preprocessHtml()` adds a `hivelog-page` body class
+      (matched on the route path, so `entity.*.collection` routes count),
+      and `src/hivelog.css` scopes core-table / heading / link rules to
+      `body.hivelog-page .region-content`. Moving that class into the
+      module is [[0062-module-themeability-tokens]].
 - [x] **kbg default.** `beeswax` enabled and set as `system.theme`
       `default` (`admin` stays `gin`) via drush; **still needs a config
       export** in the cms2 / verdigris repo to persist. `npm run build`

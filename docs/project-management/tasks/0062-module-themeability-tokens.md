@@ -41,12 +41,16 @@ actually painful — token surface only, no brand styling in the module
       module still renders identically on a stock theme; a theme now
       recolours by redefining ~a dozen tokens instead of duplicating
       rules.
-- [ ] **Page-level hook, only if 0061 needs it.** If the skin needs to
-      scope to "any HiveLog page" (not just the dashboard, which already
-      has `.hivelog-dashboard`), add a stable class — e.g.
-      `hook_preprocess_html()` adding `hivelog-page` on a `hivelog.`
-      route-name match, mirroring `HivelogBreadcrumbBuilder::applies()`.
-      Skip if `libraries-extend` scoping proved enough.
+- [ ] **Move the `hivelog-page` body class into the module.** 0061
+      needed it (the plain `EntityListBuilder` collections carry no
+      `.hivelog-*` hook) and added it *theme-side* in
+      `beeswax_preprocess_html()`, matched on route path `/hivelog…`.
+      Reproducing it in every skin theme is duplication — a
+      `hook_preprocess_html()` in the module adding `hivelog-page` on a
+      `hivelog.` route-name match **plus** the `entity.*.collection`
+      routes whose path is under `/hivelog` (route name is not
+      `hivelog.*` there — same gap `HivelogBreadcrumbBuilder` has). Then
+      beeswax drops its copy. Low urgency: the theme-side class works.
 - [ ] **Document the theming contract.** A short "Theming HiveLog"
       section in `CLAUDE.md` / `AGENTS.md` (or an ADR note): the stable
       class names, the token list, and the `libraries-extend` seam, so a
