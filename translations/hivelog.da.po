@@ -1231,12 +1231,18 @@ msgstr "Noter"
 msgid "Unreported"
 msgstr "Ikke rapporteret"
 #: modules/contrib/hivelog/src/Controller/ApiaryController.php:316
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:355
 #: modules/contrib/hivelog/src/Controller/HiveController.php:232
+#: modules/contrib/hivelog/src/Controller/HiveController.php:271
+#: modules/contrib/hivelog/src/Controller/DashboardController.php:410
 #: modules/contrib/hivelog/src/Form/HivelogCalendarFilterForm.php:83
 msgid "Done"
 msgstr "Udført"
 #: modules/contrib/hivelog/src/Controller/ApiaryController.php:317
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php:363
 #: modules/contrib/hivelog/src/Controller/HiveController.php:233
+#: modules/contrib/hivelog/src/Controller/HiveController.php:279
+#: modules/contrib/hivelog/src/Controller/DashboardController.php:415
 #: modules/contrib/hivelog/src/Form/HivelogCalendarFilterForm.php:84
 msgid "Ignored"
 msgstr "Ignoreret"
@@ -1244,14 +1250,6 @@ msgstr "Ignoreret"
 #: modules/contrib/hivelog/src/Controller/HiveController.php:257
 msgid "@status (@timing)"
 msgstr "@status (@timing)"
-#: modules/contrib/hivelog/src/Controller/ApiaryController.php:355
-#: modules/contrib/hivelog/src/Controller/HiveController.php:271
-msgid "Report Done"
-msgstr "Rapportér som udført"
-#: modules/contrib/hivelog/src/Controller/ApiaryController.php:363
-#: modules/contrib/hivelog/src/Controller/HiveController.php:279
-msgid "Report Ignored"
-msgstr "Rapportér som ignoreret"
 #: modules/contrib/hivelog/src/Controller/ApiaryController.php:379
 #: modules/contrib/hivelog/src/Controller/HiveController.php:295
 msgid "View Log"

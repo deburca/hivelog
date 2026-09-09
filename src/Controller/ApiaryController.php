@@ -352,7 +352,7 @@ class ApiaryController extends ControllerBase {
           '#props' => [
             'buttons' => [
               [
-                'label' => (string) $this->t('Report Done'),
+                'label' => (string) $this->t('Done'),
                 'url' => Url::fromRoute('hivelog.apiary_action_log.add', [
                   'apiary' => $apiary->id(),
                   'calendar_action' => $calendar_action->id(),
@@ -360,7 +360,7 @@ class ApiaryController extends ControllerBase {
                 'variant' => 'primary',
               ],
               [
-                'label' => (string) $this->t('Report Ignored'),
+                'label' => (string) $this->t('Ignored'),
                 'url' => Url::fromRoute('hivelog.apiary_action_log.add', [
                   'apiary' => $apiary->id(),
                   'calendar_action' => $calendar_action->id(),

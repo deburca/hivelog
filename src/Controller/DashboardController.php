@@ -354,15 +354,66 @@ class DashboardController extends ControllerBase {
         ],
         'context' => $alert['context'],
       ],
-      'action' => [
-        '#type' => 'component',
-        '#component' => 'hivelog:button',
-        '#props' => [
-          'label' => (string) $alert['action_label'],
-          'url' => $alert['action_url'],
-          'variant' => 'primary',
-          'extra_classes' => 'hivelog-attention__action',
+      'action' => $this->buildAttentionAction($alert),
+    ];
+  }
+
+  /**
+   * Builds a "Needs attention" row's action control.
+   *
+   * Seasonal rows carry an `actions` list (Done / Ignored) and render as a
+   * hivelog:button-group, matching the apiary and hive calendar
+   * checklists; low-stock rows keep their single "Add purchase" button.
+   * Every target is a safe GET link to an add form (with a ?status=
+   * default for the report links) — the write only happens through that
+   * form's own CSRF-protected POST (ADR-0018).
+   */
+  protected function buildAttentionAction(array $alert): array {
+    if (!empty($alert['actions'])) {
+      return [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['hivelog-attention__action']],
+        'group' => [
+          '#type' => 'component',
+          '#component' => 'hivelog:button-group',
+          '#props' => ['buttons' => $alert['actions']],
         ],
+      ];
+    }
+
+    return [
+      '#type' => 'component',
+      '#component' => 'hivelog:button',
+      '#props' => [
+        'label' => (string) $alert['action_label'],
+        'url' => $alert['action_url'],
+        'variant' => 'primary',
+        'extra_classes' => 'hivelog-attention__action',
+      ],
+    ];
+  }
+
+  /**
+   * The Done / Ignored button pair for an unreported calendar action.
+   *
+   * @param string $route
+   *   The action-log add route (apiary- or hive-scoped).
+   * @param array $params
+   *   Route parameters: the parent (apiary or hive) plus calendar_action.
+   *
+   * @return array[]
+   *   Two hivelog:button descriptors — "Done" (primary) and "Ignored".
+   */
+  protected function reportButtons(string $route, array $params): array {
+    return [
+      [
+        'label' => (string) $this->t('Done'),
+        'url' => Url::fromRoute($route, $params, ['query' => ['status' => 'done']])->toString(),
+        'variant' => 'primary',
+      ],
+      [
+        'label' => (string) $this->t('Ignored'),
+        'url' => Url::fromRoute($route, $params, ['query' => ['status' => 'ignored']])->toString(),
       ],
     ];
   }
@@ -450,11 +501,10 @@ class DashboardController extends ControllerBase {
           'chip' => $timing['chip'],
           'title' => $action->label(),
           'context' => $this->attentionContext($apiary, NULL, $this->weekWindow($action)),
-          'action_label' => $this->t('Report done'),
-          'action_url' => Url::fromRoute('hivelog.apiary_action_log.add', [
+          'actions' => $this->reportButtons('hivelog.apiary_action_log.add', [
             'apiary' => $apiary->id(),
             'calendar_action' => $action->id(),
-          ], ['query' => ['status' => 'done']])->toString(),
+          ]),
           'sort' => $timing['sort'],
         ];
       }
@@ -500,11 +550,10 @@ class DashboardController extends ControllerBase {
               'chip' => $timing['chip'],
               'title' => $action->label(),
               'context' => $this->attentionContext($apiaries[$hive_apiary_id], $hive, $this->weekWindow($action)),
-              'action_label' => $this->t('Report done'),
-              'action_url' => Url::fromRoute('hivelog.hive_action_log.add', [
+              'actions' => $this->reportButtons('hivelog.hive_action_log.add', [
                 'hive' => $hive->id(),
                 'calendar_action' => $action->id(),
-              ], ['query' => ['status' => 'done']])->toString(),
+              ]),
               'sort' => $timing['sort'],
             ];
           }

@@ -457,7 +457,7 @@ class ApiaryCalendarChecklistTest extends KernelTestBase {
   /**
    * Tests that the checklist's report buttons never leak a hive id.
    *
-   * Report Done/Ignored actions link to the apiary_action_log add route,
+   * The Done/Ignored report actions link to the apiary_action_log add route,
    * which never involves a hive at all.
    */
   public function testChecklistReportButtonsLinkToApiaryActionLogAddRoute(): void {

@@ -437,7 +437,13 @@ class DashboardTest extends KernelTestBase {
     $this->assertStringContainsString('hivelog-attention__row--critical', $html);
     $this->assertStringContainsString('Overdue', $html);
     $this->assertStringNotContainsString('All caught up', $html);
+    // Both reporting outcomes are offered as a button group, mirroring the
+    // apiary calendar checklist, with the short mobile-friendly labels.
+    $this->assertStringContainsString('hivelog-button-group', $html);
     $this->assertStringContainsString('/log/add?status=done', $html);
+    $this->assertStringContainsString('/log/add?status=ignored', $html);
+    $this->assertStringContainsString('>Done</a>', $html);
+    $this->assertStringContainsString('>Ignored</a>', $html);
     // Overdue → the header count reads in the danger colour.
     $this->assertStringContainsString('hivelog-attention__count--danger', $html);
   }
