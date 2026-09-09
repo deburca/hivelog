@@ -1,11 +1,12 @@
 ---
 type: task
 tags: [hivelog/task]
-status: review
+status: done
 priority: medium
 project: "[[action-button-consistency]]"
 area: theme
 created: 2026-09-09
+completed: 2026-09-09
 branch: feature/0071-dashboard-report-buttons-parity
 release: 1.8.5
 depends-on: ["[[0056-dashboard-landing-page]]", "[[0068-replace-dropbutton-operations]]"]
@@ -70,7 +71,8 @@ all in `DashboardController::buildAttentionRow()` /
       `HiveCalendarChecklistTest` green from cms2 (55 tests, OK — the 6
       pre-existing geofield deprecations only).
 - [x] phpcs clean (`--standard=Drupal,DrupalPractice --warning-severity=0`).
-- [ ] PR against `main`, CI green (Lint + Kernel/Unit are the hard gates).
+- [x] PR against `main`, CI green (Lint + Kernel/Unit are the hard gates)
+      — PR #138, squash-merge commit `0beb718`. Shipped in release 1.8.5.
 
 ## Implementation notes
 - Key files: `src/Controller/DashboardController.php`
@@ -87,4 +89,5 @@ all in `DashboardController::buildAttentionRow()` /
 - Project:: [[action-button-consistency]] · also helps [[mobile-ux-improvements]]
 - Follows:: [[0068-replace-dropbutton-operations]], [[0056-dashboard-landing-page]]
 - Decisions:: [[0012-action-button-design-system]], [[0018-csrf-and-safe-http-methods]]
-- Commits::
+- Commits:: `0beb718` (PR #138 — fix + tests + `.po`); `5e4d730`
+  (release 1.8.5 bump)
