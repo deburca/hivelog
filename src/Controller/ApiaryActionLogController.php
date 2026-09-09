@@ -69,7 +69,7 @@ class ApiaryActionLogController extends ControllerBase {
    *
    * Pre-populates `apiary` and `calendar_action`. An optional `?status=`
    * query parameter (`done` / `ignored`) pre-fills the `status` field so
-   * "Report Done" / "Report Ignored" links can jump straight into the
+   * the "Done" / "Ignored" report links can jump straight into the
    * relevant state — the link itself is a safe GET navigation to this form;
    * the actual write only happens through the form's own CSRF-protected
    * POST submission, per ADR-0018. Unknown/invalid status values are
