@@ -58,10 +58,21 @@ FROM #hivelog/task
 WHERE contains(string(project), this.file.name)
 SORT status asc, priority asc
 ```
-None yet, deliberately — [[0083-ai-assisted-apiary-insights]] is
-intentionally incomplete, and per its own Consequences, "cannot be
-picked up as an implementation task yet." The first real task here is
-answering the privacy question (below), not writing code.
+Three investigation/decision tasks — deliberately not implementation
+tasks, since [[0083-ai-assisted-apiary-insights]] is intentionally
+incomplete and, per its own Consequences, "cannot be picked up as an
+implementation task yet":
+- [[0084-ai-insights-hosting-and-privacy-decision]] — backlog (do first;
+  the ADR's single most gating open question; output is a written
+  decision, not code)
+- [[0085-sensor-less-insight-prototype]] — backlog (independent spike;
+  no hard dependency, can run in parallel with 0084)
+- [[0086-ai-insights-implementation-adr]] — backlog, blocked on 0084 —
+  the actual "proper follow-up ADR"
+  [[0083-ai-assisted-apiary-insights]] deferred to; real implementation
+  tasks (entity, agent endpoint, UI) get broken out from *that* ADR once
+  it lands, the same way [[0074-sensor-data-ingestion-architecture]] led
+  to [[0076-sensor-device-and-reading-entities]] onward.
 
 ## Open questions
 - Model/hosting choice: a self-hosted open model (no data ever leaves
