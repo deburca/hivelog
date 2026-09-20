@@ -57,10 +57,11 @@ snapshots, re-check before ordering:
 
 - **MCU + radio**: two genuinely different, both-real options, not one
   "correct" answer:
-  - The hardware already sourced (a generic ESP32/Arduino + a separate
-    868 MHz SX1276/RFM95-class LoRa module,
-    [[0075-sensor-hardware-and-connectivity-selection]]) — cheapest to
-    start with since it's already owned, and the power budget in
+  - The generic ESP32/Arduino + separate 868 MHz SX1276/RFM95-class
+    LoRa module already identified as an example
+    ([[0075-sensor-hardware-and-connectivity-selection]]) — nothing
+    purchased yet, but this remains the cheapest path to start with,
+    and the power budget in
     [[0095-renewable-power-for-apiary-equipment]] is achievable with
     it.
   - **RAK WisBlock** (RAK4631 "core" module, nRF52840 + SX1262 LoRa,
@@ -123,9 +124,9 @@ snapshots, re-check before ordering:
    TP4056/LiFePO4 pairing error** (done, in that ADR directly, per its
    own note) — a chemistry-matched charge controller is now a hard
    requirement, not a detail to sort out during assembly.
-3. **Pilot node** ([[0079-pilot-weight-sensor-hardware-build]]):
-   continue with the already-sourced ESP32/Arduino + LoRa module +
-   HX711 + load cell — cheapest, already owned, and the power budget
+3. **Pilot node** ([[0079-pilot-weight-sensor-hardware-build]]): order
+   the identified-but-not-yet-purchased ESP32/Arduino + LoRa module +
+   HX711 + load cell — cheapest option to buy, and the power budget
    works with it. Pair with a **chemistry-matched** charge controller
    per the correction above (TP4056 + standard Li-ion, *or* a
    CN3058-class controller + LiFePO4 — pick one, not a mismatched pair).
@@ -153,7 +154,7 @@ snapshots, re-check before ordering:
   restated wish — a beekeeper (or a future contributor) adding, say, an
   entrance-counter sensor next year checks it against I2C/1-Wire/GPIO
   first, rather than reverse-engineering a bespoke wiring scheme from
-  scratch. Naming two real, current MCU/radio platforms (already-sourced
+  scratch. Naming two real, current MCU/radio platforms (the cheap
   generic parts vs. RAK WisBlock) rather than one lets the pilot proceed
   cheaply now while flagging the better-fit platform for scaling,
   instead of silently picking one and hiding the trade-off.
@@ -162,10 +163,12 @@ snapshots, re-check before ordering:
   ("without this... development will be unnecessary"), not a
   self-imposed delay. Prices and specific product availability are a
   September 2026 snapshot; re-verify before actually ordering, since
-  hobbyist-electronics listings change. Recommending RAK WisBlock for
-  future scaling while keeping the pilot on already-sourced parts means
-  the fleet won't be hardware-uniform from day one — an accepted,
-  explicit trade-off (cheap pilot now vs. one consistent platform from
+  hobbyist-electronics listings change — **nothing described in this
+  catalog has been purchased yet; every item here is still a shopping
+  list, not an inventory.** Recommending RAK WisBlock for future scaling
+  while keeping the pilot on the cheaper generic parts means the fleet
+  won't be hardware-uniform from day one — an accepted, explicit
+  trade-off (cheap pilot now vs. one consistent platform from
   the start), not an oversight.
 - Follow-up tasks: [[0079-pilot-weight-sensor-hardware-build]]'s
   acceptance criteria should reference this ADR's corrected §3 power

@@ -88,9 +88,10 @@ Hivekraft's cost figures (EUR, retail, 2026): hive scales €150–400,
 internal temperature sensors €30–80, external temperature/humidity
 €20–50, acoustic €50–150 ("experimental"), GPS trackers €30–80
 (anti-theft). These roughly bracket what a DIY build (a load cell + HX711
-+ an MCU + a radio, of the kind already sourced by the team) costs to
-assemble per node, which is the basis for recommending weight as the
-starting sensor in [[0075-sensor-hardware-and-connectivity-selection]].
++ an MCU + a radio, of the kind the user linked as a real example, not
+yet purchased) costs to assemble per node, which is the basis for
+recommending weight as the starting sensor in
+[[0075-sensor-hardware-and-connectivity-selection]].
 
 ### Scoping questions this ADR has to settle
 1. **Buy a vendor platform, or build a generic ingestion point?** A vendor

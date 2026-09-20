@@ -24,11 +24,23 @@ site" testing culture, extended here to real hardware for the first
 time.
 
 ## Acceptance criteria
-- [ ] Assemble the sensor node: the already-sourced half-bridge load
-      cell + HX711 amplifier, on an ESP32 (preferred per
-      [[0075-sensor-hardware-and-connectivity-selection]]) or the
-      already-sourced Arduino, plus the already-sourced 868 MHz LoRa
-      radio module.
+- [ ] **Procure every component first — nothing has been purchased yet.**
+      Per [[0097-hardware-infrastructure-and-component-catalog]]'s
+      catalog: for the sensor node, a half-bridge load cell + HX711
+      amplifier, an ESP32 (preferred per
+      [[0075-sensor-hardware-and-connectivity-selection]]) or an Arduino,
+      an 868 MHz SX1276/RFM95-class LoRa module, a small (1–2W, 5–6V)
+      solar panel, and a chemistry-matched charge controller + cell (see
+      the next criterion). For the receiver node, a matching 868 MHz
+      LoRa radio plus a WiFi-capable ESP32 (or a single Heltec WiFi
+      LoRa 32-class board integrating both). Confirm each item's real,
+      current listing and price before ordering — the catalog names
+      component categories and examples, not a fixed, already-checked-out
+      cart.
+- [ ] Assemble the sensor node: the load cell + HX711 amplifier, on an
+      ESP32 (preferred per
+      [[0075-sensor-hardware-and-connectivity-selection]]) or an
+      Arduino, plus the 868 MHz LoRa radio module — once procured.
 - [ ] Power the sensor node per [[0095-renewable-power-for-apiary-equipment]]
       §1 and [[0097-hardware-infrastructure-and-component-catalog]]'s
       corrected component pairing: a small (1–2 W) solar panel plus a
@@ -89,9 +101,9 @@ time.
   the firmware itself, that's a sign it should move into
   [[0077-sensor-ingestion-endpoint-and-device-auth]]'s scope instead, not
   a reason to add PHP tests here.
-- Four-corner load cells (vs. the single half-bridge already sourced) are
-  a later accuracy upgrade, not required to pass this task — per
-  [[0075-sensor-hardware-and-connectivity-selection]].
+- Four-corner load cells (vs. the single half-bridge planned for the
+  pilot) are a later accuracy upgrade, not required to pass this task —
+  per [[0075-sensor-hardware-and-connectivity-selection]].
 
 ## Related
 - Project:: [[sensor-data-collection]]

@@ -51,11 +51,12 @@ physical situation calls for, without having to commit to one protocol
 module-wide, since [[0074-sensor-data-ingestion-architecture]]'s ingestion
 contract doesn't care which was used.
 
-### LoRa hardware already sourced: two distinct paths, not one
-The 868 MHz LoRa module the team has already identified (an
-SX1276/RFM95-class radio + antenna, paired with an Arduino) is a **raw
-LoRa radio**, not a complete LoRaWAN end node by itself. It supports two
-materially different builds:
+### LoRa hardware identified (not yet purchased): two distinct paths, not one
+The 868 MHz LoRa module the user linked as an example during research
+(an SX1276/RFM95-class radio + antenna, paired with an Arduino) is a
+**raw LoRa radio**, not a complete LoRaWAN end node by itself — nothing
+has actually been procured yet, this is a real, buyable example, not a
+component in hand. It supports two materially different builds:
 
 1. **Point-to-point raw LoRa** — the sensor node and a single "receiver"
    node (an identical radio on an ESP32/Arduino sitting near the house/
@@ -88,8 +89,8 @@ materially different builds:
 
 **Recommendation: start with option 1 (point-to-point) for the very first
 pilot hive**, since it proves the sensor → weight-reading → HiveLog chain
-end-to-end fastest with hardware already in hand and zero third-party
-accounts. **Move to option 2 with TTN** (not self-hosted ChirpStack) as
+end-to-end fastest with the cheapest hardware to buy and zero
+third-party accounts. **Move to option 2 with TTN** (not self-hosted ChirpStack) as
 soon as a second apiary or an out-of-WiFi-range site needs covering — TTN
 is free, needs no server of its own to operate, and its HTTP
 webhook/MQTT integration bridges straight into
@@ -98,18 +99,19 @@ HiveLog-side code, only bridge configuration. Self-hosted ChirpStack is a
 later option, not a starting one, and only if TTN's fair-use ceiling or
 public-coverage gaps actually become a problem in practice.
 
-### Weight sensing: the load cell already sourced
-The half-bridge load cell + HX711-style 24-bit ADC amplifier already
-identified is the standard, widely-used DIY beehive-scale approach —
-the same shape used by the "Bienenwaage" project (2011) and every
-BroodMinder-DIY-style build found during research. Practical guidance:
-- A **single half-bridge pair** (as sourced) works if the hive stand is
+### Weight sensing: the load cell identified (not yet purchased)
+The half-bridge load cell + HX711-style 24-bit ADC amplifier the user
+linked as an example is the standard, widely-used DIY beehive-scale
+approach — the same shape used by the "Bienenwaage" project (2011) and
+every BroodMinder-DIY-style build found during research. Practical
+guidance:
+- A **single half-bridge pair** (as linked) works if the hive stand is
   level and rigid; **four full load cells, one under each corner**, is
   the more accurate, more tolerant-of-an-uneven-stand configuration used
   by most mature DIY projects, at roughly proportionally higher cost and
   wiring complexity. Start with the half-bridge for the pilot — it's
-  already in hand and sufficient to validate the whole pipeline — and
-  treat four-corner load cells as an accuracy upgrade to revisit once the
+  cheap and sufficient to validate the whole pipeline — and treat
+  four-corner load cells as an accuracy upgrade to revisit once the
   ingestion/dashboard side is proven, not a blocker to starting.
 - Per [[0074-sensor-data-ingestion-architecture]] §5, sample and transmit
   every 15–60 minutes, not continuously — this is both what every source
@@ -117,17 +119,18 @@ BroodMinder-DIY-style build found during research. Practical guidance:
   storage volume sane without any code needing to enforce it.
 
 ### Microcontroller: ESP32 over a bare Arduino Uno, where the choice is open
-The team's linked parts pair with "Arduino" generically. Where the board
-isn't already fixed, an ESP32-class board (also ~€5–10, comparable price
-to an Uno/Nano) is the better general default for this project: built-in
-WiFi *and* Bluetooth (useful for the point-to-point-then-WiFi-bridge
-build above, and for any future Bluetooth-sensor aggregation in the style
-of BEEP), more RAM/flash for a real LoRaWAN stack if/when needed, and it
-is what most of the open-source hive-monitoring prior art (Hiveeyes-adjacent
+The example the user linked pairs with "Arduino" generically. Since
+nothing has actually been bought yet, this choice is still fully open —
+an ESP32-class board (also ~€5–10, comparable price to an Uno/Nano) is
+the better general default for this project: built-in WiFi *and*
+Bluetooth (useful for the point-to-point-then-WiFi-bridge build above,
+and for any future Bluetooth-sensor aggregation in the style of BEEP),
+more RAM/flash for a real LoRaWAN stack if/when needed, and it is what
+most of the open-source hive-monitoring prior art (Hiveeyes-adjacent
 builds, BroodMinder-DIY-style projects) already standardises on. This
-does not conflict with the LoRa module already sourced — the same
+does not conflict with the LoRa module identified above — the same
 SX1276/RFM95-class radio pairs with an ESP32 exactly as it does with a
-classic Arduino.
+classic Arduino, so switching MCU doesn't mean switching radio.
 
 ### What NOT to build first
 Per [[0074-sensor-data-ingestion-architecture]] §6, acoustic and chemical
@@ -138,11 +141,11 @@ first would mean building the hardest sensor type before the ingestion
 pipeline itself is even proven with the simplest one (weight).
 
 ## Decision (recommended)
-1. **Pilot node**: the already-sourced load cell + HX711 amplifier for
-   weight, on an ESP32 (preferred) or the already-sourced Arduino, talking
-   **point-to-point raw LoRa** to a single receiver bridging onto WiFi and
-   HiveLog's ingestion endpoint. One hive, one metric, proving the full
-   chain.
+1. **Pilot node**: a load cell + HX711 amplifier for weight (the linked
+   example is a fine one, nothing bought yet), on an ESP32 (preferred)
+   or an Arduino, talking **point-to-point raw LoRa** to a single
+   receiver bridging onto WiFi and HiveLog's ingestion endpoint. One
+   hive, one metric, proving the full chain.
 2. **Second sensor type**: internal temperature/humidity (a cheap,
    well-understood addition, e.g. a DHT22/SHT31-class sensor on the same
    node), still point-to-point.
@@ -157,9 +160,10 @@ pipeline itself is even proven with the simplest one (weight).
    commercial vendor's proprietary platform as the primary path.
 
 ## Consequences
-- Positive: reuses hardware already in hand; proves the riskiest new
-  architecture (the ingestion API and its auth) against the simplest,
-  highest-value sensor (weight) before investing in harder sensor types;
+- Positive: keeps the first purchase cheap and small; proves the
+  riskiest new architecture (the ingestion API and its auth) against the
+  simplest, highest-value sensor (weight) before investing in harder
+  sensor types;
   a clear, cheap trigger (a second apiary / out-of-range site) for when to
   adopt real LoRaWAN infrastructure instead of guessing upfront.
 - Negative / trade-offs: point-to-point raw LoRa doesn't scale past one
