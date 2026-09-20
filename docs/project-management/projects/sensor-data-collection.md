@@ -57,7 +57,10 @@ hardware/protocol recommendation.
      pilot.
   3. Move from point-to-point raw LoRa to true LoRaWAN via The Things
      Network once a second apiary or an out-of-WiFi-range site needs
-     covering.
+     covering. If that new site has no mains-powered site and no
+     public/community gateway coverage, a dedicated off-grid gateway's
+     power design is [[0096-off-grid-gateway-power-design]] — not
+     triggered yet.
 - Out of scope (for now):
   - Acoustic sensing (pre-swarm/queenless detection) — needs edge signal
     processing HiveLog does not do; no `SensorEvent`-style entity is
@@ -157,6 +160,11 @@ Static index (in execution order):
 - [[0081-sensor-needs-attention-alerts]] — backlog
 - [[0082-sensor-reading-retention-and-rollup]] — backlog, low priority
   (not required for the Phase 1 pilot; required before general rollout)
+- [[0096-off-grid-gateway-power-design]] — backlog, low priority,
+  **not yet triggered** — only becomes relevant once the Phase 2/3
+  LoRaWAN scale-out trigger (item 3 above) actually happens, and even
+  then only if no mains-powered site or public gateway coverage exists
+  at the new location.
 
 ## Open questions
 - Exact alert thresholds for Phase 2 (how large a weight drop, how far
