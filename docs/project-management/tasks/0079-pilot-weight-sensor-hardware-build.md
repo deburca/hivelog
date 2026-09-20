@@ -51,13 +51,43 @@ time.
       that ADR's cold-climate note). **Do not pair a TP4056 with a
       LiFePO4 cell** — it charges to 4.2V, which overcharges and damages
       that chemistry (the original, since-corrected error in
-      [[0095-renewable-power-for-apiary-equipment]]). Use a bare
-      ESP32-WROOM module or remove the dev board's power LED — the
-      real-world gap between a board's advertised deep-sleep current and
-      what an unmodified dev board actually draws matters more to
-      battery life than panel wattage. Confirm actual measured
-      sleep/active current on the real assembled node, not just the
-      datasheet figure.
+      [[0095-renewable-power-for-apiary-equipment]]). **Confirmed cell
+      spec for the LiFePO4 path: 3.2V nominal, 1.5Ah (1500mAh), genuine
+      18650 form factor (18.2×64.8mm)** — verified against real current
+      listings 2026-09-21: physically fits standard 18650 holders,
+      comfortably covers the 2–3 week cloudy-season autonomy target with
+      real margin (this power budget only needs ~3–5mAh/day; 1.5Ah is
+      close to the practical capacity ceiling for genuine LiFePO4 in this
+      form factor anyway, since its lower energy density means there
+      isn't a meaningfully bigger 18650 LiFePO4 option to consider), and
+      its ~4.2A continuous discharge rating is far beyond this node's
+      ~100–150mA transmit-burst peak. **Before ordering the specific
+      listing found**: confirm its own datasheet states a **3.6V charge
+      voltage**, not 4.2V — a "LiFePO4" listing quoting 4.2V is either
+      mislabeled or not actually LiFePO4 chemistry, and pairing it with a
+      CN3058-class charger (which outputs ~3.6V) would undercharge it
+      rather than deliver the rated capacity. **Voltage compatibility,
+      confirmed 2026-09-21**: LiFePO4's 2.5–3.6V discharge curve sits
+      entirely inside the bare ESP32 chip's real 2.2–3.6V operating
+      range, so it can power the module **directly with no separate
+      voltage regulator**, wired to the board's **3V3 pin specifically**
+      — not the 5V/VIN pin most dev boards expect for USB-style power,
+      which routes through an onboard regulator needing more headroom
+      than 3.2–3.6V reliably provides. This is actually simpler than
+      standard Li-ion, whose 4.2V full-charge voltage *exceeds* the
+      ESP32's 3.6V absolute maximum and would need a step-down regulator
+      to avoid damaging the chip if fed to 3V3 directly. The HX711
+      (2.6–5.5V range) and the LoRa module (typically 1.8–3.7V for
+      SX1276-class) both also accept 3.2V comfortably, so the whole node
+      can plausibly run off raw LiFePO4 voltage with no boost/buck
+      converter anywhere — confirm the specific ESP32 board chosen
+      exposes a clean 3V3 direct-feed path before assuming this, since
+      not every dev board does. Use a bare ESP32-WROOM module or remove
+      the dev board's power LED — the real-world gap between a board's
+      advertised deep-sleep current and what an unmodified dev board
+      actually draws matters more to battery life than panel wattage or
+      cell capacity. Confirm actual measured sleep/active current on the
+      real assembled node, not just the datasheet figure.
 - [ ] Assemble the receiver node: a matching LoRa radio on an
       ESP32/Arduino with WiFi, sited near the house/router — per
       [[0095-renewable-power-for-apiary-equipment]]'s scoping, this is
