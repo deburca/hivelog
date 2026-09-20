@@ -8,7 +8,7 @@ area: hardware
 created: 2026-09-20
 branch: feature/0079-pilot-weight-sensor-hardware-build
 release:
-depends-on: ["[[0077-sensor-ingestion-endpoint-and-device-auth]]", "[[0078-sensor-device-configuration-descriptor]]"]
+depends-on: ["[[0077-sensor-ingestion-endpoint-and-device-auth]]", "[[0078-sensor-device-configuration-descriptor]]", "[[0097-hardware-infrastructure-and-component-catalog]]"]
 blocked-by: ["[[0078-sensor-device-configuration-descriptor]]"]
 ---
 # Task: Pilot weight-sensor hardware build + end-to-end smoke test
@@ -30,15 +30,22 @@ time.
       already-sourced Arduino, plus the already-sourced 868 MHz LoRa
       radio module.
 - [ ] Power the sensor node per [[0095-renewable-power-for-apiary-equipment]]
-      §1: a small (1–2 W) solar panel, a TP4056-class solar-input Li-ion
-      charge controller, and a LiFePO4 cell (preferred over standard
-      Li-ion given this apiary's real Danish winter conditions — see
-      that ADR's cold-climate note). Use a bare ESP32-WROOM module or
-      remove the dev board's power LED — the real-world gap between a
-      board's advertised deep-sleep current and what an unmodified dev
-      board actually draws matters more to battery life than panel
-      wattage. Confirm actual measured sleep/active current on the real
-      assembled node, not just the datasheet figure.
+      §1 and [[0097-hardware-infrastructure-and-component-catalog]]'s
+      corrected component pairing: a small (1–2 W) solar panel plus a
+      **chemistry-matched** charge controller and cell — either a
+      TP4056-class controller with a standard Li-ion/18650 cell, or a
+      CN3058-class LiFePO4-specific controller with a LiFePO4 cell
+      (preferred given this apiary's real Danish winter conditions — see
+      that ADR's cold-climate note). **Do not pair a TP4056 with a
+      LiFePO4 cell** — it charges to 4.2V, which overcharges and damages
+      that chemistry (the original, since-corrected error in
+      [[0095-renewable-power-for-apiary-equipment]]). Use a bare
+      ESP32-WROOM module or remove the dev board's power LED — the
+      real-world gap between a board's advertised deep-sleep current and
+      what an unmodified dev board actually draws matters more to
+      battery life than panel wattage. Confirm actual measured
+      sleep/active current on the real assembled node, not just the
+      datasheet figure.
 - [ ] Assemble the receiver node: a matching LoRa radio on an
       ESP32/Arduino with WiFi, sited near the house/router — per
       [[0095-renewable-power-for-apiary-equipment]]'s scoping, this is
@@ -90,5 +97,6 @@ time.
 - Project:: [[sensor-data-collection]]
 - Decisions:: [[0075-sensor-hardware-and-connectivity-selection]],
   [[0095-renewable-power-for-apiary-equipment]],
+  [[0097-hardware-infrastructure-and-component-catalog]],
   [[0074-sensor-data-ingestion-architecture]]
 - Commits::

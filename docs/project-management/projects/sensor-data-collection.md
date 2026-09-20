@@ -13,10 +13,17 @@ automated readings (weight, temperature, humidity, and — later —
 additional metrics) from physical sensor hardware, without locking the
 module to any single vendor's sensors, radio protocol, or cloud platform.
 Confirmed direction: an open, self-built platform, not a commercial
-vendor's stack. See [[0074-sensor-data-ingestion-architecture]] (accepted)
-for the data model, API, and device-provisioning mechanism, and
+vendor's stack, built from mostly off-the-shelf components against a
+defined extensibility contract, and powered entirely by renewable
+energy at the apiary itself. See [[0074-sensor-data-ingestion-architecture]]
+(accepted) for the data model, API, and device-provisioning mechanism,
 [[0075-sensor-hardware-and-connectivity-selection]] (accepted) for the
-hardware/protocol recommendation.
+hardware/protocol recommendation, [[0095-renewable-power-for-apiary-equipment]]
+(accepted) for the solar/battery power constraint, and
+[[0097-hardware-infrastructure-and-component-catalog]] (accepted) for
+the standard-interface extensibility framework and real, current
+off-the-shelf component catalog — required, per explicit direction,
+before any physical hardware task proceeds.
 
 ## Scope
 - In scope (Phase 1, per [[0074-sensor-data-ingestion-architecture]] §8):
@@ -45,6 +52,12 @@ hardware/protocol recommendation.
     batteries — per [[0095-renewable-power-for-apiary-equipment]]. The
     receiver stays on ordinary mains power (sited at the house, out of
     that ADR's "at/around the apiary" scope).
+  - The standing extensibility contract every future hardware addition
+    is checked against, per [[0097-hardware-infrastructure-and-component-catalog]]:
+    I2C for environmental sensors, 1-Wire for probe-style temperature,
+    HX711's fixed 2-wire interface for weight, JST-PH 2.0mm for
+    battery/solar power. A part that doesn't fit one of these is a
+    signal to look for a more standard part first.
 - In scope (Phase 2+, sequenced but not yet broken into tasks):
   1. Dashboard "Needs attention" integration — device-offline, sudden
      weight-drop, and out-of-range-temperature alerts, feeding the
@@ -186,6 +199,10 @@ Static index (in execution order):
   power constraint on the sensor node; flags the harder gateway-class
   case for any future phase that needs a dedicated, off-grid LoRaWAN
   gateway)
+- [[0097-hardware-infrastructure-and-component-catalog]] (accepted — the
+  standard-interface extensibility contract, a real market survey of
+  current off-the-shelf components, and the corrected power-component
+  pairing for [[0095-renewable-power-for-apiary-equipment]])
 - [[0003-code-defined-entity-schema]] (baseFieldDefinitions + update
   hooks pattern reused for both new entities)
 - [[0004-custom-controllers-over-view-builders]] (the ingestion route and

@@ -71,11 +71,20 @@ to be at the hive.
 
 ## Decision
 
-### 1. Sensor node: small solar panel + Li-ion/LiFePO4 battery + charge controller — the easy case
-- A small (1–2 W, 5–6 V) solar panel, a TP4056-class (or equivalent)
-  solar-input Li-ion charge controller, and an 18650 cell (or small
-  LiFePO4 pack) is the standard, well-proven combination for this power
-  class — no custom power electronics needed.
+### 1. Sensor node: small solar panel + battery + charge controller — the easy case
+- A small (1–2 W, 5–6 V) solar panel plus a matching charge controller
+  and cell is the standard, well-proven combination for this power
+  class — no custom power electronics needed. **Correction (2026-09-20,
+  caught during [[0097-hardware-infrastructure-and-component-catalog]]'s
+  market research, not designed carefully enough here originally): the
+  charge controller and cell chemistry must match.** A TP4056-class
+  controller charges to 4.2V, correct for a standard Li-ion/18650 cell
+  but **enough to overcharge and damage a LiFePO4 cell**, which needs a
+  3.6V charge voltage from a chemistry-specific IC (e.g. CN3058-based).
+  Pick one consistent pair, not "TP4056 with a LiFePO4 cell" as this
+  ADR originally, wrongly, implied — see
+  [[0097-hardware-infrastructure-and-component-catalog]] for the
+  corrected, real-product-level component catalog.
 - **Sizing rule** (from the same sourcing above): panel daily harvest
   should be **at least 3× the node's daily consumption**, assuming
   ~3 hours of effective sunlight — comfortably achievable at this power

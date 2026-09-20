@@ -34,19 +34,32 @@ harder case isn't discovered mid-deployment with no plan.
       "no solar gateway build required" — record that and close it, per
       [[0095-renewable-power-for-apiary-equipment]] §2's explicit
       preference to avoid this build rather than default into it.
-- [ ] If genuinely needed: confirm the actual power draw of the specific
-      gateway hardware chosen — [[0095-renewable-power-for-apiary-equipment]]
-      cites a real range (roughly 3–6 Wh/day for an indoor pico-gateway
-      up to 15–25 Wh/day for an outdoor 16-channel unit with cellular
-      backhaul) that varies by channel count and backhaul type; don't
-      assume the low end without checking the chosen unit's own specs.
-- [ ] Size the solar panel + battery bank at **5× daily consumption**
-      (not the sensor node's 3× rule) — per
-      [[0095-renewable-power-for-apiary-equipment]] §2's winter-reliability
-      reasoning for this latitude — an MPPT controller in the 12–20 W
-      class, and a real battery bank (LiFePO4 preferred, per that ADR's
-      cold-climate note — the same reasoning applies here, more so given
-      the larger capacity involved).
+- [ ] **Evaluate buying a pre-integrated solar LoRa relay unit before
+      designing a custom system.** A real, currently-available product
+      category exists — e.g. the KEEPTEEN D5 (~DKK 942 / ~€126: IP67
+      housing, 5W panel, ~5000mAh battery, built on genuine RAK19007 +
+      RAK4631 WisBlock hardware — the same platform
+      [[0097-hardware-infrastructure-and-component-catalog]] already
+      recommends for scaling), with comparable competing products
+      (ELECROW, AYWHP, ASHATA) confirming this is a real market, not one
+      listing. These ship with Meshtastic firmware, not this project's
+      point-to-point/LoRaWAN protocol — but the RAK4631 underneath is
+      fully reprogrammable, so buying one and reflashing it is a
+      legitimate option to weigh against hand-building the equivalent
+      from raw components. Record which was chosen and why.
+- [ ] If a custom build is chosen instead: confirm the actual power draw
+      of the specific gateway hardware chosen —
+      [[0095-renewable-power-for-apiary-equipment]] cites a real range
+      (roughly 3–6 Wh/day for an indoor pico-gateway up to 15–25 Wh/day
+      for an outdoor 16-channel unit with cellular backhaul) that varies
+      by channel count and backhaul type; don't assume the low end
+      without checking the chosen unit's own specs. Size the solar panel
+      + battery bank at **5× daily consumption** (not the sensor node's
+      3× rule) — per [[0095-renewable-power-for-apiary-equipment]] §2's
+      winter-reliability reasoning for this latitude — an MPPT
+      controller in the 12–20 W class, and a real battery bank (LiFePO4
+      preferred, per that ADR's cold-climate note — the same reasoning
+      applies here, more so given the larger capacity involved).
 - [ ] Multi-week off-grid smoke test spanning genuinely overcast weather,
       mirroring [[0079-pilot-weight-sensor-hardware-build]]'s own
       power-validation approach at the smaller scale — confirm the
@@ -59,5 +72,9 @@ harder case isn't discovered mid-deployment with no plan.
 ## Related
 - Project:: [[sensor-data-collection]]
 - Decisions:: [[0095-renewable-power-for-apiary-equipment]],
+  [[0097-hardware-infrastructure-and-component-catalog]] (use the same
+  chemistry-matched charge-controller requirement at gateway scale — a
+  bigger LiFePO4 bank still needs a LiFePO4-rated controller, not a
+  scaled-up TP4056),
   [[0075-sensor-hardware-and-connectivity-selection]]
 - Commits::
