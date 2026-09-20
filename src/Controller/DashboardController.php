@@ -129,7 +129,7 @@ class DashboardController extends ControllerBase {
         array_merge($seasonal['alerts'], $low_stock),
         $current_week,
       ) + ['#weight' => 0];
-      $build['stat_tiles'] = $this->buildStatTiles($cache, $apiaries, $seasonal, count($low_stock), $year) + ['#weight' => 10];
+      $build['stat_tiles'] = $this->buildStatTiles($cache, $apiaries, $seasonal, count($low_stock), $year, $current_week) + ['#weight' => 10];
       $build['activity'] = [
         '#type' => 'container',
         '#attributes' => ['class' => ['hivelog-dashboard__split']],
@@ -836,8 +836,11 @@ class DashboardController extends ControllerBase {
    *   Number of low-stock items (count of collectLowStockAlerts()).
    * @param int $year
    *   The current year, for Net YTD.
+   * @param int $current_week
+   *   The current ISO week number, for the "Open seasonal tasks" tile's
+   *   link (task 0073).
    */
-  protected function buildStatTiles(CacheableMetadata $cache, array $apiaries, array $seasonal, int $low_stock_count, int $year): array {
+  protected function buildStatTiles(CacheableMetadata $cache, array $apiaries, array $seasonal, int $low_stock_count, int $year, int $current_week): array {
     $etm = $this->entityTypeManager;
     $apiary_ids = array_keys($apiaries);
 
@@ -891,7 +894,13 @@ class DashboardController extends ControllerBase {
       $this->statTile(
         (string) $seasonal['open_total'],
         $this->t('Open seasonal tasks'),
-        Url::fromRoute('entity.calendar_action.collection'),
+        // Defaults the collection page's week filter to "this week through
+        // the end of the year" — the open tally counts every unreported
+        // action regardless of week, so this is the closest the filtered
+        // table can get to matching it (see that page's own footnote).
+        Url::fromRoute('entity.calendar_action.collection', [], [
+          'query' => ['week_from' => (string) $current_week, 'week_to' => '53'],
+        ]),
         $seasonal['open_overdue'] ? $this->t('@n overdue', ['@n' => $seasonal['open_overdue']]) : '',
         $seasonal['open_overdue'] ? 'critical' : 'default',
       ),

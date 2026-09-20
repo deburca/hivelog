@@ -8,6 +8,14 @@
  * hivelog:entity-table SDC component instead.
  */
 
+/* Explanatory footnote below a list page's table (e.g. Calendar Actions,
+   task 0073) — same muted tone as the dashboard's empty-state text. */
+.hivelog-list-footnote {
+  margin: 0.75rem 0 0;
+  font-size: 0.85rem;
+  color: var(--hivelog-ink-muted);
+}
+
 /* Full-width tables. */
 .hivelog-inspection-table,
 .hivelog-queen-table,

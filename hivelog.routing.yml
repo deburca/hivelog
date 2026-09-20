@@ -302,7 +302,7 @@ entity.queen_observation.delete_form:
 entity.calendar_action.collection:
   path: '/hivelog/calendar-actions'
   defaults:
-    _entity_list: 'calendar_action'
+    _controller: '\Drupal\hivelog\Controller\CalendarActionController::collection'
     _title: 'Calendar Actions'
   requirements:
     _permission: 'view own calendar action+view any calendar action+administer hivelog'

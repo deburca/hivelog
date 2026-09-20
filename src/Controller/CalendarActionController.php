@@ -8,12 +8,16 @@ use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityFormBuilderInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Entity\Query\QueryInterface;
+use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Url;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\CalendarAction;
+use Drupal\hivelog\Form\HivelogCalendarActionsFilterForm;
 use Drupal\hivelog\Utility\SimpleBulletText;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Controller for Calendar Action pages.
@@ -21,9 +25,30 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class CalendarActionController extends ControllerBase {
 
   /**
+   * Default number of calendar actions shown per page on the collection page.
+   *
+   * Matches core EntityListBuilder's own default, since this controller
+   * replaces that default list builder on the route (task 0073).
+   */
+  public const CALENDAR_ACTIONS_PER_PAGE = 50;
+
+  /**
+   * Pager element id for the collection page's table.
+   *
+   * A standalone page — element 0 is safe to reuse, there is only ever
+   * one paginated list here.
+   */
+  protected const CALENDAR_ACTIONS_PAGER_ELEMENT = 0;
+
+  /**
    * The renderer.
    */
   protected RendererInterface $renderer;
+
+  /**
+   * The request stack.
+   */
+  protected RequestStack $requestStack;
 
   /**
    * Constructs a CalendarActionController.
@@ -32,12 +57,17 @@ class CalendarActionController extends ControllerBase {
     EntityTypeManagerInterface $entity_type_manager,
     EntityFormBuilderInterface $entity_form_builder,
     RendererInterface $renderer,
+    FormBuilderInterface $form_builder,
+    RequestStack $request_stack,
   ) {
-    // $entityTypeManager / $entityFormBuilder are untyped ControllerBase
-    // properties; assign them rather than redeclaring them with types.
+    // $entityTypeManager / $entityFormBuilder / $formBuilder are untyped
+    // ControllerBase properties; assign them rather than redeclaring them
+    // with types.
     $this->entityTypeManager = $entity_type_manager;
     $this->entityFormBuilder = $entity_form_builder;
     $this->renderer = $renderer;
+    $this->formBuilder = $form_builder;
+    $this->requestStack = $request_stack;
   }
 
   /**
@@ -48,7 +78,201 @@ class CalendarActionController extends ControllerBase {
       $container->get('entity_type.manager'),
       $container->get('entity.form_builder'),
       $container->get('renderer'),
+      $container->get('form_builder'),
+      $container->get('request_stack'),
     );
+  }
+
+  /**
+   * Lists every calendar action visible to the user, across all apiaries.
+   *
+   * Global companion to ApiaryController::fullCalendar() — filterable by
+   * week range so a beekeeper can find open/upcoming work without paging
+   * through every apiary's calendar, and so the dashboard's "Open seasonal
+   * tasks" stat tile can link straight to "the rest of the year from this
+   * week" (task 0073). Keeps CalendarActionListBuilder's original default
+   * of showing every row regardless of the `enabled` flag — this is the
+   * page a beekeeper uses to find and re-enable a disabled action.
+   */
+  public function collection(): array {
+    $build = [];
+
+    $build['filter'] = $this->formBuilder->getForm(HivelogCalendarActionsFilterForm::class);
+    $build['filter']['#weight'] = 0;
+
+    $filters = $this->extractCollectionFilters();
+    $query = $this->entityTypeManager
+      ->getStorage('calendar_action')
+      ->getQuery()
+      ->accessCheck(TRUE)
+      ->sort('week_start', 'ASC')
+      ->pager(static::CALENDAR_ACTIONS_PER_PAGE, static::CALENDAR_ACTIONS_PAGER_ELEMENT);
+    $this->applyCollectionFilters($query, $filters);
+    $calendar_action_ids = $query->execute();
+
+    $calendar_actions = $calendar_action_ids
+      ? $this->entityTypeManager->getStorage('calendar_action')->loadMultiple($calendar_action_ids)
+      : [];
+    $calendar_actions = array_filter(
+      $calendar_actions,
+      fn($calendar_action) => $calendar_action->access('view')
+    );
+
+    $scope_labels = [
+      'hive' => $this->t('Hive'),
+      'apiary' => $this->t('Apiary'),
+    ];
+
+    $header = [
+      $this->t('Title'),
+      $this->t('Apiary'),
+      $this->t('Scope'),
+      $this->t('Category'),
+      $this->t('Week(s)'),
+      $this->t('Enabled'),
+      $this->t('Operations'),
+    ];
+
+    $rows = [];
+    foreach ($calendar_actions as $calendar_action) {
+      $apiary = $calendar_action->get('apiary')->entity;
+
+      $week_start = $calendar_action->get('week_start')->value;
+      $week_end = $calendar_action->get('week_end')->value;
+      $weeks = ($week_end !== NULL && $week_end !== '' && (int) $week_end !== (int) $week_start)
+        ? $this->t('@start–@end', ['@start' => $week_start, '@end' => $week_end])
+        : (string) $week_start;
+
+      $scope = $calendar_action->get('scope')->value;
+      $scope_display = (string) ($scope_labels[$scope] ?? $scope);
+
+      $category = $calendar_action->get('category')->value;
+      $category_label = $category
+        ? ($calendar_action->get('category')->getSetting('allowed_values')[$category] ?? $category)
+        : '';
+
+      $enabled_display = $calendar_action->get('enabled')->value ? (string) $this->t('Yes') : (string) $this->t('Disabled');
+
+      $buttons = [];
+      if ($calendar_action->access('update')) {
+        $buttons[] = [
+          'label' => (string) $this->t('Edit'),
+          'url' => $calendar_action->toUrl('edit-form')->toString(),
+        ];
+      }
+      if ($calendar_action->access('delete')) {
+        $buttons[] = [
+          'label' => (string) $this->t('Delete'),
+          'url' => $calendar_action->toUrl('delete-form')->toString(),
+          'variant' => 'danger',
+        ];
+      }
+      $actions = [
+        '#type' => 'component',
+        '#component' => 'hivelog:button-group',
+        '#props' => ['buttons' => $buttons],
+      ];
+
+      $rows[] = [
+        'cells' => [
+          $calendar_action->toLink()->toString(),
+          $apiary ? $apiary->toLink()->toString() : '',
+          $scope_display,
+          (string) $category_label,
+          (string) $weeks,
+          $enabled_display,
+          $this->renderer->renderInIsolation($actions),
+        ],
+      ];
+    }
+
+    $build['table'] = [
+      '#type' => 'component',
+      '#component' => 'hivelog:entity-table',
+      '#props' => [
+        'headers' => array_map('strval', $header),
+        'rows' => $rows,
+        'empty_message' => (string) (!empty($filters)
+          ? $this->t('No calendar actions match the current filters.')
+          : $this->t('No calendar actions have been added yet.')),
+      ],
+      '#weight' => 1,
+    ];
+
+    $build['pager'] = [
+      '#type' => 'pager',
+      '#element' => static::CALENDAR_ACTIONS_PAGER_ELEMENT,
+      '#weight' => 2,
+    ];
+
+    $build['footnote'] = [
+      '#type' => 'html_tag',
+      '#tag' => 'p',
+      '#attributes' => ['class' => ['hivelog-list-footnote']],
+      '#attached' => ['library' => ['hivelog/tables']],
+      '#value' => $this->t('How "Open seasonal tasks" is counted: the dashboard tile counts every enabled calendar action not yet reported Done or Ignored for the current year, for any week — an apiary-scoped action counts once, a hive-scoped action counts once per hive in its apiary that has not reported it. This table lists each calendar action once (not fanned out per hive); use the week filter above to narrow it down.'),
+      '#weight' => 3,
+    ];
+
+    $cache = CacheableMetadata::createFromRenderArray($build)
+      ->addCacheContexts(['url.query_args', 'user.permissions'])
+      ->addCacheTags($this->entityTypeManager->getDefinition('calendar_action')->getListCacheTags());
+    foreach ($calendar_actions as $calendar_action) {
+      $cache->addCacheableDependency($calendar_action);
+    }
+    $cache->applyTo($build);
+
+    return $build;
+  }
+
+  /**
+   * Extracts Calendar Actions collection filter values from the request.
+   *
+   * @return array{week_from?: int, week_to?: int}
+   *   Associative array keyed by filter name. Only present values are
+   *   included, each clamped to the valid 1–53 ISO week range and swapped
+   *   into order if given reversed.
+   */
+  protected function extractCollectionFilters(): array {
+    $request = $this->requestStack->getCurrentRequest();
+    if (!$request) {
+      return [];
+    }
+
+    $filters = [];
+
+    $week_from = trim((string) $request->query->get('week_from', ''));
+    if ($week_from !== '' && ctype_digit($week_from)) {
+      $filters['week_from'] = max(1, min(53, (int) $week_from));
+    }
+
+    $week_to = trim((string) $request->query->get('week_to', ''));
+    if ($week_to !== '' && ctype_digit($week_to)) {
+      $filters['week_to'] = max(1, min(53, (int) $week_to));
+    }
+
+    if (isset($filters['week_from'], $filters['week_to']) && $filters['week_from'] > $filters['week_to']) {
+      [$filters['week_from'], $filters['week_to']] = [$filters['week_to'], $filters['week_from']];
+    }
+
+    return $filters;
+  }
+
+  /**
+   * Applies Calendar Actions collection filters to an entity query.
+   *
+   * Matches against `week_start` only, the same simplified "does the
+   * action start in this window" semantic DashboardController::
+   * buildUpcoming() already uses for its own week-range look-ahead, rather
+   * than a full window-overlap check against `week_end` too.
+   */
+  protected function applyCollectionFilters(QueryInterface $query, array $filters): void {
+    if (isset($filters['week_from'])) {
+      $query->condition('week_start', $filters['week_from'], '>=');
+    }
+    if (isset($filters['week_to'])) {
+      $query->condition('week_start', $filters['week_to'], '<=');
+    }
   }
 
   /**
