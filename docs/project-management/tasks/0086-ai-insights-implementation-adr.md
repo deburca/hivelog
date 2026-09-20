@@ -8,8 +8,8 @@ area: entity
 created: 2026-09-20
 branch: feature/0086-ai-insights-implementation-adr
 release:
-depends-on: ["[[0084-ai-insights-hosting-and-privacy-decision]]"]
-blocked-by: ["[[0084-ai-insights-hosting-and-privacy-decision]]"]
+depends-on: ["[[0084-ai-insights-hosting-and-privacy-decision]]", "[[0087-ai-insights-hosting-and-privacy-model]]"]
+blocked-by:
 ---
 # Task: Write the AI-insights implementation ADR
 
@@ -44,10 +44,12 @@ endpoint, UI) get broken out from *this* ADR once it lands, the same way
 - [ ] Hive-scoped vs. apiary-scoped insights — resolve the open question
       from [[ai-apiary-insights]]'s project file rather than leaving it
       open a second time.
-- [ ] Incorporates [[0084-ai-insights-hosting-and-privacy-decision]]'s
-      outcome directly (model/hosting choice, what data may cross any
-      external boundary, the consent model) — this task cannot
-      meaningfully start without that decision made.
+- [ ] Incorporates [[0087-ai-insights-hosting-and-privacy-model]]'s
+      decision directly: hosted API by default (self-hosting as a
+      supported alternative), the per-field data-minimisation table, and
+      the new `Apiary.ai_insights_enabled` consent field — no longer
+      blocked, since [[0084-ai-insights-hosting-and-privacy-decision]]
+      is done.
 - [ ] Incorporates [[0085-sensor-less-insight-prototype]]'s findings if
       available at the time (not a hard blocker, since that task has no
       `depends-on`/`blocked-by` here, but its conclusion should shape
@@ -61,5 +63,6 @@ endpoint, UI) get broken out from *this* ADR once it lands, the same way
 ## Related
 - Project:: [[ai-apiary-insights]]
 - Decisions:: [[0083-ai-assisted-apiary-insights]],
+  [[0087-ai-insights-hosting-and-privacy-model]],
   [[0074-sensor-data-ingestion-architecture]]
 - Commits::

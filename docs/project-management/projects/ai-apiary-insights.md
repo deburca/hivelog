@@ -33,17 +33,27 @@ built design.
     verdicts.
   - Advisory only: never marks anything done, never places an order,
     never acts on the beekeeper's behalf.
-- Explicitly not yet decided (see Open questions) — none of these should
-  be guessed by picking up an implementation task prematurely:
-  - Which model/service does the reasoning, and where it's hosted.
-  - How apiary location and other potentially sensitive data are
-    handled if a third-party hosted API is ever used
-    ([[0015-apiary-location-privacy]] is the precedent this has to
-    satisfy, not just resemble).
+- In scope, decided (per [[0087-ai-insights-hosting-and-privacy-model]],
+  resolving [[0084-ai-insights-hosting-and-privacy-decision]]):
+  - A hosted API by default (not self-hosted) — reasoning quality and
+    zero ops burden win, and real cost turned out negligible at
+    hivelog's scale (~$6.57/year for the actual 4-hive Vand Værk
+    apiary at Haiku-tier pricing). Self-hosting stays a fully supported
+    alternative, not foreclosed.
+  - Data minimisation is mandatory: apiary GPS/location is never sent;
+    hive/apiary names are never sent (opaque ids only, resolved back to
+    real names inside hivelog's own UI); sensor data goes as derived
+    summaries, never raw readings; inspection notes and harvest/
+    inventory figures are excluded from the default payload.
+  - A new opt-in consent field, `Apiary.ai_insights_enabled` (default
+    `FALSE`), mirroring `Apiary.visibility`'s per-apiary shape — the
+    daily job never runs for an apiary where this isn't explicitly
+    turned on.
+- Explicitly not yet decided (see Open questions):
   - The exact `HiveInsight` schema.
   - Where insights surface in the UI (a hive-page panel, a dashboard
     rollup, both).
-  - Cost model / who pays for API calls at what cadence.
+  - Hive-scoped vs. apiary-scoped insights.
 - Out of scope entirely for now: any auto-acting behaviour (auto-adding
   a super to inventory, auto-marking a calendar action done, sending
   notifications on the beekeeper's behalf) — see
@@ -62,31 +72,36 @@ Three investigation/decision tasks — deliberately not implementation
 tasks, since [[0083-ai-assisted-apiary-insights]] is intentionally
 incomplete and, per its own Consequences, "cannot be picked up as an
 implementation task yet":
-- [[0084-ai-insights-hosting-and-privacy-decision]] — backlog (do first;
-  the ADR's single most gating open question; output is a written
-  decision, not code)
+- [[0084-ai-insights-hosting-and-privacy-decision]] — **done** — output
+  is [[0087-ai-insights-hosting-and-privacy-model]] (hosted API by
+  default, per-field data minimisation, new `Apiary.ai_insights_enabled`
+  consent field).
 - [[0085-sensor-less-insight-prototype]] — backlog (independent spike;
-  no hard dependency, can run in parallel with 0084)
-- [[0086-ai-insights-implementation-adr]] — backlog, blocked on 0084 —
-  the actual "proper follow-up ADR"
-  [[0083-ai-assisted-apiary-insights]] deferred to; real implementation
-  tasks (entity, agent endpoint, UI) get broken out from *that* ADR once
-  it lands, the same way [[0074-sensor-data-ingestion-architecture]] led
-  to [[0076-sensor-device-and-reading-entities]] onward.
+  no hard dependency, can run in parallel with/after 0084).
+- [[0086-ai-insights-implementation-adr]] — backlog, **no longer
+  blocked** now that 0084/0087 have landed — the actual "proper
+  follow-up ADR" [[0083-ai-assisted-apiary-insights]] deferred to; real
+  implementation tasks (entity, agent endpoint, UI) get broken out from
+  *that* ADR once it lands, the same way
+  [[0074-sensor-data-ingestion-architecture]] led to
+  [[0076-sensor-device-and-reading-entities]] onward.
 
 ## Open questions
-- Model/hosting choice: a self-hosted open model (no data ever leaves
-  hivelog's own infrastructure, but real ops burden and likely lower
-  reasoning quality) vs. a hosted third-party API (better quality, real
-  per-call cost, and the privacy question below becomes load-bearing).
-- Privacy: per [[0083-ai-assisted-apiary-insights]] §6, if a hosted API
-  is used, what exactly is safe to send off-site? Apiary GPS/location is
-  the clearest example of data that must not travel raw, per
-  [[0015-apiary-location-privacy]]'s existing precedent — but inspection
-  notes, hive names, and yield figures may carry their own sensitivity a
-  beekeeper hasn't been asked about yet. Needs an explicit opt-in model,
-  not an assumption that existing data-sharing consent (there isn't
-  any, today) extends to this.
+- ~~Model/hosting choice: a self-hosted open model vs. a hosted
+  third-party API.~~ **Resolved 2026-09-20** in
+  [[0087-ai-insights-hosting-and-privacy-model]]: hosted API by
+  default (cost turned out negligible at hivelog's scale — the deciding
+  factor was never money), self-hosting kept as a fully supported
+  alternative.
+- ~~Privacy: what exactly is safe to send off-site?~~ **Resolved
+  2026-09-20** in [[0087-ai-insights-hosting-and-privacy-model]]: a full
+  per-field table (location and names never sent; sensor data as
+  derived summaries; inspection notes and harvest/inventory excluded by
+  default), plus a new opt-in `Apiary.ai_insights_enabled` consent
+  field. Worth a second look once [[0086-ai-insights-implementation-adr]]
+  is drafted: excluding inspection notes/harvest data by default may
+  turn out to cost real recommendation quality, per that ADR's own
+  Consequences.
 - `HiveInsight` schema and UI surface — deliberately not designed in
   [[0083-ai-assisted-apiary-insights]]; first real design work once the
   above two are answered.
@@ -100,15 +115,19 @@ implementation task yet":
   prototype would clarify whether that's true in practice.
 
 ## Related decisions
-- [[0083-ai-assisted-apiary-insights]] (proposed — the only decision made
-  so far; almost everything else is an open question above)
+- [[0083-ai-assisted-apiary-insights]] (proposed — the overall shape;
+  hosting/privacy resolved below, schema/UI still open)
+- [[0087-ai-insights-hosting-and-privacy-model]] (accepted — hosting
+  choice, data minimisation, consent field)
 - [[0074-sensor-data-ingestion-architecture]] (the device-token
   provisioning pattern this reuses; §7's threshold alerts this sits
   alongside, not replaces)
-- [[0015-apiary-location-privacy]] (the precedent any third-party data
-  sharing has to satisfy)
+- [[0015-apiary-location-privacy]] (the precedent
+  [[0087-ai-insights-hosting-and-privacy-model]]'s data-minimisation
+  table satisfies)
 - [[0006-contrib-dependency-policy]] (written for contrib PHP modules;
-  needs a conscious decision about whether/how its spirit extends to an
-  external paid API, not an assumption)
+  [[0087-ai-insights-hosting-and-privacy-model]] makes the conscious
+  call that a hosted API is still the right choice despite that
+  minimal-footprint spirit, for reasons specific to this feature)
 - [[0025-seasonal-calendar-and-hive-action-tracking]] (one of the several
   existing data sources an insight would reason over)
