@@ -29,8 +29,21 @@ time.
       [[0075-sensor-hardware-and-connectivity-selection]]) or the
       already-sourced Arduino, plus the already-sourced 868 MHz LoRa
       radio module.
+- [ ] Power the sensor node per [[0095-renewable-power-for-apiary-equipment]]
+      §1: a small (1–2 W) solar panel, a TP4056-class solar-input Li-ion
+      charge controller, and a LiFePO4 cell (preferred over standard
+      Li-ion given this apiary's real Danish winter conditions — see
+      that ADR's cold-climate note). Use a bare ESP32-WROOM module or
+      remove the dev board's power LED — the real-world gap between a
+      board's advertised deep-sleep current and what an unmodified dev
+      board actually draws matters more to battery life than panel
+      wattage. Confirm actual measured sleep/active current on the real
+      assembled node, not just the datasheet figure.
 - [ ] Assemble the receiver node: a matching LoRa radio on an
-      ESP32/Arduino with WiFi, sited near the house/router.
+      ESP32/Arduino with WiFi, sited near the house/router — per
+      [[0095-renewable-power-for-apiary-equipment]]'s scoping, this is
+      not "at/around the apiary" and stays on ordinary mains power; no
+      solar/battery build needed for it.
 - [ ] Sensor firmware: reads the HX711 on a timer (15–60 minute interval
       per [[0074-sensor-data-ingestion-architecture]] §5), transmits a
       raw point-to-point LoRa packet carrying the weight reading — no
@@ -50,6 +63,14 @@ time.
       correct-within-expected-accuracy `SensorReading` appears in HiveLog
       within one reporting interval, and `SensorDevice.last_seen`
       updates.
+- [ ] Multi-day power smoke test: leave the sensor node running on
+      solar + battery alone (no bench power, no manual recharge) for at
+      least a week, ideally spanning a mix of sunny and overcast days,
+      and confirm it keeps reporting on schedule throughout — a
+      real-world check against
+      [[0095-renewable-power-for-apiary-equipment]]'s "2–3 weeks of
+      cloudy-season autonomy, not the optimistic capacity÷current
+      arithmetic" guidance, not just a component-datasheet assumption.
 - [ ] Document the wiring and firmware source somewhere reproducible for
       a second device (a small firmware repo, or a `hardware/` doc
       folder — exact location decided during implementation; it does not
@@ -68,5 +89,6 @@ time.
 ## Related
 - Project:: [[sensor-data-collection]]
 - Decisions:: [[0075-sensor-hardware-and-connectivity-selection]],
+  [[0095-renewable-power-for-apiary-equipment]],
   [[0074-sensor-data-ingestion-architecture]]
 - Commits::

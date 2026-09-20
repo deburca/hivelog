@@ -13,6 +13,15 @@ first against [[0074-sensor-data-ingestion-architecture]] — not a
 constraint enforced by any code. Nothing here blocks a different hardware
 choice later; the ingestion contract is transport-agnostic by design.
 
+**Power constraint added 2026-09-20**: all equipment at/around the
+apiaries must run on renewable power (solar + battery), not mains or
+disposable batteries alone — see
+[[0095-renewable-power-for-apiary-equipment]], recorded as its own ADR
+rather than a rewrite here. The pilot recommendation below is
+unaffected in shape (point-to-point, receiver near the house); that ADR
+adds the sensor node's power budget and flags the harder gateway-class
+case for later phases.
+
 ## Context
 [[0074-sensor-data-ingestion-architecture]] decided *what HiveLog accepts*
 (one HTTP contract) and deliberately said nothing about *what hardware

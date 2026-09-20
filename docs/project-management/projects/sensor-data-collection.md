@@ -41,6 +41,10 @@ hardware/protocol recommendation.
   - A pilot build per [[0075-sensor-hardware-and-connectivity-selection]]:
     a load-cell weight sensor on an ESP32/Arduino, point-to-point raw
     LoRa to a WiFi-bridged receiver, for one hive.
+  - The sensor node runs on solar + battery, not mains or disposable
+    batteries — per [[0095-renewable-power-for-apiary-equipment]]. The
+    receiver stays on ordinary mains power (sited at the house, out of
+    that ADR's "at/around the apiary" scope).
 - In scope (Phase 2+, sequenced but not yet broken into tasks):
   1. Dashboard "Needs attention" integration — device-offline, sudden
      weight-drop, and out-of-range-temperature alerts, feeding the
@@ -90,15 +94,17 @@ to happen before any telemetry can flow at all.
 
 ```mermaid
 flowchart LR
-    subgraph HIVE["At the hive (battery powered)"]
+    subgraph HIVE["At the hive (solar + battery powered)"]
+        SOLAR["Solar panel + charge controller<br/>+ LiFePO4 cell"]
         LC["Load cell<br/>half-bridge strain gauge"]
         HX["HX711<br/>24-bit ADC amplifier"]
         SN["Sensor node<br/>ESP32/Arduino + 868MHz LoRa radio<br/>= the SensorDevice (scope=hive)"]
+        SOLAR -.->|"power"| SN
         LC -->|"analog differential<br/>signal (mV)"| HX
         HX -->|"2-wire digital<br/>(clock + data)"| SN
     end
 
-    subgraph HOUSE["Near the house/router"]
+    subgraph HOUSE["Near the house/router (mains powered)"]
         RX["Receiver node<br/>ESP32/Arduino + matching LoRa radio<br/>holds the SensorDevice's<br/>config descriptor + token"]
     end
 
@@ -128,7 +134,10 @@ Steps 0a–0c happen once, when the device is first set up (or whenever its
 token is regenerated); steps ①–③ are the recurring, unattended cycle.
 Nothing here needs a LoRaWAN gateway, a network server account, or
 temperature/humidity hardware — those are later, out-of-scope additions
-per the Scope section above.
+per the Scope section above. The dashed power link into the sensor node
+is the only equipment in this diagram [[0095-renewable-power-for-apiary-equipment]]
+actually constrains — the receiver sits at the house, already on mains,
+outside that ADR's "at/around the apiary" scope.
 
 ## Tasks
 ```dataview
@@ -165,6 +174,10 @@ Static index (in execution order):
   dashboard integration)
 - [[0075-sensor-hardware-and-connectivity-selection]] (accepted —
   protocol/hardware recommendation)
+- [[0095-renewable-power-for-apiary-equipment]] (accepted — solar/battery
+  power constraint on the sensor node; flags the harder gateway-class
+  case for any future phase that needs a dedicated, off-grid LoRaWAN
+  gateway)
 - [[0003-code-defined-entity-schema]] (baseFieldDefinitions + update
   hooks pattern reused for both new entities)
 - [[0004-custom-controllers-over-view-builders]] (the ingestion route and
