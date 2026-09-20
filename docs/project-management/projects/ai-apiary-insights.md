@@ -1,22 +1,27 @@
 ---
 type: project
 tags: [hivelog/project]
-status: planning
+status: active
 target:
 created: 2026-09-20
 ---
 # Project: AI-assisted apiary insights
 
 ## Goal
-Synthesise multiple existing signals per hive — sensor trends (once
-[[sensor-data-collection]] exists), inspection history, the seasonal
-calendar's plan/status, queen status, and recent harvests/feeding — into
-one explained, three-way daily recommendation: an action to take now
-(e.g. add a super), a reason to inspect soon (e.g. possible swarm risk),
-or an explicit "all clear, no inspection needed." See
-[[0083-ai-assisted-apiary-insights]] (proposed) — deliberately
-under-specified; most of this project is still open questions, not a
-built design.
+Synthesise multiple existing signals per hive — inspection history, the
+seasonal calendar's plan/status, queen status, and (once
+[[sensor-data-collection]] exists) sensor trends — into one explained,
+three-way daily recommendation: an action to take now (e.g. add a
+super), a reason to inspect soon (e.g. possible swarm risk), or an
+explicit "all clear, no inspection needed." Design is now largely
+settled: [[0083-ai-assisted-apiary-insights]] (the shape),
+[[0087-ai-insights-hosting-and-privacy-model]] (hosting/privacy),
+[[0085-sensor-less-insight-prototype]] (validated the approach works),
+and [[0088-ai-insights-implementation]] (the real schema/API/UI design)
+— all landed 2026-09-20. Next step is breaking
+[[0088-ai-insights-implementation]] into implementation task files, the
+same way [[0074-sensor-data-ingestion-architecture]] became
+[[0076-sensor-device-and-reading-entities]] onward.
 
 ## Scope
 - In scope, decided (per [[0083-ai-assisted-apiary-insights]]):
@@ -49,11 +54,24 @@ built design.
     `FALSE`), mirroring `Apiary.visibility`'s per-apiary shape — the
     daily job never runs for an apiary where this isn't explicitly
     turned on.
-- Explicitly not yet decided (see Open questions):
-  - The exact `HiveInsight` schema.
-  - Where insights surface in the UI (a hive-page panel, a dashboard
-    rollup, both).
-  - Hive-scoped vs. apiary-scoped insights.
+- In scope, decided (per [[0088-ai-insights-implementation]]):
+  - Two new entities: `InsightAgent` (a site-level credential — not
+    apiary/hive-scoped like `SensorDevice`, since one external process
+    serves every opted-in apiary) and `HiveInsight` (the actual
+    recommendation, reusing the `CalendarAction`/`SensorDevice`
+    apiary/hive `scope` duality).
+  - Two endpoints behind the `InsightAgent` token: a context-read
+    endpoint (the actual enforcement point for
+    `ai_insights_enabled` and every data-minimisation rule) and the
+    insight write-back.
+  - Hive-scoped only for Phase 1 — apiary-scoped deferred to Phase 2.
+  - UI: a hive-page panel (with staleness flagging), and a dashboard
+    section kept separate from "Needs attention" with a positive
+    "N hives all clear today" summary line.
+  - Two explicit, non-optional pre-launch checks carried forward from
+    [[0085-sensor-less-insight-prototype]]: re-validate at the actual
+    Haiku-class production model tier, and test ambiguous/sparse
+    inspection histories.
 - Out of scope entirely for now: any auto-acting behaviour (auto-adding
   a super to inventory, auto-marking a calendar action done, sending
   notifications on the beekeeper's behalf) — see
@@ -68,10 +86,7 @@ FROM #hivelog/task
 WHERE contains(string(project), this.file.name)
 SORT status asc, priority asc
 ```
-Three investigation/decision tasks — deliberately not implementation
-tasks, since [[0083-ai-assisted-apiary-insights]] is intentionally
-incomplete and, per its own Consequences, "cannot be picked up as an
-implementation task yet":
+All three investigation/decision tasks are done:
 - [[0084-ai-insights-hosting-and-privacy-decision]] — **done** — output
   is [[0087-ai-insights-hosting-and-privacy-model]] (hosted API by
   default, per-field data minimisation, new `Apiary.ai_insights_enabled`
@@ -82,13 +97,25 @@ implementation task yet":
   produce; two real gaps flagged as pre-launch checks (untested at the
   actually-intended cheaper model tier; untested on ambiguous/sparse
   data), not as blockers.
-- [[0086-ai-insights-implementation-adr]] — backlog, **no longer
-  blocked** now that 0084/0087 have landed — the actual "proper
-  follow-up ADR" [[0083-ai-assisted-apiary-insights]] deferred to; real
-  implementation tasks (entity, agent endpoint, UI) get broken out from
-  *that* ADR once it lands, the same way
-  [[0074-sensor-data-ingestion-architecture]] led to
-  [[0076-sensor-device-and-reading-entities]] onward.
+- [[0086-ai-insights-implementation-adr]] — **done** — output is
+  [[0088-ai-insights-implementation]], the real `HiveInsight`/
+  `InsightAgent` schema, API, access control, and UI design.
+
+Implementation, broken out from [[0088-ai-insights-implementation]]'s
+Decision section (static index, execution order):
+- [[0089-insight-agent-and-hive-insight-entities]] — backlog (do first;
+  everything else depends on it)
+- [[0090-insight-agent-api-endpoints]] — backlog
+- [[0091-insight-agent-management-ui]] — backlog
+- [[0092-hive-apiary-ai-insight-panel]] — backlog
+- [[0093-dashboard-ai-insights-section]] — backlog (also carries the
+  `InsightAgent` staleness alert, folded in rather than its own task)
+- [[0094-ai-insights-prelaunch-validation]] — backlog, **the release
+  gate**: not another design task, running [[0088-ai-insights-implementation]]
+  §6's two required checks against the real endpoints. Only needs
+  0089/0090 to exist — not blocked by the UI tasks — but nothing ships
+  to real beekeepers, and `ai_insights_enabled` is not safe to
+  recommend turning on, until this one passes.
 
 ## Open questions
 - ~~Model/hosting choice: a self-hosted open model vs. a hosted
@@ -106,12 +133,12 @@ implementation task yet":
   is drafted: excluding inspection notes/harvest data by default may
   turn out to cost real recommendation quality, per that ADR's own
   Consequences.
-- `HiveInsight` schema and UI surface — deliberately not designed in
-  [[0083-ai-assisted-apiary-insights]]; first real design work once the
-  above two are answered.
-- Should apiary-scoped insights exist too (e.g. "register renewal due,"
-  synthesising apiary-level calendar/inventory context), or is this
-  hive-only to start? Not addressed yet.
+- ~~`HiveInsight` schema and UI surface.~~ **Resolved 2026-09-20** in
+  [[0088-ai-insights-implementation]] §1/§4 — see Scope above.
+- ~~Should apiary-scoped insights exist too, or is this hive-only to
+  start?~~ **Resolved 2026-09-20** in [[0088-ai-insights-implementation]]
+  §5: schema supports both, Phase 1 ships hive-scoped only, apiary-scoped
+  deferred to Phase 2 until a concrete use case exists.
 - ~~Does this want [[sensor-data-collection]] to have shipped real pilot
   data first, or is inspection/calendar-only reasoning worth
   prototyping independently and sooner?~~ **Resolved 2026-09-20** in
@@ -121,17 +148,29 @@ implementation task yet":
   closed, though: the prototype used a large model, not the
   cost-optimised tier [[0087-ai-insights-hosting-and-privacy-model]]
   actually recommends starting at, and didn't test ambiguous/sparse
-  data — both carried forward as pre-launch checks for
-  [[0086-ai-insights-implementation-adr]].
+  data — both carried forward as pre-launch checks in
+  [[0088-ai-insights-implementation]] §6.
+- **Still genuinely open**: [[0088-ai-insights-implementation]] §6's two
+  pre-launch checks are *specified*, not yet *run* — Phase 1
+  implementation tasks can be broken out and built, but nothing ships to
+  real data until both actually pass. Don't treat "the ADR is accepted"
+  as "the checks are done."
 
 ## Related decisions
 - [[0083-ai-assisted-apiary-insights]] (proposed — the overall shape;
-  hosting/privacy resolved below, schema/UI still open)
+  every open question it deliberately left has now been resolved by the
+  three decisions below)
 - [[0087-ai-insights-hosting-and-privacy-model]] (accepted — hosting
   choice, data minimisation, consent field)
+- [[0085-sensor-less-insight-prototype]] — recorded as a task, not an
+  ADR, but functions as one: the evidence base for treating sensor-less
+  reasoning as in-scope for Phase 1
+- [[0088-ai-insights-implementation]] (accepted — the real
+  `HiveInsight`/`InsightAgent` schema, API, access control, UI design;
+  incorporates both decisions above directly)
 - [[0074-sensor-data-ingestion-architecture]] (the device-token
-  provisioning pattern this reuses; §7's threshold alerts this sits
-  alongside, not replaces)
+  provisioning pattern `InsightAgent` follows the spirit of; §7's
+  threshold alerts this sits alongside, not replaces)
 - [[0015-apiary-location-privacy]] (the precedent
   [[0087-ai-insights-hosting-and-privacy-model]]'s data-minimisation
   table satisfies)
@@ -139,5 +178,7 @@ implementation task yet":
   [[0087-ai-insights-hosting-and-privacy-model]] makes the conscious
   call that a hosted API is still the right choice despite that
   minimal-footprint spirit, for reasons specific to this feature)
-- [[0025-seasonal-calendar-and-hive-action-tracking]] (one of the several
-  existing data sources an insight would reason over)
+- [[0025-seasonal-calendar-and-hive-action-tracking]] /
+  [[0027-apiary-vs-hive-scoped-calendar-items]] (the hive-then-apiary
+  scoping sequence [[0088-ai-insights-implementation]] §5 deliberately
+  repeats)
