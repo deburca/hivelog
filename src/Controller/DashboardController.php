@@ -1006,7 +1006,8 @@ class DashboardController extends ControllerBase {
    * [current_week + 1, current_week + 4], one row per action (hive-scoped
    * actions are not fanned out — this is a forward plan, not a checklist).
    * Apiary-scoped actions already reported done / ignored for the year are
-   * dropped. No wraparound past week 53.
+   * dropped; hive-scoped actions drop the same way once every hive in the
+   * apiary has reported. No wraparound past week 53.
    *
    * @param \Drupal\Core\Cache\CacheableMetadata $cache
    *   Collects list cache tags and per-row dependencies.
@@ -1023,6 +1024,8 @@ class DashboardController extends ControllerBase {
 
     $cache->addCacheTags($etm->getDefinition('calendar_action')->getListCacheTags());
     $cache->addCacheTags($etm->getDefinition('apiary_action_log')->getListCacheTags());
+    $cache->addCacheTags($etm->getDefinition('hive_action_log')->getListCacheTags());
+    $cache->addCacheTags($etm->getDefinition('hive')->getListCacheTags());
 
     $block = [
       '#type' => 'container',
@@ -1054,9 +1057,14 @@ class DashboardController extends ControllerBase {
       ) : [];
 
       $reported = $this->reportedApiaryActionIds($apiary_ids, $actions, $year);
+      $reported_hive = $this->reportedHiveActionIds($apiary_ids, $actions, $year);
 
       foreach ($actions as $action) {
-        if ($action->get('scope')->value === 'apiary' && isset($reported[$action->id()])) {
+        $scope = $action->get('scope')->value;
+        if ($scope === 'apiary' && isset($reported[$action->id()])) {
+          continue;
+        }
+        if ($scope === 'hive' && isset($reported_hive[$action->id()])) {
           continue;
         }
         $cache->addCacheableDependency($action);
@@ -1124,6 +1132,74 @@ class DashboardController extends ControllerBase {
     foreach ($log_ids ? $this->entityTypeManager->getStorage('apiary_action_log')->loadMultiple($log_ids) : [] as $log) {
       /** @var \Drupal\hivelog\Entity\ApiaryActionLog $log */
       $reported[$log->get('calendar_action')->target_id] = TRUE;
+    }
+    return $reported;
+  }
+
+  /**
+   * Returns the ids of hive-scoped actions every hive has reported for a year.
+   *
+   * Unlike the needs-attention / open-tile pass, which tracks each hive's
+   * instance of a hive-scoped action separately, "Upcoming" shows one
+   * forward-looking row per action — so it only drops once EVERY hive in
+   * the action's apiary has a done / ignored log for the year.
+   *
+   * @param int[] $apiary_ids
+   *   Apiary ids to match.
+   * @param \Drupal\hivelog\Entity\CalendarAction[] $actions
+   *   The candidate actions (only the hive-scoped ones are checked).
+   * @param int $year
+   *   The reporting year.
+   *
+   * @return array<int|string, true>
+   *   A set keyed by calendar-action id.
+   */
+  protected function reportedHiveActionIds(array $apiary_ids, array $actions, int $year): array {
+    $hive_scoped = array_filter($actions, fn($action) => $action->get('scope')->value === 'hive');
+    if (!$hive_scoped) {
+      return [];
+    }
+
+    $etm = $this->entityTypeManager;
+    $hive_ids = $etm->getStorage('hive')->getQuery()
+      ->accessCheck(TRUE)
+      ->condition('apiary', $apiary_ids, 'IN')
+      ->execute();
+    if (!$hive_ids) {
+      return [];
+    }
+    $hives = array_filter(
+      $etm->getStorage('hive')->loadMultiple($hive_ids),
+      fn($hive) => $hive->access('view')
+    );
+    if (!$hives) {
+      return [];
+    }
+
+    $hives_by_apiary = [];
+    foreach ($hives as $hive) {
+      $hives_by_apiary[(int) $hive->get('apiary')->target_id][] = $hive->id();
+    }
+
+    $logs = $this->indexHiveLogs(array_keys($hives), array_keys($hive_scoped), $year);
+
+    $reported = [];
+    foreach ($hive_scoped as $action) {
+      $action_hive_ids = $hives_by_apiary[(int) $action->get('apiary')->target_id] ?? [];
+      if (!$action_hive_ids) {
+        continue;
+      }
+      $all_reported = TRUE;
+      foreach ($action_hive_ids as $hive_id) {
+        $log = $logs[$hive_id][$action->id()] ?? NULL;
+        if (!$log || $log->get('status')->value === 'pending') {
+          $all_reported = FALSE;
+          break;
+        }
+      }
+      if ($all_reported) {
+        $reported[$action->id()] = TRUE;
+      }
     }
     return $reported;
   }

@@ -10,6 +10,7 @@ use Drupal\hivelog\Entity\ApiaryActionLog;
 use Drupal\hivelog\Entity\CalendarAction;
 use Drupal\hivelog\Entity\HarvestYield;
 use Drupal\hivelog\Entity\Hive;
+use Drupal\hivelog\Entity\HiveActionLog;
 use Drupal\hivelog\Entity\HiveInspection;
 use Drupal\hivelog\Entity\InventoryItem;
 use Drupal\hivelog\Entity\InventoryPurchase;
@@ -891,6 +892,83 @@ class DashboardTest extends KernelTestBase {
     // "Recent activity", so assert on the row markup, not the title).
     $this->assertStringNotContainsString('hivelog-upcoming__row', $html);
     $this->assertStringContainsString('Nothing scheduled for the next four weeks', $html);
+  }
+
+  /**
+   * A hive-scoped action drops off "Upcoming" once every hive has reported.
+   */
+  public function testUpcomingSkipsFullyReportedHiveAction(): void {
+    $week = $this->weekOrSkipLateYear();
+    $user = $this->makeCurrentUser();
+    $apiary = Apiary::create(['name' => 'A1', 'uid' => $user->id()]);
+    $apiary->save();
+    $this->clearSeededCalendarActions();
+
+    $hive1 = Hive::create(['name' => 'H1', 'apiary' => $apiary->id(), 'status' => 'active']);
+    $hive1->save();
+    $hive2 = Hive::create(['name' => 'H2', 'apiary' => $apiary->id(), 'status' => 'active']);
+    $hive2->save();
+
+    $action = CalendarAction::create([
+      'apiary' => $apiary->id(),
+      'title' => 'Autumn weight check',
+      'description' => 'x',
+      'week_start' => $week + 2,
+      'scope' => 'hive',
+    ]);
+    $action->save();
+    HiveActionLog::create([
+      'hive' => $hive1->id(),
+      'calendar_action' => $action->id(),
+      'year' => (int) date('Y'),
+      'status' => 'done',
+    ])->save();
+    HiveActionLog::create([
+      'hive' => $hive2->id(),
+      'calendar_action' => $action->id(),
+      'year' => (int) date('Y'),
+      'status' => 'ignored',
+    ])->save();
+
+    $html = $this->renderBuild($this->controller()->view());
+
+    $this->assertStringNotContainsString('hivelog-upcoming__row', $html);
+    $this->assertStringContainsString('Nothing scheduled for the next four weeks', $html);
+  }
+
+  /**
+   * A hive-scoped action stays on "Upcoming" while any hive is still pending.
+   */
+  public function testUpcomingKeepsPartiallyReportedHiveAction(): void {
+    $week = $this->weekOrSkipLateYear();
+    $user = $this->makeCurrentUser();
+    $apiary = Apiary::create(['name' => 'A1', 'uid' => $user->id()]);
+    $apiary->save();
+    $this->clearSeededCalendarActions();
+
+    $hive1 = Hive::create(['name' => 'H1', 'apiary' => $apiary->id(), 'status' => 'active']);
+    $hive1->save();
+    Hive::create(['name' => 'H2', 'apiary' => $apiary->id(), 'status' => 'active'])->save();
+
+    $action = CalendarAction::create([
+      'apiary' => $apiary->id(),
+      'title' => 'Autumn weight check',
+      'description' => 'x',
+      'week_start' => $week + 2,
+      'scope' => 'hive',
+    ]);
+    $action->save();
+    HiveActionLog::create([
+      'hive' => $hive1->id(),
+      'calendar_action' => $action->id(),
+      'year' => (int) date('Y'),
+      'status' => 'done',
+    ])->save();
+
+    $html = $this->renderBuild($this->controller()->view());
+
+    $this->assertStringContainsString('hivelog-upcoming__row', $html);
+    $this->assertStringContainsString('Autumn weight check', $html);
   }
 
   /**
