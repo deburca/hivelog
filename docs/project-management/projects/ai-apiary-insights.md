@@ -76,8 +76,12 @@ implementation task yet":
   is [[0087-ai-insights-hosting-and-privacy-model]] (hosted API by
   default, per-field data minimisation, new `Apiary.ai_insights_enabled`
   consent field).
-- [[0085-sensor-less-insight-prototype]] — backlog (independent spike;
-  no hard dependency, can run in parallel with/after 0084).
+- [[0085-sensor-less-insight-prototype]] — **done** — finding:
+  inspection/calendar-only reasoning works well for all three verdicts,
+  including genuine multi-signal value a fixed threshold rule can't
+  produce; two real gaps flagged as pre-launch checks (untested at the
+  actually-intended cheaper model tier; untested on ambiguous/sparse
+  data), not as blockers.
 - [[0086-ai-insights-implementation-adr]] — backlog, **no longer
   blocked** now that 0084/0087 have landed — the actual "proper
   follow-up ADR" [[0083-ai-assisted-apiary-insights]] deferred to; real
@@ -108,11 +112,17 @@ implementation task yet":
 - Should apiary-scoped insights exist too (e.g. "register renewal due,"
   synthesising apiary-level calendar/inventory context), or is this
   hive-only to start? Not addressed yet.
-- Does this want [[sensor-data-collection]] to have shipped real pilot
-  data first, or is inspection/calendar-only reasoning (no sensors at
-  all) worth prototyping independently and sooner? [[0083-ai-assisted-apiary-insights]]
-  argues the value doesn't strictly require sensors, but a real
-  prototype would clarify whether that's true in practice.
+- ~~Does this want [[sensor-data-collection]] to have shipped real pilot
+  data first, or is inspection/calendar-only reasoning worth
+  prototyping independently and sooner?~~ **Resolved 2026-09-20** in
+  [[0085-sensor-less-insight-prototype]]: yes, worth pursuing
+  independently — sensor-less reasoning already produces genuinely
+  useful, well-cited output across all three verdicts. Not fully
+  closed, though: the prototype used a large model, not the
+  cost-optimised tier [[0087-ai-insights-hosting-and-privacy-model]]
+  actually recommends starting at, and didn't test ambiguous/sparse
+  data — both carried forward as pre-launch checks for
+  [[0086-ai-insights-implementation-adr]].
 
 ## Related decisions
 - [[0083-ai-assisted-apiary-insights]] (proposed — the overall shape;

@@ -8,7 +8,7 @@ area: entity
 created: 2026-09-20
 branch: feature/0086-ai-insights-implementation-adr
 release:
-depends-on: ["[[0084-ai-insights-hosting-and-privacy-decision]]", "[[0087-ai-insights-hosting-and-privacy-model]]"]
+depends-on: ["[[0084-ai-insights-hosting-and-privacy-decision]]", "[[0087-ai-insights-hosting-and-privacy-model]]", "[[0085-sensor-less-insight-prototype]]"]
 blocked-by:
 ---
 # Task: Write the AI-insights implementation ADR
@@ -50,11 +50,20 @@ endpoint, UI) get broken out from *this* ADR once it lands, the same way
       the new `Apiary.ai_insights_enabled` consent field — no longer
       blocked, since [[0084-ai-insights-hosting-and-privacy-decision]]
       is done.
-- [ ] Incorporates [[0085-sensor-less-insight-prototype]]'s findings if
-      available at the time (not a hard blocker, since that task has no
-      `depends-on`/`blocked-by` here, but its conclusion should shape
-      whether this ADR treats sensor-less reasoning as in-scope for the
-      first real implementation or a later addition).
+- [ ] Incorporates [[0085-sensor-less-insight-prototype]]'s finding:
+      treat sensor-less (inspection/calendar-only) reasoning as in-scope
+      for the first real implementation, not gated on
+      [[sensor-data-collection]] shipping — the prototype found genuine,
+      well-cited value from structured `HiveInspection` fields alone.
+      Must also carry forward that prototype's two flagged gaps as
+      explicit pre-launch checks in this ADR's own acceptance criteria,
+      not silently drop them: (a) validate output quality at the actual
+      cost-optimised model tier [[0087-ai-insights-hosting-and-privacy-model]]
+      recommends starting at (Haiku-class), not just the larger model
+      the prototype used; (b) test behaviour on ambiguous/sparse
+      inspection histories (e.g. a new hive with one inspection ever),
+      which the prototype's three deliberately-clear scenarios didn't
+      cover.
 - [ ] Once accepted, this ADR's own "Decision" section should be broken
       into numbered implementation tasks the same way
       [[0074-sensor-data-ingestion-architecture]] was — that breakdown is
