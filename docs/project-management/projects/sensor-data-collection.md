@@ -72,7 +72,12 @@ hardware/protocol recommendation.
   - Forecasting/anomaly ML — Phase 2's alerts are fixed thresholds,
     consistent with the module's existing "simple, explainable rules"
     style (the seasonal calendar is a fixed week window, not a predictive
-    schedule either).
+    schedule either). Multi-signal, AI-synthesised recommendations
+    ("add a super," "inspect — swarm risk," "all clear") are a distinct,
+    later initiative — tracked separately as
+    [[ai-apiary-insights]] ([[0083-ai-assisted-apiary-insights]],
+    proposed and deliberately under-specified), not bundled into this
+    project's own Phase 2 alerts.
 
 ## Architecture (Phase 1 pilot — one hive, weight only)
 The minimal component set from [[0074-sensor-data-ingestion-architecture]]
@@ -132,19 +137,17 @@ FROM #hivelog/task
 WHERE contains(string(project), this.file.name)
 SORT status asc, priority asc
 ```
-Not yet broken into individual task files. Suggested breakdown, in
-execution order:
-1. `SensorDevice` + `SensorReading` entity schema, access control
-   (`ApiaryAccessTrait` extension), update hooks.
-2. Ingestion endpoint + device-token authentication.
-3. Configuration-descriptor generation/download from the `SensorDevice`
-   canonical page.
-4. Pilot hardware build (weight sensor, point-to-point LoRa) and an
-   end-to-end smoke test against a real device, using a real generated
-   config file.
-5. "Sensors" panel on hive/apiary pages.
-6. Dashboard "Needs attention" alert rules.
-7. Retention/rollup cron job.
+Static index (in execution order):
+- [[0076-sensor-device-and-reading-entities]] — backlog (do first;
+  everything else depends on it)
+- [[0077-sensor-ingestion-endpoint-and-device-auth]] — backlog
+- [[0078-sensor-device-configuration-descriptor]] — backlog
+- [[0079-pilot-weight-sensor-hardware-build]] — backlog (the real-hardware
+  proof; no PHP test-suite deliverable of its own)
+- [[0080-hive-apiary-sensors-panel]] — backlog
+- [[0081-sensor-needs-attention-alerts]] — backlog
+- [[0082-sensor-reading-retention-and-rollup]] — backlog, low priority
+  (not required for the Phase 1 pilot; required before general rollout)
 
 ## Open questions
 - Exact alert thresholds for Phase 2 (how large a weight drop, how far
