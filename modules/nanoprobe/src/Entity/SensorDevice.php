@@ -12,6 +12,7 @@ use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\Core\Url;
 use Drupal\hivelog\HivelogEntityStorage;
 use Drupal\nanoprobe\SensorDeviceAccessControlHandler;
 use Drupal\user\EntityOwnerInterface;
@@ -51,11 +52,48 @@ use Drupal\user\EntityOwnerTrait;
     'uuid' => 'uuid',
     'owner' => 'uid',
   ],
+  links: [
+    'canonical' => '/hivelog/sensor-device/{sensor_device}',
+  ],
 )]
 class SensorDevice extends ContentEntityBase implements EntityChangedInterface, EntityOwnerInterface {
 
   use EntityChangedTrait;
   use EntityOwnerTrait;
+
+  /**
+   * The config descriptor's `transport.suggested_interval_seconds` default.
+   *
+   * 1800 seconds (30 minutes) sits mid-band within
+   * [[0074-sensor-data-ingestion-architecture]] §5's recommended 15–60
+   * minute sampling interval — advisory only, firmware may use a
+   * different value; the ingestion endpoint never enforces it.
+   */
+  public const DEFAULT_SUGGESTED_INTERVAL_SECONDS = 1800;
+
+  /**
+   * Maps `device_type` to the `SensorReading::METRIC_TYPES` it reports.
+   *
+   * `multi` and `other` are deliberately absent — device types with no
+   * known restriction fall back to the full metric taxonomy in
+   * `getConfigMetrics()`, rather than guessing a subset. Every mapped
+   * type also gets `battery_voltage`/`signal_rssi` — diagnostic metrics
+   * useful regardless of what the device primarily senses.
+   */
+  public const DEVICE_TYPE_METRICS = [
+    'weight' => ['weight_kg', 'battery_voltage', 'signal_rssi'],
+    'temperature_humidity' => [
+      'temp_internal_c',
+      'temp_external_c',
+      'humidity_internal_pct',
+      'humidity_external_pct',
+      'battery_voltage',
+      'signal_rssi',
+    ],
+    'acoustic' => ['battery_voltage', 'signal_rssi'],
+    'entrance_counter' => ['battery_voltage', 'signal_rssi'],
+    'gps' => ['battery_voltage', 'signal_rssi'],
+  ];
 
   /**
    * The plaintext token generated in this request, if any.
@@ -116,6 +154,62 @@ class SensorDevice extends ContentEntityBase implements EntityChangedInterface, 
   public function verifyToken(string $provided): bool {
     $hash = $this->get('token')->value;
     return is_string($hash) && $hash !== '' && password_verify($provided, $hash);
+  }
+
+  /**
+   * The `SensorReading::METRIC_TYPES` this device is expected to report.
+   *
+   * @return string[]
+   *   Metric machine names, per `DEVICE_TYPE_METRICS`'s mapping for this
+   *   device's `device_type`; the full taxonomy if `device_type` is
+   *   `multi`, `other`, or unset.
+   */
+  public function getConfigMetrics(): array {
+    $device_type = $this->get('device_type')->value;
+    if ($device_type !== NULL && isset(self::DEVICE_TYPE_METRICS[$device_type])) {
+      return self::DEVICE_TYPE_METRICS[$device_type];
+    }
+    return array_keys(SensorReading::METRIC_TYPES);
+  }
+
+  /**
+   * Builds the device configuration descriptor.
+   *
+   * Per docs/project-management/decisions/0074-sensor-data-ingestion-architecture.md
+   * §3. Deliberately excludes which physical pin reads which sensor, and
+   * any calibration constant — firmware/hardware-specific, stays in
+   * firmware's own local configuration.
+   *
+   * @param string $token
+   *   The plaintext bearer token to embed — the caller is responsible for
+   *   having just generated it (e.g. via `generateToken()`); this method
+   *   never reads or regenerates a token itself.
+   *
+   * @return array
+   *   The descriptor, ready for `json_encode()`.
+   */
+  public function buildConfigDescriptor(string $token): array {
+    return [
+      'config_version' => 1,
+      'device' => [
+        'id' => (int) $this->id(),
+        'label' => $this->label(),
+      ],
+      'endpoint' => [
+        'url' => Url::fromRoute('nanoprobe.sensor_reading.ingest', [], ['absolute' => TRUE])->toString(),
+        'method' => 'POST',
+        'content_type' => 'application/json',
+      ],
+      'auth' => [
+        'type' => 'bearer',
+        'token' => $token,
+      ],
+      'transport' => [
+        'batch' => TRUE,
+        'suggested_interval_seconds' => self::DEFAULT_SUGGESTED_INTERVAL_SECONDS,
+      ],
+      'metrics' => $this->getConfigMetrics(),
+    ];
   }
 
   /**

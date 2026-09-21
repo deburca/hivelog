@@ -1,0 +1,45 @@
+# Sensor reading ingestion. Per docs/project-management/decisions/
+# 0074-sensor-data-ingestion-architecture.md §2/§3: no Drupal permission
+# gate and no session CSRF token — the caller is a device/bridge with no
+# Drupal session, authenticated by its own per-device bearer token, which
+# SensorIngestController::ingest() checks itself. POST-only; no state
+# change is ever reachable via GET.
+nanoprobe.sensor_reading.ingest:
+  path: '/hivelog/api/sensor-readings'
+  defaults:
+    _controller: '\Drupal\nanoprobe\Controller\SensorIngestController::ingest'
+  requirements:
+    _access: 'TRUE'
+  methods: [POST]
+
+# Sensor Device canonical page. Route-level requirement is a flat
+# own/any/admin permission, matching every other custom hivelog route;
+# the real, apiary-scoped check happens inside SensorDeviceController per
+# ADR-0020 (access parity for custom routes).
+entity.sensor_device.canonical:
+  path: '/hivelog/sensor-device/{sensor_device}'
+  defaults:
+    _controller: '\Drupal\nanoprobe\Controller\SensorDeviceController::view'
+    _title_callback: '\Drupal\nanoprobe\Controller\SensorDeviceController::title'
+  requirements:
+    _permission: 'view own sensor device+view any sensor device+administer hivelog'
+  options:
+    parameters:
+      sensor_device:
+        type: entity:sensor_device
+
+# Download Configuration / regenerate token — see
+# SensorDeviceConfigDownloadForm's own docblock for why these are the
+# same action. Gated at least as strictly as edit access, since it
+# exposes the device's secret token (task 0078).
+nanoprobe.sensor_device.config:
+  path: '/hivelog/sensor-device/{sensor_device}/config'
+  defaults:
+    _form: '\Drupal\nanoprobe\Form\SensorDeviceConfigDownloadForm'
+    _title: 'Download Configuration'
+  requirements:
+    _permission: 'edit own sensor device+edit any sensor device+administer hivelog'
+  options:
+    parameters:
+      sensor_device:
+        type: entity:sensor_device
