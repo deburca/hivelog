@@ -14,3 +14,9 @@ services:
       - '@datetime.time'
       - '@date.formatter'
       - '@string_translation'
+  nanoprobe.sensor_reading_retention:
+    class: Drupal\nanoprobe\SensorReadingRetentionService
+    arguments:
+      - '@entity_type.manager'
+      - '@datetime.time'
+      - '@date.formatter'

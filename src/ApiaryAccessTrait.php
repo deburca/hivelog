@@ -42,6 +42,8 @@ trait ApiaryAccessTrait {
    *   → hive → apiary (scope = hive).
    * - SensorReading: sensor_reading → sensor_device → (recursively
    *   resolved as above).
+   * - SensorReadingDaily: sensor_reading_daily → sensor_device →
+   *   (recursively resolved as above).
    *
    * @param \Drupal\Core\Entity\EntityInterface $entity
    *   The entity to resolve the apiary from.
@@ -188,6 +190,13 @@ trait ApiaryAccessTrait {
 
     // SensorReading → sensor_device → (recursively resolved).
     if ($entity_type === 'sensor_reading') {
+      // @phpstan-ignore-next-line
+      $sensor_device = $entity->get('sensor_device')->entity;
+      return $sensor_device ? $this->resolveApiary($sensor_device) : NULL;
+    }
+
+    // SensorReadingDaily → sensor_device → (recursively resolved).
+    if ($entity_type === 'sensor_reading_daily') {
       // @phpstan-ignore-next-line
       $sensor_device = $entity->get('sensor_device')->entity;
       return $sensor_device ? $this->resolveApiary($sensor_device) : NULL;

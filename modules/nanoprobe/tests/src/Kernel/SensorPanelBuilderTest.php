@@ -8,6 +8,7 @@ use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\Hive;
 use Drupal\nanoprobe\Entity\SensorDevice;
 use Drupal\nanoprobe\Entity\SensorReading;
+use Drupal\nanoprobe\SensorReadingRetentionService;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\user\Traits\UserCreationTrait;
 use Drupal\user\Entity\Role;
@@ -71,6 +72,7 @@ class SensorPanelBuilderTest extends KernelTestBase {
     $this->installEntitySchema('hive');
     $this->installEntitySchema('sensor_device');
     $this->installEntitySchema('sensor_reading');
+    $this->installEntitySchema('sensor_reading_daily');
     $this->installSchema('file', ['file_usage']);
 
     $role = Role::create(['id' => 'beekeeper', 'label' => 'Beekeeper']);
@@ -304,6 +306,46 @@ class SensorPanelBuilderTest extends KernelTestBase {
     $this->setCurrentUser($this->owner);
     $panels = \Drupal::moduleHandler()->invokeAll('hivelog_hive_view_panels', [$this->hive]);
     $this->assertArrayHasKey('nanoprobe_sensors', $panels);
+  }
+
+  /**
+   * Tests the trend chart still renders once a date's raw rows are gone.
+   *
+   * Per task 0082: create readings on two days old enough to sit outside
+   * SensorReadingRetentionService::RAW_RETENTION_DAYS, compute their
+   * rollup, then actually purge the raw rows (not just assume it
+   * happened) — confirming the chart is built from the persisted
+   * SensorReadingDaily rollup, not silently empty. buildTrendChart() is
+   * protected — its default $days (30) never needs to cross the
+   * retention boundary in production, so this calls it directly via
+   * reflection with a wide window that does.
+   */
+  public function testTrendChartUsesRollupAfterRawRowsArePurged(): void {
+    $device = SensorDevice::create([
+      'label' => 'VV-01 Scale',
+      'apiary' => $this->apiary->id(),
+      'hive' => $this->hive->id(),
+      'scope' => 'hive',
+      'device_type' => 'weight',
+      'uid' => $this->owner->id(),
+    ]);
+    $device->save();
+
+    $old_days = SensorReadingRetentionService::RAW_RETENTION_DAYS + 5;
+    $this->createReading($device, 'weight_kg', 40.0, $old_days + 1);
+    $this->createReading($device, 'weight_kg', 44.0, $old_days);
+
+    \Drupal::service('nanoprobe.sensor_reading_retention')->runDailyMaintenance();
+
+    // The raw rows are actually gone now, not just assumed to be.
+    $reading_storage = \Drupal::entityTypeManager()->getStorage('sensor_reading');
+    $this->assertEmpty($reading_storage->getQuery()->accessCheck(FALSE)->execute());
+
+    $builder = \Drupal::service('nanoprobe.sensor_panel_builder');
+    $method = new \ReflectionMethod($builder, 'buildTrendChart');
+    $chart = $method->invoke($builder, $device, 'weight_kg', $old_days + 2);
+
+    $this->assertNotEmpty($chart, 'Chart must still render from the rollup once raw rows are purged.');
   }
 
 }

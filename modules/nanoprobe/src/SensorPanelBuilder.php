@@ -287,57 +287,45 @@ class SensorPanelBuilder {
   /**
    * Builds a trend chart for one device/metric, if there's enough data.
    *
-   * Aggregates raw readings into daily min/max/avg **on read**, not from
-   * a persisted rollup — Phase 1 pilot volume (per
-   * [[0074-sensor-data-ingestion-architecture]] §5, a handful of devices
-   * reporting every 15–60 minutes) keeps a TREND_WINDOW_DAYS query small
-   * enough that this is genuinely simpler than building
-   * [[0082-sensor-reading-retention-and-rollup]]'s persisted rollup
-   * early just to serve this panel. Revisit if this ever shows up as
-   * slow in practice.
+   * Aggregates raw readings into daily min/max/avg **on read** for the
+   * portion of the window still within
+   * SensorReadingRetentionService::RAW_RETENTION_DAYS, and reads the
+   * persisted `SensorReadingDaily` rollup (task 0082) for any older
+   * portion whose raw rows may already have been purged. In practice
+   * TREND_WINDOW_DAYS (30) sits far inside RAW_RETENTION_DAYS (730), so
+   * the rollup branch is unreachable with today's constants — this
+   * exists for correctness if either constant ever changes, not because
+   * it fires currently; $days lets a caller (or a test) request a wider
+   * window that does cross the boundary.
    *
    * @param \Drupal\nanoprobe\Entity\SensorDevice $device
    *   The device to chart.
    * @param string $metric
    *   The metric to chart.
+   * @param int|null $days
+   *   How many trailing days to cover. Defaults to TREND_WINDOW_DAYS.
    *
    * @return array
    *   A render array, or an empty array if fewer than two distinct days
    *   of data exist in the window (a single point isn't a trend — the
    *   latest-reading summary above already shows it).
    */
-  protected function buildTrendChart(SensorDevice $device, string $metric): array {
+  protected function buildTrendChart(SensorDevice $device, string $metric, ?int $days = NULL): array {
+    $days ??= self::TREND_WINDOW_DAYS;
     $end = $this->time->getRequestTime();
-    $start = $end - (self::TREND_WINDOW_DAYS * 86400);
-
-    $storage = $this->entityTypeManager->getStorage('sensor_reading');
-    $ids = $storage->getQuery()
-      ->accessCheck(TRUE)
-      ->condition('sensor_device', $device->id())
-      ->condition('metric', $metric)
-      ->condition('recorded', $start, '>=')
-      ->condition('recorded', $end, '<=')
-      ->sort('recorded', 'ASC')
-      ->execute();
-
-    if (empty($ids)) {
-      return [];
-    }
+    $start = $end - ($days * 86400);
+    $raw_retention_cutoff = $end - (SensorReadingRetentionService::RAW_RETENTION_DAYS * 86400);
 
     $daily = [];
-    foreach ($storage->loadMultiple($ids) as $reading) {
-      $date = $this->dateFormatter->format((int) $reading->get('recorded')->value, 'custom', 'Y-m-d', 'UTC');
-      $value = (float) $reading->get('value')->value;
-      if (!isset($daily[$date])) {
-        $daily[$date] = ['min' => $value, 'max' => $value, 'sum' => $value, 'count' => 1];
-      }
-      else {
-        $daily[$date]['min'] = min($daily[$date]['min'], $value);
-        $daily[$date]['max'] = max($daily[$date]['max'], $value);
-        $daily[$date]['sum'] += $value;
-        $daily[$date]['count']++;
-      }
+
+    $raw_start = max($start, $raw_retention_cutoff);
+    if ($raw_start < $end) {
+      $this->collectDailyAggregatesFromRaw($device, $metric, $raw_start, $end, $daily);
     }
+    if ($start < $raw_retention_cutoff) {
+      $this->collectDailyAggregatesFromRollup($device, $metric, $start, min($end, $raw_retention_cutoff), $daily);
+    }
+
     ksort($daily);
 
     if (count($daily) < 2) {
@@ -355,6 +343,100 @@ class SensorPanelBuilder {
     }
 
     return $this->renderTrendSvg($points, $metric);
+  }
+
+  /**
+   * Aggregates raw SensorReading rows into $daily's per-date buckets.
+   *
+   * @param \Drupal\nanoprobe\Entity\SensorDevice $device
+   *   The device to query.
+   * @param string $metric
+   *   The metric to query.
+   * @param int $start
+   *   Window start (inclusive), UNIX timestamp.
+   * @param int $end
+   *   Window end (inclusive), UNIX timestamp.
+   * @param array $daily
+   *   Per-date `['min' => float, 'max' => float, 'sum' => float, 'count'
+   *   => int]` buckets, keyed by `Y-m-d`, merged into by reference.
+   */
+  protected function collectDailyAggregatesFromRaw(SensorDevice $device, string $metric, int $start, int $end, array &$daily): void {
+    $storage = $this->entityTypeManager->getStorage('sensor_reading');
+    $ids = $storage->getQuery()
+      ->accessCheck(TRUE)
+      ->condition('sensor_device', $device->id())
+      ->condition('metric', $metric)
+      ->condition('recorded', $start, '>=')
+      ->condition('recorded', $end, '<=')
+      ->execute();
+    if (empty($ids)) {
+      return;
+    }
+
+    foreach ($storage->loadMultiple($ids) as $reading) {
+      $date = $this->dateFormatter->format((int) $reading->get('recorded')->value, 'custom', 'Y-m-d', 'UTC');
+      $value = (float) $reading->get('value')->value;
+      if (!isset($daily[$date])) {
+        $daily[$date] = ['min' => $value, 'max' => $value, 'sum' => $value, 'count' => 1];
+      }
+      else {
+        $daily[$date]['min'] = min($daily[$date]['min'], $value);
+        $daily[$date]['max'] = max($daily[$date]['max'], $value);
+        $daily[$date]['sum'] += $value;
+        $daily[$date]['count']++;
+      }
+    }
+  }
+
+  /**
+   * Reads persisted SensorReadingDaily rollups into $daily's per-date buckets.
+   *
+   * Used for the portion of a chart's window old enough that raw rows
+   * may already be purged (task 0082) — a rollup row's `avg_value` is
+   * used directly (`sum` = `avg_value`, `count` = 1), rather than
+   * re-deriving an average from raw data that may no longer exist.
+   *
+   * @param \Drupal\nanoprobe\Entity\SensorDevice $device
+   *   The device to query.
+   * @param string $metric
+   *   The metric to query.
+   * @param int $start
+   *   Window start (inclusive), UNIX timestamp.
+   * @param int $end
+   *   Window end (inclusive), UNIX timestamp.
+   * @param array $daily
+   *   Per-date buckets, keyed by `Y-m-d`, merged into by reference. A
+   *   rollup row always replaces any existing bucket for its date rather
+   *   than merging with it — the two data sources cover disjoint date
+   *   ranges by construction (see buildTrendChart()).
+   */
+  protected function collectDailyAggregatesFromRollup(SensorDevice $device, string $metric, int $start, int $end, array &$daily): void {
+    $start_date = $this->dateFormatter->format($start, 'custom', 'Y-m-d', 'UTC');
+    $end_date = $this->dateFormatter->format($end, 'custom', 'Y-m-d', 'UTC');
+
+    $storage = $this->entityTypeManager->getStorage('sensor_reading_daily');
+    $ids = $storage->getQuery()
+      ->accessCheck(TRUE)
+      ->condition('sensor_device', $device->id())
+      ->condition('metric', $metric)
+      ->condition('date', $start_date, '>=')
+      ->condition('date', $end_date, '<=')
+      ->execute();
+    if (empty($ids)) {
+      return;
+    }
+
+    foreach ($storage->loadMultiple($ids) as $rollup) {
+      if (!$rollup->access('view', $this->currentUser)) {
+        continue;
+      }
+      $daily[$rollup->get('date')->value] = [
+        'min' => (float) $rollup->get('min_value')->value,
+        'max' => (float) $rollup->get('max_value')->value,
+        'sum' => (float) $rollup->get('avg_value')->value,
+        'count' => 1,
+      ];
+    }
   }
 
   /**

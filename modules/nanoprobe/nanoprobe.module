@@ -38,3 +38,13 @@ function nanoprobe_hivelog_apiary_view_panels(Apiary $apiary) {
 function nanoprobe_hivelog_needs_attention_alerts(array $apiaries, CacheableMetadata $cache) {
   return \Drupal::service('nanoprobe.sensor_alert_collector')->collectAlerts($apiaries, $cache);
 }
+
+/**
+ * Implements hook_cron().
+ *
+ * Computes/updates daily rollups, then purges raw readings past the
+ * retention window — see SensorReadingRetentionService (task 0082).
+ */
+function nanoprobe_cron() {
+  \Drupal::service('nanoprobe.sensor_reading_retention')->runDailyMaintenance();
+}

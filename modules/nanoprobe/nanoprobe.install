@@ -6,19 +6,42 @@
  */
 
 /**
+ * Installs the Sensor Reading Daily Rollup entity type (task 0082).
+ *
+ * New entity type added to an already-installed module, so — unlike
+ * SensorDevice/SensorReading, which were installed automatically when
+ * nanoprobe was first enabled — this needs an explicit update hook,
+ * mirroring hivelog core's own established pattern (e.g.
+ * hivelog_update_10020()).
+ */
+function nanoprobe_update_10001(&$sandbox) {
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+
+  if (!$entity_definition_update_manager->getEntityType('sensor_reading_daily')) {
+    $entity_type = $entity_type_manager->getDefinition('sensor_reading_daily');
+    $entity_definition_update_manager->installEntityType($entity_type);
+  }
+
+  return t('Installed the Sensor Reading Daily Rollup entity type.');
+}
+
+/**
  * Implements hook_uninstall().
  *
- * Deletes all nanoprobe entities in child-first order (readings before the
- * devices they belong to), wrapped in a try/catch so uninstall succeeds
- * even when the underlying database tables have already been removed.
- * SensorDevice/SensorReading entity types are installed automatically by
- * Drupal when this module is first enabled (no hook_install() needed), so
- * only cleanup is required here.
+ * Deletes all nanoprobe entities in child-first order (rollups and raw
+ * readings before the devices they belong to), wrapped in a try/catch so
+ * uninstall succeeds even when the underlying database tables have
+ * already been removed. SensorDevice/SensorReading entity types were
+ * installed automatically by Drupal when this module was first enabled
+ * (no hook_install() needed); SensorReadingDaily was added later via
+ * nanoprobe_update_10001() — either way, only cleanup is required here.
  */
 function nanoprobe_uninstall() {
   $entity_type_manager = \Drupal::entityTypeManager();
 
   $entity_type_ids = [
+    'sensor_reading_daily',
     'sensor_reading',
     'sensor_device',
   ];
