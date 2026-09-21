@@ -7,3 +7,10 @@ services:
       - '@datetime.time'
       - '@date.formatter'
       - '@string_translation'
+  nanoprobe.sensor_alert_collector:
+    class: Drupal\nanoprobe\SensorAlertCollector
+    arguments:
+      - '@entity_type.manager'
+      - '@datetime.time'
+      - '@date.formatter'
+      - '@string_translation'

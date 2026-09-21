@@ -5,6 +5,7 @@
  * Hooks provided by the HiveLog module.
  */
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\Hive;
 
@@ -68,6 +69,44 @@ function hook_hivelog_hive_view_panels(Hive $hive) {
  *   A render array keyed by a unique, module-prefixed key.
  */
 function hook_hivelog_apiary_view_panels(Apiary $apiary) {
+  return [];
+}
+
+/**
+ * Contributes rows to the dashboard's "Needs attention" queue.
+ *
+ * The same optional-submodule-extends-core-without-a-dependency problem
+ * as hook_hivelog_hive_view_panels() (see
+ * docs/project-management/decisions/0099-submodule-canonical-page-panel-hook.md),
+ * applied to `DashboardController::view()`'s merged-alert-passes queue
+ * instead of a canonical page — `hivelog` core defines and invokes this
+ * hook; it implements nothing here itself.
+ *
+ * Implementations are responsible for their own access checks — $apiaries
+ * is already filtered to ones the current user may view, but that does
+ * not imply access to whatever data an implementation would alert on
+ * (e.g. sensor devices need their own `view` access check).
+ *
+ * @param \Drupal\hivelog\Entity\Apiary[] $apiaries
+ *   Every apiary the current user may view, keyed by entity id.
+ * @param \Drupal\Core\Cache\CacheableMetadata $cache
+ *   Cacheability collector — implementations should add their own cache
+ *   tags/dependencies to it, mirroring
+ *   `DashboardController::collectLowStockAlerts()`'s own pattern.
+ *
+ * @return array[]
+ *   A list of alert rows, each shaped exactly like
+ *   `DashboardController::collectLowStockAlerts()`'s own rows: `severity`
+ *   (`critical`|`warning`), `chip` (a short translated label),
+ *   `title` (a string), `context` (a render array — build one matching
+ *   `.hivelog-attention__ctx` markup, e.g. apiary/hive links + a detail
+ *   string), `action_label` + `action_url` (or an `actions` list for a
+ *   Done/Ignored-style button group), and `sort` (a `[tier, secondary]`
+ *   array — see `DashboardController::attentionTiming()` for the
+ *   existing tier numbering: `0` = critical/most urgent, higher = less
+ *   urgent).
+ */
+function hook_hivelog_needs_attention_alerts(array $apiaries, CacheableMetadata $cache) {
   return [];
 }
 

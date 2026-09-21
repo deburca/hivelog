@@ -5,6 +5,7 @@
  * Hook implementations for the Nanoprobe module.
  */
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\Hive;
 
@@ -26,4 +27,14 @@ function nanoprobe_hivelog_hive_view_panels(Hive $hive) {
  */
 function nanoprobe_hivelog_apiary_view_panels(Apiary $apiary) {
   return \Drupal::service('nanoprobe.sensor_panel_builder')->buildApiaryPanel($apiary);
+}
+
+/**
+ * Implements hook_hivelog_needs_attention_alerts().
+ *
+ * See hivelog.api.php and
+ * docs/project-management/decisions/0099-submodule-canonical-page-panel-hook.md.
+ */
+function nanoprobe_hivelog_needs_attention_alerts(array $apiaries, CacheableMetadata $cache) {
+  return \Drupal::service('nanoprobe.sensor_alert_collector')->collectAlerts($apiaries, $cache);
 }

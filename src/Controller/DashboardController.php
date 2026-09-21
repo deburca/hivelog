@@ -124,9 +124,10 @@ class DashboardController extends ControllerBase {
       // due rows) and the "Open seasonal tasks" tile (the open tally).
       $seasonal = $this->collectSeasonalAlerts($apiaries, $year, $current_week, $cache);
       $low_stock = $this->collectLowStockAlerts($apiaries, $cache);
+      $sensor_alerts = $this->collectSensorAlerts($apiaries, $cache);
 
       $build['needs_attention'] = $this->buildNeedsAttention(
-        array_merge($seasonal['alerts'], $low_stock),
+        array_merge($seasonal['alerts'], $low_stock, $sensor_alerts),
         $current_week,
       ) + ['#weight' => 0];
       $build['stat_tiles'] = $this->buildStatTiles($cache, $apiaries, $seasonal, count($low_stock), $year, $current_week) + ['#weight' => 10];
@@ -633,6 +634,30 @@ class DashboardController extends ControllerBase {
     }
 
     return $alerts;
+  }
+
+  /**
+   * Collects sensor-driven alert rows contributed by optional submodules.
+   *
+   * `hivelog` core has no sensor entities of its own — this is a thin
+   * wrapper around hook_hivelog_needs_attention_alerts() (see
+   * hivelog.api.php and
+   * docs/project-management/decisions/0099-submodule-canonical-page-panel-hook.md),
+   * so `nanoprobe`'s device-offline/weight-drop/temperature rules can
+   * feed this queue without core depending on that module. Returns an
+   * empty array when no module implements the hook (e.g. `nanoprobe`
+   * isn't installed).
+   *
+   * @param \Drupal\hivelog\Entity\Apiary[] $apiaries
+   *   Every apiary the current user may view, keyed by entity id.
+   * @param \Drupal\Core\Cache\CacheableMetadata $cache
+   *   Cacheability collector, passed through to implementations.
+   *
+   * @return array[]
+   *   Alert rows, shaped exactly like collectLowStockAlerts()'s own rows.
+   */
+  protected function collectSensorAlerts(array $apiaries, CacheableMetadata $cache): array {
+    return $this->moduleHandler()->invokeAll('hivelog_needs_attention_alerts', [$apiaries, $cache]);
   }
 
   /**
