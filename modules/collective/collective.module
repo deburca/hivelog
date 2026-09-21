@@ -1,0 +1,46 @@
+<?php
+
+/**
+ * @file
+ * Hook implementations for the Collective module.
+ */
+
+use Drupal\Core\Form\FormStateInterface;
+
+/**
+ * Implements hook_form_alter().
+ *
+ * Injects the AI-insights data-sharing disclosure next to Apiary's
+ * `ai_insights_enabled` field (added to `hivelog` core in task 0089) —
+ * kept out of core's own `ApiaryForm` since this explanatory copy is
+ * `collective`-specific. `hook_form_alter()` is a standard Drupal
+ * extension point available to any module, so — unlike
+ * hook_hivelog_hive_view_panels() and friends — no new core mechanism
+ * was needed here at all.
+ *
+ * Per [[0087-ai-insights-hosting-and-privacy-model]]: shown plainly on
+ * the form itself (not a tooltip), always visible rather than
+ * JS-revealed-on-toggle — kernel tests can't exercise real client-side
+ * interactivity, and a disclosure the beekeeper sees before deciding
+ * whether to turn the toggle on serves task 0091's actual intent (an
+ * informed decision) just as well as one that only appears after.
+ */
+function collective_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
+  if (!in_array($form_id, ['apiary_add_form', 'apiary_edit_form'], TRUE)) {
+    return;
+  }
+  if (!isset($form['ai_insights_enabled'])) {
+    return;
+  }
+
+  $form['ai_insights_enabled_disclosure'] = [
+    '#type' => 'container',
+    '#attributes' => ['class' => ['collective-ai-insights-disclosure']],
+    '#weight' => ($form['ai_insights_enabled']['#weight'] ?? 7) + 0.5,
+    'text' => [
+      '#type' => 'html_tag',
+      '#tag' => 'p',
+      '#value' => t('Turning this on shares this apiary\'s hive ids, calendar status, recent inspection fields (population, brood pattern, honey/pollen stores, queen cells seen, varroa checks, disease signs, supers, weight), and the active queen\'s year/status with whatever service your provisioned insight agent uses. Never shared: apiary/hive names, GPS location, inspection notes, harvest or inventory figures, or raw sensor readings.'),
+    ],
+  ];
+}

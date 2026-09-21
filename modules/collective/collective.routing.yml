@@ -19,3 +19,73 @@ collective.hive_insight.write:
   requirements:
     _access: 'TRUE'
   methods: [POST]
+
+# Insight Agent management UI — task 0091. Route-level requirements are
+# flat own/any/admin permissions, matching every other custom hivelog
+# route; the real per-entity check happens inside the controller/forms.
+# add_form is administer-hivelog-only — no "add insight agent" permission
+# exists at all (task 0089's own deliberate design: a rare, high-trust
+# credential, not something every beekeeper self-serves).
+entity.insight_agent.collection:
+  path: '/hivelog/insight-agents'
+  defaults:
+    _entity_list: 'insight_agent'
+    _title: 'Insight Agents'
+  requirements:
+    _permission: 'view own insight agent+view any insight agent+administer hivelog'
+
+entity.insight_agent.add_form:
+  path: '/hivelog/insight-agent/add'
+  defaults:
+    _entity_form: 'insight_agent.add'
+    _title: 'Add Insight Agent'
+  requirements:
+    _permission: 'administer hivelog'
+
+entity.insight_agent.canonical:
+  path: '/hivelog/insight-agent/{insight_agent}'
+  defaults:
+    _controller: '\Drupal\collective\Controller\InsightAgentController::view'
+    _title_callback: '\Drupal\collective\Controller\InsightAgentController::title'
+  requirements:
+    _permission: 'view own insight agent+view any insight agent+administer hivelog'
+  options:
+    parameters:
+      insight_agent:
+        type: entity:insight_agent
+
+entity.insight_agent.edit_form:
+  path: '/hivelog/insight-agent/{insight_agent}/edit'
+  defaults:
+    _entity_form: 'insight_agent.edit'
+    _title: 'Edit Insight Agent'
+  requirements:
+    _permission: 'edit own insight agent+edit any insight agent+administer hivelog'
+  options:
+    parameters:
+      insight_agent:
+        type: entity:insight_agent
+
+entity.insight_agent.delete_form:
+  path: '/hivelog/insight-agent/{insight_agent}/delete'
+  defaults:
+    _entity_form: 'insight_agent.delete'
+    _title: 'Delete Insight Agent'
+  requirements:
+    _permission: 'delete own insight agent+delete any insight agent+administer hivelog'
+  options:
+    parameters:
+      insight_agent:
+        type: entity:insight_agent
+
+collective.insight_agent.regenerate_token:
+  path: '/hivelog/insight-agent/{insight_agent}/regenerate-token'
+  defaults:
+    _form: '\Drupal\collective\Form\InsightAgentRegenerateTokenForm'
+    _title: 'Regenerate Token'
+  requirements:
+    _permission: 'edit own insight agent+edit any insight agent+administer hivelog'
+  options:
+    parameters:
+      insight_agent:
+        type: entity:insight_agent

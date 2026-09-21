@@ -12,7 +12,10 @@ use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\collective\Form\InsightAgentDeleteForm;
+use Drupal\collective\Form\InsightAgentForm;
 use Drupal\collective\InsightAgentAccessControlHandler;
+use Drupal\collective\InsightAgentListBuilder;
 use Drupal\hivelog\HivelogEntityStorage;
 use Drupal\user\EntityOwnerInterface;
 use Drupal\user\EntityOwnerTrait;
@@ -45,6 +48,13 @@ use Drupal\user\EntityOwnerTrait;
   handlers: [
     'storage' => HivelogEntityStorage::class,
     'access' => InsightAgentAccessControlHandler::class,
+    'list_builder' => InsightAgentListBuilder::class,
+    'form' => [
+      'default' => InsightAgentForm::class,
+      'add' => InsightAgentForm::class,
+      'edit' => InsightAgentForm::class,
+      'delete' => InsightAgentDeleteForm::class,
+    ],
   ],
   base_table: 'collective_insight_agent',
   admin_permission: 'administer hivelog',
@@ -53,6 +63,13 @@ use Drupal\user\EntityOwnerTrait;
     'label' => 'label',
     'uuid' => 'uuid',
     'owner' => 'uid',
+  ],
+  links: [
+    'canonical' => '/hivelog/insight-agent/{insight_agent}',
+    'add-form' => '/hivelog/insight-agent/add',
+    'edit-form' => '/hivelog/insight-agent/{insight_agent}/edit',
+    'delete-form' => '/hivelog/insight-agent/{insight_agent}/delete',
+    'collection' => '/hivelog/insight-agents',
   ],
 )]
 class InsightAgent extends ContentEntityBase implements EntityChangedInterface, EntityOwnerInterface {
