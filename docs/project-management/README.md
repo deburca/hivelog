@@ -4,6 +4,18 @@ A lightweight, Git-tracked [Obsidian](https://obsidian.md) vault for managing
 work on the **Hivelog** Drupal 11 module. Everything here is plain Markdown, so
 it version-controls cleanly alongside the code it documents.
 
+## Claude Code skill
+
+This vault follows the `project-management-vault` Claude Code skill — a shared
+convention kept as a personal skill (`~/.claude/skills/project-management-vault/`)
+and reused across hivelog, llamanator, and cms2. The skill is the canonical
+reference for the full frontmatter schema, per-type ID assignment (sequential and
+contiguous within each type, independent across types, IDs never reused or
+renumbered once assigned), and status vocabularies — this README documents
+hivelog's specific instance of it. Hivelog uses the base schema as-is: no
+scoping field, no session notes, no ID registry, since this vault is small
+enough not to need them yet.
+
 ## How to open
 
 Open either `docs/` **or** `docs/project-management/` as an Obsidian vault — the
