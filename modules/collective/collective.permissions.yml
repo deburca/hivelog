@@ -1,0 +1,26 @@
+# Insight agent permissions. Deliberately no "add" permission — a rare,
+# high-trust site-level credential, provisioned by an administrator
+# (administer hivelog), not something every beekeeper self-serves.
+view own insight agent:
+  title: 'View own insight agents'
+view any insight agent:
+  title: 'View any insight agent'
+edit own insight agent:
+  title: 'Edit own insight agents'
+edit any insight agent:
+  title: 'Edit any insight agent'
+delete own insight agent:
+  title: 'Delete own insight agents'
+delete any insight agent:
+  title: 'Delete any insight agent'
+
+# Hive insight permissions. Machine-written only — no add/edit
+# permissions at all.
+view own hive insight:
+  title: 'View own hive insights'
+view any hive insight:
+  title: 'View any hive insight'
+delete own hive insight:
+  title: 'Delete own hive insights'
+delete any hive insight:
+  title: 'Delete any hive insight'

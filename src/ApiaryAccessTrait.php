@@ -44,6 +44,9 @@ trait ApiaryAccessTrait {
    *   resolved as above).
    * - SensorReadingDaily: sensor_reading_daily → sensor_device →
    *   (recursively resolved as above).
+   * - HiveInsight: hive_insight → apiary directly (scope = apiary), or
+   *   → hive → apiary (scope = hive). No branch exists for
+   *   InsightAgent — it has no apiary/hive to resolve to.
    *
    * @param \Drupal\Core\Entity\EntityInterface $entity
    *   The entity to resolve the apiary from.
@@ -200,6 +203,18 @@ trait ApiaryAccessTrait {
       // @phpstan-ignore-next-line
       $sensor_device = $entity->get('sensor_device')->entity;
       return $sensor_device ? $this->resolveApiary($sensor_device) : NULL;
+    }
+
+    // HiveInsight → apiary directly (scope = apiary), or → hive →
+    // apiary (scope = hive).
+    if ($entity_type === 'hive_insight') {
+      // @phpstan-ignore-next-line
+      $hive = $entity->get('hive')->entity;
+      if ($hive) {
+        return $hive->get('apiary')->entity;
+      }
+      // @phpstan-ignore-next-line
+      return $entity->get('apiary')->entity;
     }
 
     return NULL;

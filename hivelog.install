@@ -875,6 +875,33 @@ function hivelog_update_10027(&$sandbox) {
 }
 
 /**
+ * Installs the ai_insights_enabled field storage on Apiary.
+ *
+ * The per-apiary opt-in consent field for
+ * docs/project-management/decisions/0087-ai-insights-hosting-and-privacy-model.md,
+ * consumed by the optional `collective` submodule (task 0089). The
+ * module is not yet in production, so no data migration is required.
+ */
+function hivelog_update_10028(&$sandbox) {
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+
+  $field_definitions = Apiary::baseFieldDefinitions(
+    $entity_type_manager->getDefinition('apiary')
+  );
+  if (isset($field_definitions['ai_insights_enabled'])) {
+    $entity_definition_update_manager->installFieldStorageDefinition(
+      'ai_insights_enabled',
+      'apiary',
+      'hivelog',
+      $field_definitions['ai_insights_enabled']
+    );
+  }
+
+  return t('Installed the ai_insights_enabled field storage on Apiary.');
+}
+
+/**
  * Removes all traces of the cbr_number field from Drupal's tracking stores.
  *
  * The normal EntityDefinitionUpdateManager::uninstallFieldStorageDefinition()

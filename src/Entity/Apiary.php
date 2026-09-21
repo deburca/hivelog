@@ -244,12 +244,41 @@ class Apiary extends ContentEntityBase implements EntityChangedInterface, Entity
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
+    // Opt-in, not opt-out — mirrors this field's own shape (a per-apiary
+    // toggle, not a global setting), per
+    // docs/project-management/decisions/0087-ai-insights-hosting-and-privacy-model.md.
+    // Consumed by the optional `collective` submodule; core itself does
+    // nothing with this value beyond storing it — a beekeeper with no
+    // AI-insights module installed simply has an unused flag, the same
+    // small, accepted trade-off as ApiaryAccessTrait's sensor_device/
+    // hive_insight resolution branches (see
+    // docs/project-management/decisions/0098-nanoprobe-collective-locutus-submodule-split.md
+    // §6).
+    $fields['ai_insights_enabled'] = BaseFieldDefinition::create('boolean')
+      ->setLabel(t('AI insights enabled'))
+      ->setDescription(t('Allow an insight agent to read this apiary\'s data and generate AI-assisted recommendations. Off by default — turning this on shares apiary/hive data (never precise location) with whatever service the provisioned insight agent uses.'))
+      ->setDefaultValue(FALSE)
+      ->setDisplayOptions('form', [
+        'type' => 'boolean_checkbox',
+        'weight' => 7,
+      ])
+      ->setDisplayOptions('view', [
+        'label' => 'inline',
+        'type' => 'boolean',
+        'weight' => 7,
+        'settings' => [
+          'format' => 'yes-no',
+        ],
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
+
     $fields['uid']
       ->setLabel(t('Owner'))
       ->setDescription(t('The user who owns this apiary.'))
       ->setDisplayOptions('form', [
         'type' => 'entity_reference_autocomplete',
-        'weight' => 7,
+        'weight' => 8,
         'settings' => [
           'match_operator' => 'CONTAINS',
           'size' => 60,

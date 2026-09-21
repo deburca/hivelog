@@ -95,6 +95,20 @@ class ApiaryTest extends KernelTestBase {
   }
 
   /**
+   * Tests `ai_insights_enabled` defaults to FALSE on a new apiary.
+   *
+   * The per-apiary opt-in consent field for
+   * [[0087-ai-insights-hosting-and-privacy-model]], consumed by the
+   * optional `collective` submodule (task 0089) — tested here, not in
+   * `collective`'s own tests, since the field itself belongs to core's
+   * Apiary entity, per [[0098-nanoprobe-collective-locutus-submodule-split]].
+   */
+  public function testAiInsightsEnabledDefaultsToFalse(): void {
+    $apiary = Apiary::create(['name' => 'Default Consent Apiary']);
+    $this->assertFalse((bool) $apiary->get('ai_insights_enabled')->value);
+  }
+
+  /**
    * Tests geolocation coordinate field.
    */
   public function testGeolocation(): void {
