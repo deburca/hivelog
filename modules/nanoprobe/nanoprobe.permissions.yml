@@ -1,0 +1,25 @@
+# Sensor device permissions.
+view own sensor device:
+  title: 'View own sensor devices'
+view any sensor device:
+  title: 'View any sensor device'
+add sensor device:
+  title: 'Add sensor devices'
+edit own sensor device:
+  title: 'Edit own sensor devices'
+edit any sensor device:
+  title: 'Edit any sensor device'
+delete own sensor device:
+  title: 'Delete own sensor devices'
+delete any sensor device:
+  title: 'Delete any sensor device'
+
+# Sensor reading permissions.
+view own sensor reading:
+  title: 'View own sensor readings'
+view any sensor reading:
+  title: 'View any sensor reading'
+delete own sensor reading:
+  title: 'Delete own sensor reading records'
+delete any sensor reading:
+  title: 'Delete any sensor reading record'

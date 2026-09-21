@@ -1,0 +1,43 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the Nanoprobe module.
+ */
+
+/**
+ * Implements hook_uninstall().
+ *
+ * Deletes all nanoprobe entities in child-first order (readings before the
+ * devices they belong to), wrapped in a try/catch so uninstall succeeds
+ * even when the underlying database tables have already been removed.
+ * SensorDevice/SensorReading entity types are installed automatically by
+ * Drupal when this module is first enabled (no hook_install() needed), so
+ * only cleanup is required here.
+ */
+function nanoprobe_uninstall() {
+  $entity_type_manager = \Drupal::entityTypeManager();
+
+  $entity_type_ids = [
+    'sensor_reading',
+    'sensor_device',
+  ];
+
+  foreach ($entity_type_ids as $entity_type_id) {
+    try {
+      $storage = $entity_type_manager->getStorage($entity_type_id);
+      // Delete entities in batches to avoid memory issues on large datasets.
+      while ($ids = $storage->getQuery()->accessCheck(FALSE)->range(0, 50)->execute()) {
+        $entities = $storage->loadMultiple($ids);
+        $storage->delete($entities);
+      }
+    }
+    catch (\Exception $e) {
+      // The table may already be gone — log and continue.
+      \Drupal::logger('nanoprobe')->notice(
+        'Could not delete @type entities during uninstall: @message',
+        ['@type' => $entity_type_id, '@message' => $e->getMessage()]
+      );
+    }
+  }
+}

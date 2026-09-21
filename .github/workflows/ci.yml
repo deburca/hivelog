@@ -62,10 +62,13 @@ jobs:
 
       - name: phpcs — Drupal coding standards
         run: |
+          # modules/ picks up every submodule (nanoprobe, and later
+          # collective/locutus) recursively — see ADR-0098 §7: without
+          # this, a submodule's code ships with zero lint coverage.
           phpcs --standard=Drupal,DrupalPractice \
             --extensions=php,module,install,inc,profile,theme \
             --warning-severity=0 \
-            src/ tests/ hivelog.module hivelog.install
+            src/ tests/ hivelog.module hivelog.install modules/
 
       - name: phpstan — static analysis
         # phpstan requires drupal/core to be present in the same vendor tree —
@@ -197,10 +200,17 @@ jobs:
           # web/modules/contrib/hivelog/ depending on installer-paths config).
           MODULE_PATH=$(find web/modules -maxdepth 3 -name "hivelog.info.yml" | head -1 | xargs dirname)
           echo "Module installed at: $MODULE_PATH"
+          # Discover Kernel/Unit test directories in hivelog core AND every
+          # submodule (modules/nanoprobe, and later collective/locutus) —
+          # see ADR-0098 §7: a fixed path here would silently skip a
+          # submodule's tests.
+          KERNEL_PATHS=$(find "$MODULE_PATH" -type d -path '*/tests/src/Kernel')
+          UNIT_PATHS=$(find "$MODULE_PATH" -type d -path '*/tests/src/Unit')
+          echo "Kernel test dirs: $KERNEL_PATHS"
+          echo "Unit test dirs: $UNIT_PATHS"
           vendor/bin/phpunit \
             -c web/core \
-            "$MODULE_PATH/tests/src/Kernel" \
-            "$MODULE_PATH/tests/src/Unit" \
+            $KERNEL_PATHS $UNIT_PATHS \
             --group hivelog \
             --testdox
 
@@ -221,9 +231,12 @@ jobs:
           # causes "file included multiple times" errors in the full Drupal
           # project context (core-dev also ships phpstan-deprecation-rules).
           # Level 2 type analysis is sufficient to catch real regressions.
+          # modules/ picks up every submodule (nanoprobe, and later
+          # collective/locutus) — see ADR-0098 §7.
           vendor/bin/phpstan analyse \
             "$MODULE_PATH/src" \
             "$MODULE_PATH/tests" \
+            "$MODULE_PATH/modules" \
             --level=2 \
             --no-progress \
             --memory-limit=512M \

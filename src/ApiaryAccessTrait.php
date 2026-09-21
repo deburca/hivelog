@@ -38,6 +38,10 @@ trait ApiaryAccessTrait {
    *   calendar_action → apiary.
    * - HarvestYield: harvest_yield → hive_action_log → hive → apiary, or
    *   → apiary_action_log → apiary directly (exactly one is set).
+   * - SensorDevice: sensor_device → apiary directly (scope = apiary), or
+   *   → hive → apiary (scope = hive).
+   * - SensorReading: sensor_reading → sensor_device → (recursively
+   *   resolved as above).
    *
    * @param \Drupal\Core\Entity\EntityInterface $entity
    *   The entity to resolve the apiary from.
@@ -168,6 +172,25 @@ trait ApiaryAccessTrait {
       // @phpstan-ignore-next-line
       $apiary_action_log = $entity->get('apiary_action_log')->entity;
       return $apiary_action_log ? $apiary_action_log->get('apiary')->entity : NULL;
+    }
+
+    // SensorDevice → apiary directly (scope = apiary), or → hive →
+    // apiary (scope = hive).
+    if ($entity_type === 'sensor_device') {
+      // @phpstan-ignore-next-line
+      $hive = $entity->get('hive')->entity;
+      if ($hive) {
+        return $hive->get('apiary')->entity;
+      }
+      // @phpstan-ignore-next-line
+      return $entity->get('apiary')->entity;
+    }
+
+    // SensorReading → sensor_device → (recursively resolved).
+    if ($entity_type === 'sensor_reading') {
+      // @phpstan-ignore-next-line
+      $sensor_device = $entity->get('sensor_device')->entity;
+      return $sensor_device ? $this->resolveApiary($sensor_device) : NULL;
     }
 
     return NULL;
