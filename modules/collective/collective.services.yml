@@ -1,0 +1,5 @@
+services:
+  collective.hive_context_builder:
+    class: Drupal\collective\HiveContextBuilder
+    arguments:
+      - '@entity_type.manager'

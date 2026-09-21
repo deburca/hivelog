@@ -1,0 +1,21 @@
+# InsightAgent API — task 0090. Per docs/project-management/decisions/
+# 0088-ai-insights-implementation.md §2/§3: no Drupal permission gate and
+# no session CSRF token — the caller is a stateless, credentialed
+# external agent, authenticated by InsightAgentApiController's own
+# bearer-token check, exactly mirroring nanoprobe.sensor_reading.ingest's
+# pattern.
+collective.hive_insight.contexts:
+  path: '/hivelog/api/hive-insights/contexts'
+  defaults:
+    _controller: '\Drupal\collective\Controller\InsightAgentApiController::contexts'
+  requirements:
+    _access: 'TRUE'
+  methods: [GET]
+
+collective.hive_insight.write:
+  path: '/hivelog/api/hive-insights'
+  defaults:
+    _controller: '\Drupal\collective\Controller\InsightAgentApiController::write'
+  requirements:
+    _access: 'TRUE'
+  methods: [POST]
