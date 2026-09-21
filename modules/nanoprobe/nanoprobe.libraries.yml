@@ -1,0 +1,5 @@
+sensor_trend:
+  version: 1.x
+  css:
+    component:
+      css/nanoprobe.sensor-trend.css: {}

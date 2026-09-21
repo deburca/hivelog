@@ -1,0 +1,9 @@
+services:
+  nanoprobe.sensor_panel_builder:
+    class: Drupal\nanoprobe\SensorPanelBuilder
+    arguments:
+      - '@entity_type.manager'
+      - '@current_user'
+      - '@datetime.time'
+      - '@date.formatter'
+      - '@string_translation'

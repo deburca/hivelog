@@ -1,0 +1,50 @@
+/**
+ * @file
+ * Styles for the Sensors panel and its trend chart, on the hive/apiary
+ * canonical pages (hook_hivelog_hive_view_panels() /
+ * hook_hivelog_apiary_view_panels()).
+ */
+
+.nanoprobe-sensors-panel {
+  margin: 1.5rem 0;
+}
+
+.nanoprobe-sensor-device {
+  margin-bottom: 1.5rem;
+}
+
+.nanoprobe-sensor-metric {
+  margin-bottom: 1rem;
+}
+
+.nanoprobe-sensor-trend__frame {
+  width: 100%;
+  aspect-ratio: 8 / 2;
+  background: #111;
+  border-radius: 4px;
+  padding: 1px;
+  box-sizing: border-box;
+}
+
+.nanoprobe-sensor-trend__frame svg {
+  width: 100%;
+  height: 100%;
+  background: #fdf6e3;
+  border-radius: 2px;
+}
+
+.nanoprobe-sensor-trend__band {
+  fill: #f2a42e;
+  fill-opacity: 0.25;
+  stroke: none;
+}
+
+.nanoprobe-sensor-trend__avg {
+  stroke: #d98e1a;
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.nanoprobe-sensor-trend__date {
+  fill: #333;
+}

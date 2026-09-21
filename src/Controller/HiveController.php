@@ -133,6 +133,15 @@ class HiveController extends ControllerBase {
       $build['weight_histogram'] = $histogram + ['#weight' => 7];
     }
 
+    // Optional submodules (e.g. nanoprobe's Sensors panel) contribute
+    // sections here without hivelog core depending on them — see
+    // hivelog.api.php's hook_hivelog_hive_view_panels() and ADR-0099.
+    // Each panel carries its own #weight, so invocation order here
+    // doesn't determine page position.
+    foreach ($this->moduleHandler()->invokeAll('hivelog_hive_view_panels', [$hive]) as $key => $panel) {
+      $build[$key] = $panel;
+    }
+
     // Queen section — rendered after the histogram so the histogram stays
     // visually on top of the page, but still above the inspection list so
     // the current queen is the last thing the reader sees before the

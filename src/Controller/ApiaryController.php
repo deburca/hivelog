@@ -130,6 +130,15 @@ class ApiaryController extends ControllerBase {
     // taller, viewport-relative height on small screens (task 0008).
     $build['#attached']['library'][] = 'hivelog/map';
 
+    // Optional submodules (e.g. nanoprobe's Sensors panel) contribute
+    // sections here without hivelog core depending on them — see
+    // hivelog.api.php's hook_hivelog_apiary_view_panels() and ADR-0099.
+    // Each panel carries its own #weight, so invocation order here
+    // doesn't determine page position.
+    foreach ($this->moduleHandler()->invokeAll('hivelog_apiary_view_panels', [$apiary]) as $key => $panel) {
+      $build[$key] = $panel;
+    }
+
     // Heading row: the "Hives" title on the left, the Add Hive action on
     // the right. Placing the action here (rather than inline with the
     // filter form below) keeps it at the top-right of the list section
