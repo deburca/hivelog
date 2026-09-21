@@ -2,3 +2,8 @@
 opencode.json
 vendor/
 phpstan-baseline.neon
+
+# Real WiFi credentials for the pilot receiver firmware — never commit.
+# Copy hardware/receiver/src/secrets.h.example to secrets.h instead.
+hardware/receiver/src/secrets.h
+hardware/*/.pio/

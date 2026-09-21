@@ -200,18 +200,24 @@ time.
       [[0095-renewable-power-for-apiary-equipment]]'s scoping, this is
       not "at/around the apiary" and stays on ordinary mains power; no
       solar/battery build needed for it.
-- [ ] Sensor firmware: reads the HX711 on a timer (15–60 minute interval
-      per [[0074-sensor-data-ingestion-architecture]] §5), transmits a
-      raw point-to-point LoRa packet carrying the weight reading — no
-      LoRaWAN join, no gateway, per
+- [x] **Sensor firmware drafted** (`hardware/oneof9/`, PlatformIO):
+      wakes on a timer (default 1800s, matching `SensorDevice::
+      DEFAULT_SUGGESTED_INTERVAL_SECONDS`), reads the HX711 (four load
+      cells summed via one wiring junction into a single channel),
+      reads battery voltage, sends both as a raw point-to-point LoRa
+      packet, deep-sleeps — no LoRaWAN join, no gateway, per
       [[0075-sensor-hardware-and-connectivity-selection]]'s pilot
-      recommendation.
-- [ ] Receiver firmware: receives the LoRa packet; reads its locally
-      stored configuration descriptor (downloaded via
+      recommendation. **Not yet compiled, flashed, or validated against
+      real hardware** — this criterion isn't fully satisfied until it
+      is; see Implementation notes.
+- [x] **Receiver firmware drafted** (`hardware/receiver/`, PlatformIO):
+      receives the LoRa packet, reads its own signal RSSI, reads its
+      locally stored configuration descriptor (downloaded via
       [[0078-sensor-device-configuration-descriptor]] and copied on once
-      during setup) for the endpoint URL and bearer token; `POST`s to
-      [[0077-sensor-ingestion-endpoint-and-device-auth]]'s endpoint with
-      `metric: weight_kg`.
+      during setup) for the endpoint URL and bearer token, `POST`s a
+      batch of `weight_kg`/`battery_voltage`/`signal_rssi` to
+      [[0077-sensor-ingestion-endpoint-and-device-auth]]'s endpoint.
+      **Not yet compiled, flashed, or validated against real hardware.**
 - [ ] Register a real `SensorDevice` (`scope: hive`, `device_type:
       weight`, `transport: lorawan`) against a real test hive; download
       its config descriptor; copy it onto the receiver.
@@ -227,10 +233,25 @@ time.
       [[0095-renewable-power-for-apiary-equipment]]'s "2–3 weeks of
       cloudy-season autonomy, not the optimistic capacity÷current
       arithmetic" guidance, not just a component-datasheet assumption.
-- [ ] Document the wiring and firmware source somewhere reproducible for
-      a second device (a small firmware repo, or a `hardware/` doc
-      folder — exact location decided during implementation; it does not
-      need to live inside the `hivelog` Drupal module itself).
+- [x] Document the wiring and firmware source somewhere reproducible for
+      a second device — landed as `hardware/` (a `README.md` with wiring
+      tables, a Mermaid diagram, the calibration procedure, build/flash/
+      provisioning steps, and documented Phase-1 simplifications) plus
+      the two PlatformIO firmware projects themselves. **Decision:
+      inside this same git repo**, not a separate firmware repo — kept
+      simple for a solo-maintainer pilot; the task's own note explicitly
+      said a separate repo isn't required. `hardware/` is deliberately
+      outside `src/`/`tests/` (not PHP, not part of the Drupal module,
+      not linted/tested by any of hivelog's own CI steps). **The weight
+      sensor's firmware project is named `hardware/oneof9/`** (not
+      `sensor-node/`) — the first of up to nine planned per-sensor-type
+      hardware projects (weight, temperature, humidity, acoustic, ...),
+      named `oneof9`–`nineof9` as they're built, continuing the
+      `nanoprobe`/`collective`/`locutus` Borg-designation theme from
+      [[0098-nanoprobe-collective-locutus-submodule-split]]. The naming
+      is folder-level only — `device_type`/`metric` machine values and
+      all code/firmware internals still reference `weight`/`Weight`
+      plainly; nothing inside `oneof9/` mentions the designation.
 
 ## Implementation notes
 - No kernel/unit tests are added by this task — see Context. If the
@@ -244,6 +265,39 @@ time.
   selected 2026-09-21 (4× 50kg half-bridge cells) gets this from day
   one anyway, so wire and calibrate all four from the start rather than
   building single-cell first and upgrading later.
+- **Firmware was drafted ahead of hardware delivery** (2026-09-21, the
+  same day the order was placed), so it could be flashed the moment
+  parts arrive rather than written from scratch then. It has not been
+  compiled, flashed, or run against any real board — there is no way to
+  validate C++/PlatformIO firmware without physical hardware, so the two
+  firmware-drafting acceptance criteria above are marked done for the
+  *drafting* but the task as a whole stays `in-progress` until it's
+  actually been flashed and proven against real hardware (the remaining
+  unchecked criteria).
+- **Packet protocol** between the two boards is a small custom
+  pipe-delimited text format (`HLOG1|weight_kg=...|battery_voltage=...|
+  seq=...`), not raw binary — chosen over a packed struct for
+  debuggability during bring-up (readable directly off a serial LoRa
+  sniffer) at a negligible airtime cost for a payload this small. The
+  `HLOG1` tag exists so a future firmware revision could change the
+  packet shape without silently confusing an unupdated receiver.
+  `signal_rssi` is measured receiver-side (`LoRa.packetRssi()`), not by
+  the sensor node — RSSI is inherently a property of what the *receiver*
+  measured, not something the transmitting node can know about itself.
+- **`recorded` timestamps come from the receiver's NTP-synced clock**,
+  not the sensor node — the sensor node has no RTC and no network access
+  to get one from, being deep-sleep/battery-only by design. Documented
+  in `hardware/README.md`'s "Known simplifications" section along with
+  the other two Phase-1 trade-offs made (no TLS cert pinning, no send
+  retry/queue on either board) — deliberate, not oversights, and
+  reconsider before a wider-than-pilot rollout.
+- **Pin assignments in both firmwares are placeholders** matching common
+  ESP32+SX1276 wiring conventions (documented in `hardware/README.md`'s
+  wiring tables) — adjust the `#define`s at the top of each `main.cpp`
+  if the actual physical build wires differently. `CALIBRATION_FACTOR`/
+  `TARE_OFFSET` are explicit TODO placeholders that must be set per
+  physical build once real load cells are in hand — see the README's
+  calibration procedure.
 
 ## Related
 - Project:: [[sensor-data-collection]]
