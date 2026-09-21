@@ -24,19 +24,48 @@ site" testing culture, extended here to real hardware for the first
 time.
 
 ## Acceptance criteria
-- [ ] **Procure every component first — nothing has been purchased yet.**
-      Per [[0097-hardware-infrastructure-and-component-catalog]]'s
-      catalog: for the sensor node, a half-bridge load cell + HX711
-      amplifier, an ESP32 (preferred per
-      [[0075-sensor-hardware-and-connectivity-selection]]) or an Arduino,
-      an 868 MHz SX1276/RFM95-class LoRa module, a small (1–2W, 5–6V)
-      solar panel, and a chemistry-matched charge controller + cell (see
-      the next criterion). For the receiver node, a matching 868 MHz
-      LoRa radio plus a WiFi-capable ESP32 (or a single Heltec WiFi
-      LoRa 32-class board integrating both). Confirm each item's real,
-      current listing and price before ordering — the catalog names
-      component categories and examples, not a fixed, already-checked-out
-      cart.
+- [ ] **Procurement — basket selected 2026-09-21, not yet confirmed
+      ordered.** Six items chosen, checked against
+      [[0097-hardware-infrastructure-and-component-catalog]]'s catalog:
+      - LiFePO4 3.2V 1.5Ah battery (Akkuman, an "emergency lighting
+        replacement" cell) — matches the confirmed spec (§ below), but
+        **check before assuming it's ready to use**: (a) its own
+        datasheet rates it −5°C to 40°C, which doesn't cover the coldest
+        real Danish winter nights (a real gap against
+        [[0095-renewable-power-for-apiary-equipment]]'s cold-climate
+        reasoning, not just a formality to note); (b) confirm what
+        terminal type actually arrives — "emergency lighting
+        replacement" batteries sometimes ship with pre-attached wire
+        leads or a specific connector rather than bare terminals for a
+        generic 18650 holder.
+      - Single-cell LiFePO4 charging board, 3.2V/3.6V output, USB-C
+        input, 2.4A — correctly chemistry-matched (outputs 3.6V, not
+        the TP4056's 4.2V).
+      - Solar panel, 5V 2W, USB-A output, waterproof — within the
+        1–2W/5–6V range specified.
+      - Geekstory 4× 50kg half-bridge load cells + 1× HX711 — exceeds
+        the pilot minimum; gets the four-corner accuracy upgrade
+        (previously scoped as a later addition, see Implementation
+        notes) for free instead of buying it separately afterward.
+      - Paradisetronic 868MHz SX1276 LoRa breakout, **pack of 2** —
+        covers both the sensor node's radio and the receiver's matching
+        radio in one purchase.
+      - ESP32-WROOM-32U DevKitC V4, USB-C, external antenna, **pack of
+        2** — covers both nodes' MCUs in one purchase. This is a full
+        dev board (onboard USB-to-serial chip, status LEDs), not a bare
+        module — see the power criterion below for what that changes.
+      - **Two likely gaps, not in this basket**: a USB-A→USB-C cable
+        (the panel's USB-A output and the charger's USB-C input are
+        different connectors); a weatherproof enclosure for the sensor
+        node's electronics (the solar panel itself is rated waterproof,
+        the ESP32/HX711/charger assembly isn't).
+      Confirm the two battery check items above before finalising the
+      order, or accept the risk consciously if proceeding anyway.
+      **Do not add a boost or buck converter to the cart** — per the
+      power criterion below, LiFePO4's raw voltage feeds the
+      ESP32/HX711/LoRa module directly; a boost-regulator variant of the
+      charge-controller board would be redundant for this wiring, not an
+      upgrade.
 - [ ] Assemble the sensor node: the load cell + HX711 amplifier, on an
       ESP32 (preferred per
       [[0075-sensor-hardware-and-connectivity-selection]]) or an
@@ -80,14 +109,17 @@ time.
       (2.6–5.5V range) and the LoRa module (typically 1.8–3.7V for
       SX1276-class) both also accept 3.2V comfortably, so the whole node
       can plausibly run off raw LiFePO4 voltage with no boost/buck
-      converter anywhere — confirm the specific ESP32 board chosen
-      exposes a clean 3V3 direct-feed path before assuming this, since
-      not every dev board does. Use a bare ESP32-WROOM module or remove
-      the dev board's power LED — the real-world gap between a board's
-      advertised deep-sleep current and what an unmodified dev board
-      actually draws matters more to battery life than panel wattage or
-      cell capacity. Confirm actual measured sleep/active current on the
-      real assembled node, not just the datasheet figure.
+      converter anywhere. **The board actually procured is an
+      ESP32-WROOM-32U DevKitC V4 — a full dev board, not the bare module
+      originally preferred.** Its standard Espressif reference-design
+      header does expose a 3V3 pin usable for direct battery injection,
+      so this still works — but the onboard USB-to-serial chip and
+      status LED draw quiescent current a bare module wouldn't, so
+      **removing/desoldering the power LED is now a required assembly
+      step for the sensor node's copy of this board, not an optional
+      best practice** (the receiver's copy is mains-powered and doesn't
+      need this). Confirm actual measured sleep/active current on the
+      real assembled node afterward, not just the datasheet figure.
 - [ ] Assemble the receiver node: a matching LoRa radio on an
       ESP32/Arduino with WiFi, sited near the house/router — per
       [[0095-renewable-power-for-apiary-equipment]]'s scoping, this is
@@ -131,9 +163,12 @@ time.
   the firmware itself, that's a sign it should move into
   [[0077-sensor-ingestion-endpoint-and-device-auth]]'s scope instead, not
   a reason to add PHP tests here.
-- Four-corner load cells (vs. the single half-bridge planned for the
-  pilot) are a later accuracy upgrade, not required to pass this task —
-  per [[0075-sensor-hardware-and-connectivity-selection]].
+- Four-corner load cells were scoped as a later accuracy upgrade, not
+  required for the pilot, per
+  [[0075-sensor-hardware-and-connectivity-selection]] — the basket
+  selected 2026-09-21 (4× 50kg half-bridge cells) gets this from day
+  one anyway, so wire and calibrate all four from the start rather than
+  building single-cell first and upgrading later.
 
 ## Related
 - Project:: [[sensor-data-collection]]
