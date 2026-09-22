@@ -14,6 +14,13 @@ blocked-by:
 ---
 # Task: Define the `InsightAgent` and `HiveInsight` entities
 
+> **Superseded 2026-09-22** by [[0100-nexus-in-process-ai-synthesis]]:
+> `InsightAgent` was renamed/rescoped to `ApiClient` in `collective`
+> ([[0101-collective-rescope-to-api-client]]); `HiveInsight` relocated to
+> the new `nexus` submodule ([[0102-nexus-scaffold-and-ai-provider-config]]).
+> Kept below as a historical record of what actually shipped in this
+> task — not the active design.
+
 ## Context
 Foundational pair for [[ai-apiary-insights]] — the external agent's
 credential and the recommendation it produces, per

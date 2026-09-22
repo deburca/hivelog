@@ -14,6 +14,14 @@ blocked-by: ["[[0090-insight-agent-api-endpoints]]"]
 ---
 # Task: `InsightAgent` provisioning UI + `ai_insights_enabled` consent toggle
 
+> **Superseded 2026-09-22** by [[0100-nexus-in-process-ai-synthesis]]:
+> the consent toggle + disclosure stay in `collective`, updated in
+> [[0101-collective-rescope-to-api-client]]; `InsightAgent`'s own
+> provisioning UI becomes `ApiClient`'s (also 0101) — a genuinely new
+> `AiProviderConfig` provisioning UI is built separately in
+> [[0104-ai-provider-config-management-ui]]. Kept below as a historical
+> record of what actually shipped in this task — not the active design.
+
 ## Context
 Without this, nobody can actually turn the feature on or get a
 credential to build the external agent against — mirrors

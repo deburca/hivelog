@@ -14,6 +14,13 @@ blocked-by: ["[[0089-insight-agent-and-hive-insight-entities]]"]
 ---
 # Task: Context-read + insight write-back API endpoints
 
+> **Superseded 2026-09-22** by [[0100-nexus-in-process-ai-synthesis]]:
+> the context-read endpoint survives, renamed, in
+> [[0101-collective-rescope-to-api-client]]; the write-back endpoint is
+> retired outright — `nexus` writes `HiveInsight` in-process instead
+> ([[0103-nexus-cron-and-provider-calling]]). Kept below as a historical
+> record of what actually shipped in this task — not the active design.
+
 ## Context
 The two endpoints an external insight-generating agent needs, per
 [[0088-ai-insights-implementation]] §2 — a real gap
