@@ -1,0 +1,36 @@
+services:
+  logger.channel.nexus:
+    parent: logger.channel_base
+    arguments: ['nexus']
+
+  nexus.ai_module_provider_caller:
+    class: Drupal\nexus\ProviderCaller\AiModuleProviderCaller
+    arguments:
+      - '@module_handler'
+
+  nexus.direct_api_provider_caller:
+    class: Drupal\nexus\ProviderCaller\DirectApiProviderCaller
+    arguments:
+      - '@http_client'
+      - '@key.repository'
+
+  nexus.custom_endpoint_provider_caller:
+    class: Drupal\nexus\ProviderCaller\CustomEndpointProviderCaller
+    arguments:
+      - '@http_client'
+      - '@key.repository'
+
+  nexus.response_parser:
+    class: Drupal\nexus\NexusResponseParser
+
+  nexus.insight_generator:
+    class: Drupal\nexus\NexusInsightGenerator
+    arguments:
+      - '@entity_type.manager'
+      - '@collective.hive_context_builder'
+      - '@nexus.response_parser'
+      - '@datetime.time'
+      - '@logger.channel.nexus'
+      - '@nexus.ai_module_provider_caller'
+      - '@nexus.direct_api_provider_caller'
+      - '@nexus.custom_endpoint_provider_caller'

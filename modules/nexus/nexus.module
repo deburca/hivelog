@@ -1,0 +1,17 @@
+<?php
+
+/**
+ * @file
+ * Hook implementations for the Nexus module.
+ */
+
+/**
+ * Implements hook_cron().
+ *
+ * Runs the full in-process AI synthesis cycle — see
+ * NexusInsightGenerator (task 0103) and
+ * docs/project-management/decisions/0100-nexus-in-process-ai-synthesis.md.
+ */
+function nexus_cron() {
+  \Drupal::service('nexus.insight_generator')->generateAll();
+}
