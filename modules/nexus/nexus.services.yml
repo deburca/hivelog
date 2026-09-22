@@ -34,3 +34,12 @@ services:
       - '@nexus.ai_module_provider_caller'
       - '@nexus.direct_api_provider_caller'
       - '@nexus.custom_endpoint_provider_caller'
+
+  nexus.hive_insight_panel_builder:
+    class: Drupal\nexus\HiveInsightPanelBuilder
+    arguments:
+      - '@entity_type.manager'
+      - '@current_user'
+      - '@datetime.time'
+      - '@date.formatter'
+      - '@string_translation'

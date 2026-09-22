@@ -5,6 +5,9 @@
  * Hook implementations for the Nexus module.
  */
 
+use Drupal\hivelog\Entity\Apiary;
+use Drupal\hivelog\Entity\Hive;
+
 /**
  * Implements hook_cron().
  *
@@ -14,4 +17,24 @@
  */
 function nexus_cron() {
   \Drupal::service('nexus.insight_generator')->generateAll();
+}
+
+/**
+ * Implements hook_hivelog_hive_view_panels().
+ *
+ * See hivelog.api.php and
+ * docs/project-management/decisions/0099-submodule-canonical-page-panel-hook.md.
+ */
+function nexus_hivelog_hive_view_panels(Hive $hive) {
+  return \Drupal::service('nexus.hive_insight_panel_builder')->buildHivePanel($hive);
+}
+
+/**
+ * Implements hook_hivelog_apiary_view_panels().
+ *
+ * See hivelog.api.php and
+ * docs/project-management/decisions/0099-submodule-canonical-page-panel-hook.md.
+ */
+function nexus_hivelog_apiary_view_panels(Apiary $apiary) {
+  return \Drupal::service('nexus.hive_insight_panel_builder')->buildApiaryPanel($apiary);
 }
