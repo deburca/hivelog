@@ -14,6 +14,9 @@ use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\hivelog\HivelogEntityStorage;
 use Drupal\nexus\AiProviderConfigAccessControlHandler;
+use Drupal\nexus\AiProviderConfigListBuilder;
+use Drupal\nexus\Form\AiProviderConfigDeleteForm;
+use Drupal\nexus\Form\AiProviderConfigForm;
 use Drupal\user\EntityOwnerInterface;
 use Drupal\user\EntityOwnerTrait;
 
@@ -47,6 +50,13 @@ use Drupal\user\EntityOwnerTrait;
   handlers: [
     'storage' => HivelogEntityStorage::class,
     'access' => AiProviderConfigAccessControlHandler::class,
+    'list_builder' => AiProviderConfigListBuilder::class,
+    'form' => [
+      'default' => AiProviderConfigForm::class,
+      'add' => AiProviderConfigForm::class,
+      'edit' => AiProviderConfigForm::class,
+      'delete' => AiProviderConfigDeleteForm::class,
+    ],
   ],
   base_table: 'nexus_ai_provider_config',
   admin_permission: 'administer hivelog',
@@ -55,6 +65,13 @@ use Drupal\user\EntityOwnerTrait;
     'label' => 'label',
     'uuid' => 'uuid',
     'owner' => 'uid',
+  ],
+  links: [
+    'canonical' => '/hivelog/ai-provider-config/{ai_provider_config}',
+    'add-form' => '/hivelog/ai-provider-config/add',
+    'edit-form' => '/hivelog/ai-provider-config/{ai_provider_config}/edit',
+    'delete-form' => '/hivelog/ai-provider-config/{ai_provider_config}/delete',
+    'collection' => '/hivelog/ai-provider-configs',
   ],
 )]
 class AiProviderConfig extends ContentEntityBase implements EntityChangedInterface, EntityOwnerInterface {

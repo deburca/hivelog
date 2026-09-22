@@ -101,21 +101,48 @@ All three investigation/decision tasks are done:
   [[0088-ai-insights-implementation]], the real `HiveInsight`/
   `InsightAgent` schema, API, access control, and UI design.
 
-Implementation, broken out from [[0088-ai-insights-implementation]]'s
-Decision section (static index, execution order):
-- [[0089-insight-agent-and-hive-insight-entities]] — backlog (do first;
-  everything else depends on it)
-- [[0090-insight-agent-api-endpoints]] — backlog
-- [[0091-insight-agent-management-ui]] — backlog
+**2026-09-22 architecture pivot**: [[0100-nexus-in-process-ai-synthesis]]
+splits AI synthesis out of `collective` into a new `nexus` submodule,
+calling providers in-process via cron rather than through an external
+agent + write-back API. This partially supersedes
+[[0089-insight-agent-and-hive-insight-entities]] through
+[[0091-insight-agent-management-ui]] (their `InsightAgent`/`HiveInsight`
+design), which stay `done` as a historical record but are no longer the
+active design — see each task's own note. Replaced by
+[[0101-collective-rescope-to-api-client]] through
+[[0104-ai-provider-config-management-ui]] below, **all four now done**
+(2026-09-22) — the `nexus` rework itself is complete.
+[[0092-hive-apiary-ai-insight-panel]] through
+[[0094-ai-insights-prelaunch-validation]] are unaffected in substance
+(still read `HiveInsight`, just relocated to `nexus`); their own
+`depends-on` fields still name 0089/0090 and should be repointed at
+0102/0103 whichever of them is picked up next, not urgent before then.
+
+Implementation, current (post-ADR-0100):
+- [[0101-collective-rescope-to-api-client]] — **done** (2026-09-22):
+  narrowed `collective` to context-gathering only
+- [[0102-nexus-scaffold-and-ai-provider-config]] — **done** (2026-09-22):
+  `nexus` module scaffolded, `AiProviderConfig` + relocated `HiveInsight`
+- [[0103-nexus-cron-and-provider-calling]] — **done** (2026-09-22):
+  `nexus_cron()` + all three provider integration modes wired
+- [[0104-ai-provider-config-management-ui]] — **done** (2026-09-22):
+  `AiProviderConfig` add/edit/delete UI, mode-conditional form fields,
+  `key_select` integration, canonical page's live AI-module-status check
 - [[0092-hive-apiary-ai-insight-panel]] — backlog
 - [[0093-dashboard-ai-insights-section]] — backlog (also carries the
-  `InsightAgent` staleness alert, folded in rather than its own task)
+  provider-credential staleness alert, folded in rather than its own
+  task)
 - [[0094-ai-insights-prelaunch-validation]] — backlog, **the release
   gate**: not another design task, running [[0088-ai-insights-implementation]]
-  §6's two required checks against the real endpoints. Only needs
-  0089/0090 to exist — not blocked by the UI tasks — but nothing ships
-  to real beekeepers, and `ai_insights_enabled` is not safe to
-  recommend turning on, until this one passes.
+  §6's two required checks against the real, nexus-driven pipeline.
+  Nothing ships to real beekeepers, and `ai_insights_enabled` is not safe
+  to recommend turning on, until this one passes.
+
+Implementation, superseded 2026-09-22 (kept for history, not the active
+plan — see above):
+- ~~[[0089-insight-agent-and-hive-insight-entities]]~~ — done, superseded
+- ~~[[0090-insight-agent-api-endpoints]]~~ — done, superseded
+- ~~[[0091-insight-agent-management-ui]]~~ — done, superseded
 
 ## Open questions
 - ~~Model/hosting choice: a self-hosted open model vs. a hosted

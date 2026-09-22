@@ -1,0 +1,58 @@
+# AI Provider Config management UI — task 0104. Route-level requirements
+# are flat own/any/admin permissions, matching every other custom hivelog
+# route; the real per-entity check happens inside the controller/forms.
+# add_form is administer-hivelog-only — no "add ai provider config"
+# permission exists at all (task 0102's own deliberate design: a rare,
+# high-trust, billing-relevant credential reference, not something every
+# beekeeper self-serves).
+entity.ai_provider_config.collection:
+  path: '/hivelog/ai-provider-configs'
+  defaults:
+    _entity_list: 'ai_provider_config'
+    _title: 'AI Provider Configs'
+  requirements:
+    _permission: 'view own ai provider config+view any ai provider config+administer hivelog'
+
+entity.ai_provider_config.add_form:
+  path: '/hivelog/ai-provider-config/add'
+  defaults:
+    _entity_form: 'ai_provider_config.add'
+    _title: 'Add AI Provider Config'
+  requirements:
+    _permission: 'administer hivelog'
+
+entity.ai_provider_config.canonical:
+  path: '/hivelog/ai-provider-config/{ai_provider_config}'
+  defaults:
+    _controller: '\Drupal\nexus\Controller\AiProviderConfigController::view'
+    _title_callback: '\Drupal\nexus\Controller\AiProviderConfigController::title'
+  requirements:
+    _permission: 'view own ai provider config+view any ai provider config+administer hivelog'
+  options:
+    parameters:
+      ai_provider_config:
+        type: entity:ai_provider_config
+
+entity.ai_provider_config.edit_form:
+  path: '/hivelog/ai-provider-config/{ai_provider_config}/edit'
+  defaults:
+    _entity_form: 'ai_provider_config.edit'
+    _title: 'Edit AI Provider Config'
+  requirements:
+    _permission: 'edit own ai provider config+edit any ai provider config+administer hivelog'
+  options:
+    parameters:
+      ai_provider_config:
+        type: entity:ai_provider_config
+
+entity.ai_provider_config.delete_form:
+  path: '/hivelog/ai-provider-config/{ai_provider_config}/delete'
+  defaults:
+    _entity_form: 'ai_provider_config.delete'
+    _title: 'Delete AI Provider Config'
+  requirements:
+    _permission: 'delete own ai provider config+delete any ai provider config+administer hivelog'
+  options:
+    parameters:
+      ai_provider_config:
+        type: entity:ai_provider_config
