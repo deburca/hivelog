@@ -6,6 +6,7 @@
  */
 
 use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Url;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\Hive;
 
@@ -37,6 +38,24 @@ function nanoprobe_hivelog_apiary_view_panels(Apiary $apiary) {
  */
 function nanoprobe_hivelog_needs_attention_alerts(array $apiaries, CacheableMetadata $cache) {
   return \Drupal::service('nanoprobe.sensor_alert_collector')->collectAlerts($apiaries, $cache);
+}
+
+/**
+ * Implements hook_hivelog_app_nav_items().
+ *
+ * See hivelog.api.php and [[0105-submodule-navigation-menu-links]] — the
+ * `nanoprobe.links.menu.yml` entry alongside this one is a best-effort
+ * secondary integration for themes that do render menu-link children;
+ * this hook is the one hivelog core's own in-app nav actually uses.
+ */
+function nanoprobe_hivelog_app_nav_items() {
+  return [
+    'nanoprobe_sensor_devices' => [
+      'title' => t('Sensor Devices'),
+      'url' => Url::fromRoute('entity.sensor_device.collection'),
+      'weight' => 10,
+    ],
+  ];
 }
 
 /**

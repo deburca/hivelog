@@ -1,11 +1,12 @@
 ---
 type: task
 tags: [hivelog/task]
-status: backlog
+status: done
 priority: high
 project: "[[sensor-data-collection]]"
 area: entity
 created: 2026-09-22
+completed: 2026-09-22
 branch: feature/0106-sensor-device-management-ui
 release:
 depends-on: ["[[0076-sensor-device-and-reading-entities]]"]
@@ -40,7 +41,7 @@ it. Today the only way to create a `SensorDevice` is programmatically
 self-provisioning hardware, not a nice-to-have.
 
 ## Acceptance criteria
-- [ ] `SensorDevice` gains standard entity handlers
+- [x] `SensorDevice` gains standard entity handlers
       (`list_builder` → `SensorDeviceListBuilder`, `form` →
       `SensorDeviceForm`/`SensorDeviceDeleteForm`) and `links`
       (`add-form`, `edit-form`, `delete-form`, `collection`), mirroring
@@ -48,7 +49,7 @@ self-provisioning hardware, not a nice-to-have.
       existing precedent for a site/apiary-scoped credential entity with
       a full management UI, adapted for `SensorDevice`'s own
       apiary/hive `scope` duality instead of a flat owner-only model.
-- [ ] Add form lets a beekeeper set `label`, `apiary`, `hive` (required
+- [x] Add form lets a beekeeper set `label`, `apiary`, `hive` (required
       only when `scope = hive`, hidden/disabled otherwise — mirrors
       `CalendarAction`'s own apiary/hive scope-conditional field
       pattern, not a new UI idiom), `device_type`, `transport`, and
@@ -56,7 +57,7 @@ self-provisioning hardware, not a nice-to-have.
       `SensorDevice::preSave()` exactly as today, shown once via a
       status message on creation (mirrors `ApiClientForm`'s own
       one-time-plaintext UX from task 0091).
-- [ ] `entity.sensor_device.add_form` is `administer hivelog`-only, NOT
+- [x] `entity.sensor_device.add_form` is `administer hivelog`-only, NOT
       gated by the existing `add sensor device` permission — re-examine
       whether that permission should actually be used instead (it's
       existed, unused, since task 0076) or removed as dead config if a
@@ -65,36 +66,113 @@ self-provisioning hardware, not a nice-to-have.
       administrator-provisioned" reasoning. Document whichever way this
       goes — don't leave a second permission sitting unused for a second
       task in a row.
-- [ ] Collection page (`entity.sensor_device.collection`) lists every
+- [x] Collection page (`entity.sensor_device.collection`) lists every
       device the current user may view — label, apiary/hive, scope,
       device type, enabled, last seen — following `HivelogListBuilder`'s
       established `hivelog:entity-table` component pattern
       (`ApiClientListBuilder`, `AiProviderConfigListBuilder`).
-- [ ] The existing canonical page (`SensorDeviceController::view()`,
+- [x] The existing canonical page (`SensorDeviceController::view()`,
       task 0078) and its "Download Configuration" action are unchanged
       — this task only adds what was missing around it, not a
       replacement.
-- [ ] `entity.hive.canonical` and `entity.apiary.canonical` (or the
+- [x] `entity.hive.canonical` and `entity.apiary.canonical` (or the
       `nanoprobe` Sensors panel itself) gain a visible "Add sensor" link
       when the current user has create access — closing the loop from
       "I'm looking at this hive" to "associate a sensor with it"
       without a detour through the standalone collection page. Exact
       placement (panel vs. canonical page action) is an implementation
       decision, not fixed here.
-- [ ] `modules/nanoprobe/nanoprobe.links.menu.yml`: a "Sensor Devices"
+- [x] `modules/nanoprobe/nanoprobe.links.menu.yml`: a "Sensor Devices"
       link to `entity.sensor_device.collection`, parented under
       `hivelog.admin` — the `nanoprobe` piece of
       [[0105-submodule-navigation-menu-links]], deliberately folded into
       this task instead since it depends on the collection route this
       task creates.
-- [ ] Kernel tests mirroring `ApiClientManagementUiTest`'s pattern: add
+- [x] Kernel tests mirroring `ApiClientManagementUiTest`'s pattern: add
       form creates a device with correct `hive`/`apiary` per `scope`;
       `hive` required only when `scope = hive`; token shown once on
       creation; collection page lists accessible devices and hides
       inaccessible ones; delete works and is properly gated; the new
       "Add sensor" link appears/hides correctly by access.
-- [ ] phpcs clean. Full kernel + unit suite re-run against `cms2`, no
+- [x] phpcs clean. Full kernel + unit suite re-run against `cms2`, no
       regressions.
+
+## Implementation notes
+- **`add sensor device` permission resolved: removed as dead config.**
+  Rather than wire it into `checkCreateAccess()`, it's deleted from
+  `nanoprobe.permissions.yml` outright — `entity.sensor_device.add_form`
+  and the two contextual add routes below are `administer hivelog`-only,
+  matching `ApiClient`/`AiProviderConfig`'s "rare, high-trust,
+  administrator-provisioned" reasoning exactly. `SensorDeviceTest`'s own
+  `testApiaryScopedAccess()` had a stale `grantPermission('add sensor
+  device')` call (never actually exercising create access) — removed.
+- **Contextual add routes, not just the standalone one.** Beyond the
+  plain `entity.sensor_device.add_form` (`/hivelog/sensor-device/add`),
+  added `nanoprobe.sensor_device.add_for_hive` and
+  `.add_for_apiary` (`SensorDeviceController::addFormForHive()`/
+  `addFormForApiary()`), mirroring `QueenController::addForm()`/
+  `CalendarActionController::addForm()`'s established "pre-fill the
+  parent reference from the route" pattern — pre-fills `apiary`, `hive`,
+  and `scope` so a beekeeper starting from a hive/apiary page never
+  fills those in by hand. `SensorPanelBuilder::buildHivePanel()`/
+  `buildApiaryPanel()` link to these, gated by `Url::access()` (the
+  `HivelogAppNavBuilder` idiom) so the link never leads a non-admin into
+  a 403 — verified with a kernel test asserting the whole panel is `[]`
+  when neither devices nor create access exist, and that `heading['add']`
+  is present/absent by access.
+- **`scope` reordered ahead of `hive` in the entity's field weights**
+  (form weight 2 vs. 3, was 3 vs. 2) — matches `AiProviderConfigForm`'s
+  own "controlling field before its conditional dependents" convention
+  (task 0104) now that `SensorDeviceForm::addScopeConditionalStates()`
+  hides `hive` via `#states` unless `scope = hive`. Verified live: the
+  rendered `hive` autocomplete's `data-drupal-states` attribute carries
+  the exact expected selector (`:input[name="scope"]` / `value: hive`) —
+  the browser pane's sandbox blocks Drupal core JS entirely (no
+  `Drupal`/`jQuery` global), so the actual show/hide couldn't be
+  interactively exercised, same limitation noted in task 0105.
+- **Real bug caught only by directly calling `validateForm()` in a
+  kernel test, not by `SensorDevice::preSave()`'s own invariant check:**
+  an unselected `entity_reference_autocomplete` widget submits
+  `target_id => ''`, and `EntityReferenceItem::isEmpty()` only treats
+  `NULL` as empty — so `!$entity->get('hive')->isEmpty()` incorrectly
+  read as "hive is set" for a genuinely-empty field, and the "Hive is
+  required" error never fired. Fixed by checking `target_id` directly
+  (falsy, so `''` and `NULL` both count), mirroring the exact style
+  `SensorDevice::preSave()` already used for this same reason.
+- **`SensorDeviceListBuilder::load()` explicitly filters by
+  `access('view')`, unlike `ApiClientListBuilder`/
+  `AiProviderConfigListBuilder`.** `EntityListBuilder::load()`'s default
+  `accessCheck(TRUE)` on the query doesn't actually filter rows for an
+  entity type with no `query_access` handler — never noticed on
+  `ApiClient`/`AiProviderConfig` since their "own" access is a flat
+  owner check on a handful of site-level rows, but `SensorDevice` is
+  genuinely apiary-scoped and multi-tenant, so the acceptance criterion
+  ("lists every device the current user may view") needed real
+  filtering. Added the same per-entity `->access('view', ...)` filter
+  `SensorPanelBuilder::loadAccessibleDevices()` already used, rather
+  than inventing a `query_access` handler for one entity type.
+- Verified live against `cms2`: created a real device from the add form
+  (autocomplete fields filled as `Label (id)`, since the browser pane's
+  JS sandbox blocks the real autocomplete UI too), confirmed the
+  one-time token warning, the canonical page's styled table (task
+  0108's fix, unaffected), the Hive canonical page's "Sensors" panel
+  (empty-state message + "Add Sensor" link, since a freshly-created
+  device with no readings still contributes nothing to
+  `buildDeviceSection()` — pre-existing, unchanged behavior), both
+  contextual add routes' pre-fill, the collection page's columns, and
+  delete — then deleted the test device and its two apiary/hive
+  fixtures again to leave `cms2` clean.
+- **Full regression caught a real, session-recurring uid=1 pitfall**:
+  the pre-existing `SensorPanelBuilderTest`'s `$owner` was the first
+  `User::create()->save()` in its `setUp()`, making it uid 1 — a
+  superuser who bypasses every permission check, including the new
+  `administer hivelog`-gated "Add Sensor" route. Four of that file's
+  tests asserted an empty panel (`[]`) for scenarios with no devices/no
+  accessible readings, which broke once `$owner` started seeing the
+  "Add Sensor" link it was never supposed to have access to. Fixed by
+  consuming uid 1 with a throwaway user first, the same fix applied
+  repeatedly elsewhere this session — not a change to their assertions,
+  which were correct once `$owner` was genuinely unprivileged again.
 
 ## Related
 - Project:: [[sensor-data-collection]]

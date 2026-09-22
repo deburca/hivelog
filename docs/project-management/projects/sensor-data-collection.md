@@ -192,10 +192,19 @@ reachable from the site's navigation at all.
   for `collective`/`nexus` stay too, as a best-effort secondary
   integration. `nanoprobe`'s own nav item is still deferred to 0106,
   since there's no `SensorDevice` collection route to point it at yet.
-- [[0106-sensor-device-management-ui]] — backlog, **high priority** —
-  the actual blocker for a beekeeper self-provisioning any sensor at
-  all; task 0078 explicitly deferred this and no follow-up task ever
-  existed until now
+- [[0106-sensor-device-management-ui]] — **done** (2026-09-22): the
+  actual blocker for a beekeeper self-provisioning any sensor at all —
+  task 0078 explicitly deferred this and no follow-up task ever existed
+  until now. `SensorDevice` gained the standard add/edit/delete/
+  collection handlers (mirroring `ApiClient`), a scope-conditional
+  `hive` field (`#states`, matching `AiProviderConfigForm`'s `mode`
+  pattern), contextual add routes pre-filling apiary/hive from a Hive/
+  Apiary canonical page's new "Add Sensor" link, and folded in
+  `nanoprobe`'s own `hook_hivelog_app_nav_items()`/menu-link
+  contribution per 0105. The long-unused `add sensor device` permission
+  was removed as dead config rather than wired in — `administer
+  hivelog` is the only way to create one, matching `ApiClient`/
+  `AiProviderConfig`.
 - [[0107-assimilate-mock-sensor-data-module]] — backlog, low priority,
   dev/demo-only — depends on 0106 so "here's what adding a sensor looks
   like" has a real add form to point at

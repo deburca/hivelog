@@ -12,6 +12,30 @@ nanoprobe.sensor_reading.ingest:
     _access: 'TRUE'
   methods: [POST]
 
+# Sensor Device management UI — task 0106. Route-level requirements are
+# flat own/any/admin permissions, matching every other custom hivelog
+# route; the real, apiary-scoped check happens inside
+# SensorDeviceAccessControlHandler. add_form (and the two hive/apiary-
+# contextual add routes below) are administer-hivelog-only — no "add
+# sensor device" permission exists at all (task 0106 removed the unused
+# one from task 0076, matching ApiClient/AiProviderConfig's own "rare,
+# high-trust, administrator-provisioned" reasoning).
+entity.sensor_device.collection:
+  path: '/hivelog/sensor-devices'
+  defaults:
+    _entity_list: 'sensor_device'
+    _title: 'Sensor Devices'
+  requirements:
+    _permission: 'view own sensor device+view any sensor device+administer hivelog'
+
+entity.sensor_device.add_form:
+  path: '/hivelog/sensor-device/add'
+  defaults:
+    _entity_form: 'sensor_device.add'
+    _title: 'Add Sensor Device'
+  requirements:
+    _permission: 'administer hivelog'
+
 # Sensor Device canonical page. Route-level requirement is a flat
 # own/any/admin permission, matching every other custom hivelog route;
 # the real, apiary-scoped check happens inside SensorDeviceController per
@@ -27,6 +51,59 @@ entity.sensor_device.canonical:
     parameters:
       sensor_device:
         type: entity:sensor_device
+
+entity.sensor_device.edit_form:
+  path: '/hivelog/sensor-device/{sensor_device}/edit'
+  defaults:
+    _entity_form: 'sensor_device.edit'
+    _title: 'Edit Sensor Device'
+  requirements:
+    _permission: 'edit own sensor device+edit any sensor device+administer hivelog'
+  options:
+    parameters:
+      sensor_device:
+        type: entity:sensor_device
+
+entity.sensor_device.delete_form:
+  path: '/hivelog/sensor-device/{sensor_device}/delete'
+  defaults:
+    _entity_form: 'sensor_device.delete'
+    _title: 'Delete Sensor Device'
+  requirements:
+    _permission: 'delete own sensor device+delete any sensor device+administer hivelog'
+  options:
+    parameters:
+      sensor_device:
+        type: entity:sensor_device
+
+# Contextual add routes from a Hive/Apiary canonical page's "Add Sensor"
+# link (SensorPanelBuilder) — pre-fill apiary/hive/scope so a beekeeper
+# doesn't have to set them by hand, mirroring
+# CalendarActionController::addForm()/QueenController::addForm()'s own
+# established pattern for adding a child entity from its parent's page.
+nanoprobe.sensor_device.add_for_hive:
+  path: '/hivelog/hive/{hive}/sensor-device/add'
+  defaults:
+    _controller: '\Drupal\nanoprobe\Controller\SensorDeviceController::addFormForHive'
+    _title: 'Add Sensor Device'
+  requirements:
+    _permission: 'administer hivelog'
+  options:
+    parameters:
+      hive:
+        type: entity:hive
+
+nanoprobe.sensor_device.add_for_apiary:
+  path: '/hivelog/apiary/{apiary}/sensor-device/add'
+  defaults:
+    _controller: '\Drupal\nanoprobe\Controller\SensorDeviceController::addFormForApiary'
+    _title: 'Add Sensor Device'
+  requirements:
+    _permission: 'administer hivelog'
+  options:
+    parameters:
+      apiary:
+        type: entity:apiary
 
 # Download Configuration / regenerate token — see
 # SensorDeviceConfigDownloadForm's own docblock for why these are the

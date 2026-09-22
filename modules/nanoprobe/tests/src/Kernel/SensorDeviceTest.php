@@ -242,7 +242,6 @@ class SensorDeviceTest extends KernelTestBase {
     $role->grantPermission('view own sensor device');
     $role->grantPermission('edit own sensor device');
     $role->grantPermission('delete own sensor device');
-    $role->grantPermission('add sensor device');
     $role->save();
 
     $owner = User::create(['name' => 'owner', 'mail' => 'owner@example.com']);

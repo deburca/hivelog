@@ -14,7 +14,10 @@ use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\hivelog\HivelogEntityStorage;
+use Drupal\nanoprobe\Form\SensorDeviceDeleteForm;
+use Drupal\nanoprobe\Form\SensorDeviceForm;
 use Drupal\nanoprobe\SensorDeviceAccessControlHandler;
+use Drupal\nanoprobe\SensorDeviceListBuilder;
 use Drupal\user\EntityOwnerInterface;
 use Drupal\user\EntityOwnerTrait;
 
@@ -43,6 +46,13 @@ use Drupal\user\EntityOwnerTrait;
   handlers: [
     'storage' => HivelogEntityStorage::class,
     'access' => SensorDeviceAccessControlHandler::class,
+    'list_builder' => SensorDeviceListBuilder::class,
+    'form' => [
+      'default' => SensorDeviceForm::class,
+      'add' => SensorDeviceForm::class,
+      'edit' => SensorDeviceForm::class,
+      'delete' => SensorDeviceDeleteForm::class,
+    ],
   ],
   base_table: 'nanoprobe_sensor_device',
   admin_permission: 'administer hivelog',
@@ -54,6 +64,10 @@ use Drupal\user\EntityOwnerTrait;
   ],
   links: [
     'canonical' => '/hivelog/sensor-device/{sensor_device}',
+    'add-form' => '/hivelog/sensor-device/add',
+    'edit-form' => '/hivelog/sensor-device/{sensor_device}/edit',
+    'delete-form' => '/hivelog/sensor-device/{sensor_device}/delete',
+    'collection' => '/hivelog/sensor-devices',
   ],
 )]
 class SensorDevice extends ContentEntityBase implements EntityChangedInterface, EntityOwnerInterface {
@@ -279,22 +293,6 @@ class SensorDevice extends ContentEntityBase implements EntityChangedInterface, 
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
-    $fields['hive'] = BaseFieldDefinition::create('entity_reference')
-      ->setLabel(t('Hive'))
-      ->setDescription(t('The specific hive this device monitors. Required when scope is "Hive"; must be left empty when scope is "Apiary".'))
-      ->setSetting('target_type', 'hive')
-      ->setDisplayOptions('form', [
-        'type' => 'entity_reference_autocomplete',
-        'weight' => 2,
-      ])
-      ->setDisplayOptions('view', [
-        'label' => 'inline',
-        'type' => 'entity_reference_label',
-        'weight' => 2,
-      ])
-      ->setDisplayConfigurable('form', TRUE)
-      ->setDisplayConfigurable('view', TRUE);
-
     $fields['scope'] = BaseFieldDefinition::create('list_string')
       ->setLabel(t('Scope'))
       ->setDescription(t('A hive-scoped device monitors one specific hive (e.g. a per-hive weight sensor). An apiary-scoped device serves the whole site (e.g. an ambient weather station).'))
@@ -306,11 +304,32 @@ class SensorDevice extends ContentEntityBase implements EntityChangedInterface, 
       ])
       ->setDisplayOptions('form', [
         'type' => 'options_select',
-        'weight' => 3,
+        'weight' => 2,
       ])
       ->setDisplayOptions('view', [
         'label' => 'inline',
         'type' => 'list_default',
+        'weight' => 2,
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
+
+    // Ordered after `scope` (form weight 3 vs. 2) — matches
+    // AiProviderConfigForm's own "controlling field before its
+    // conditional dependents" convention (task 0104), since
+    // SensorDeviceForm::addScopeConditionalStates() hides this field
+    // unless scope = hive.
+    $fields['hive'] = BaseFieldDefinition::create('entity_reference')
+      ->setLabel(t('Hive'))
+      ->setDescription(t('The specific hive this device monitors. Required when scope is "Hive"; must be left empty when scope is "Apiary".'))
+      ->setSetting('target_type', 'hive')
+      ->setDisplayOptions('form', [
+        'type' => 'entity_reference_autocomplete',
+        'weight' => 3,
+      ])
+      ->setDisplayOptions('view', [
+        'label' => 'inline',
+        'type' => 'entity_reference_label',
         'weight' => 3,
       ])
       ->setDisplayConfigurable('form', TRUE)

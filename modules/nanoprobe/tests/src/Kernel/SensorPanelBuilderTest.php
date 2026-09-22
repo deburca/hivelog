@@ -81,6 +81,12 @@ class SensorPanelBuilderTest extends KernelTestBase {
     $role->grantPermission('view own sensor reading');
     $role->save();
 
+    // Consumes uid 1 (which bypasses every permission check, including
+    // the new administer-hivelog-gated "Add Sensor" link's route access
+    // — task 0106) so $owner below is a genuinely unprivileged
+    // beekeeper, not an accidental superuser.
+    User::create(['name' => 'uid1_throwaway', 'mail' => 'uid1@example.com'])->save();
+
     $this->owner = User::create(['name' => 'owner', 'mail' => 'owner@example.com']);
     $this->owner->addRole('beekeeper');
     $this->owner->save();

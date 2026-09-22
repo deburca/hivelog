@@ -1,10 +1,12 @@
-# Sensor device permissions.
+# Sensor device permissions. Deliberately no "add" permission — task 0106
+# resolved the `add sensor device` permission that had sat unused since
+# task 0076 by removing it as dead config, matching ApiClient/
+# AiProviderConfig's own "rare, high-trust, administrator-provisioned"
+# reasoning: `administer hivelog` is the only way to create one.
 view own sensor device:
   title: 'View own sensor devices'
 view any sensor device:
   title: 'View any sensor device'
-add sensor device:
-  title: 'Add sensor devices'
 edit own sensor device:
   title: 'Edit own sensor devices'
 edit any sensor device:

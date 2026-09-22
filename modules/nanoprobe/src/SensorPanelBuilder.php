@@ -10,6 +10,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
+use Drupal\Core\Url;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\Hive;
 use Drupal\nanoprobe\Entity\SensorDevice;
@@ -60,7 +61,8 @@ class SensorPanelBuilder {
    *
    * @return array
    *   A render array keyed `nanoprobe_sensors`, or an empty array if
-   *   there is no accessible sensor data to show.
+   *   there's neither accessible sensor data nor an "Add Sensor" link
+   *   to offer the current user.
    */
   public function buildHivePanel(Hive $hive): array {
     $devices = $this->loadAccessibleDevices([
@@ -68,7 +70,8 @@ class SensorPanelBuilder {
       'scope' => 'hive',
       'enabled' => 1,
     ]);
-    return $this->buildPanel($devices);
+    $add_url = Url::fromRoute('nanoprobe.sensor_device.add_for_hive', ['hive' => $hive->id()]);
+    return $this->buildPanel($devices, $add_url);
   }
 
   /**
@@ -83,7 +86,8 @@ class SensorPanelBuilder {
    *
    * @return array
    *   A render array keyed `nanoprobe_sensors`, or an empty array if
-   *   there is no accessible sensor data to show.
+   *   there's neither accessible sensor data nor an "Add Sensor" link
+   *   to offer the current user.
    */
   public function buildApiaryPanel(Apiary $apiary): array {
     $devices = $this->loadAccessibleDevices([
@@ -91,7 +95,8 @@ class SensorPanelBuilder {
       'scope' => 'apiary',
       'enabled' => 1,
     ]);
-    return $this->buildPanel($devices);
+    $add_url = Url::fromRoute('nanoprobe.sensor_device.add_for_apiary', ['apiary' => $apiary->id()]);
+    return $this->buildPanel($devices, $add_url);
   }
 
   /**
@@ -132,13 +137,18 @@ class SensorPanelBuilder {
    *
    * @param \Drupal\nanoprobe\Entity\SensorDevice[] $devices
    *   Devices to include, already access-filtered.
+   * @param \Drupal\Core\Url $add_url
+   *   The hive/apiary-contextual "Add Sensor" route (task 0106) — shown
+   *   only when the current user actually has access to it, so this
+   *   never links a beekeeper into a 403.
    *
    * @return array
-   *   A render array keyed `nanoprobe_sensors`, or an empty array if no
-   *   device actually has any accessible reading to show (an attached
-   *   device that has never reported yet contributes nothing).
+   *   A render array keyed `nanoprobe_sensors`, or an empty array if
+   *   there's neither an accessible reading to show nor an "Add Sensor"
+   *   link to offer (an attached device that has never reported yet
+   *   contributes nothing on its own).
    */
-  protected function buildPanel(array $devices): array {
+  protected function buildPanel(array $devices, Url $add_url): array {
     $device_sections = [];
     foreach ($devices as $device) {
       $section = $this->buildDeviceSection($device);
@@ -147,8 +157,38 @@ class SensorPanelBuilder {
       }
     }
 
-    if (empty($device_sections)) {
+    $can_add = $add_url->access($this->currentUser);
+    if (empty($device_sections) && !$can_add) {
       return [];
+    }
+
+    $heading = [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['hivelog-list-heading']],
+      'title' => [
+        '#type' => 'html_tag',
+        '#tag' => 'h2',
+        '#value' => $this->t('Sensors'),
+        '#attributes' => ['class' => ['hivelog-list-heading__title']],
+      ],
+    ];
+    if ($can_add) {
+      $heading['add'] = [
+        '#type' => 'component',
+        '#component' => 'hivelog:button',
+        '#props' => [
+          'label' => (string) $this->t('Add Sensor'),
+          'url' => $add_url->toString(),
+          'variant' => 'primary',
+          'extra_classes' => 'hivelog-list-heading__action',
+        ],
+      ];
+    }
+
+    if (empty($device_sections)) {
+      $device_sections['empty'] = [
+        '#markup' => '<p>' . $this->t('No sensors are registered here yet.') . '</p>',
+      ];
     }
 
     return [
@@ -156,11 +196,7 @@ class SensorPanelBuilder {
         '#type' => 'container',
         '#attributes' => ['class' => ['nanoprobe-sensors-panel']],
         '#weight' => 7.5,
-        'heading' => [
-          '#type' => 'html_tag',
-          '#tag' => 'h2',
-          '#value' => $this->t('Sensors'),
-        ],
+        'heading' => $heading,
       ] + $device_sections,
     ];
   }

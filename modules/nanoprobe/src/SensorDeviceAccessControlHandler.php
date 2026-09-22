@@ -18,6 +18,11 @@ use Drupal\hivelog\ApiaryAccessTrait;
  * - update: site-wide "any" OR apiary member (owner + beekeepers).
  * - delete: site-wide "any" OR apiary owner only (registered hardware is
  *   foundational apiary structure, mirroring CalendarAction/Hive).
+ * - create: `administer hivelog` only, matching `ApiClient`/
+ *   `AiProviderConfig`'s own "rare, high-trust, administrator-provisioned"
+ *   reasoning — task 0106's resolution of the `add sensor device`
+ *   permission that had sat unused since task 0076: rather than wire it
+ *   in, it's removed as dead config (see nanoprobe.permissions.yml).
  */
 class SensorDeviceAccessControlHandler extends EntityAccessControlHandler {
 
@@ -51,10 +56,7 @@ class SensorDeviceAccessControlHandler extends EntityAccessControlHandler {
    * {@inheritdoc}
    */
   protected function checkCreateAccess(AccountInterface $account, array $context, $entity_bundle = NULL) {
-    return AccessResult::allowedIfHasPermissions($account, [
-      'administer hivelog',
-      'add sensor device',
-    ], 'OR');
+    return AccessResult::allowedIfHasPermission($account, 'administer hivelog');
   }
 
 }

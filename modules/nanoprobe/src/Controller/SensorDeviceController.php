@@ -6,6 +6,8 @@ namespace Drupal\nanoprobe\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Url;
+use Drupal\hivelog\Entity\Apiary;
+use Drupal\hivelog\Entity\Hive;
 use Drupal\nanoprobe\Entity\SensorDevice;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
@@ -90,6 +92,45 @@ class SensorDeviceController extends ControllerBase {
     }
 
     return $build;
+  }
+
+  /**
+   * Provides the add form pre-filled for a hive-scoped device.
+   *
+   * Mirrors `QueenController::addForm()`/`CalendarActionController::
+   * addForm()`'s established pattern for adding a child entity from its
+   * parent's canonical page — task 0106.
+   *
+   * @param \Drupal\hivelog\Entity\Hive $hive
+   *   The hive to pre-fill.
+   *
+   * @return array
+   *   The add form's render array.
+   */
+  public function addFormForHive(Hive $hive): array {
+    $device = $this->entityTypeManager()->getStorage('sensor_device')->create([
+      'apiary' => $hive->get('apiary')->target_id,
+      'hive' => $hive->id(),
+      'scope' => 'hive',
+    ]);
+    return $this->entityFormBuilder()->getForm($device, 'add');
+  }
+
+  /**
+   * Provides the add form pre-filled for an apiary-scoped device.
+   *
+   * @param \Drupal\hivelog\Entity\Apiary $apiary
+   *   The apiary to pre-fill.
+   *
+   * @return array
+   *   The add form's render array.
+   */
+  public function addFormForApiary(Apiary $apiary): array {
+    $device = $this->entityTypeManager()->getStorage('sensor_device')->create([
+      'apiary' => $apiary->id(),
+      'scope' => 'apiary',
+    ]);
+    return $this->entityFormBuilder()->getForm($device, 'add');
   }
 
   /**
