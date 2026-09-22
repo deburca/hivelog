@@ -111,5 +111,44 @@ function hook_hivelog_needs_attention_alerts(array $apiaries, CacheableMetadata 
 }
 
 /**
+ * Contributes a whole new section to the dashboard, its own landing page.
+ *
+ * The same optional-submodule-extends-core-without-a-dependency problem
+ * as hook_hivelog_hive_view_panels()/hook_hivelog_needs_attention_alerts()
+ * (see docs/project-management/decisions/0099-submodule-canonical-page-panel-hook.md),
+ * applied here to a new page region rather than an existing one — unlike
+ * those two hooks, this doesn't feed into an existing merged pass
+ * (`DashboardController` has no equivalent of its own to contribute
+ * into), so an implementation returns a complete, ready-to-place render
+ * array instead of a list of rows. `hivelog` core defines and invokes
+ * this hook; it implements nothing here itself.
+ *
+ * Implementations are responsible for their own access checks — $apiaries
+ * is already filtered to ones the current user may view, but that does
+ * not imply access to whatever data an implementation would build a
+ * section from (e.g. an AI-insight section needs its own per-hive/
+ * per-entity `view` access checks).
+ *
+ * @param \Drupal\hivelog\Entity\Apiary[] $apiaries
+ *   Every apiary the current user may view, keyed by entity id.
+ * @param \Drupal\Core\Cache\CacheableMetadata $cache
+ *   Cacheability collector — implementations should add their own cache
+ *   tags/dependencies to it, mirroring
+ *   `DashboardController::collectLowStockAlerts()`'s own pattern.
+ *
+ * @return array
+ *   A render array keyed by a unique, module-prefixed key (e.g.
+ *   `nexus_ai_insights`) to avoid colliding with another
+ *   implementation's section. Each section should set its own `#weight`
+ *   to control where it lands on the page. Return an empty array to
+ *   contribute nothing (e.g. no relevant data exists, or the current
+ *   user lacks access to it) — an empty array renders as nothing, never
+ *   an empty-state stub.
+ */
+function hook_hivelog_dashboard_sections(array $apiaries, CacheableMetadata $cache) {
+  return [];
+}
+
+/**
  * @} End of "addtogroup hooks".
  */

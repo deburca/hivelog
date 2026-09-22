@@ -114,9 +114,10 @@ active design — see each task's own note. Replaced by
 (2026-09-22) — the `nexus` rework itself is complete.
 [[0092-hive-apiary-ai-insight-panel]] through
 [[0094-ai-insights-prelaunch-validation]] are unaffected in substance
-(still read `HiveInsight`, just relocated to `nexus`); their own
-`depends-on` fields still name 0089/0090 and should be repointed at
-0102/0103 whichever of them is picked up next, not urgent before then.
+(still read `HiveInsight`, just relocated to `nexus`).
+[[0092-hive-apiary-ai-insight-panel]]'s `depends-on` has been repointed
+at 0102 and is done; 0093/0094's still name 0089/0090 and should be
+repointed when picked up.
 
 Implementation, current (post-ADR-0100):
 - [[0101-collective-rescope-to-api-client]] — **done** (2026-09-22):
@@ -128,10 +129,15 @@ Implementation, current (post-ADR-0100):
 - [[0104-ai-provider-config-management-ui]] — **done** (2026-09-22):
   `AiProviderConfig` add/edit/delete UI, mode-conditional form fields,
   `key_select` integration, canonical page's live AI-module-status check
-- [[0092-hive-apiary-ai-insight-panel]] — backlog
-- [[0093-dashboard-ai-insights-section]] — backlog (also carries the
-  provider-credential staleness alert, folded in rather than its own
-  task)
+- [[0092-hive-apiary-ai-insight-panel]] — **done** (2026-09-22):
+  read-only "AI Insight" panel on the Hive/Apiary canonical pages, via
+  the same ADR-0099 hook mechanism `nanoprobe`'s Sensors panel uses —
+  no core controller changes needed
+- [[0093-dashboard-ai-insights-section]] — **done** (2026-09-22):
+  dashboard "AI Insights" section (new `hook_hivelog_dashboard_sections()`
+  — the first genuine extension of ADR-0099's mechanism since it was
+  written) plus the `AiProviderConfig` staleness alert, folded into the
+  existing "Needs attention" queue rather than a new mechanism
 - [[0094-ai-insights-prelaunch-validation]] — backlog, **the release
   gate**: not another design task, running [[0088-ai-insights-implementation]]
   §6's two required checks against the real, nexus-driven pipeline.

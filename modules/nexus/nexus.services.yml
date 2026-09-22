@@ -43,3 +43,18 @@ services:
       - '@datetime.time'
       - '@date.formatter'
       - '@string_translation'
+
+  nexus.provider_health_alert_collector:
+    class: Drupal\nexus\ProviderHealthAlertCollector
+    arguments:
+      - '@entity_type.manager'
+      - '@datetime.time'
+      - '@date.formatter'
+      - '@string_translation'
+
+  nexus.dashboard_ai_insights_builder:
+    class: Drupal\nexus\DashboardAiInsightsBuilder
+    arguments:
+      - '@entity_type.manager'
+      - '@datetime.time'
+      - '@string_translation'

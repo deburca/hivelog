@@ -26,9 +26,11 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * (current ISO week + the CBR summary line, moved here from
  * ApiaryListBuilder), and then either the first-run welcome card (no
  * visible apiaries) or the operational widgets — the "Needs attention"
- * queue, the six stat tiles, and the "Upcoming" / "Recent activity"
- * split. One seasonal pass (collectSeasonalAlerts()) feeds both the queue
- * and the "Open seasonal tasks" tile.
+ * queue, any optional submodule dashboard sections (task 0093;
+ * hook_hivelog_dashboard_sections(), see hivelog.api.php and ADR-0099),
+ * the six stat tiles, and the "Upcoming" / "Recent activity" split. One
+ * seasonal pass (collectSeasonalAlerts()) feeds both the queue and the
+ * "Open seasonal tasks" tile.
  */
 class DashboardController extends ControllerBase {
 
@@ -130,6 +132,17 @@ class DashboardController extends ControllerBase {
         array_merge($seasonal['alerts'], $low_stock, $sensor_alerts),
         $current_week,
       ) + ['#weight' => 0];
+
+      // Optional submodules (e.g. nexus's "AI Insights" section)
+      // contribute whole new dashboard sections here without hivelog
+      // core depending on them — see hivelog.api.php's
+      // hook_hivelog_dashboard_sections() and ADR-0099. Each section
+      // carries its own #weight, so invocation order here doesn't
+      // determine page position.
+      foreach ($this->moduleHandler()->invokeAll('hivelog_dashboard_sections', [$apiaries, $cache]) as $key => $section) {
+        $build[$key] = $section;
+      }
+
       $build['stat_tiles'] = $this->buildStatTiles($cache, $apiaries, $seasonal, count($low_stock), $year, $current_week) + ['#weight' => 10];
       $build['activity'] = [
         '#type' => 'container',
