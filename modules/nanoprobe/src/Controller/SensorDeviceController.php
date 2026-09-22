@@ -68,6 +68,9 @@ class SensorDeviceController extends ControllerBase {
 
     $build['summary'] = [
       '#type' => 'table',
+      '#header' => [$this->t('Field'), $this->t('Value')],
+      '#attributes' => ['class' => ['hivelog-sensor-device-table']],
+      '#attached' => ['library' => ['hivelog/tables']],
       '#rows' => $rows,
     ];
 
