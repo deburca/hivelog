@@ -45,8 +45,8 @@ trait ApiaryAccessTrait {
    * - SensorReadingDaily: sensor_reading_daily → sensor_device →
    *   (recursively resolved as above).
    * - HiveInsight: hive_insight → apiary directly (scope = apiary), or
-   *   → hive → apiary (scope = hive). No branch exists for
-   *   InsightAgent — it has no apiary/hive to resolve to.
+   *   → hive → apiary (scope = hive). No branch exists for ApiClient or
+   *   AiProviderConfig — neither has an apiary/hive to resolve to.
    *
    * @param \Drupal\Core\Entity\EntityInterface $entity
    *   The entity to resolve the apiary from.

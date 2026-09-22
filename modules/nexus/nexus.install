@@ -1,0 +1,43 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the Nexus module.
+ */
+
+/**
+ * Implements hook_uninstall().
+ *
+ * Deletes all nexus entities in child-first order (insights before the
+ * provider config), wrapped in a try/catch so uninstall succeeds even
+ * when the underlying database tables have already been removed.
+ * HiveInsight/AiProviderConfig entity types are installed automatically
+ * by Drupal when this module is first enabled (no hook_install()
+ * needed), so only cleanup is required here.
+ */
+function nexus_uninstall() {
+  $entity_type_manager = \Drupal::entityTypeManager();
+
+  $entity_type_ids = [
+    'hive_insight',
+    'ai_provider_config',
+  ];
+
+  foreach ($entity_type_ids as $entity_type_id) {
+    try {
+      $storage = $entity_type_manager->getStorage($entity_type_id);
+      // Delete entities in batches to avoid memory issues on large datasets.
+      while ($ids = $storage->getQuery()->accessCheck(FALSE)->range(0, 50)->execute()) {
+        $entities = $storage->loadMultiple($ids);
+        $storage->delete($entities);
+      }
+    }
+    catch (\Exception $e) {
+      // The table may already be gone — log and continue.
+      \Drupal::logger('nexus')->notice(
+        'Could not delete @type entities during uninstall: @message',
+        ['@type' => $entity_type_id, '@message' => $e->getMessage()]
+      );
+    }
+  }
+}
