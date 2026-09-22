@@ -6,6 +6,7 @@
  */
 
 use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Url;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\Hive;
 
@@ -147,6 +148,42 @@ function hook_hivelog_needs_attention_alerts(array $apiaries, CacheableMetadata 
  */
 function hook_hivelog_dashboard_sections(array $apiaries, CacheableMetadata $cache) {
   return [];
+}
+
+/**
+ * Contributes destinations to `hivelog`'s in-app secondary navigation.
+ *
+ * The same optional-submodule-extends-core-without-a-dependency problem
+ * as the other hooks in this file, applied here to `hivelog`'s own
+ * theme-independent nav strip (task 0105) — `HivelogAppNavBuilder`
+ * builds this from `hivelog` core's own 8 built-in destinations plus
+ * every implementation of this hook. Unlike the panel/needs-attention/
+ * dashboard-section hooks, an implementation returns plain link
+ * *descriptors*, not a render array — `hivelog` itself builds the
+ * actual link markup and performs the access check (via
+ * `\Drupal\Core\Url::access()`) uniformly for every item, built-in or
+ * contributed, so implementations don't each need to reimplement route
+ * access checking for what's always just a link to one of their own
+ * collection pages.
+ *
+ * @return array
+ *   A list of nav item descriptors, each `['title' =>
+ *   \Drupal\Core\StringTranslation\TranslatableMarkup, 'url' =>
+ *   \Drupal\Core\Url, 'weight' => int]`, keyed by a unique,
+ *   module-prefixed key to avoid colliding with another
+ *   implementation's item. `hivelog` core's own built-in items use
+ *   weights 0–7 (matching `hivelog.links.menu.yml`'s own weights);
+ *   start contributed items at 8 or above unless deliberately
+ *   interleaving with a specific core item.
+ */
+function hook_hivelog_app_nav_items() {
+  return [
+    'my_module_things' => [
+      'title' => t('My Things'),
+      'url' => Url::fromRoute('entity.my_thing.collection'),
+      'weight' => 20,
+    ],
+  ];
 }
 
 /**

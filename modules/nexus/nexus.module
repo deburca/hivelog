@@ -6,6 +6,7 @@
  */
 
 use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Url;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\Hive;
 
@@ -58,4 +59,22 @@ function nexus_hivelog_needs_attention_alerts(array $apiaries, CacheableMetadata
  */
 function nexus_hivelog_dashboard_sections(array $apiaries, CacheableMetadata $cache) {
   return \Drupal::service('nexus.dashboard_ai_insights_builder')->build($apiaries, $cache);
+}
+
+/**
+ * Implements hook_hivelog_app_nav_items().
+ *
+ * See hivelog.api.php and
+ * docs/project-management/decisions/0099-submodule-canonical-page-panel-hook.md.
+ * Same weight (9) `nexus.links.menu.yml` already uses for this
+ * destination.
+ */
+function nexus_hivelog_app_nav_items() {
+  return [
+    'nexus_ai_provider_configs' => [
+      'title' => t('AI Provider Configs'),
+      'url' => Url::fromRoute('entity.ai_provider_config.collection'),
+      'weight' => 9,
+    ],
+  ];
 }

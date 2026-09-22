@@ -29,6 +29,33 @@ function hivelog_preprocess_html(array &$variables): void {
 }
 
 /**
+ * Implements hook_preprocess_HOOK() for page.html.twig.
+ *
+ * Injects `HivelogAppNavBuilder`'s theme-independent secondary nav
+ * directly into `page.content`, deliberately NOT via a placed block or
+ * `hook_page_top()` (task 0105). Both were tried against a real theme
+ * first: with zero blocks placed in any region and no `{{ page.top }}`
+ * in its own `page.html.twig`, a real site's active theme can silently
+ * drop either approach entirely, while `page.content` is the one region
+ * a theme cannot omit without failing to render any page content at
+ * all — confirmed by direct inspection of the failing case, not
+ * assumed. Same `/hivelog`/`/hivelog/...` path match as
+ * `hivelog_preprocess_html()` above, reused rather than reimplemented.
+ */
+function hivelog_preprocess_page(array &$variables): void {
+  $route = \Drupal::routeMatch()->getRouteObject();
+  $path = $route ? $route->getPath() : '';
+  if ($path !== '/hivelog' && !str_starts_with($path, '/hivelog/')) {
+    return;
+  }
+
+  $nav = \Drupal::service('hivelog.app_nav_builder')->build();
+  if ($nav) {
+    $variables['page']['content']['hivelog_app_nav'] = $nav;
+  }
+}
+
+/**
  * Implements hook_entity_base_field_info().
  *
  * Adds a Central Beehive Registration (CBR) number base field to the user

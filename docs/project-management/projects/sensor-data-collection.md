@@ -179,6 +179,31 @@ Static index (in execution order):
   then only if no mains-powered site or public gateway coverage exists
   at the new location.
 
+**Added 2026-09-22**, caught during manual UI validation ahead of
+[[ai-apiary-insights]]'s own [[0094-ai-insights-prelaunch-validation]]
+gate — a real, previously-untracked gap: `SensorDevice` has never had
+an add/edit UI, and none of `nanoprobe`/`collective`/`nexus` are
+reachable from the site's navigation at all.
+- [[0105-submodule-navigation-menu-links]] — **done** (2026-09-22):
+  grew mid-task into a theme-independent in-app secondary nav
+  (`hook_hivelog_app_nav_items()`, `HivelogAppNavBuilder`) after manual
+  verification found `cms2`'s active theme renders none of
+  `hivelog.links.menu.yml`'s existing links either — the menu-link files
+  for `collective`/`nexus` stay too, as a best-effort secondary
+  integration. `nanoprobe`'s own nav item is still deferred to 0106,
+  since there's no `SensorDevice` collection route to point it at yet.
+- [[0106-sensor-device-management-ui]] — backlog, **high priority** —
+  the actual blocker for a beekeeper self-provisioning any sensor at
+  all; task 0078 explicitly deferred this and no follow-up task ever
+  existed until now
+- [[0107-assimilate-mock-sensor-data-module]] — backlog, low priority,
+  dev/demo-only — depends on 0106 so "here's what adding a sensor looks
+  like" has a real add form to point at
+- [[0108-custom-controller-table-styling-parity]] — **done** (2026-09-22):
+  `ApiClientController`/`AiProviderConfigController`/`SensorDeviceController`'s
+  bare summary tables now match every other custom controller's styled
+  `hivelog-*-table` convention
+
 ## Open questions
 - Exact alert thresholds for Phase 2 (how large a weight drop, how far
   outside 33–36 °C, how stale a `last_seen`) are illustrative in the ADR,

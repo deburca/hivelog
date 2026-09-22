@@ -81,3 +81,11 @@ dashboard:
     - hivelog/buttons
     - hivelog/responsive
     - hivelog/tables
+
+app_nav:
+  version: 1.x
+  css:
+    component:
+      css/hivelog.app-nav.css: {}
+  dependencies:
+    - hivelog/responsive

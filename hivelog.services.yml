@@ -4,3 +4,7 @@ services:
     arguments: ['@entity_type.manager']
     tags:
       - { name: breadcrumb_builder, priority: 1004 }
+
+  hivelog.app_nav_builder:
+    class: Drupal\hivelog\HivelogAppNavBuilder
+    arguments: ['@module_handler', '@string_translation']

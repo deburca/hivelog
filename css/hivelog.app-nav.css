@@ -1,0 +1,38 @@
+/**
+ * @file
+ * The in-app secondary navigation strip (task 0105).
+ *
+ * A plain, wrapping row of links — deliberately minimal, matching the
+ * effort level `nanoprobe`'s own panel containers use (see
+ * `SensorPanelBuilder`'s docblock precedent: functional over decorated).
+ * Reuses `hivelog.responsive.css`'s existing custom-property tokens; no
+ * new token set for one small nav strip.
+ */
+
+.hivelog-app-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--hivelog-gap-tight);
+  align-items: center;
+  padding: var(--hivelog-gap-tight) 0;
+  margin-bottom: var(--hivelog-gap);
+  border-bottom: 1px solid var(--hivelog-hairline);
+}
+
+.hivelog-app-nav__link {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--hivelog-border);
+  background: var(--hivelog-surface-2);
+  color: var(--hivelog-ink);
+  font-size: 0.875rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.hivelog-app-nav__link:hover,
+.hivelog-app-nav__link:focus {
+  background: var(--hivelog-ground);
+  border-color: var(--hivelog-ink-muted);
+}

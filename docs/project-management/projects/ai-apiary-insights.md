@@ -142,7 +142,17 @@ Implementation, current (post-ADR-0100):
   gate**: not another design task, running [[0088-ai-insights-implementation]]
   §6's two required checks against the real, nexus-driven pipeline.
   Nothing ships to real beekeepers, and `ai_insights_enabled` is not safe
-  to recommend turning on, until this one passes.
+  to recommend turning on, until this one passes. **2026-09-22**: manual
+  UI validation ahead of this gate surfaced a real, separate blocker —
+  none of `nanoprobe`/`collective`/`nexus` are reachable from site
+  navigation, and `SensorDevice` has no add UI at all — tracked in
+  [[sensor-data-collection]] as
+  [[0105-submodule-navigation-menu-links]]/[[0106-sensor-device-management-ui]]/
+  [[0107-assimilate-mock-sensor-data-module]]. Worth resolving before
+  0094 runs, since a beekeeper can't turn `ai_insights_enabled` on
+  through a UI they can't find either (`collective`'s consent toggle
+  lives on the apiary form, which is reachable — but provisioning an
+  `AiProviderConfig` isn't, for the same navigation reason).
 
 Implementation, superseded 2026-09-22 (kept for history, not the active
 plan — see above):
