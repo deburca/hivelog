@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\collective\Kernel;
 
-use Drupal\collective\Controller\InsightAgentApiController;
-use Drupal\collective\Entity\HiveInsight;
-use Drupal\collective\Entity\InsightAgent;
+use Drupal\collective\Controller\ApiClientApiController;
+use Drupal\collective\Entity\ApiClient;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\CalendarAction;
 use Drupal\hivelog\Entity\Hive;
@@ -19,11 +18,16 @@ use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
- * Tests the InsightAgent context-read + write-back API (task 0090).
+ * Tests the API Client context-read endpoint (task 0090, rescoped 0101).
+ *
+ * The insight write-back endpoint this test class originally also
+ * covered was retired in task 0101 per
+ * [[0100-nexus-in-process-ai-synthesis]] — those assertions were removed
+ * outright, not adapted, since the route no longer exists.
  */
 #[Group('hivelog')]
 #[RunTestsInSeparateProcesses]
-class InsightAgentApiControllerTest extends KernelTestBase {
+class ApiClientApiControllerTest extends KernelTestBase {
 
   /**
    * {@inheritdoc}
@@ -62,19 +66,19 @@ class InsightAgentApiControllerTest extends KernelTestBase {
   protected Hive $optedOutHive;
 
   /**
-   * A test insight agent.
+   * A test API client.
    */
-  protected InsightAgent $agent;
+  protected ApiClient $client;
 
   /**
-   * The plaintext token for `$agent`.
+   * The plaintext token for `$client`.
    */
   protected string $token;
 
   /**
    * The controller under test.
    */
-  protected InsightAgentApiController $controller;
+  protected ApiClientApiController $controller;
 
   /**
    * {@inheritdoc}
@@ -90,8 +94,7 @@ class InsightAgentApiControllerTest extends KernelTestBase {
     $this->installEntitySchema('calendar_action');
     $this->installEntitySchema('hive_action_log');
     $this->installEntitySchema('apiary_action_log');
-    $this->installEntitySchema('insight_agent');
-    $this->installEntitySchema('hive_insight');
+    $this->installEntitySchema('api_client');
     $this->installSchema('file', ['file_usage']);
     $this->installConfig(['system']);
     \Drupal::service('router.builder')->rebuild();
@@ -114,38 +117,19 @@ class InsightAgentApiControllerTest extends KernelTestBase {
     ]);
     $this->optedOutHive->save();
 
-    $this->agent = InsightAgent::create(['label' => 'Test Agent']);
-    $this->agent->save();
-    $this->token = $this->agent->getPlainTextToken();
+    $this->client = ApiClient::create(['label' => 'Test Client']);
+    $this->client->save();
+    $this->token = $this->client->getPlainTextToken();
 
     $this->controller = \Drupal::service('class_resolver')
-      ->getInstanceFromDefinition(InsightAgentApiController::class);
+      ->getInstanceFromDefinition(ApiClientApiController::class);
   }
 
   /**
    * Builds a GET request with an optional Authorization header.
    */
   protected function buildGetRequest(?string $token, array $query = []): Request {
-    $request = Request::create('/hivelog/api/hive-insights/contexts', 'GET', $query);
-    if ($token !== NULL) {
-      $request->headers->set('Authorization', 'Bearer ' . $token);
-    }
-    return $request;
-  }
-
-  /**
-   * Builds a JSON POST request with an optional Authorization header.
-   */
-  protected function buildPostRequest(mixed $body, ?string $token): Request {
-    $request = Request::create(
-      '/hivelog/api/hive-insights',
-      'POST',
-      [],
-      [],
-      [],
-      [],
-      is_string($body) ? $body : json_encode($body)
-    );
+    $request = Request::create('/hivelog/api/collective/context', 'GET', $query);
     if ($token !== NULL) {
       $request->headers->set('Authorization', 'Bearer ' . $token);
     }
@@ -310,127 +294,56 @@ class InsightAgentApiControllerTest extends KernelTestBase {
   }
 
   /**
-   * Tests a valid write-back creates the right HiveInsight.
+   * Tests a successful read updates `ApiClient.last_run`.
+   *
+   * The write-back endpoint used to be the thing that updated this;
+   * with that endpoint gone, a successful context read is now the only
+   * signal that a credential is actually in use.
    */
-  public function testWriteEndpointCreatesInsight(): void {
-    $generated = \Drupal::time()->getRequestTime();
-    $response = $this->controller->write($this->buildPostRequest([
-      'hive' => $this->optedInHive->id(),
-      'scope' => 'hive',
-      'verdict' => 'inspect_soon',
-      'recommendation' => 'Possible swarm risk — inspect within 2 days',
-      'signals' => "- Weight dropped 2.1 kg overnight\n- Queen cells present",
-      'confidence' => 'high',
-      'generated' => $generated,
-    ], $this->token));
+  public function testSuccessfulReadUpdatesLastRun(): void {
+    $this->assertTrue($this->client->get('last_run')->isEmpty());
 
-    $this->assertEquals(201, $response->getStatusCode());
-    $data = json_decode($response->getContent(), TRUE);
-    $this->assertArrayHasKey('id', $data);
+    $this->controller->contexts($this->buildGetRequest($this->token));
 
-    $insight = HiveInsight::load($data['id']);
-    $this->assertEquals($this->optedInApiary->id(), $insight->get('apiary')->target_id);
-    $this->assertEquals($this->optedInHive->id(), $insight->get('hive')->target_id);
-    $this->assertEquals('inspect_soon', $insight->get('verdict')->value);
-    $this->assertEquals('high', $insight->get('confidence')->value);
-    $this->assertEquals($generated, (int) $insight->get('generated')->value);
-
-    // last_run is updated on a successful write.
-    $reloaded_agent = InsightAgent::load($this->agent->id());
-    $this->assertNotEmpty($reloaded_agent->get('last_run')->value);
+    $reloaded_client = ApiClient::load($this->client->id());
+    $this->assertNotEmpty($reloaded_client->get('last_run')->value);
   }
 
   /**
-   * Tests a missing token is rejected with 401 on both routes.
+   * Tests a missing token is rejected with 401.
    */
-  public function testMissingTokenRejectedOnBothRoutes(): void {
+  public function testMissingTokenRejected(): void {
     $this->assertEquals(401, $this->controller->contexts($this->buildGetRequest(NULL))->getStatusCode());
-    $this->assertEquals(401, $this->controller->write($this->buildPostRequest(['scope' => 'hive'], NULL))->getStatusCode());
   }
 
   /**
-   * Tests an unrecognised token is rejected with 401 on both routes.
+   * Tests an unrecognised token is rejected with 401.
    */
-  public function testUnrecognisedTokenRejectedOnBothRoutes(): void {
+  public function testUnrecognisedTokenRejected(): void {
     $this->assertEquals(401, $this->controller->contexts($this->buildGetRequest('not-a-real-token'))->getStatusCode());
-    $this->assertEquals(401, $this->controller->write($this->buildPostRequest(['scope' => 'hive'], 'not-a-real-token'))->getStatusCode());
   }
 
   /**
-   * Tests a disabled agent is rejected with 403 on both routes.
+   * Tests a disabled client is rejected with 403.
    */
-  public function testDisabledAgentRejectedOnBothRoutes(): void {
-    $this->agent->set('enabled', FALSE);
-    $this->agent->save();
+  public function testDisabledClientRejected(): void {
+    $this->client->set('enabled', FALSE);
+    $this->client->save();
 
     $this->assertEquals(403, $this->controller->contexts($this->buildGetRequest($this->token))->getStatusCode());
-    $this->assertEquals(403, $this->controller->write($this->buildPostRequest(['scope' => 'hive'], $this->token))->getStatusCode());
   }
 
   /**
-   * Tests an unknown verdict is rejected with 422.
+   * Tests the context route is registered with no permission requirement.
    */
-  public function testUnknownVerdictRejected(): void {
-    $response = $this->controller->write($this->buildPostRequest([
-      'hive' => $this->optedInHive->id(),
-      'scope' => 'hive',
-      'verdict' => 'not_a_real_verdict',
-      'recommendation' => 'Test',
-      'signals' => '- Test',
-      'generated' => \Drupal::time()->getRequestTime(),
-    ], $this->token));
-
-    $this->assertEquals(422, $response->getStatusCode());
-  }
-
-  /**
-   * Tests writing against a hive whose apiary hasn't opted in is 404.
-   */
-  public function testWriteToNonOptedInApiaryRejected(): void {
-    $response = $this->controller->write($this->buildPostRequest([
-      'hive' => $this->optedOutHive->id(),
-      'scope' => 'hive',
-      'verdict' => 'all_clear',
-      'recommendation' => 'Test',
-      'signals' => '- Test',
-      'generated' => \Drupal::time()->getRequestTime(),
-    ], $this->token));
-
-    $this->assertEquals(404, $response->getStatusCode());
-  }
-
-  /**
-   * Tests a malformed hive reference is rejected with 422, not a crash.
-   */
-  public function testUnresolvableHiveReferenceRejected(): void {
-    $response = $this->controller->write($this->buildPostRequest([
-      'hive' => 999999,
-      'scope' => 'hive',
-      'verdict' => 'all_clear',
-      'recommendation' => 'Test',
-      'signals' => '- Test',
-      'generated' => \Drupal::time()->getRequestTime(),
-    ], $this->token));
-
-    $this->assertEquals(422, $response->getStatusCode());
-  }
-
-  /**
-   * Tests both routes are registered with no permission requirement.
-   */
-  public function testRoutesAreRegisteredWithNoPermissionGate(): void {
+  public function testRouteIsRegisteredWithNoPermissionGate(): void {
     /** @var \Symfony\Component\Routing\RouteProviderInterface $route_provider */
     $route_provider = \Drupal::service('router.route_provider');
 
-    $contexts_route = $route_provider->getRouteByName('collective.hive_insight.contexts');
-    $this->assertEquals('/hivelog/api/hive-insights/contexts', $contexts_route->getPath());
+    $contexts_route = $route_provider->getRouteByName('collective.api_client.context');
+    $this->assertEquals('/hivelog/api/collective/context', $contexts_route->getPath());
     $this->assertEquals(['GET'], $contexts_route->getMethods());
     $this->assertEquals('TRUE', $contexts_route->getRequirement('_access'));
-
-    $write_route = $route_provider->getRouteByName('collective.hive_insight.write');
-    $this->assertEquals('/hivelog/api/hive-insights', $write_route->getPath());
-    $this->assertEquals(['POST'], $write_route->getMethods());
-    $this->assertEquals('TRUE', $write_route->getRequirement('_access'));
   }
 
 }

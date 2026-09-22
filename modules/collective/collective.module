@@ -24,6 +24,14 @@ use Drupal\Core\Form\FormStateInterface;
  * interactivity, and a disclosure the beekeeper sees before deciding
  * whether to turn the toggle on serves task 0091's actual intent (an
  * informed decision) just as well as one that only appears after.
+ *
+ * Wording updated by task 0101, per
+ * [[0100-nexus-in-process-ai-synthesis]]: `collective` no longer knows
+ * or claims to know what consumes this data — it names the mechanism
+ * (a provisioned API client credential) rather than "your insight
+ * agent", since the actual consumer may now be the `nexus` submodule
+ * reading in-process, an external script, or anything else holding a
+ * valid token.
  */
 function collective_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
   if (!in_array($form_id, ['apiary_add_form', 'apiary_edit_form'], TRUE)) {
@@ -40,7 +48,7 @@ function collective_form_alter(array &$form, FormStateInterface $form_state, $fo
     'text' => [
       '#type' => 'html_tag',
       '#tag' => 'p',
-      '#value' => t('Turning this on shares this apiary\'s hive ids, calendar status, recent inspection fields (population, brood pattern, honey/pollen stores, queen cells seen, varroa checks, disease signs, supers, weight), and the active queen\'s year/status with whatever service your provisioned insight agent uses. Never shared: apiary/hive names, GPS location, inspection notes, harvest or inventory figures, or raw sensor readings.'),
+      '#value' => t('Turning this on makes this apiary\'s hive ids, calendar status, recent inspection fields (population, brood pattern, honey/pollen stores, queen cells seen, varroa checks, disease signs, supers, weight), and the active queen\'s year/status readable by anything holding a provisioned API client credential — the nexus module\'s own AI processing, if installed, or any other client you\'ve authorised. Never shared: apiary/hive names, GPS location, inspection notes, harvest or inventory figures, or raw sensor readings.'),
     ],
   ];
 }

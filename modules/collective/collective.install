@@ -8,19 +8,18 @@
 /**
  * Implements hook_uninstall().
  *
- * Deletes all collective entities in child-first order (insights before
- * the agent credential), wrapped in a try/catch so uninstall succeeds
- * even when the underlying database tables have already been removed.
- * InsightAgent/HiveInsight entity types are installed automatically by
+ * Deletes all collective entities, wrapped in a try/catch so uninstall
+ * succeeds even when the underlying database tables have already been
+ * removed. The `ApiClient` entity type is installed automatically by
  * Drupal when this module is first enabled (no hook_install() needed),
- * so only cleanup is required here.
+ * so only cleanup is required here. `HiveInsight` moved to `nexus` in
+ * task 0102 — its cleanup lives in that module's own uninstall hook now.
  */
 function collective_uninstall() {
   $entity_type_manager = \Drupal::entityTypeManager();
 
   $entity_type_ids = [
-    'hive_insight',
-    'insight_agent',
+    'api_client',
   ];
 
   foreach ($entity_type_ids as $entity_type_id) {

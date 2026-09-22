@@ -6,46 +6,46 @@ namespace Drupal\collective\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\collective\Entity\InsightAgent;
+use Drupal\collective\Entity\ApiClient;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 /**
- * Regenerate Token action for an Insight Agent.
+ * Regenerate Token action for an API Client.
  *
  * Implemented as a real Drupal form (POST, CSRF-protected by the Form
  * API) rather than a bare GET link, since this action mutates the
- * agent's token — the same [[0018-csrf-and-safe-http-methods]] reasoning
+ * client's token — the same [[0018-csrf-and-safe-http-methods]] reasoning
  * `\Drupal\nanoprobe\Form\SensorDeviceConfigDownloadForm` already
  * documents for its own regenerate action. Unlike that form, there is no
  * config descriptor to download here — the new plaintext is shown once,
  * via a status message, then never recoverable again.
  */
-class InsightAgentRegenerateTokenForm extends FormBase {
+class ApiClientRegenerateTokenForm extends FormBase {
 
   /**
-   * The agent this form regenerates a token for.
+   * The client this form regenerates a token for.
    */
-  protected InsightAgent $insightAgent;
+  protected ApiClient $apiClient;
 
   /**
    * {@inheritdoc}
    */
   public function getFormId(): string {
-    return 'collective_insight_agent_regenerate_token_form';
+    return 'collective_api_client_regenerate_token_form';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, ?InsightAgent $insight_agent = NULL): array {
-    if ($insight_agent === NULL || !$insight_agent->access('update')) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?ApiClient $api_client = NULL): array {
+    if ($api_client === NULL || !$api_client->access('update')) {
       throw new AccessDeniedHttpException();
     }
-    $this->insightAgent = $insight_agent;
+    $this->apiClient = $api_client;
 
     $form['warning'] = [
       '#type' => 'container',
-      '#markup' => '<p>' . $this->t('Regenerating this agent\'s token <strong>immediately invalidates</strong> the previous one — any external agent process still using it will start getting 401 responses from both API endpoints. The new token is shown once, here, after you confirm; it cannot be recovered afterward.') . '</p>',
+      '#markup' => '<p>' . $this->t('Regenerating this client\'s token <strong>immediately invalidates</strong> the previous one — any process still using it will start getting 401 responses from the API endpoint. The new token is shown once, here, after you confirm; it cannot be recovered afterward.') . '</p>',
     ];
 
     $form['actions'] = ['#type' => 'actions'];
@@ -62,14 +62,14 @@ class InsightAgentRegenerateTokenForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
-    $plaintext = $this->insightAgent->generateToken();
-    $this->insightAgent->save();
+    $plaintext = $this->apiClient->generateToken();
+    $this->apiClient->save();
 
     $this->messenger()->addWarning($this->t('Token regenerated (copy this now — it will not be shown again): %token', [
       '%token' => $plaintext,
     ]));
 
-    $form_state->setRedirectUrl($this->insightAgent->toUrl());
+    $form_state->setRedirectUrl($this->apiClient->toUrl());
   }
 
 }

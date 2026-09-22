@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\collective\Kernel;
 
-use Drupal\collective\Entity\InsightAgent;
+use Drupal\collective\Entity\ApiClient;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
@@ -12,11 +12,11 @@ use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * Tests the Insight Agent entity.
+ * Tests the API Client entity.
  */
 #[Group('hivelog')]
 #[RunTestsInSeparateProcesses]
-class InsightAgentTest extends KernelTestBase {
+class ApiClientTest extends KernelTestBase {
 
   /**
    * {@inheritdoc}
@@ -40,37 +40,37 @@ class InsightAgentTest extends KernelTestBase {
   protected function setUp(): void {
     parent::setUp();
     $this->installEntitySchema('user');
-    $this->installEntitySchema('insight_agent');
+    $this->installEntitySchema('api_client');
   }
 
   /**
    * Tests creating, updating and deleting an agent.
    */
   public function testCrud(): void {
-    $agent = InsightAgent::create(['label' => 'Production Insight Agent']);
+    $agent = ApiClient::create(['label' => 'Production API Client']);
     $agent->save();
 
-    $loaded = InsightAgent::load($agent->id());
-    $this->assertEquals('Production Insight Agent', $loaded->label());
+    $loaded = ApiClient::load($agent->id());
+    $this->assertEquals('Production API Client', $loaded->label());
     $this->assertTrue((bool) $loaded->get('enabled')->value);
     $this->assertTrue($loaded->get('last_run')->isEmpty());
 
     // Update.
-    $agent->set('label', 'Production Insight Agent (renamed)');
+    $agent->set('label', 'Production API Client (renamed)');
     $agent->save();
-    $this->assertEquals('Production Insight Agent (renamed)', InsightAgent::load($agent->id())->label());
+    $this->assertEquals('Production API Client (renamed)', ApiClient::load($agent->id())->label());
 
     // Delete.
     $id = $agent->id();
     $agent->delete();
-    $this->assertNull(InsightAgent::load($id));
+    $this->assertNull(ApiClient::load($id));
   }
 
   /**
    * Tests `enabled` defaults to TRUE.
    */
   public function testFieldDefaults(): void {
-    $agent = InsightAgent::create(['label' => 'Default Agent']);
+    $agent = ApiClient::create(['label' => 'Default Agent']);
     $this->assertTrue((bool) $agent->get('enabled')->value);
   }
 
@@ -78,7 +78,7 @@ class InsightAgentTest extends KernelTestBase {
    * Tests that a token is auto-generated on insert.
    */
   public function testTokenGeneratedOnInsert(): void {
-    $agent = InsightAgent::create(['label' => 'Token Test']);
+    $agent = ApiClient::create(['label' => 'Token Test']);
     $this->assertNull($agent->getPlainTextToken());
     $agent->save();
 
@@ -94,11 +94,11 @@ class InsightAgentTest extends KernelTestBase {
    * Tests that the plaintext token is not recoverable after a plain load.
    */
   public function testPlainTextTokenNotExposedAfterLoad(): void {
-    $agent = InsightAgent::create(['label' => 'Token Load Test']);
+    $agent = ApiClient::create(['label' => 'Token Load Test']);
     $agent->save();
     $plaintext = $agent->getPlainTextToken();
 
-    $loaded = InsightAgent::load($agent->id());
+    $loaded = ApiClient::load($agent->id());
     $this->assertNull($loaded->getPlainTextToken());
     $this->assertTrue($loaded->verifyToken($plaintext));
   }
@@ -107,7 +107,7 @@ class InsightAgentTest extends KernelTestBase {
    * Tests that regenerating a token invalidates the previous one.
    */
   public function testTokenRegeneration(): void {
-    $agent = InsightAgent::create(['label' => 'Regeneration Test']);
+    $agent = ApiClient::create(['label' => 'Regeneration Test']);
     $agent->save();
     $original = $agent->getPlainTextToken();
 
@@ -129,21 +129,21 @@ class InsightAgentTest extends KernelTestBase {
     // exercise the ownership-check logic, not the uid-1 bypass.
     User::create(['name' => 'uid1_throwaway', 'mail' => 'uid1@example.com'])->save();
 
-    $role = Role::create(['id' => 'agent_manager', 'label' => 'Agent Manager']);
-    $role->grantPermission('view own insight agent');
-    $role->grantPermission('edit own insight agent');
-    $role->grantPermission('delete own insight agent');
+    $role = Role::create(['id' => 'client_manager', 'label' => 'Client Manager']);
+    $role->grantPermission('view own api client');
+    $role->grantPermission('edit own api client');
+    $role->grantPermission('delete own api client');
     $role->save();
 
     $owner = User::create(['name' => 'owner', 'mail' => 'owner@example.com']);
-    $owner->addRole('agent_manager');
+    $owner->addRole('client_manager');
     $owner->save();
 
     $other = User::create(['name' => 'other', 'mail' => 'other@example.com']);
-    $other->addRole('agent_manager');
+    $other->addRole('client_manager');
     $other->save();
 
-    $agent = InsightAgent::create(['label' => 'Owned Agent', 'uid' => $owner->id()]);
+    $agent = ApiClient::create(['label' => 'Owned Agent', 'uid' => $owner->id()]);
     $agent->save();
 
     $this->assertTrue($agent->access('view', $owner));
@@ -162,18 +162,18 @@ class InsightAgentTest extends KernelTestBase {
    * Tests "any" permissions grant access regardless of ownership.
    */
   public function testAnyPermissionGrantsAccessRegardlessOfOwnership(): void {
-    $role = Role::create(['id' => 'agent_admin', 'label' => 'Agent Admin']);
-    $role->grantPermission('view any insight agent');
+    $role = Role::create(['id' => 'client_admin', 'label' => 'Client Admin']);
+    $role->grantPermission('view any api client');
     $role->save();
 
     $owner = User::create(['name' => 'owner', 'mail' => 'owner@example.com']);
     $owner->save();
 
     $admin = User::create(['name' => 'admin', 'mail' => 'admin@example.com']);
-    $admin->addRole('agent_admin');
+    $admin->addRole('client_admin');
     $admin->save();
 
-    $agent = InsightAgent::create(['label' => 'Owned Agent', 'uid' => $owner->id()]);
+    $agent = ApiClient::create(['label' => 'Owned Agent', 'uid' => $owner->id()]);
     $agent->save();
 
     $this->assertTrue($agent->access('view', $admin));
@@ -190,17 +190,17 @@ class InsightAgentTest extends KernelTestBase {
     // $user below genuinely exercises the permission check.
     User::create(['name' => 'uid1_throwaway', 'mail' => 'uid1@example.com'])->save();
 
-    $role = Role::create(['id' => 'agent_manager', 'label' => 'Agent Manager']);
-    $role->grantPermission('view own insight agent');
-    $role->grantPermission('edit own insight agent');
-    $role->grantPermission('delete own insight agent');
+    $role = Role::create(['id' => 'client_manager', 'label' => 'Client Manager']);
+    $role->grantPermission('view own api client');
+    $role->grantPermission('edit own api client');
+    $role->grantPermission('delete own api client');
     $role->save();
 
     $user = User::create(['name' => 'user', 'mail' => 'user@example.com']);
-    $user->addRole('agent_manager');
+    $user->addRole('client_manager');
     $user->save();
 
-    $access_handler = \Drupal::entityTypeManager()->getAccessControlHandler('insight_agent');
+    $access_handler = \Drupal::entityTypeManager()->getAccessControlHandler('api_client');
     $this->assertFalse($access_handler->createAccess(NULL, $user));
 
     $admin_role = Role::create(['id' => 'hivelog_admin', 'label' => 'Hivelog Admin']);

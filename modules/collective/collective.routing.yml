@@ -1,91 +1,85 @@
-# InsightAgent API — task 0090. Per docs/project-management/decisions/
-# 0088-ai-insights-implementation.md §2/§3: no Drupal permission gate and
-# no session CSRF token — the caller is a stateless, credentialed
-# external agent, authenticated by InsightAgentApiController's own
-# bearer-token check, exactly mirroring nanoprobe.sensor_reading.ingest's
-# pattern.
-collective.hive_insight.contexts:
-  path: '/hivelog/api/hive-insights/contexts'
+# API Client context-read endpoint — task 0090, rescoped by task 0101.
+# Per docs/project-management/decisions/0100-nexus-in-process-ai-synthesis.md
+# §1/§4: the insight write-back route this file used to carry is retired
+# outright — `nexus` writes `HiveInsight` in-process instead. This route
+# carries `_access: 'TRUE'` — no Drupal permission gate and no session
+# CSRF token — the caller is a stateless, credentialed external client,
+# authenticated by ApiClientApiController's own bearer-token check,
+# exactly mirroring nanoprobe.sensor_reading.ingest's pattern.
+collective.api_client.context:
+  path: '/hivelog/api/collective/context'
   defaults:
-    _controller: '\Drupal\collective\Controller\InsightAgentApiController::contexts'
+    _controller: '\Drupal\collective\Controller\ApiClientApiController::contexts'
   requirements:
     _access: 'TRUE'
   methods: [GET]
 
-collective.hive_insight.write:
-  path: '/hivelog/api/hive-insights'
+# API Client management UI — task 0091, rescoped by task 0101. Route-level
+# requirements are flat own/any/admin permissions, matching every other
+# custom hivelog route; the real per-entity check happens inside the
+# controller/forms. add_form is administer-hivelog-only — no "add api
+# client" permission exists at all (task 0089's own deliberate design: a
+# rare, high-trust credential, not something every beekeeper self-serves).
+entity.api_client.collection:
+  path: '/hivelog/api-clients'
   defaults:
-    _controller: '\Drupal\collective\Controller\InsightAgentApiController::write'
+    _entity_list: 'api_client'
+    _title: 'API Clients'
   requirements:
-    _access: 'TRUE'
-  methods: [POST]
+    _permission: 'view own api client+view any api client+administer hivelog'
 
-# Insight Agent management UI — task 0091. Route-level requirements are
-# flat own/any/admin permissions, matching every other custom hivelog
-# route; the real per-entity check happens inside the controller/forms.
-# add_form is administer-hivelog-only — no "add insight agent" permission
-# exists at all (task 0089's own deliberate design: a rare, high-trust
-# credential, not something every beekeeper self-serves).
-entity.insight_agent.collection:
-  path: '/hivelog/insight-agents'
+entity.api_client.add_form:
+  path: '/hivelog/api-client/add'
   defaults:
-    _entity_list: 'insight_agent'
-    _title: 'Insight Agents'
-  requirements:
-    _permission: 'view own insight agent+view any insight agent+administer hivelog'
-
-entity.insight_agent.add_form:
-  path: '/hivelog/insight-agent/add'
-  defaults:
-    _entity_form: 'insight_agent.add'
-    _title: 'Add Insight Agent'
+    _entity_form: 'api_client.add'
+    _title: 'Add API Client'
   requirements:
     _permission: 'administer hivelog'
 
-entity.insight_agent.canonical:
-  path: '/hivelog/insight-agent/{insight_agent}'
+entity.api_client.canonical:
+  path: '/hivelog/api-client/{api_client}'
   defaults:
-    _controller: '\Drupal\collective\Controller\InsightAgentController::view'
-    _title_callback: '\Drupal\collective\Controller\InsightAgentController::title'
+    _controller: '\Drupal\collective\Controller\ApiClientController::view'
+    _title_callback: '\Drupal\collective\Controller\ApiClientController::title'
   requirements:
-    _permission: 'view own insight agent+view any insight agent+administer hivelog'
+    _permission: 'view own api client+view any api client+administer hivelog'
   options:
     parameters:
-      insight_agent:
-        type: entity:insight_agent
+      api_client:
+        type: entity:api_client
 
-entity.insight_agent.edit_form:
-  path: '/hivelog/insight-agent/{insight_agent}/edit'
+entity.api_client.edit_form:
+  path: '/hivelog/api-client/{api_client}/edit'
   defaults:
-    _entity_form: 'insight_agent.edit'
-    _title: 'Edit Insight Agent'
+    _entity_form: 'api_client.edit'
+    _title: 'Edit API Client'
   requirements:
-    _permission: 'edit own insight agent+edit any insight agent+administer hivelog'
+    _permission: 'edit own api client+edit any api client+administer hivelog'
   options:
     parameters:
-      insight_agent:
-        type: entity:insight_agent
+      api_client:
+        type: entity:api_client
 
-entity.insight_agent.delete_form:
-  path: '/hivelog/insight-agent/{insight_agent}/delete'
+entity.api_client.delete_form:
+  path: '/hivelog/api-client/{api_client}/delete'
   defaults:
-    _entity_form: 'insight_agent.delete'
-    _title: 'Delete Insight Agent'
+    _entity_form: 'api_client.delete'
+    _title: 'Delete API Client'
   requirements:
-    _permission: 'delete own insight agent+delete any insight agent+administer hivelog'
+    _permission: 'delete own api client+delete any api client+administer hivelog'
   options:
     parameters:
-      insight_agent:
-        type: entity:insight_agent
+      api_client:
+        type: entity:api_client
 
-collective.insight_agent.regenerate_token:
-  path: '/hivelog/insight-agent/{insight_agent}/regenerate-token'
+collective.api_client.regenerate_token:
+  path: '/hivelog/api-client/{api_client}/regenerate-token'
   defaults:
-    _form: '\Drupal\collective\Form\InsightAgentRegenerateTokenForm'
+    _form: '\Drupal\collective\Form\ApiClientRegenerateTokenForm'
     _title: 'Regenerate Token'
   requirements:
-    _permission: 'edit own insight agent+edit any insight agent+administer hivelog'
+    _permission: 'edit own api client+edit any api client+administer hivelog'
   options:
     parameters:
-      insight_agent:
-        type: entity:insight_agent
+      api_client:
+        type: entity:api_client

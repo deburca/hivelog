@@ -13,14 +13,14 @@ use Drupal\hivelog\HivelogListBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Provides a list builder for Insight Agent entities.
+ * Provides a list builder for API Client entities.
  *
  * Mirrors `\Drupal\hivelog\ProductListBuilder`'s shape exactly (the
  * `hivelog:entity-table` SDC component, its own "Add" heading) — reusing
  * core's `HivelogListBuilder` base class, since `collective` depends on
  * `hivelog`.
  */
-class InsightAgentListBuilder extends HivelogListBuilder {
+class ApiClientListBuilder extends HivelogListBuilder {
 
   /**
    * The renderer.
@@ -28,7 +28,7 @@ class InsightAgentListBuilder extends HivelogListBuilder {
   protected RendererInterface $renderer;
 
   /**
-   * Constructs a new InsightAgentListBuilder.
+   * Constructs a new ApiClientListBuilder.
    */
   public function __construct(EntityTypeInterface $entity_type, EntityStorageInterface $storage, RendererInterface $renderer) {
     parent::__construct($entity_type, $storage);
@@ -106,8 +106,8 @@ class InsightAgentListBuilder extends HivelogListBuilder {
           '#type' => 'component',
           '#component' => 'hivelog:button',
           '#props' => [
-            'label' => (string) $this->t('Add Insight Agent'),
-            'url' => Url::fromRoute('entity.insight_agent.add_form')->toString(),
+            'label' => (string) $this->t('Add API Client'),
+            'url' => Url::fromRoute('entity.api_client.add_form')->toString(),
             'variant' => 'primary',
           ],
         ],

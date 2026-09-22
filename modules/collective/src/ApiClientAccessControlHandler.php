@@ -11,15 +11,14 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\user\EntityOwnerInterface;
 
 /**
- * Access control handler for Insight Agent entities.
+ * Access control handler for API Client entities.
  *
  * Deliberately **not** resolved through `ApiaryAccessTrait` — an
- * `InsightAgent` has no apiary/hive to resolve to (per
- * docs/project-management/decisions/0088-ai-insights-implementation.md
- * §1, it's a site-level credential, normally exactly one row). Access is
- * a plain ownership check instead: "own" means the current user is the
- * entity's owner, mirroring every other hivelog entity's own/any
- * permission pattern but without any apiary-membership dimension.
+ * `ApiClient` has no apiary/hive to resolve to (it's a site-level
+ * credential, normally exactly one row). Access is a plain ownership
+ * check instead: "own" means the current user is the entity's owner,
+ * mirroring every other hivelog entity's own/any permission pattern but
+ * without any apiary-membership dimension.
  *
  * - view/update/delete: site-wide "any" OR ("own" permission AND the
  *   current user is the owner).
@@ -27,7 +26,7 @@ use Drupal\user\EntityOwnerInterface;
  *   exists at all; provisioning this rare, high-trust credential is an
  *   administrator action, not something every beekeeper self-serves.
  */
-class InsightAgentAccessControlHandler extends EntityAccessControlHandler {
+class ApiClientAccessControlHandler extends EntityAccessControlHandler {
 
   /**
    * {@inheritdoc}
@@ -38,9 +37,9 @@ class InsightAgentAccessControlHandler extends EntityAccessControlHandler {
     }
 
     $permission_map = [
-      'view' => ['any' => 'view any insight agent', 'own' => 'view own insight agent'],
-      'update' => ['any' => 'edit any insight agent', 'own' => 'edit own insight agent'],
-      'delete' => ['any' => 'delete any insight agent', 'own' => 'delete own insight agent'],
+      'view' => ['any' => 'view any api client', 'own' => 'view own api client'],
+      'update' => ['any' => 'edit any api client', 'own' => 'edit own api client'],
+      'delete' => ['any' => 'delete any api client', 'own' => 'delete own api client'],
     ];
     if (!isset($permission_map[$operation])) {
       return AccessResult::neutral();

@@ -12,51 +12,55 @@ use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\collective\Form\InsightAgentDeleteForm;
-use Drupal\collective\Form\InsightAgentForm;
-use Drupal\collective\InsightAgentAccessControlHandler;
-use Drupal\collective\InsightAgentListBuilder;
+use Drupal\collective\ApiClientAccessControlHandler;
+use Drupal\collective\ApiClientListBuilder;
+use Drupal\collective\Form\ApiClientDeleteForm;
+use Drupal\collective\Form\ApiClientForm;
 use Drupal\hivelog\HivelogEntityStorage;
 use Drupal\user\EntityOwnerInterface;
 use Drupal\user\EntityOwnerTrait;
 
 /**
- * Defines the Insight Agent entity — a site-level AI-insight credential.
+ * Defines the API Client entity — a site-level context-read credential.
  *
  * Not tied to one hive/apiary the way `SensorDevice` is — normally
- * exactly one row, provisioned by an administrator, authenticating the
- * external process that reads hive/apiary context and writes back
- * `HiveInsight` rows. Per
- * docs/project-management/decisions/0088-ai-insights-implementation.md
- * §1, deliberately has no `apiary`/`hive`/`scope` field.
+ * exactly one row, provisioned by an administrator, authenticating GET
+ * access to `HiveContextBuilder`'s output at
+ * `collective.api_client.context`. Deliberately generic per
+ * docs/project-management/decisions/0100-nexus-in-process-ai-synthesis.md
+ * Decision §4: not AI-specific — the consumer may be the `nexus`
+ * submodule (which actually reads context via a direct PHP service call,
+ * not this HTTP route), a beekeeper's own script, or anything else that
+ * holds a valid token.
  *
- * Token generation/verification mirrors
- * `\Drupal\nanoprobe\Entity\SensorDevice` exactly (same
+ * Renamed from `InsightAgent` (task 0089/0091) by task 0101 — the
+ * previous name and its "insight write-back" half are retired, not this
+ * entity's own credential shape, which carries over unchanged: same
  * `password_hash()`/`password_verify()` mechanism, same "never returned
  * in plaintext except immediately after generation/regeneration"
- * contract) — independently implemented here rather than shared, since
- * the two entities live in different, mutually-independent optional
- * submodules per
+ * contract as `\Drupal\nanoprobe\Entity\SensorDevice` — independently
+ * implemented here rather than shared, since the two entities live in
+ * different, mutually-independent optional submodules per
  * docs/project-management/decisions/0098-nanoprobe-collective-locutus-submodule-split.md.
  */
 #[ContentEntityType(
-  id: 'insight_agent',
-  label: new TranslatableMarkup('Insight Agent'),
-  label_collection: new TranslatableMarkup('Insight Agents'),
-  label_singular: new TranslatableMarkup('insight agent'),
-  label_plural: new TranslatableMarkup('insight agents'),
+  id: 'api_client',
+  label: new TranslatableMarkup('API Client'),
+  label_collection: new TranslatableMarkup('API Clients'),
+  label_singular: new TranslatableMarkup('API client'),
+  label_plural: new TranslatableMarkup('API clients'),
   handlers: [
     'storage' => HivelogEntityStorage::class,
-    'access' => InsightAgentAccessControlHandler::class,
-    'list_builder' => InsightAgentListBuilder::class,
+    'access' => ApiClientAccessControlHandler::class,
+    'list_builder' => ApiClientListBuilder::class,
     'form' => [
-      'default' => InsightAgentForm::class,
-      'add' => InsightAgentForm::class,
-      'edit' => InsightAgentForm::class,
-      'delete' => InsightAgentDeleteForm::class,
+      'default' => ApiClientForm::class,
+      'add' => ApiClientForm::class,
+      'edit' => ApiClientForm::class,
+      'delete' => ApiClientDeleteForm::class,
     ],
   ],
-  base_table: 'collective_insight_agent',
+  base_table: 'collective_api_client',
   admin_permission: 'administer hivelog',
   entity_keys: [
     'id' => 'id',
@@ -65,14 +69,14 @@ use Drupal\user\EntityOwnerTrait;
     'owner' => 'uid',
   ],
   links: [
-    'canonical' => '/hivelog/insight-agent/{insight_agent}',
-    'add-form' => '/hivelog/insight-agent/add',
-    'edit-form' => '/hivelog/insight-agent/{insight_agent}/edit',
-    'delete-form' => '/hivelog/insight-agent/{insight_agent}/delete',
-    'collection' => '/hivelog/insight-agents',
+    'canonical' => '/hivelog/api-client/{api_client}',
+    'add-form' => '/hivelog/api-client/add',
+    'edit-form' => '/hivelog/api-client/{api_client}/edit',
+    'delete-form' => '/hivelog/api-client/{api_client}/delete',
+    'collection' => '/hivelog/api-clients',
   ],
 )]
-class InsightAgent extends ContentEntityBase implements EntityChangedInterface, EntityOwnerInterface {
+class ApiClient extends ContentEntityBase implements EntityChangedInterface, EntityOwnerInterface {
 
   use EntityChangedTrait;
   use EntityOwnerTrait;
@@ -90,7 +94,7 @@ class InsightAgent extends ContentEntityBase implements EntityChangedInterface, 
    * Generates a new random token, stores its hash, and returns the plaintext.
    *
    * Called automatically from `preSave()` on insert if no token has been
-   * set; call directly to regenerate an existing agent's token, which
+   * set; call directly to regenerate an existing client's token, which
    * immediately invalidates the previous one.
    *
    * @return string
@@ -114,13 +118,13 @@ class InsightAgent extends ContentEntityBase implements EntityChangedInterface, 
   }
 
   /**
-   * Whether $provided matches this agent's stored token hash.
+   * Whether $provided matches this client's stored token hash.
    *
    * @param string $provided
-   *   The bearer token presented by a client.
+   *   The bearer token presented by a caller.
    *
    * @return bool
-   *   TRUE if $provided hashes to the same value stored on this agent.
+   *   TRUE if $provided hashes to the same value stored on this client.
    */
   public function verifyToken(string $provided): bool {
     $hash = $this->get('token')->value;
@@ -147,7 +151,7 @@ class InsightAgent extends ContentEntityBase implements EntityChangedInterface, 
 
     $fields['label'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Label'))
-      ->setDescription(t('A short, human-readable name for this agent, e.g. "Production Insight Agent".'))
+      ->setDescription(t('A short, human-readable name for this client, e.g. "Production API Client".'))
       ->setRequired(TRUE)
       ->setSetting('max_length', 255)
       ->setDisplayOptions('form', [
@@ -172,7 +176,7 @@ class InsightAgent extends ContentEntityBase implements EntityChangedInterface, 
 
     $fields['enabled'] = BaseFieldDefinition::create('boolean')
       ->setLabel(t('Enabled'))
-      ->setDescription(t('A disabled agent\'s context-read and insight-write requests are rejected outright, not silently accepted.'))
+      ->setDescription(t('A disabled client\'s context-read requests are rejected outright, not silently accepted.'))
       ->setDefaultValue(TRUE)
       ->setDisplayOptions('form', [
         'type' => 'boolean_checkbox',
@@ -191,7 +195,7 @@ class InsightAgent extends ContentEntityBase implements EntityChangedInterface, 
 
     $fields['last_run'] = BaseFieldDefinition::create('timestamp')
       ->setLabel(t('Last Run'))
-      ->setDescription(t('Updated on every successful batch completion.'))
+      ->setDescription(t('Updated on every successful context read.'))
       ->setDisplayOptions('view', [
         'label' => 'inline',
         'type' => 'timestamp',
@@ -201,7 +205,7 @@ class InsightAgent extends ContentEntityBase implements EntityChangedInterface, 
 
     $fields['uid']
       ->setLabel(t('Owner'))
-      ->setDescription(t('The user who provisioned this agent.'))
+      ->setDescription(t('The user who provisioned this client.'))
       ->setDisplayOptions('form', [
         'type' => 'entity_reference_autocomplete',
         'weight' => 3,
@@ -211,11 +215,11 @@ class InsightAgent extends ContentEntityBase implements EntityChangedInterface, 
 
     $fields['created'] = BaseFieldDefinition::create('created')
       ->setLabel(t('Created'))
-      ->setDescription(t('The time this agent was registered.'));
+      ->setDescription(t('The time this client was registered.'));
 
     $fields['changed'] = BaseFieldDefinition::create('changed')
       ->setLabel(t('Changed'))
-      ->setDescription(t('The time this agent was last updated.'));
+      ->setDescription(t('The time this client was last updated.'));
 
     return $fields;
   }

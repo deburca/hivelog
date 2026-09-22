@@ -10,10 +10,13 @@ use Drupal\hivelog\Entity\CalendarAction;
 use Drupal\hivelog\Entity\Hive;
 
 /**
- * Builds the minimised "hive context" an InsightAgent reads.
+ * Builds the minimised "hive context" an ApiClient-authenticated caller reads.
  *
- * Backs `GET /hivelog/api/hive-insights/contexts`
- * (task 0090). Exactly the shape
+ * Backs `GET /hivelog/api/collective/context` (task 0090, rescoped by
+ * task 0101) and, per
+ * [[0100-nexus-in-process-ai-synthesis]] Decision §2, is also called
+ * directly (bypassing HTTP entirely) by `nexus`'s own cron job via this
+ * same `collective.hive_context_builder` service. Exactly the shape
  * docs/project-management/tasks/0085-sensor-less-insight-prototype.md
  * validated and
  * docs/project-management/decisions/0087-ai-insights-hosting-and-privacy-model.md's

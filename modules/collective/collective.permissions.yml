@@ -1,26 +1,17 @@
-# Insight agent permissions. Deliberately no "add" permission — a rare,
+# API Client permissions. Deliberately no "add" permission — a rare,
 # high-trust site-level credential, provisioned by an administrator
-# (administer hivelog), not something every beekeeper self-serves.
-view own insight agent:
-  title: 'View own insight agents'
-view any insight agent:
-  title: 'View any insight agent'
-edit own insight agent:
-  title: 'Edit own insight agents'
-edit any insight agent:
-  title: 'Edit any insight agent'
-delete own insight agent:
-  title: 'Delete own insight agents'
-delete any insight agent:
-  title: 'Delete any insight agent'
-
-# Hive insight permissions. Machine-written only — no add/edit
-# permissions at all.
-view own hive insight:
-  title: 'View own hive insights'
-view any hive insight:
-  title: 'View any hive insight'
-delete own hive insight:
-  title: 'Delete own hive insights'
-delete any hive insight:
-  title: 'Delete any hive insight'
+# (administer hivelog), not something every beekeeper self-serves. The
+# `hive insight` permissions task 0089 defined here moved to `nexus`
+# alongside the `HiveInsight` entity itself (task 0102).
+view own api client:
+  title: 'View own API clients'
+view any api client:
+  title: 'View any API client'
+edit own api client:
+  title: 'Edit own API clients'
+edit any api client:
+  title: 'Edit any API client'
+delete own api client:
+  title: 'Delete own API clients'
+delete any api client:
+  title: 'Delete any API client'

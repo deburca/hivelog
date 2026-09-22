@@ -1,6 +1,6 @@
 name: Collective
 type: module
-description: 'AI-synthesised apiary insights for HiveLog — the intelligence. Optional; works from manually-logged data alone, richer if nanoprobe sensor data is also present.'
+description: 'Structured hive/apiary context for HiveLog, gathered and served via a credentialed API. Optional; works from manually-logged data alone, richer if nanoprobe sensor data is also present. Pairs with the nexus module for AI-synthesised insights.'
 core_version_requirement: ^11
 package: Custom
 version: '1.0.0'
