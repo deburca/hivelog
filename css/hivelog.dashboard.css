@@ -214,6 +214,12 @@
 
 .hivelog-attention__action {
   flex: 0 0 auto;
+  /* Keeps the button group right-justified even once the row wraps
+     below 768px — without this, a wrapped item with no explicit
+     alignment falls back to the start (left) of its own line, same
+     trick already used by .hivelog-attention__count above and
+     .hivelog-list-heading__action (hivelog.buttons.css). */
+  margin-left: auto;
 }
 
 @media (max-width: 768px) {

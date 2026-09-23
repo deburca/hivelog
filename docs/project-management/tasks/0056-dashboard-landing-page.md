@@ -260,6 +260,21 @@ Design reference: `projects/dashboard-landing-page-mockup.html` and
   [[seasonal-calendar-and-hive-action-tracking]]'s "dashboard alerts —
   out of scope" deferral, for pull-on-open surfacing only (no push
   notifications).
+- **Addendum (2026-09-23, user report):** below 768px, a "Needs
+  attention" row's `.hivelog-attention__row` (a wrapping flex row) let
+  its `.hivelog-attention__action` (the View/Edit `hivelog-button-group`)
+  fall back to left-aligned once it wrapped onto its own line — a plain
+  flex item with no explicit alignment starts at the beginning of the
+  line it wraps to. Every other structured-info page in HiveLog keeps
+  its action controls right-justified regardless of width. Fixed with
+  `margin-left: auto` on `.hivelog-attention__action`
+  (`css/hivelog.dashboard.css`) — the same trick already used by
+  `.hivelog-attention__count` two rules above it, and by
+  `.hivelog-list-heading__action` (`css/hivelog.buttons.css`), just not
+  applied here originally. Verified with a standalone test page at a
+  narrow width (this sandboxed browser's CSS introspection is
+  unreliable for module-served assets — see prior session notes) and
+  against the live page's own aggregated CSS bundle.
 
 ## Related
 - Project:: [[dashboard-landing-page]]
