@@ -943,9 +943,13 @@ class ApiaryController extends ControllerBase {
     // is what preserves the page's original "hide disabled actions"
     // behaviour. An explicit empty string ("- Any -") means no
     // restriction at all.
+    // Bound as an int rather than a PHP bool: PDO's SQLite driver casts an
+    // unbound bool parameter to string ("" for FALSE), which never matches
+    // an integer column, silently dropping every disabled row from the
+    // enabled=0 filter.
     $enabled = $filters['enabled'] ?? '1';
     if ($enabled !== '') {
-      $query->condition('enabled', $enabled === '1');
+      $query->condition('enabled', $enabled === '1' ? 1 : 0);
     }
   }
 
