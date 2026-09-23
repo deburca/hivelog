@@ -53,6 +53,35 @@ Static index (in suggested execution order):
   Inspections / Queen Observations lists get their embedded versions'
   filters (user decision, 2026-09-23); after 0126
 
+Gap-analysis follow-ups (2026-09-23). **0133 and the delete-policy set jump
+the queue**:
+- [[0133-route-level-entity-access]] — **critical security**: routes
+  never check per-entity access; ship with 0124 as a security release
+- Delete policy ([[0103-delete-policy-for-records-with-children]], user
+  direction: block where possible, else warn with links; the ADR
+  inventories all 28 relationships):
+  - [[0134-delete-dependency-framework]] — shared registry, counts, form
+    sections, execution hook (do first)
+  - [[0141-delete-block-relationships]] — 13 BLOCK rows
+  - [[0142-delete-cascade-owned-records]] — 9 CASCADE rows (seeded
+    calendar, inline log lines, telemetry, AI insights)
+  - [[0143-delete-detach-optional-references]] — 3 DETACH rows (queen,
+    hive-scoped sensor, log → inspection)
+  - [[0144-delete-warn-historical-references]] — 3 WARN rows (task 0045's
+    item / product warnings, now with links)
+  - [[0145-orphan-report-and-cleanup-command]] — `drush hivelog:orphans`
+    for the existing 1,024 / 9 orphans on `cms2`
+- [[0137-align-lint-static-analysis-and-test-gates]] — local lint = CI,
+  submodules analysed, access tests in the hard gate
+- [[0136-missing-collection-link-templates]] — unblocks the generic
+  collection handling in 0116 / 0119 / 0127
+- [[0138-refresh-agents-md]] — AGENTS.md describes 5 of 21 entities and
+  no submodules
+- [[0140-controller-and-form-test-gaps]] — write before the refactors
+  they guard
+- [[0135-submodule-create-permissions]] — needs a decision
+- [[0139-submodule-packaging-hygiene]] — needs small decisions
+
 ## Key findings (2026-09-23 page-structure review)
 Read all 21 page controllers, 15 list builders and 32 forms, and fetched
 32 pages live on `cms2` (`quick_silver`, logged in as admin).
@@ -115,6 +144,56 @@ Read all 21 page controllers, 15 list builders and 32 forms, and fetched
   "Sub-page: Entity" title pattern (`Insights: …`, `Full Calendar: …`,
   `Sensor Readings: …`), and button styling.
 
+## Key findings (2026-09-23 gap analysis)
+A follow-up sweep of what the page review didn't cover: entity
+definitions, permissions / access, routing, schema, deletes, CI, tests,
+assets and docs. Two findings were confirmed with throwaway kernel tests
+on `cms2` (deleted afterwards); the orphan counts came from SQL there.
+
+- **Routes never check per-entity access (IDOR).** Only one hivelog
+  route has `_entity_access`, contrary to
+  [[0020-access-parity-custom-routes]]. A user with only "own"
+  permissions passes route access for another user's apiary / hive
+  view, edit, delete and Insights pages, and can add a hive to their
+  apiary. The entity access handlers are correct; nothing calls them →
+  [[0133-route-level-entity-access]]. This also corrects
+  [[0124-list-page-row-access-filter]], which had wrongly assumed
+  canonical pages returned 403.
+- **Deletes orphan children.** No delete handling exists anywhere.
+  `cms2` has 1,024 calendar actions and 9 inventory items pointing at
+  deleted apiaries. One rule doesn't fit every relationship:
+  `Apiary::postSave()` seeds ~30 calendar actions per apiary, and five
+  child types have no delete page of their own. So
+  [[0103-delete-policy-for-records-with-children]] classifies all 28
+  relationships (13 block, 3 warn, 9 cascade, 3 detach) →
+  [[0134-delete-dependency-framework]] and 0141–0145.
+- **Submodule permission model differs from core.** Sensor device, API
+  client and AI provider config have no "add" permission (create is
+  admin-only) but do have "own" edit / delete →
+  [[0135-submodule-create-permissions]].
+- **Five entity types lack a `collection` link template** despite having
+  collection routes → [[0136-missing-collection-link-templates]].
+- **Local and CI checks differ.** Local phpcs and phpstan skip
+  `modules/`. phpstan and functional tests are advisory, and functional
+  tests run for the core module only →
+  [[0137-align-lint-static-analysis-and-test-gates]].
+- **AGENTS.md is badly out of date**: 5 entities (actually 21), no
+  submodules, latest update hook `_10013` (actually `_10028`), "one
+  service" (3), "eleven list builders" (14) →
+  [[0138-refresh-agents-md]].
+- **Packaging**: `nexus` depends on `collective:collective`, not
+  `hivelog:collective`. Submodule versions are stuck at `1.0.0`.
+  `drupal/key` is required for every install though only nexus uses it →
+  [[0139-submodule-packaging-hygiene]].
+- **Test gaps**: three controllers and 28 form classes (including every
+  filter form) aren't directly tested →
+  [[0140-controller-and-form-test-gaps]].
+- **Checked and clean**: no unused libraries, CSS files, SDC components
+  or PHP classes. Declared permissions == referenced permissions. No
+  pending entity schema changes on `cms2`, whose copy matches the repo.
+  Every entity type has kernel tests; every test is in the `hivelog`
+  group.
+
 ## Open questions
 - ~~Should the full-page lists (Hives, Inspections, Queen Observations)
   get the same filter forms their embedded counterparts on the Apiary /
@@ -124,8 +203,19 @@ Read all 21 page controllers, 15 list builders and 32 forms, and fetched
 - [[0131-single-detail-table-css-class]] renames theming-API class names
   (AGENTS.md "Theming HiveLog"). Keep the old names as aliases for one
   minor release, or break them in a major?
+- No entity type has Views integration (`views_data` handler), so every
+  list, report and export is custom controller code. Deliberate
+  (ADR-0004's custom-controller approach), or wanted for site builders?
+  No task created until decided.
+- [[0103-delete-policy-for-records-with-children]]'s own open questions
+  gate [[0134-delete-dependency-framework]]: confirm the CASCADE and
+  DETACH treatments (recommended where neither block nor warn works),
+  what to do when a user can't delete the blocking children, and user
+  accounts.
 
 ## Related decisions
+- [[0103-delete-policy-for-records-with-children]] (proposed)
+- [[0020-access-parity-custom-routes]]
 - [[0004-custom-controllers-over-view-builders]]
 - [[0012-action-button-design-system]]
 - [[0060-visual-identity-in-site-theme]]

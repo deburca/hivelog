@@ -28,10 +28,18 @@ afterwards): Alice owns an apiary and a hive, and Bob has only `view own
 apiary` + `view own hive`. `ApiaryListBuilder::load()` and
 `HiveListBuilder::load()` each returned Alice's entity (listed=1,
 viewable by Bob=0). The rendered `/hivelog/apiaries` and `/hivelog/hives`
-HTML contained "Alice apiary" / "Alice hive" as links. The canonical
-pages behind those links correctly return 403, but names, apiary
+HTML contained "Alice apiary" / "Alice hive" as links. Names, apiary
 locations, owners, hive breeds and statuses are exposed in the list
 columns.
+
+> **Correction, 2026-09-23 gap analysis.** This note originally said
+> "the canonical pages behind those links correctly return 403". That
+> was assumed, not tested, and it is **wrong**. Core routes check only
+> `_permission`, never per-entity access, and the core controllers and
+> forms don't check either. Bob can open, edit and delete Alice's
+> apiary and hive by URL. That is a separate, more severe gap than this
+> list leak, and it needs its own task. Fixing this list leak alone
+> doesn't close it.
 
 Only `SensorDeviceListBuilder` already overrides `load()` to filter.
 Its docblock assumed `ApiClient` / `AiProviderConfig` "never needed
