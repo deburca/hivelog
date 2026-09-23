@@ -14,6 +14,7 @@
         "php": ">=8.3",
         "drupal/core": "^11",
         "drupal/geofield": "^10.3",
+        "drupal/key": "^1.18",
         "drupal/leaflet": "^10"
     },
     "extra": {
