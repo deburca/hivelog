@@ -1,0 +1,37 @@
+<?php
+
+/**
+ * @file
+ * Hook implementations for the Assimilate module.
+ */
+
+/**
+ * Implements hook_cron().
+ *
+ * Generates one new plausible `SensorReading` per metric for each of
+ * assimilate's own demo devices. Re-checks `ProductionGuardrail` on
+ * every run, not just at install — a site could install assimilate
+ * first and only later have a real apiary opt into AI insights, and
+ * that's exactly when mock data would start contaminating real insight
+ * generation if this kept running regardless.
+ */
+function assimilate_cron() {
+  $guardrail = \Drupal::service('assimilate.production_guardrail');
+  $reason = $guardrail->blockingReason();
+  if ($reason) {
+    \Drupal::logger('assimilate')->warning('assimilate_cron() skipped: @reason', ['@reason' => $reason]);
+    return;
+  }
+
+  $devices = \Drupal::service('assimilate.demo_data_provisioner')->getDemoDevices();
+  if (!$devices) {
+    return;
+  }
+
+  $generator = \Drupal::service('assimilate.mock_reading_generator');
+  foreach ($devices as $device) {
+    if ($device->get('enabled')->value) {
+      $generator->generateReadingsForDevice($device);
+    }
+  }
+}

@@ -1,0 +1,10 @@
+services:
+  assimilate.production_guardrail:
+    class: Drupal\assimilate\ProductionGuardrail
+    arguments: ['@entity_type.manager', '@state', '@string_translation']
+  assimilate.demo_data_provisioner:
+    class: Drupal\assimilate\DemoDataProvisioner
+    arguments: ['@entity_type.manager', '@state']
+  assimilate.mock_reading_generator:
+    class: Drupal\assimilate\MockReadingGenerator
+    arguments: ['@entity_type.manager', '@datetime.time']

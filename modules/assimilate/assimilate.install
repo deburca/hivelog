@@ -1,0 +1,103 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the Assimilate module.
+ */
+
+/**
+ * Implements hook_requirements().
+ *
+ * The real guardrail against accidental production use (task 0107): the
+ * `install` phase reports a `REQUIREMENT_ERROR` if any real apiary
+ * already has `ai_insights_enabled` on, which is Drupal's own idiomatic
+ * way to refuse an install outright — both the module-list UI
+ * (`drupal_check_module()`) and `drush pm:install` check `install`-phase
+ * requirements and refuse to proceed on an error, before `hook_install()`
+ * ever runs. The `runtime` phase re-shows the same check (now a
+ * `REQUIREMENT_WARNING`, since the module is already installed and this
+ * is informational) on `admin/reports/status`, so it stays visible for
+ * as long as the module is enabled, not just at install time.
+ *
+ * Deliberately does NOT call the `assimilate.production_guardrail`
+ * service during the `install` phase — this function runs before the
+ * module is actually installed, when assimilate's own services.yml
+ * isn't registered in the container yet (`drupal_check_module()` just
+ * `require_once`s this file and calls the function directly). The check
+ * itself is duplicated here, inline, using only core services that are
+ * always available.
+ */
+function assimilate_requirements($phase) {
+  $requirements = [];
+
+  if ($phase !== 'install' && $phase !== 'runtime') {
+    return $requirements;
+  }
+
+  $storage = \Drupal::entityTypeManager()->getStorage('apiary');
+  $query = $storage->getQuery()
+    ->accessCheck(FALSE)
+    ->condition('ai_insights_enabled', TRUE);
+  $demo_apiary_id = \Drupal::state()->get('assimilate.demo_apiary_id');
+  if ($demo_apiary_id) {
+    $query->condition('id', $demo_apiary_id, '<>');
+  }
+  $real_apiary_count = count($query->execute());
+
+  if ($phase === 'install') {
+    if ($real_apiary_count > 0) {
+      $requirements['assimilate_production_guardrail'] = [
+        'title' => t('Assimilate: production guardrail'),
+        'value' => t('@count real apiary/apiaries already have AI insights enabled.', ['@count' => $real_apiary_count]),
+        'description' => t('Assimilate fabricates mock sensor data for demonstration purposes and must never run on a site with real AI-insight data. Disable AI insights on every real apiary first, or do not install this module here.'),
+        'severity' => REQUIREMENT_ERROR,
+      ];
+    }
+    return $requirements;
+  }
+
+  // Runtime: always visible while installed, error severity if the
+  // situation has arisen since install (a real apiary opted in later),
+  // otherwise just a standing reminder of what this module is.
+  $requirements['assimilate_dev_only'] = [
+    'title' => t('Assimilate (development/demo only)'),
+    'value' => $real_apiary_count > 0
+      ? t('@count real apiary/apiaries have AI insights enabled — assimilate_cron() will not run until this is resolved.', ['@count' => $real_apiary_count])
+      : t('No real apiary currently has AI insights enabled.'),
+    'description' => t('Assimilate fabricates mock sensor data for demonstration purposes. It must never be enabled on a beekeeper\'s production site.'),
+    'severity' => $real_apiary_count > 0 ? REQUIREMENT_ERROR : REQUIREMENT_WARNING,
+  ];
+
+  return $requirements;
+}
+
+/**
+ * Implements hook_install().
+ *
+ * Safe to reach here at all only because `assimilate_requirements()`'s
+ * `install` phase already refused to let this run on a site with real
+ * AI-insight data.
+ */
+function assimilate_install($is_syncing) {
+  \Drupal::service('assimilate.demo_data_provisioner')->provision();
+}
+
+/**
+ * Implements hook_uninstall().
+ *
+ * Removes every demo entity `DemoDataProvisioner` created, wrapped in a
+ * try/catch so uninstall succeeds even when the underlying database
+ * tables have already been removed (mirrors `collective_uninstall()`'s
+ * own reasoning).
+ */
+function assimilate_uninstall() {
+  try {
+    \Drupal::service('assimilate.demo_data_provisioner')->cleanUp();
+  }
+  catch (\Exception $e) {
+    \Drupal::logger('assimilate')->notice(
+      'Could not clean up demo entities during uninstall: @message',
+      ['@message' => $e->getMessage()]
+    );
+  }
+}
