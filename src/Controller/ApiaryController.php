@@ -16,6 +16,7 @@ use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Form\HivelogCalendarFilterForm;
 use Drupal\hivelog\Form\HivelogFullCalendarFilterForm;
 use Drupal\hivelog\Form\HivelogHiveFilterForm;
+use Drupal\hivelog\HivelogStatTileBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -85,6 +86,11 @@ class ApiaryController extends ControllerBase {
   protected RendererInterface $renderer;
 
   /**
+   * The stat-tile builder.
+   */
+  protected HivelogStatTileBuilder $statTileBuilder;
+
+  /**
    * Constructs an ApiaryController.
    */
   public function __construct(
@@ -93,6 +99,7 @@ class ApiaryController extends ControllerBase {
     AccountInterface $current_user,
     RequestStack $request_stack,
     RendererInterface $renderer,
+    HivelogStatTileBuilder $stat_tile_builder,
   ) {
     // $entityTypeManager / $formBuilder / $currentUser are untyped properties
     // inherited from ControllerBase; assign rather than redeclare them.
@@ -101,6 +108,7 @@ class ApiaryController extends ControllerBase {
     $this->currentUser = $current_user;
     $this->requestStack = $request_stack;
     $this->renderer = $renderer;
+    $this->statTileBuilder = $stat_tile_builder;
   }
 
   /**
@@ -113,6 +121,7 @@ class ApiaryController extends ControllerBase {
       $container->get('current_user'),
       $container->get('request_stack'),
       $container->get('renderer'),
+      $container->get('hivelog.stat_tile_builder'),
     );
   }
 
@@ -121,6 +130,15 @@ class ApiaryController extends ControllerBase {
    */
   public function view(Apiary $apiary) {
     $build = [];
+
+    // "At a glance" stat tiles — optional submodules only; hivelog core
+    // contributes none of its own here. See hivelog.api.php's
+    // hook_hivelog_apiary_stat_tiles() and ADR-0099. Weight -1 keeps
+    // this first regardless of the other sections' own weights.
+    $stat_tiles = $this->statTileBuilder->buildForApiary($apiary);
+    if (!empty($stat_tiles)) {
+      $build['stat_tiles'] = $stat_tiles + ['#weight' => -1];
+    }
 
     // Render the apiary entity fields.
     $view_builder = $this->entityTypeManager->getViewBuilder('apiary');

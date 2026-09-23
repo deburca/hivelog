@@ -1,0 +1,64 @@
+$schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schemas/v1/metadata.schema.json
+
+name: Metric Tabs
+status: stable
+description: >
+  A CSS-only (no JS) vertical tab strip for a sensor device's per-metric
+  detail: one tab per metric, its content area showing the current value,
+  trend chart, and last-updated time. Radio-input driven, so it works with
+  JS disabled and multiple instances can coexist on one page as long as
+  each is given a distinct `group`.
+
+props:
+  type: object
+  required:
+    - group
+    - tabs
+  properties:
+    group:
+      type: string
+      title: Group name
+      description: >
+        Unique per instance (e.g. the device id) — becomes the radio
+        inputs' shared `name` and their `id` prefix, so multiple tab
+        groups can appear on the same page without colliding.
+      examples:
+        - '42'
+    tabs:
+      type: array
+      title: Metric tabs
+      description: >
+        One entry per metric, in display order. The first entry is
+        selected by default.
+      items:
+        type: object
+        required:
+          - id
+          - label
+          - value
+          - updated
+        properties:
+          id:
+            type: string
+            title: Tab id
+            description: Unique within this group (e.g. the metric machine name).
+          label:
+            type: string
+            title: Tab label
+            examples:
+              - Weight (kg)
+          value:
+            type: string
+            title: Current value
+            description: Already formatted, e.g. "22.87".
+          updated:
+            type: string
+            title: Last-updated text
+            description: Already formatted, e.g. "3 minutes ago".
+          chart:
+            type: string
+            title: Trend chart markup
+            description: >
+              Pre-rendered HTML for the trend chart (or an empty-state
+              message if there isn't enough data for one yet).
+            default: ''

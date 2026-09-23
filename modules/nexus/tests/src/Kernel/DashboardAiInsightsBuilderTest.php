@@ -126,9 +126,12 @@ class DashboardAiInsightsBuilderTest extends KernelTestBase {
   }
 
   /**
-   * Tests act_now/inspect_soon hives appear as action rows.
+   * Tests act_now/inspect_soon hives each appear as their own stat tile.
+   *
+   * Task 0110: every insight gets a tile linking to its hive, replacing
+   * the old chip+text row.
    */
-  public function testActNowAndInspectSoonHivesAppearAsRows(): void {
+  public function testActNowAndInspectSoonHivesAppearAsTiles(): void {
     $act_now_hive = $this->createHive('Act Now Hive');
     $this->createInsight($act_now_hive, 'act_now', ['recommendation' => 'Add a super']);
 
@@ -136,67 +139,121 @@ class DashboardAiInsightsBuilderTest extends KernelTestBase {
     $this->createInsight($inspect_hive, 'inspect_soon', ['recommendation' => 'Possible swarm risk']);
 
     $section = $this->build();
-    $rendered = (string) \Drupal::service('renderer')->renderInIsolation($section['nexus_ai_insights']);
+    $this->assertArrayHasKey('tiles', $section['nexus_ai_insights']);
+    $tiles = $section['nexus_ai_insights']['tiles'];
 
+    $values = array_map(fn(array $t) => $t['#props']['label'] . '|' . $t['#props']['value'], array_filter(
+      $tiles,
+      fn($k) => str_starts_with((string) $k, 'tile_'),
+      ARRAY_FILTER_USE_KEY
+    ));
+    $this->assertContains('Act Now Hive|Act now', $values);
+    $this->assertContains('Inspect Soon Hive|Inspect soon', $values);
+
+    $rendered = (string) \Drupal::service('renderer')->renderInIsolation($section['nexus_ai_insights']);
     $this->assertStringContainsString('Add a super', $rendered);
     $this->assertStringContainsString('Possible swarm risk', $rendered);
   }
 
   /**
-   * Tests act_now sorts before inspect_soon.
+   * Tests each tile links to its own hive's canonical page.
    */
-  public function testActNowSortsBeforeInspectSoon(): void {
-    $inspect_hive = $this->createHive('Inspect Soon Hive');
-    $this->createInsight($inspect_hive, 'inspect_soon', ['recommendation' => 'Inspect me']);
-
-    $act_now_hive = $this->createHive('Act Now Hive');
-    $this->createInsight($act_now_hive, 'act_now', ['recommendation' => 'Act on me']);
+  public function testTileLinksToItsHive(): void {
+    $hive = $this->createHive('Act Now Hive');
+    $this->createInsight($hive, 'act_now');
 
     $section = $this->build();
-    $rendered = (string) \Drupal::service('renderer')->renderInIsolation($section['nexus_ai_insights']);
-
-    $this->assertTrue(strpos($rendered, 'Act on me') < strpos($rendered, 'Inspect me'));
+    $tile = $section['nexus_ai_insights']['tiles']['tile_0'];
+    $this->assertEquals($hive->toUrl()->toString(), $tile['#props']['url']);
   }
 
   /**
-   * Tests the "N hives all clear today" summary counts fresh all_clear hives.
+   * Tests act_now sorts before inspect_soon, which sorts before all_clear.
    */
-  public function testAllClearSummaryCountsFreshAllClearHives(): void {
+  public function testActNowSortsBeforeInspectSoonBeforeAllClear(): void {
+    $clear_hive = $this->createHive('Clear Hive');
+    $this->createInsight($clear_hive, 'all_clear');
+
+    $inspect_hive = $this->createHive('Inspect Soon Hive');
+    $this->createInsight($inspect_hive, 'inspect_soon');
+
+    $act_now_hive = $this->createHive('Act Now Hive');
+    $this->createInsight($act_now_hive, 'act_now');
+
+    $section = $this->build();
+    $labels = array_map(
+      fn(array $t) => $t['#props']['label'],
+      array_filter($section['nexus_ai_insights']['tiles'], fn($k) => str_starts_with((string) $k, 'tile_'), ARRAY_FILTER_USE_KEY)
+    );
+    $this->assertSame(['Act Now Hive', 'Inspect Soon Hive', 'Clear Hive'], array_values($labels));
+  }
+
+  /**
+   * Tests every fresh all_clear hive gets its own tile.
+   */
+  public function testFreshAllClearHivesEachGetTile(): void {
     $hive_one = $this->createHive('Clear Hive One');
     $this->createInsight($hive_one, 'all_clear');
     $hive_two = $this->createHive('Clear Hive Two');
     $this->createInsight($hive_two, 'all_clear');
 
     $section = $this->build();
-    $rendered = (string) \Drupal::service('renderer')->renderInIsolation($section['nexus_ai_insights']);
-
-    $this->assertStringContainsString('2 hives all clear today.', $rendered);
+    $labels = array_map(
+      fn(array $t) => $t['#props']['label'],
+      array_filter($section['nexus_ai_insights']['tiles'], fn($k) => str_starts_with((string) $k, 'tile_'), ARRAY_FILTER_USE_KEY)
+    );
+    $this->assertCount(2, $labels);
+    $this->assertContains('Clear Hive One', $labels);
+    $this->assertContains('Clear Hive Two', $labels);
   }
 
   /**
-   * Tests a stale all_clear insight is NOT counted as "clear today".
+   * Tests a stale all_clear insight gets no tile at all.
+   *
+   * An out-of-date "nothing's wrong" must never be shown as current
+   * reassurance.
    */
-  public function testStaleAllClearInsightNotCounted(): void {
+  public function testStaleAllClearInsightGetsNoTile(): void {
     $hive = $this->createHive('Stale Clear Hive');
     $this->createInsight($hive, 'all_clear', ['generated' => \Drupal::time()->getRequestTime() - (49 * 3600)]);
 
     $section = $this->build();
-    $rendered = (string) \Drupal::service('renderer')->renderInIsolation($section['nexus_ai_insights']);
-
-    $this->assertStringContainsString('0 hives all clear today.', $rendered);
+    $this->assertArrayNotHasKey('tiles', $section['nexus_ai_insights']);
+    $this->assertArrayHasKey('empty', $section['nexus_ai_insights']);
   }
 
   /**
-   * Tests a hive with no insight at all is excluded from both counts.
+   * Tests a stale act_now insight still gets a tile.
+   *
+   * Staleness only withholds the positive (`all_clear`) verdict, never
+   * an actionable one.
    */
-  public function testHiveWithNoInsightExcludedFromBoth(): void {
+  public function testStaleActNowInsightStillGetsTile(): void {
+    $hive = $this->createHive('Stale Act Now Hive');
+    $this->createInsight($hive, 'act_now', ['generated' => \Drupal::time()->getRequestTime() - (49 * 3600)]);
+
+    $section = $this->build();
+    $this->assertArrayHasKey('tiles', $section['nexus_ai_insights']);
+  }
+
+  /**
+   * Tests a hive with no insight at all shows an explicit empty state.
+   *
+   * The hive itself is excluded, and the section shows an explicit
+   * "nothing analysed yet" message rather than nothing/an ambiguous
+   * count — real user-reported confusion with the old "0 hives all
+   * clear today" wording, which looked identical whether nothing had
+   * run yet or every hive was genuinely fine.
+   */
+  public function testHiveWithNoInsightExcludedAndShowsExplicitEmptyState(): void {
     $this->createHive('Unmonitored Hive');
 
     $section = $this->build();
     $rendered = (string) \Drupal::service('renderer')->renderInIsolation($section['nexus_ai_insights']);
 
     $this->assertStringNotContainsString('Unmonitored Hive', $rendered);
-    $this->assertStringContainsString('0 hives all clear today.', $rendered);
+    $this->assertArrayNotHasKey('tiles', $section['nexus_ai_insights']);
+    $this->assertStringContainsString('No AI insights yet', $rendered);
   }
 
   /**

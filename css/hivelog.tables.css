@@ -5,8 +5,8 @@
  * Covers inspection, queen, observation, inventory detail view, inventory
  * report, product detail view, calendar action detail view, hive/apiary
  * action log detail view, sensor device, API client, and AI provider
- * config detail view tables. Entity list tables use the
- * hivelog:entity-table SDC component instead.
+ * config tables. Entity list tables use the hivelog:entity-table SDC
+ * component instead.
  */
 
 /* Explanatory footnote below a list page's table (e.g. Calendar Actions,

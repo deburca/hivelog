@@ -34,26 +34,31 @@ class DashboardAiInsightsBuilder {
   use StringTranslationTrait;
 
   /**
-   * How old a HiveInsight can be before it stops counting as "clear today".
+   * How old a HiveInsight can be before an `all_clear` stops showing.
    *
    * Matches `HiveInsightPanelBuilder::STALE_THRESHOLD_SECONDS` — the
    * same "is this specific recommendation still fresh" question this
    * class asks for the positive (`all_clear`) case: a stale all-clear
-   * isn't a real current confirmation, so it's excluded from the count
-   * rather than silently counted as reassurance it can no longer back
-   * up. A hive with no insight at all is excluded from both this count
-   * and the action-row list below — it simply hasn't been monitored
-   * yet, which is a third state this task's own acceptance criteria
-   * doesn't ask this section to represent.
+   * isn't a real current confirmation, so its tile is withheld rather
+   * than silently offering reassurance it can no longer back up.
+   * act_now/inspect_soon insights are never withheld for staleness —
+   * old actionable information is still actionable. A hive with no
+   * insight at all gets no tile either way; it simply hasn't been
+   * monitored yet.
    */
   protected const STALE_THRESHOLD_SECONDS = 48 * 3600;
 
   /**
    * Sort priority for each verdict — lower sorts first (most urgent).
+   *
+   * `all_clear` sorts last — every insight gets its own tile now (task
+   * 0110), so a confirmed-fine hive still needs a defined position
+   * relative to the actionable ones, just the least urgent one.
    */
   protected const VERDICT_SORT_ORDER = [
     'act_now' => 0,
     'inspect_soon' => 1,
+    'all_clear' => 2,
   ];
 
   public function __construct(
@@ -92,8 +97,16 @@ class DashboardAiInsightsBuilder {
       $cache->addCacheableDependency($apiary);
     }
 
-    $action_rows = [];
-    $all_clear_count = 0;
+    // One stat tile per hive with a current insight — task 0110. Every
+    // insight gets a tile, not just the actionable ones: a plain
+    // aggregate "N hives all clear today" line, with nothing shown at
+    // all when N is 0, read ambiguously (does 0 mean everything's fine,
+    // or that nothing has been checked yet?) — real user-reported
+    // confusion. Individual tiles make the actual state legible at a
+    // glance, and the section's own empty-state text (below) covers the
+    // genuine "nothing has been analysed yet" case explicitly instead of
+    // leaving it to be inferred from an absent count.
+    $candidates = [];
     $now = $this->time->getRequestTime();
 
     foreach ($hives as $hive) {
@@ -104,18 +117,25 @@ class DashboardAiInsightsBuilder {
       $cache->addCacheableDependency($insight);
 
       $verdict = $insight->get('verdict')->value;
-      if (isset(self::VERDICT_SORT_ORDER[$verdict])) {
-        $action_rows[] = $this->buildActionRow($hive, $insight, $verdict);
-        continue;
+      $sort_key = self::VERDICT_SORT_ORDER[$verdict] ?? count(self::VERDICT_SORT_ORDER);
+
+      // A stale act_now/inspect_soon insight is still real, actionable
+      // information — only a stale *all_clear* is withheld, since an
+      // out-of-date "nothing's wrong" is exactly the reassurance this
+      // section must never give without backing it up (mirrors
+      // HiveInsightPanelBuilder's own staleness reasoning, applied here
+      // only to the positive verdict).
+      if ($verdict === 'all_clear') {
+        $generated = (int) $insight->get('generated')->value;
+        if (($now - $generated) > self::STALE_THRESHOLD_SECONDS) {
+          continue;
+        }
       }
 
-      $generated = (int) $insight->get('generated')->value;
-      if (($now - $generated) <= self::STALE_THRESHOLD_SECONDS) {
-        $all_clear_count++;
-      }
+      $candidates[] = [$sort_key, mb_strtolower($hive->label()), $hive, $insight, $verdict];
     }
 
-    usort($action_rows, fn(array $a, array $b) => $a['#context']['sort'] <=> $b['#context']['sort']);
+    usort($candidates, fn(array $a, array $b) => [$a[0], $a[1]] <=> [$b[0], $b[1]]);
 
     $section = [
       'nexus_ai_insights' => [
@@ -131,40 +151,64 @@ class DashboardAiInsightsBuilder {
       ],
     ];
 
-    foreach ($action_rows as $i => $row) {
-      unset($row['#context']['sort']);
-      $section['nexus_ai_insights']['row_' . $i] = $row;
+    if ($candidates) {
+      $tiles = [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['hivelog-stat-tiles']],
+      ];
+      foreach ($candidates as $i => [, , $hive, $insight, $verdict]) {
+        $tiles['tile_' . $i] = $this->buildInsightTile($hive, $insight, $verdict);
+      }
+      $section['nexus_ai_insights']['tiles'] = $tiles;
     }
-
-    $section['nexus_ai_insights']['summary'] = [
-      '#type' => 'html_tag',
-      '#tag' => 'p',
-      '#attributes' => ['class' => ['hivelog-ai-insights__summary']],
-      '#value' => $this->formatPlural(
-        $all_clear_count,
-        '1 hive all clear today.',
-        '@count hives all clear today.'
-      ),
-    ];
+    else {
+      $section['nexus_ai_insights']['empty'] = [
+        '#markup' => '<p>' . $this->t('No AI insights yet — insights are generated on cron for each hive whose apiary has opted in.') . '</p>',
+      ];
+    }
 
     return $section;
   }
 
   /**
-   * Builds one action row for an act_now/inspect_soon hive.
+   * Builds one hive's insight as a `hivelog:stat-tile` component.
+   *
+   * Value is the verdict itself, sublabel a truncated recommendation —
+   * a compact teaser; the hive's own canonical page (this tile's link)
+   * shows the full recommendation and signals via `HiveInsightPanelBuilder`'s
+   * own panel.
    */
-  protected function buildActionRow(Hive $hive, HiveInsight $insight, string $verdict): array {
+  protected function buildInsightTile(Hive $hive, HiveInsight $insight, string $verdict): array {
+    $recommendation = (string) $insight->get('recommendation')->value;
+    $sublabel = mb_strlen($recommendation) > 70 ? mb_substr($recommendation, 0, 69) . '…' : $recommendation;
+
     return [
-      '#type' => 'inline_template',
-      '#template' => '<div class="hivelog-ai-insights__row hivelog-ai-insights__row--{{ verdict }}"><span class="hivelog-ai-insights__chip">{{ chip }}</span><span class="hivelog-ai-insights__text">{{ title }} — {{ recommendation }}</span></div>',
-      '#context' => [
-        'verdict' => $verdict,
-        'chip' => HiveInsight::VERDICTS[$verdict] ?? $verdict,
-        'title' => $hive->toLink()->toRenderable(),
-        'recommendation' => $insight->get('recommendation')->value,
-        'sort' => [self::VERDICT_SORT_ORDER[$verdict], mb_strtolower($hive->label())],
+      '#type' => 'component',
+      '#component' => 'hivelog:stat-tile',
+      '#props' => [
+        'value' => HiveInsight::VERDICTS[$verdict] ?? $verdict,
+        'label' => $hive->label(),
+        'url' => $hive->toUrl()->toString(),
+        'sublabel' => $sublabel,
+        'sublabel_variant' => $this->verdictTileVariant($verdict),
       ],
     ];
+  }
+
+  /**
+   * Maps a verdict to one of the stat tile's three sublabel variants.
+   *
+   * Same mapping `HiveInsightPanelBuilder::verdictTileVariant()` uses —
+   * small enough, and specific enough to each class's own verdict
+   * source, that duplicating it beats extracting a shared trait for
+   * five lines.
+   */
+  protected function verdictTileVariant(string $verdict): string {
+    return match ($verdict) {
+      'act_now' => 'critical',
+      'inspect_soon' => 'warning',
+      default => 'default',
+    };
   }
 
   /**

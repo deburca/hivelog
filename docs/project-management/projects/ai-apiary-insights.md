@@ -137,7 +137,15 @@ Implementation, current (post-ADR-0100):
   dashboard "AI Insights" section (new `hook_hivelog_dashboard_sections()`
   — the first genuine extension of ADR-0099's mechanism since it was
   written) plus the `AiProviderConfig` staleness alert, folded into the
-  existing "Needs attention" queue rather than a new mechanism
+  existing "Needs attention" queue rather than a new mechanism.
+  **Revisited same day** as part of [[sensor-data-collection]]'s
+  [[0110-hive-apiary-stat-tiles]]: the section's act_now/inspect_soon
+  rows and its "N hives all clear today" summary line (real,
+  user-reported ambiguity — read the same whether every hive was
+  confirmed fine or nothing had been analysed yet) are both replaced by
+  one `hivelog:stat-tile` per hive with a current insight, each linking
+  straight to that hive, plus an explicit empty-state message when
+  there's genuinely nothing to show yet.
 - [[0094-ai-insights-prelaunch-validation]] — backlog, **the release
   gate**: not another design task, running [[0088-ai-insights-implementation]]
   §6's two required checks against the real, nexus-driven pipeline.
@@ -153,6 +161,14 @@ Implementation, current (post-ADR-0100):
   through a UI they can't find either (`collective`'s consent toggle
   lives on the apiary form, which is reachable — but provisioning an
   `AiProviderConfig` isn't, for the same navigation reason).
+  **2026-09-22**: [[0107-assimilate-mock-sensor-data-module]]'s own live
+  verification then gave `nexus_cron()` real opted-in data for the first
+  time, surfacing two more real bugs neither the test suite nor manual
+  UI review had caught — fixed same-day as
+  [[0109-nexus-anthropic-call-and-response-parsing-fixes]]: a retired
+  Anthropic model id, and the response parser rejecting a valid
+  markdown-fenced response. Exactly the kind of gap 0094 exists to find,
+  found a little early.
 
 Implementation, superseded 2026-09-22 (kept for history, not the active
 plan — see above):

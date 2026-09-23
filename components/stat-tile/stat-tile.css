@@ -1,9 +1,55 @@
 /**
  * @file
- * Styling for the hivelog:stat-tile SDC component — a compact figure tile
- * on the dashboard. The grid that lays these out (.hivelog-stat-tiles)
- * lives in css/hivelog.dashboard.css.
+ * Styling for the hivelog:stat-tile SDC component — a compact figure
+ * tile, used on the dashboard and (task 0110) the Hive/Apiary canonical
+ * pages' own "at a glance" row. `.hivelog-stat-tiles`, the grid that
+ * lays several of these out together, lives here rather than in a
+ * page-specific stylesheet (e.g. hivelog.dashboard.css) so it comes
+ * along automatically wherever the component itself is used — Drupal's
+ * SDC system auto-attaches this file whenever `hivelog:stat-tile`
+ * renders, regardless of which module built the tile.
  */
+
+/*
+ * Stat-tile row: a plain wrapping flex row — each tile is its own
+ * bordered card (see `.hivelog-stat-tile` below), not a shared
+ * hairline-divided box, specifically so the row itself never needs a
+ * width of its own.
+ *
+ * Tried and rejected first: CSS Grid's `repeat(auto-fit/auto-fill,
+ * minmax(...))`, and flexbox with a `width: fit-content` row sharing
+ * one border/background — every variant either stretched a lone tile
+ * to fill the whole row (`auto-fit`), or left a wide, mostly-blank
+ * bordered box behind a lone tile (`auto-fill`, and `fit-content` on a
+ * *wrapping* flex row, which browsers don't size predictably at all —
+ * confirmed empirically, not just by reading the spec). Giving each
+ * tile its own border sidesteps the whole problem: the row can stay a
+ * plain 100%-wide block (trivial, predictable wrapping) because there's
+ * no shared box whose width needs to track the tile count.
+ */
+.hivelog-stat-tiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.hivelog-stat-tiles .hivelog-stat-tile {
+  /* No flex-grow: a tile never stretches beyond this basis, which is
+     what keeps a lone tile (e.g. a quiet AI Insights section) from
+     ballooning to fill the row — see the file docblock above. That
+     means the basis itself has to be wide enough that a *full* row
+     (6 tiles on the dashboard) reasonably fills the available width
+     without relying on stretching; 9rem left visible empty space
+     after the 6th tile on a real screen, confirmed live — 15rem
+     doesn't. */
+  flex: 0 1 15rem;
+}
+
+@media (max-width: 768px) {
+  .hivelog-stat-tiles .hivelog-stat-tile {
+    flex-basis: 100%;
+  }
+}
 
 .hivelog-stat-tile {
   display: flex;
@@ -11,6 +57,8 @@
   gap: 0.25rem;
   padding: 0.9rem 1rem 1rem;
   background: var(--hivelog-surface);
+  border: 1px solid var(--hivelog-hairline);
+  border-radius: 6px;
   color: inherit;
   text-decoration: none;
 }

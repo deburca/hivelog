@@ -52,6 +52,21 @@ entity.sensor_device.canonical:
       sensor_device:
         type: entity:sensor_device
 
+# Full-history readings page (task 0110) — linked from the per-sensor
+# stat tile on the Hive/Apiary canonical pages. Same access requirement
+# as the canonical page: this is just a deeper view of the same data.
+entity.sensor_device.readings:
+  path: '/hivelog/sensor-device/{sensor_device}/readings'
+  defaults:
+    _controller: '\Drupal\nanoprobe\Controller\SensorDeviceController::readings'
+    _title_callback: '\Drupal\nanoprobe\Controller\SensorDeviceController::readingsTitle'
+  requirements:
+    _permission: 'view own sensor device+view any sensor device+administer hivelog'
+  options:
+    parameters:
+      sensor_device:
+        type: entity:sensor_device
+
 entity.sensor_device.edit_form:
   path: '/hivelog/sensor-device/{sensor_device}/edit'
   defaults:

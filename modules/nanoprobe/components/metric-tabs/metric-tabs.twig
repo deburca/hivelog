@@ -1,0 +1,24 @@
+{%- set group_id = 'nanoprobe-metric-tabs-' ~ group -%}
+<div class="nanoprobe-metric-tabs">
+  <div class="nanoprobe-metric-tabs__list">
+    {%- for tab in tabs -%}
+      <input
+        type="radio"
+        name="{{ group_id }}"
+        id="{{ group_id }}--{{ tab.id }}"
+        class="nanoprobe-metric-tabs__input"
+        {%- if loop.first %} checked{% endif -%}
+      >
+      <label for="{{ group_id }}--{{ tab.id }}" class="nanoprobe-metric-tabs__tab">{{ tab.label }}</label>
+    {%- endfor -%}
+  </div>
+  <div class="nanoprobe-metric-tabs__panels">
+    {%- for tab in tabs -%}
+      <div class="nanoprobe-metric-tabs__panel">
+        <p class="nanoprobe-metric-tabs__value">{{ tab.value }}</p>
+        {%- if tab.chart %}{{ tab.chart|raw }}{% endif -%}
+        <p class="nanoprobe-metric-tabs__updated">{{ tab.updated }}</p>
+      </div>
+    {%- endfor -%}
+  </div>
+</div>

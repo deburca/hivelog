@@ -95,6 +95,22 @@ entity.hive.canonical:
       hive:
         type: entity:hive
 
+# Dedicated Insights page (task 0111) — the AI Insight/Sensors panels
+# moved here from the main canonical page above, which was getting too
+# busy. Same access requirement: this is just a deeper view of a page
+# the user can already see.
+entity.hive.insights:
+  path: '/hivelog/hive/{hive}/insights'
+  defaults:
+    _controller: '\Drupal\hivelog\Controller\HiveController::insights'
+    _title_callback: '\Drupal\hivelog\Controller\HiveController::insightsTitle'
+  requirements:
+    _permission: 'view own hive+view any hive+administer hivelog'
+  options:
+    parameters:
+      hive:
+        type: entity:hive
+
 entity.hive.edit_form:
   path: '/hivelog/hive/{hive}/edit'
   defaults:

@@ -205,13 +205,43 @@ reachable from the site's navigation at all.
   was removed as dead config rather than wired in — `administer
   hivelog` is the only way to create one, matching `ApiClient`/
   `AiProviderConfig`.
-- [[0107-assimilate-mock-sensor-data-module]] — backlog, low priority,
-  dev/demo-only — depends on 0106 so "here's what adding a sensor looks
-  like" has a real add form to point at
+- [[0107-assimilate-mock-sensor-data-module]] — **done** (2026-09-22):
+  a dev/demo-only module provisioning its own demo apiary/hive/sensor
+  devices (weight + temperature_humidity) plus one demo inspection
+  (needed since `HiveContextBuilder` is sensor-less by design —
+  [[0085-sensor-less-insight-prototype]] — so nexus has real inspection
+  context to reason over, not just sensor readings), then generating a
+  believable random-walk trend of new `SensorReading` rows on every
+  cron run. Guards against production contamination via
+  `hook_requirements()`'s `install`-phase `REQUIREMENT_ERROR` (refuses
+  to install if any real apiary already has AI insights enabled) plus a
+  live re-check on every `assimilate_cron()` run. Verified live: the
+  Sensors panel, dashboard, and `nexus_cron()` all picked up the demo
+  data exactly like real data.
 - [[0108-custom-controller-table-styling-parity]] — **done** (2026-09-22):
   `ApiClientController`/`AiProviderConfigController`/`SensorDeviceController`'s
   bare summary tables now match every other custom controller's styled
   `hivelog-*-table` convention
+- [[0110-hive-apiary-stat-tiles]] — **done** (2026-09-22): the dashboard's
+  own `hivelog:stat-tile` row now also appears on the Hive/Apiary
+  canonical pages — an AI Insight tile (nexus) and one tile per sensor
+  device (nanoprobe), via two new core hooks
+  (`hook_hivelog_hive_stat_tiles()`/`hook_hivelog_apiary_stat_tiles()`)
+  mirroring 0105's own app-nav descriptor pattern. Sensor tiles link to
+  a brand-new full-history readings page
+  (`entity.sensor_device.readings`), filterable by metric/date range —
+  the first collection route `SensorReading` has ever had. Same-day
+  follow-up: the dashboard's own "AI Insights" section (`/hivelog`,
+  owned by [[ai-apiary-insights]]) got the same tile treatment — see
+  that project's own notes.
+- [[0111-hive-page-declutter-dedicated-insights-page]] — **done**
+  (2026-09-22): with the stat tiles from 0110 giving a compact preview,
+  the Hive canonical page's full AI Insight and Sensors panels moved to
+  a new dedicated `entity.hive.insights` page
+  (`/hivelog/hive/{hive}/insights`), via a second, page-specific core
+  hook (`hook_hivelog_hive_insights_panels()`) — the Apiary canonical
+  page's own copies of both panels are unchanged, scoped to just the
+  page the user named.
 
 ## Open questions
 - Exact alert thresholds for Phase 2 (how large a weight drop, how far

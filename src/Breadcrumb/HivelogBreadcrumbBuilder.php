@@ -138,7 +138,9 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
       }
     }
 
-    // Hive-level routes: add apiary ancestor link then hive crumb.
+    // Hive-level routes: add apiary ancestor link then hive crumb. Named
+    // sub-pages (task 0111's Insights page) add a terminal crumb after
+    // the hive link, mirroring $apiary_page_crumbs above.
     $hive = $route_match->getParameter('hive');
     if ($hive && is_object($hive)) {
       $breadcrumb->addCacheableDependency($hive);
@@ -148,6 +150,14 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
         $breadcrumb->addLink(Link::createFromRoute($hive_apiary->label(), 'entity.apiary.canonical', ['apiary' => $hive_apiary->id()]));
       }
       $breadcrumb->addLink(Link::createFromRoute($hive->label(), 'entity.hive.canonical', ['hive' => $hive->id()]));
+
+      $hive_page_crumbs = [
+        'entity.hive.insights' => $this->t('Insights'),
+      ];
+      if (isset($hive_page_crumbs[$route_name])) {
+        $breadcrumb->addLink(Link::createFromRoute($hive_page_crumbs[$route_name], $route_name, ['hive' => $hive->id()]));
+        return $breadcrumb;
+      }
     }
 
     // Inspection-level routes: add apiary and hive ancestor links then

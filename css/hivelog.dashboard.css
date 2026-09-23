@@ -101,27 +101,6 @@
 }
 
 /*
- * Stat-tile grid: hairline-divided (1px gap over a light background),
- * fills the row on desktop, one column on small screens. Populated by
- * criterion 4.
- */
-.hivelog-stat-tiles {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
-  gap: 1px;
-  overflow: hidden;
-  border: 1px solid var(--hivelog-hairline);
-  border-radius: 6px;
-  background: var(--hivelog-hairline);
-}
-
-@media (max-width: 768px) {
-  .hivelog-stat-tiles {
-    grid-template-columns: 1fr;
-  }
-}
-
-/*
  * "Needs attention" — the priority queue. A panel of rows, each with a
  * left severity stripe (critical / warning) and a mono status chip.
  * Criterion 3.

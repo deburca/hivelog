@@ -11,23 +11,52 @@ use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\Hive;
 
 /**
- * Implements hook_hivelog_hive_view_panels().
- *
- * See hivelog.api.php and
- * docs/project-management/decisions/0099-submodule-canonical-page-panel-hook.md.
- */
-function nanoprobe_hivelog_hive_view_panels(Hive $hive) {
-  return \Drupal::service('nanoprobe.sensor_panel_builder')->buildHivePanel($hive);
-}
-
-/**
  * Implements hook_hivelog_apiary_view_panels().
+ *
+ * The apiary-scoped Sensors panel stays on the main Apiary canonical
+ * page — only the hive-scoped one moved to the dedicated Insights page
+ * (task 0111); see nexus_hivelog_apiary_view_panels()'s own docblock
+ * for why apiary is unaffected.
  *
  * See hivelog.api.php and
  * docs/project-management/decisions/0099-submodule-canonical-page-panel-hook.md.
  */
 function nanoprobe_hivelog_apiary_view_panels(Apiary $apiary) {
   return \Drupal::service('nanoprobe.sensor_panel_builder')->buildApiaryPanel($apiary);
+}
+
+/**
+ * Implements hook_hivelog_hive_insights_panels().
+ *
+ * Moved here from hook_hivelog_hive_view_panels() (task 0111) — the
+ * panel's own content/logic (`buildHivePanel()`) is unchanged, only
+ * which page it renders on.
+ *
+ * See hivelog.api.php and
+ * docs/project-management/decisions/0099-submodule-canonical-page-panel-hook.md.
+ */
+function nanoprobe_hivelog_hive_insights_panels(Hive $hive) {
+  return \Drupal::service('nanoprobe.sensor_panel_builder')->buildHivePanel($hive);
+}
+
+/**
+ * Implements hook_hivelog_hive_stat_tiles().
+ *
+ * See hivelog.api.php and
+ * docs/project-management/decisions/0099-submodule-canonical-page-panel-hook.md.
+ */
+function nanoprobe_hivelog_hive_stat_tiles(Hive $hive) {
+  return \Drupal::service('nanoprobe.sensor_panel_builder')->buildHiveStatTiles($hive);
+}
+
+/**
+ * Implements hook_hivelog_apiary_stat_tiles().
+ *
+ * See hivelog.api.php and
+ * docs/project-management/decisions/0099-submodule-canonical-page-panel-hook.md.
+ */
+function nanoprobe_hivelog_apiary_stat_tiles(Apiary $apiary) {
+  return \Drupal::service('nanoprobe.sensor_panel_builder')->buildApiaryStatTiles($apiary);
 }
 
 /**

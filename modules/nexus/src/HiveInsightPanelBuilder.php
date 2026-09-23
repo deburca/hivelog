@@ -10,6 +10,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
+use Drupal\Core\Url;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\Hive;
 use Drupal\hivelog\Utility\SimpleBulletText;
@@ -45,6 +46,14 @@ class HiveInsightPanelBuilder {
    */
   protected const STALE_THRESHOLD_SECONDS = 48 * 3600;
 
+  /**
+   * The panel container's HTML id — the stat tile's anchor-link target.
+   *
+   * Shared between the Hive and Apiary pages since only one of these
+   * panels ever appears on a given page.
+   */
+  public const PANEL_ANCHOR_ID = 'nexus-hive-insight';
+
   public function __construct(
     protected EntityTypeManagerInterface $entityTypeManager,
     protected AccountInterface $currentUser,
@@ -56,7 +65,14 @@ class HiveInsightPanelBuilder {
   }
 
   /**
-   * Builds the AI Insight panel for a Hive canonical page.
+   * Builds the AI Insight panel for the Hive's dedicated Insights page.
+   *
+   * Lived on the Hive canonical page itself until task 0111 moved it
+   * (alongside nanoprobe's Sensors panel) to a separate page, once real
+   * content — a full recommendation, its signals, a trend chart per
+   * sensor — made the canonical page too busy for its own "at a glance"
+   * purpose; the stat tile `buildHiveStatTile()` builds is what stayed
+   * behind, linking here.
    *
    * @param \Drupal\hivelog\Entity\Hive $hive
    *   The hive being displayed.
@@ -101,6 +117,93 @@ class HiveInsightPanelBuilder {
 
     $insight = $this->loadLatestInsight(['scope' => 'apiary', 'apiary' => $apiary->id()]);
     return $this->buildPanel($insight);
+  }
+
+  /**
+   * Builds the AI Insight stat tile descriptor for a Hive canonical page.
+   *
+   * Backs hook_hivelog_hive_stat_tiles() (nexus.module) — task 0110. The
+   * tile links to the full panel already on this same page
+   * (`buildHivePanel()`, anchored at `self::PANEL_ANCHOR_ID`) rather than
+   * a separate page: `HiveInsight` has exactly one recommendation and a
+   * bullet-point `signals` string, not a structured checklist of
+   * discrete to-do items, so there's nothing a dedicated page would show
+   * that the existing panel doesn't already.
+   *
+   * @param \Drupal\hivelog\Entity\Hive $hive
+   *   The hive being displayed.
+   *
+   * @return array
+   *   A single-item tile descriptor array (see
+   *   hook_hivelog_hive_stat_tiles()'s own docblock), or an empty array
+   *   if there's no insight to summarise.
+   */
+  public function buildHiveStatTile(Hive $hive): array {
+    $insight = $this->loadLatestInsight(['scope' => 'hive', 'hive' => $hive->id()]);
+    return $this->buildStatTile($insight, Url::fromRoute('entity.hive.insights', ['hive' => $hive->id()], ['fragment' => self::PANEL_ANCHOR_ID]));
+  }
+
+  /**
+   * Builds the AI Insight stat tile descriptor for an Apiary canonical page.
+   *
+   * @param \Drupal\hivelog\Entity\Apiary $apiary
+   *   The apiary being displayed.
+   *
+   * @return array
+   *   A single-item tile descriptor array, or an empty array.
+   */
+  public function buildApiaryStatTile(Apiary $apiary): array {
+    $insight = $this->loadLatestInsight(['scope' => 'apiary', 'apiary' => $apiary->id()]);
+    return $this->buildStatTile($insight, Url::fromRoute('entity.apiary.canonical', ['apiary' => $apiary->id()], ['fragment' => self::PANEL_ANCHOR_ID]));
+  }
+
+  /**
+   * Assembles one tile descriptor from an insight, or nothing.
+   *
+   * @param \Drupal\nexus\Entity\HiveInsight|null $insight
+   *   The insight to summarise, or NULL.
+   * @param \Drupal\Core\Url $anchor_url
+   *   Where the tile links — the full panel, wherever it now lives (the
+   *   Hive Insights page for a hive-scoped insight, task 0111; the same
+   *   Apiary canonical page for an apiary-scoped one, unchanged).
+   *
+   * @return array
+   *   `['nexus_ai_insight' => [...]]`, or an empty array if $insight is
+   *   NULL.
+   */
+  protected function buildStatTile(?HiveInsight $insight, Url $anchor_url): array {
+    if (!$insight) {
+      return [];
+    }
+
+    $verdict = $insight->get('verdict')->value;
+    $generated = (int) $insight->get('generated')->value;
+
+    return [
+      'nexus_ai_insight' => [
+        'value' => HiveInsight::VERDICTS[$verdict] ?? $verdict,
+        'label' => $this->t('AI Insight'),
+        'url' => $anchor_url,
+        'sublabel' => $this->t('Checked @time ago', ['@time' => $this->dateFormatter->formatTimeDiffSince($generated)]),
+        'sublabel_variant' => $this->verdictTileVariant($verdict),
+        'weight' => 0,
+      ],
+    ];
+  }
+
+  /**
+   * Maps a verdict to one of the stat tile's three sublabel variants.
+   *
+   * Same severity ordering as verdictMessageClass(), translated to the
+   * stat-tile component's own three-value scheme (default|critical|
+   * warning — it has no positive/status variant of its own).
+   */
+  protected function verdictTileVariant(string $verdict): string {
+    return match ($verdict) {
+      'act_now' => 'critical',
+      'inspect_soon' => 'warning',
+      default => 'default',
+    };
   }
 
   /**
@@ -151,7 +254,10 @@ class HiveInsightPanelBuilder {
     $build = [
       'nexus_hive_insight' => [
         '#type' => 'container',
-        '#attributes' => ['class' => ['nexus-hive-insight-panel']],
+        '#attributes' => [
+          'class' => ['nexus-hive-insight-panel'],
+          'id' => self::PANEL_ANCHOR_ID,
+        ],
         '#weight' => 6,
         'heading' => [
           '#type' => 'html_tag',

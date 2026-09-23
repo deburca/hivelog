@@ -9,6 +9,8 @@ use Drupal\Core\Url;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\Hive;
 use Drupal\nanoprobe\Entity\SensorDevice;
+use Drupal\nanoprobe\Entity\SensorReading;
+use Drupal\nanoprobe\Form\SensorReadingFilterForm;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 /**
@@ -92,6 +94,169 @@ class SensorDeviceController extends ControllerBase {
     }
 
     return $build;
+  }
+
+  /**
+   * Builds the full-history sensor readings page (task 0110).
+   *
+   * Linked from the per-sensor stat tile `SensorPanelBuilder` contributes
+   * to the Hive/Apiary canonical pages — unlike that panel's own
+   * trend chart (capped at `SensorPanelBuilder::TREND_WINDOW_DAYS`),
+   * this shows every metric's complete history, filterable by metric
+   * and date range via `SensorReadingFilterForm`.
+   *
+   * @param \Drupal\nanoprobe\Entity\SensorDevice $sensor_device
+   *   The device to show readings for.
+   *
+   * @return array
+   *   A render array.
+   */
+  public function readings(SensorDevice $sensor_device): array {
+    if (!$sensor_device->access('view')) {
+      throw new AccessDeniedHttpException();
+    }
+
+    $build['filter'] = $this->formBuilder()->getForm(SensorReadingFilterForm::class, $sensor_device);
+
+    [$start, $end, $range_label] = $this->extractReadingsDateRange($sensor_device);
+    $metrics = $this->extractReadingsMetricFilter($sensor_device);
+
+    $chart_builder = $this->trendChartBuilder();
+    $chart_sections = [];
+    foreach ($metrics as $metric) {
+      $metric_label = SensorReading::METRIC_TYPES[$metric] ?? $metric;
+      $chart_label = $this->t('@metric, @range', ['@metric' => $metric_label, '@range' => $range_label]);
+      $chart = $chart_builder->buildChart($sensor_device, $metric, $start, $end, $chart_label);
+      if (!empty($chart)) {
+        $chart_sections['metric_' . $metric] = [
+          '#type' => 'container',
+          '#attributes' => ['class' => ['nanoprobe-sensor-metric']],
+          'heading' => [
+            '#type' => 'html_tag',
+            '#tag' => 'h3',
+            '#value' => $metric_label,
+          ],
+          'chart' => $chart,
+        ];
+      }
+    }
+
+    if ($chart_sections) {
+      $build['charts'] = $chart_sections;
+    }
+    else {
+      $build['empty'] = [
+        '#markup' => '<p>' . $this->t('No readings with at least two distinct days of data match this filter yet.') . '</p>',
+      ];
+    }
+
+    return $build;
+  }
+
+  /**
+   * Extracts the date range for readings(), from filters or full history.
+   *
+   * @param \Drupal\nanoprobe\Entity\SensorDevice $sensor_device
+   *   The device being shown — its own `created` time is the default
+   *   range start when no `date_from` filter is given.
+   *
+   * @return array
+   *   `[int $start, int $end, \Drupal\Core\StringTranslation\TranslatableMarkup $range_label]`.
+   */
+  protected function extractReadingsDateRange(SensorDevice $sensor_device): array {
+    $request = $this->getRequest();
+    $date_from = $this->extractValidDate((string) $request->query->get('date_from', ''));
+    $date_to = $this->extractValidDate((string) $request->query->get('date_to', ''));
+
+    $start = $date_from !== '' ? (int) strtotime($date_from . ' 00:00:00') : (int) $sensor_device->get('created')->value;
+    $end = $date_to !== '' ? (int) strtotime($date_to . ' 23:59:59') : $this->time()->getRequestTime();
+
+    $range_label = $date_from !== '' || $date_to !== ''
+      ? $this->t('@from to @to', [
+        '@from' => $date_from !== '' ? $date_from : $this->dateFormatter()->format($start, 'custom', 'Y-m-d'),
+        '@to' => $date_to !== '' ? $date_to : $this->dateFormatter()->format($end, 'custom', 'Y-m-d'),
+      ])
+      : $this->t('full history');
+
+    return [$start, $end, $range_label];
+  }
+
+  /**
+   * Validates a `date_from`/`date_to` query value as a plain `Y-m-d` string.
+   *
+   * @param string $value
+   *   The raw query string value.
+   *
+   * @return string
+   *   $value if it's a genuine `Y-m-d` date, otherwise an empty string —
+   *   a malformed/hand-crafted query value falls back to the default
+   *   range rather than being passed to strtotime() unchecked.
+   */
+  protected function extractValidDate(string $value): string {
+    $value = trim($value);
+    if ($value === '' || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $value)) {
+      return '';
+    }
+    return checkdate((int) substr($value, 5, 2), (int) substr($value, 8, 2), (int) substr($value, 0, 4)) ? $value : '';
+  }
+
+  /**
+   * Extracts which metrics readings() should chart.
+   *
+   * @param \Drupal\nanoprobe\Entity\SensorDevice $sensor_device
+   *   The device being shown.
+   *
+   * @return string[]
+   *   The single filtered metric, if valid for this device — otherwise
+   *   every metric the device is expected to report.
+   */
+  protected function extractReadingsMetricFilter(SensorDevice $sensor_device): array {
+    $requested = trim((string) $this->getRequest()->query->get('metric', ''));
+    $available = $sensor_device->getConfigMetrics();
+    return ($requested !== '' && in_array($requested, $available, TRUE)) ? [$requested] : $available;
+  }
+
+  /**
+   * Title callback for the readings() page.
+   *
+   * @param \Drupal\nanoprobe\Entity\SensorDevice $sensor_device
+   *   The device being shown.
+   *
+   * @return string
+   *   The page title.
+   */
+  public function readingsTitle(SensorDevice $sensor_device): string {
+    return (string) $this->t('Sensor Readings: @label', ['@label' => $sensor_device->label()]);
+  }
+
+  /**
+   * The current request.
+   *
+   * @return \Symfony\Component\HttpFoundation\Request
+   *   The current request.
+   */
+  protected function getRequest() {
+    return \Drupal::request();
+  }
+
+  /**
+   * The sensor trend chart builder service.
+   *
+   * @return \Drupal\nanoprobe\SensorTrendChartBuilder
+   *   The trend chart builder.
+   */
+  protected function trendChartBuilder() {
+    return \Drupal::service('nanoprobe.sensor_trend_chart_builder');
+  }
+
+  /**
+   * The time service.
+   *
+   * @return \Drupal\Component\Datetime\TimeInterface
+   *   The time service.
+   */
+  protected function time() {
+    return \Drupal::time();
   }
 
   /**

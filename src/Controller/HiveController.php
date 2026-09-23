@@ -19,6 +19,7 @@ use Drupal\hivelog\Entity\Queen;
 use Drupal\hivelog\Form\HivelogCalendarFilterForm;
 use Drupal\hivelog\Form\HivelogInspectionFilterForm;
 use Drupal\hivelog\Form\HivelogQueenObservationFilterForm;
+use Drupal\hivelog\HivelogStatTileBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -66,6 +67,11 @@ class HiveController extends ControllerBase {
   protected RendererInterface $renderer;
 
   /**
+   * The stat-tile builder.
+   */
+  protected HivelogStatTileBuilder $statTileBuilder;
+
+  /**
    * Constructs a HiveController.
    */
   public function __construct(
@@ -75,6 +81,7 @@ class HiveController extends ControllerBase {
     FileUrlGeneratorInterface $file_url_generator,
     RequestStack $request_stack,
     RendererInterface $renderer,
+    HivelogStatTileBuilder $stat_tile_builder,
   ) {
     // $entityTypeManager / $entityFormBuilder / $formBuilder are untyped
     // properties inherited from ControllerBase; assign them rather than
@@ -85,6 +92,7 @@ class HiveController extends ControllerBase {
     $this->fileUrlGenerator = $file_url_generator;
     $this->requestStack = $request_stack;
     $this->renderer = $renderer;
+    $this->statTileBuilder = $stat_tile_builder;
   }
 
   /**
@@ -98,6 +106,7 @@ class HiveController extends ControllerBase {
       $container->get('file_url_generator'),
       $container->get('request_stack'),
       $container->get('renderer'),
+      $container->get('hivelog.stat_tile_builder'),
     );
   }
 
@@ -116,6 +125,16 @@ class HiveController extends ControllerBase {
    */
   public function view(Hive $hive) {
     $build = [];
+
+    // "At a glance" stat tiles — optional submodules only (e.g. nexus's
+    // AI Insight, nanoprobe's per-sensor vitals); hivelog core
+    // contributes none of its own here. See hivelog.api.php's
+    // hook_hivelog_hive_stat_tiles() and ADR-0099. Weight -1 keeps this
+    // first regardless of the other sections' own weights.
+    $stat_tiles = $this->statTileBuilder->buildForHive($hive);
+    if (!empty($stat_tiles)) {
+      $build['stat_tiles'] = $stat_tiles + ['#weight' => -1];
+    }
 
     // Render the hive entity fields.
     $view_builder = $this->entityTypeManager->getViewBuilder('hive');
@@ -406,6 +425,45 @@ class HiveController extends ControllerBase {
    */
   public function title(Hive $hive) {
     return $hive->label();
+  }
+
+  /**
+   * Builds the Hive's dedicated Insights page (task 0111).
+   *
+   * The AI Insight and Sensors panels moved here from the main
+   * canonical page above once real content (full trend charts, a
+   * recommendation and its signals) made that page too busy for its own
+   * "at a glance" purpose — see hivelog.api.php's
+   * hook_hivelog_hive_insights_panels() and ADR-0099. `hivelog` core
+   * contributes nothing here itself; this is purely an injection point
+   * for optional submodules, reached from the stat tiles that stayed on
+   * the main page.
+   *
+   * @param \Drupal\hivelog\Entity\Hive $hive
+   *   The hive being displayed.
+   *
+   * @return array
+   *   A render array.
+   */
+  public function insights(Hive $hive): array {
+    $build = [];
+    foreach ($this->moduleHandler()->invokeAll('hivelog_hive_insights_panels', [$hive]) as $key => $panel) {
+      $build[$key] = $panel;
+    }
+    return $build;
+  }
+
+  /**
+   * Title callback for the Hive Insights page.
+   *
+   * @param \Drupal\hivelog\Entity\Hive $hive
+   *   The hive being displayed.
+   *
+   * @return string
+   *   The page title.
+   */
+  public function insightsTitle(Hive $hive): string {
+    return (string) $this->t('Insights: @label', ['@label' => $hive->label()]);
   }
 
   /**

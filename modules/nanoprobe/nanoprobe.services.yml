@@ -6,6 +6,15 @@ services:
       - '@current_user'
       - '@datetime.time'
       - '@date.formatter'
+      - '@nanoprobe.sensor_trend_chart_builder'
+      - '@renderer'
+      - '@string_translation'
+  nanoprobe.sensor_trend_chart_builder:
+    class: Drupal\nanoprobe\SensorTrendChartBuilder
+    arguments:
+      - '@entity_type.manager'
+      - '@date.formatter'
+      - '@current_user'
       - '@string_translation'
   nanoprobe.sensor_alert_collector:
     class: Drupal\nanoprobe\SensorAlertCollector

@@ -641,6 +641,33 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
+   * Hive Insights page (task 0111): Home › HiveLog › <Apiary> › <Hive> › Insights.
+   *
+   * Unlike the canonical page (hive label is the terminal crumb),
+   * a named sub-page adds a distinct terminal after the hive link —
+   * mirrors testBuildApiaryFinancialReport()'s own pattern for
+   * `$apiary_page_crumbs`.
+   */
+  public function testBuildHiveInsightsPage(): void {
+    $apiary = $this->createApiaryMock(1, 'Home Apiary');
+    $hive = $this->createHiveMock(5, 'Hive Alpha', $apiary);
+    $route_match = $this->createRouteMatch('entity.hive.insights');
+    $route_match->method('getParameter')->willReturnMap([
+      ['apiary', NULL],
+      ['hive', $hive],
+    ]);
+
+    $links = $this->builder->build($route_match)->getLinks();
+
+    $this->assertCount(5, $links);
+    $this->assertEquals('Hive Alpha', (string) $links[3]->getText());
+    $this->assertEquals('entity.hive.canonical', $links[3]->getUrl()->getRouteName());
+    $this->assertEquals('Insights', (string) $links[4]->getText());
+    $this->assertEquals('entity.hive.insights', $links[4]->getUrl()->getRouteName());
+    $this->assertEquals(['hive' => 5], $links[4]->getUrl()->getRouteParameters());
+  }
+
+  /**
    * Hive edit: apiary and hive ancestor links are both added (5 links total).
    */
   public function testBuildHiveEditForm(): void {
