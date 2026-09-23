@@ -262,16 +262,7 @@ class Apiary extends ContentEntityBase implements EntityChangedInterface, Entity
         'type' => 'boolean_checkbox',
         'weight' => 7,
       ])
-      ->setDisplayOptions('view', [
-        'label' => 'inline',
-        'type' => 'boolean',
-        'weight' => 7,
-        'settings' => [
-          'format' => 'yes-no',
-        ],
-      ])
-      ->setDisplayConfigurable('form', TRUE)
-      ->setDisplayConfigurable('view', TRUE);
+      ->setDisplayConfigurable('form', TRUE);
 
     $fields['uid']
       ->setLabel(t('Owner'))

@@ -277,6 +277,46 @@ class SensorPanelBuilderTest extends KernelTestBase {
   }
 
   /**
+   * Tests the apiary panel has no heading row at all.
+   *
+   * Unlike the hive panel (which still shows a "Sensors" title and an
+   * "Add Sensor" action, task 0106), the Apiary canonical page's own
+   * panel offers neither (user request, 2026-09-23) —
+   * nanoprobe.sensor_device.add_for_apiary itself is unchanged and
+   * still reachable directly, just not linked here.
+   */
+  public function testApiaryPanelHasNoHeading(): void {
+    $device = SensorDevice::create([
+      'label' => 'Weather Station',
+      'apiary' => $this->apiary->id(),
+      'scope' => 'apiary',
+      'device_type' => 'temperature_humidity',
+      'uid' => $this->owner->id(),
+    ]);
+    $device->save();
+    $this->createReading($device, 'temp_external_c', 18.0, 1);
+    $this->createReading($device, 'temp_external_c', 19.5, 0);
+
+    $builder = \Drupal::service('nanoprobe.sensor_panel_builder');
+    $apiary_panel = $builder->buildApiaryPanel($this->apiary);
+
+    $this->assertArrayHasKey('nanoprobe_sensors', $apiary_panel);
+    $this->assertArrayNotHasKey('heading', $apiary_panel['nanoprobe_sensors']);
+  }
+
+  /**
+   * Tests an apiary with no attached devices gets no panel at all.
+   *
+   * With the "Add Sensor" action gone (see above), there's nothing left
+   * to justify an empty-state panel either — unlike the hive panel,
+   * which still shows one when the current user could add a device.
+   */
+  public function testApiaryWithNoDevicesHasNoPanel(): void {
+    $builder = \Drupal::service('nanoprobe.sensor_panel_builder');
+    $this->assertSame([], $builder->buildApiaryPanel($this->apiary));
+  }
+
+  /**
    * Tests a user without access to the apiary sees no panel at all.
    *
    * The panel-builder respects ApiaryAccessTrait-derived access itself,

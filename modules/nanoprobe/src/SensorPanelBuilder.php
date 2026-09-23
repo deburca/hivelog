@@ -127,15 +127,17 @@ class SensorPanelBuilder {
    *
    * Apiary-scoped devices only — hive-scoped devices attached to hives
    * within this apiary appear on their own hive's page instead, not
-   * rolled up here.
+   * rolled up here. No "Add Sensor" action and no "Sensors" title row
+   * here (user request, 2026-09-23) — `nanoprobe.sensor_device.add_for_apiary`
+   * itself is unchanged and still reachable directly, just not linked
+   * from this panel.
    *
    * @param \Drupal\hivelog\Entity\Apiary $apiary
    *   The apiary being displayed.
    *
    * @return array
    *   A render array keyed `nanoprobe_sensors`, or an empty array if
-   *   there's neither accessible sensor data nor an "Add Sensor" link
-   *   to offer the current user.
+   *   there's no accessible sensor data to show.
    */
   public function buildApiaryPanel(Apiary $apiary): array {
     $devices = $this->loadAccessibleDevices([
@@ -143,8 +145,7 @@ class SensorPanelBuilder {
       'scope' => 'apiary',
       'enabled' => 1,
     ]);
-    $add_url = Url::fromRoute('nanoprobe.sensor_device.add_for_apiary', ['apiary' => $apiary->id()]);
-    return $this->buildPanel($devices, $add_url);
+    return $this->buildPanel($devices, NULL, show_heading: FALSE);
   }
 
   /**
@@ -300,10 +301,17 @@ class SensorPanelBuilder {
    *
    * @param \Drupal\nanoprobe\Entity\SensorDevice[] $devices
    *   Devices to include, already access-filtered.
-   * @param \Drupal\Core\Url $add_url
-   *   The hive/apiary-contextual "Add Sensor" route (task 0106) — shown
-   *   only when the current user actually has access to it, so this
-   *   never links a beekeeper into a 403.
+   * @param \Drupal\Core\Url|null $add_url
+   *   The hive-contextual "Add Sensor" route (task 0106) — shown only
+   *   when the current user actually has access to it, so this never
+   *   links a beekeeper into a 403. NULL suppresses the action entirely
+   *   (the Apiary canonical page's own panel doesn't offer it — see
+   *   buildApiaryPanel()'s own docblock).
+   * @param bool $show_heading
+   *   Whether to render the "Sensors" title row at all. FALSE for the
+   *   Apiary canonical page's own panel (user request, 2026-09-23) —
+   *   with the Add Sensor action already gone there, a title-only row
+   *   had nothing left to justify itself.
    *
    * @return array
    *   A render array keyed `nanoprobe_sensors`, or an empty array if
@@ -311,7 +319,7 @@ class SensorPanelBuilder {
    *   link to offer (an attached device that has never reported yet
    *   contributes nothing on its own).
    */
-  protected function buildPanel(array $devices, Url $add_url): array {
+  protected function buildPanel(array $devices, ?Url $add_url, bool $show_heading = TRUE): array {
     $device_sections = [];
     foreach ($devices as $device) {
       $section = $this->buildDeviceSection($device);
@@ -320,32 +328,41 @@ class SensorPanelBuilder {
       }
     }
 
-    $can_add = $add_url->access($this->currentUser);
+    $can_add = $add_url && $add_url->access($this->currentUser);
     if (empty($device_sections) && !$can_add) {
       return [];
     }
 
-    $heading = [
+    $panel = [
       '#type' => 'container',
-      '#attributes' => ['class' => ['hivelog-list-heading']],
-      'title' => [
-        '#type' => 'html_tag',
-        '#tag' => 'h2',
-        '#value' => $this->t('Sensors'),
-        '#attributes' => ['class' => ['hivelog-list-heading__title']],
-      ],
+      '#attributes' => ['class' => ['nanoprobe-sensors-panel']],
+      '#weight' => 7.5,
     ];
-    if ($can_add) {
-      $heading['add'] = [
-        '#type' => 'component',
-        '#component' => 'hivelog:button',
-        '#props' => [
-          'label' => (string) $this->t('Add Sensor'),
-          'url' => $add_url->toString(),
-          'variant' => 'primary',
-          'extra_classes' => 'hivelog-list-heading__action',
+
+    if ($show_heading) {
+      $heading = [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['hivelog-list-heading']],
+        'title' => [
+          '#type' => 'html_tag',
+          '#tag' => 'h2',
+          '#value' => $this->t('Sensors'),
+          '#attributes' => ['class' => ['hivelog-list-heading__title']],
         ],
       ];
+      if ($can_add) {
+        $heading['add'] = [
+          '#type' => 'component',
+          '#component' => 'hivelog:button',
+          '#props' => [
+            'label' => (string) $this->t('Add Sensor'),
+            'url' => $add_url->toString(),
+            'variant' => 'primary',
+            'extra_classes' => 'hivelog-list-heading__action',
+          ],
+        ];
+      }
+      $panel['heading'] = $heading;
     }
 
     if (empty($device_sections)) {
@@ -355,12 +372,7 @@ class SensorPanelBuilder {
     }
 
     return [
-      'nanoprobe_sensors' => [
-        '#type' => 'container',
-        '#attributes' => ['class' => ['nanoprobe-sensors-panel']],
-        '#weight' => 7.5,
-        'heading' => $heading,
-      ] + $device_sections,
+      'nanoprobe_sensors' => $panel + $device_sections,
     ];
   }
 
