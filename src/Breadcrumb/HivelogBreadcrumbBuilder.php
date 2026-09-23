@@ -94,6 +94,9 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
       'entity.inventory_item.collection' => $this->t('Inventory Items'),
       'entity.inventory_purchase.collection' => $this->t('Inventory Purchases'),
       'entity.product.collection' => $this->t('Products'),
+      'entity.sensor_device.collection' => $this->t('Sensor Devices'),
+      'entity.ai_provider_config.collection' => $this->t('AI Provider Configs'),
+      'entity.api_client.collection' => $this->t('API Clients'),
     ];
 
     // Collection listings + the combined report: their own name is the
@@ -286,6 +289,60 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
           $breadcrumb->addLink(Link::createFromRoute($entity_apiary->label(), 'entity.apiary.canonical', ['apiary' => $entity_apiary->id()]));
         }
         $breadcrumb->addLink(Link::createFromRoute($entity->label(), $canonical_route, [$param => $entity->id()]));
+      }
+    }
+
+    // Sensor device routes: threaded through the device's own collection
+    // page rather than its apiary/hive ancestor — devices are managed
+    // from /hivelog/sensor-devices (task 0106) regardless of scope, and
+    // an apiary/hive trail was getting collapsed behind the theme's own
+    // ellipsis truncation, effectively hiding where the user actually
+    // navigated from. Named sub-pages (the full-history readings page,
+    // task 0110; the config download page) add a terminal crumb after
+    // the device link, mirroring $hive_page_crumbs above.
+    $sensor_device = $route_match->getParameter('sensor_device');
+    if ($sensor_device && is_object($sensor_device)) {
+      $breadcrumb->addCacheableDependency($sensor_device);
+      $breadcrumb->addLink(Link::createFromRoute($collections['entity.sensor_device.collection'], 'entity.sensor_device.collection'));
+      $breadcrumb->addLink(Link::createFromRoute($sensor_device->label(), 'entity.sensor_device.canonical', ['sensor_device' => $sensor_device->id()]));
+
+      $sensor_device_page_crumbs = [
+        'entity.sensor_device.readings' => $this->t('Readings'),
+        'nanoprobe.sensor_device.config' => $this->t('Download Configuration'),
+      ];
+      if (isset($sensor_device_page_crumbs[$route_name])) {
+        $breadcrumb->addLink(Link::createFromRoute($sensor_device_page_crumbs[$route_name], $route_name, ['sensor_device' => $sensor_device->id()]));
+        return $breadcrumb;
+      }
+    }
+
+    // AI Provider Config routes (task 0102/0104): a global config entity
+    // with no apiary/hive ancestor, so its own collection page is the
+    // closest thing it has to a parent — thread through it, unlike
+    // Apiary (which skips its own collection per ADR-0057, since it
+    // sits above the whole apiary/hive/… hierarchy rather than beside
+    // it).
+    $ai_provider_config = $route_match->getParameter('ai_provider_config');
+    if ($ai_provider_config && is_object($ai_provider_config)) {
+      $breadcrumb->addCacheableDependency($ai_provider_config);
+      $breadcrumb->addLink(Link::createFromRoute($collections['entity.ai_provider_config.collection'], 'entity.ai_provider_config.collection'));
+      $breadcrumb->addLink(Link::createFromRoute($ai_provider_config->label(), 'entity.ai_provider_config.canonical', ['ai_provider_config' => $ai_provider_config->id()]));
+    }
+
+    // API Client routes (task 0101): same top-level shape as AI Provider
+    // Config above — a global credential entity with no apiary/hive
+    // ancestor, threaded through its own collection page. The
+    // token-regeneration confirmation form adds a named terminal crumb
+    // after the client link.
+    $api_client = $route_match->getParameter('api_client');
+    if ($api_client && is_object($api_client)) {
+      $breadcrumb->addCacheableDependency($api_client);
+      $breadcrumb->addLink(Link::createFromRoute($collections['entity.api_client.collection'], 'entity.api_client.collection'));
+      $breadcrumb->addLink(Link::createFromRoute($api_client->label(), 'entity.api_client.canonical', ['api_client' => $api_client->id()]));
+
+      if ($route_name === 'collective.api_client.regenerate_token') {
+        $breadcrumb->addLink(Link::createFromRoute($this->t('Regenerate Token'), $route_name, ['api_client' => $api_client->id()]));
+        return $breadcrumb;
       }
     }
 

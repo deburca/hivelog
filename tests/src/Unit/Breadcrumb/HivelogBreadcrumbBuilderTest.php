@@ -366,6 +366,9 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
       'inventory items' => ['entity.inventory_item.collection', 'Inventory Items'],
       'inventory purchases' => ['entity.inventory_purchase.collection', 'Inventory Purchases'],
       'products' => ['entity.product.collection', 'Products'],
+      'sensor devices' => ['entity.sensor_device.collection', 'Sensor Devices'],
+      'ai provider configs' => ['entity.ai_provider_config.collection', 'AI Provider Configs'],
+      'api clients' => ['entity.api_client.collection', 'API Clients'],
       'combined financial report' => ['hivelog.apiaries.financial_report', 'Financial Report: All Apiaries'],
     ];
   }
@@ -405,6 +408,15 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
       ],
       'product' => [
         'entity.product.add_form', 'entity.product.collection', 'Products',
+      ],
+      'sensor device' => [
+        'entity.sensor_device.add_form', 'entity.sensor_device.collection', 'Sensor Devices',
+      ],
+      'ai provider config' => [
+        'entity.ai_provider_config.add_form', 'entity.ai_provider_config.collection', 'AI Provider Configs',
+      ],
+      'api client' => [
+        'entity.api_client.add_form', 'entity.api_client.collection', 'API Clients',
       ],
     ];
   }
@@ -463,6 +475,160 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $links = $this->builder->build($route_match)->getLinks();
     $this->assertCount(4, $links);
     $this->assertEquals('Honey', (string) $links[3]->getText());
+  }
+
+  /**
+   * Sensor device canonical, hive-scoped: threads through its own collection.
+   *
+   * Home › HiveLog › Sensor Devices › <Device> — not the apiary/hive
+   * ancestry, even though a hive-scoped device has one (task 0111
+   * follow-up: users reach a device from /hivelog/sensor-devices
+   * regardless of scope, and an apiary/hive trail was getting collapsed
+   * behind the theme's own ellipsis truncation).
+   */
+  public function testBuildSensorDeviceCanonicalHiveScoped(): void {
+    $apiary = $this->createApiaryMock(7, 'Ravnholt Home');
+    $hive = $this->createHiveMock(5, 'Hive Alpha', $apiary);
+    $device = $this->createSensorDeviceMock(12, 'VV-01 Scale', $apiary, $hive);
+    $route_match = $this->createRouteMatch('entity.sensor_device.canonical');
+    $route_match->method('getParameter')->willReturnMap([
+      ['sensor_device', $device],
+    ]);
+
+    $breadcrumb = $this->builder->build($route_match);
+    $links = $breadcrumb->getLinks();
+
+    $this->assertCount(4, $links);
+    $this->assertEquals('Sensor Devices', (string) $links[2]->getText());
+    $this->assertEquals('entity.sensor_device.collection', $links[2]->getUrl()->getRouteName());
+    $this->assertEquals('VV-01 Scale', (string) $links[3]->getText());
+    $this->assertEquals('entity.sensor_device.canonical', $links[3]->getUrl()->getRouteName());
+    $this->assertContains('sensor_device:12', $breadcrumb->getCacheTags());
+  }
+
+  /**
+   * Sensor device canonical, apiary-scoped: same shape as the hive-scoped case.
+   */
+  public function testBuildSensorDeviceCanonicalApiaryScoped(): void {
+    $apiary = $this->createApiaryMock(7, 'Ravnholt Home');
+    $device = $this->createSensorDeviceMock(13, 'VV-Yard Weather', $apiary, NULL);
+    $route_match = $this->createRouteMatch('entity.sensor_device.canonical');
+    $route_match->method('getParameter')->willReturnMap([
+      ['sensor_device', $device],
+    ]);
+
+    $links = $this->builder->build($route_match)->getLinks();
+
+    $this->assertCount(4, $links);
+    $this->assertEquals('Sensor Devices', (string) $links[2]->getText());
+    $this->assertEquals('VV-Yard Weather', (string) $links[3]->getText());
+    $this->assertEquals('entity.sensor_device.canonical', $links[3]->getUrl()->getRouteName());
+  }
+
+  /**
+   * Sensor device readings page (task 0110): named terminal after the device link.
+   */
+  public function testBuildSensorDeviceReadingsPage(): void {
+    $apiary = $this->createApiaryMock(7, 'Ravnholt Home');
+    $device = $this->createSensorDeviceMock(12, 'VV-01 Scale', $apiary, NULL);
+    $route_match = $this->createRouteMatch('entity.sensor_device.readings');
+    $route_match->method('getParameter')->willReturnMap([
+      ['sensor_device', $device],
+    ]);
+
+    $links = $this->builder->build($route_match)->getLinks();
+
+    $this->assertCount(5, $links);
+    $this->assertEquals('VV-01 Scale', (string) $links[3]->getText());
+    $this->assertEquals('entity.sensor_device.canonical', $links[3]->getUrl()->getRouteName());
+    $this->assertEquals('Readings', (string) $links[4]->getText());
+    $this->assertEquals('entity.sensor_device.readings', $links[4]->getUrl()->getRouteName());
+    $this->assertEquals(['sensor_device' => 12], $links[4]->getUrl()->getRouteParameters());
+  }
+
+  /**
+   * Sensor device config-download page: named terminal after the device link.
+   */
+  public function testBuildSensorDeviceConfigPage(): void {
+    $apiary = $this->createApiaryMock(7, 'Ravnholt Home');
+    $device = $this->createSensorDeviceMock(12, 'VV-01 Scale', $apiary, NULL);
+    $route_match = $this->createRouteMatch('nanoprobe.sensor_device.config');
+    $route_match->method('getParameter')->willReturnMap([
+      ['sensor_device', $device],
+    ]);
+
+    $links = $this->builder->build($route_match)->getLinks();
+
+    $this->assertCount(5, $links);
+    $this->assertEquals('Download Configuration', (string) $links[4]->getText());
+    $this->assertEquals('nanoprobe.sensor_device.config', $links[4]->getUrl()->getRouteName());
+  }
+
+  /**
+   * AI Provider Config canonical threads through its own collection.
+   *
+   * No apiary/hive ancestor, so Home › HiveLog › AI Provider Configs ›
+   * <label>.
+   */
+  public function testBuildAiProviderConfigCanonical(): void {
+    $config = $this->createFlatEntityMock('ai_provider_config', 3, 'Production Anthropic Key');
+    $route_match = $this->createRouteMatch('entity.ai_provider_config.canonical');
+    $route_match->method('getParameter')->willReturnMap([
+      ['ai_provider_config', $config],
+    ]);
+
+    $breadcrumb = $this->builder->build($route_match);
+    $links = $breadcrumb->getLinks();
+
+    $this->assertCount(4, $links);
+    $this->assertEquals('AI Provider Configs', (string) $links[2]->getText());
+    $this->assertEquals('entity.ai_provider_config.collection', $links[2]->getUrl()->getRouteName());
+    $this->assertEquals('Production Anthropic Key', (string) $links[3]->getText());
+    $this->assertEquals('entity.ai_provider_config.canonical', $links[3]->getUrl()->getRouteName());
+    $this->assertContains('ai_provider_config:3', $breadcrumb->getCacheTags());
+  }
+
+  /**
+   * API Client canonical threads through its own collection.
+   *
+   * No apiary/hive ancestor, so Home › HiveLog › API Clients ›
+   * <label>.
+   */
+  public function testBuildApiClientCanonical(): void {
+    $client = $this->createFlatEntityMock('api_client', 4, 'Dashboard Tablet');
+    $route_match = $this->createRouteMatch('entity.api_client.canonical');
+    $route_match->method('getParameter')->willReturnMap([
+      ['api_client', $client],
+    ]);
+
+    $breadcrumb = $this->builder->build($route_match);
+    $links = $breadcrumb->getLinks();
+
+    $this->assertCount(4, $links);
+    $this->assertEquals('API Clients', (string) $links[2]->getText());
+    $this->assertEquals('entity.api_client.collection', $links[2]->getUrl()->getRouteName());
+    $this->assertEquals('Dashboard Tablet', (string) $links[3]->getText());
+    $this->assertEquals('entity.api_client.canonical', $links[3]->getUrl()->getRouteName());
+    $this->assertContains('api_client:4', $breadcrumb->getCacheTags());
+  }
+
+  /**
+   * API Client regenerate-token page: named terminal after the client link.
+   */
+  public function testBuildApiClientRegenerateTokenPage(): void {
+    $client = $this->createFlatEntityMock('api_client', 4, 'Dashboard Tablet');
+    $route_match = $this->createRouteMatch('collective.api_client.regenerate_token');
+    $route_match->method('getParameter')->willReturnMap([
+      ['api_client', $client],
+    ]);
+
+    $links = $this->builder->build($route_match)->getLinks();
+
+    $this->assertCount(5, $links);
+    $this->assertEquals('Dashboard Tablet', (string) $links[3]->getText());
+    $this->assertEquals('Regenerate Token', (string) $links[4]->getText());
+    $this->assertEquals('collective.api_client.regenerate_token', $links[4]->getUrl()->getRouteName());
+    $this->assertEquals(['api_client' => 4], $links[4]->getUrl()->getRouteParameters());
   }
 
   /**
@@ -1629,6 +1795,49 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $apiary_ref->entity = $apiary;
     $entity->method('get')->with('apiary')->willReturn($apiary_ref);
 
+    return $entity;
+  }
+
+  /**
+   * Creates a mock SensorDevice entity.
+   *
+   * Mirrors the real entity's own invariant (SensorDevice::preSave()):
+   * `apiary` is always set; `hive` is only set when the device is
+   * hive-scoped — pass NULL for $hive to mock an apiary-scoped device.
+   */
+  private function createSensorDeviceMock(int $id, string $label, ContentEntityInterface $apiary, ?ContentEntityInterface $hive): ContentEntityInterface {
+    $device = $this->createMock(ContentEntityInterface::class);
+    $device->method('id')->willReturn($id);
+    $device->method('label')->willReturn($label);
+    $device->method('getCacheTags')->willReturn(["sensor_device:$id"]);
+    $device->method('getCacheContexts')->willReturn([]);
+    $device->method('getCacheMaxAge')->willReturn(-1);
+
+    $apiary_ref = new \stdClass();
+    $apiary_ref->entity = $apiary;
+    $hive_ref = new \stdClass();
+    $hive_ref->entity = $hive;
+    $device->method('get')->willReturnMap([
+      ['apiary', $apiary_ref],
+      ['hive', $hive_ref],
+    ]);
+
+    return $device;
+  }
+
+  /**
+   * Creates a mock top-level entity with no apiary/hive ancestor.
+   *
+   * Covers AiProviderConfig / ApiClient — global config/credential
+   * entities.
+   */
+  private function createFlatEntityMock(string $entity_type_id, int $id, string $label): ContentEntityInterface {
+    $entity = $this->createMock(ContentEntityInterface::class);
+    $entity->method('id')->willReturn($id);
+    $entity->method('label')->willReturn($label);
+    $entity->method('getCacheTags')->willReturn(["$entity_type_id:$id"]);
+    $entity->method('getCacheContexts')->willReturn([]);
+    $entity->method('getCacheMaxAge')->willReturn(-1);
     return $entity;
   }
 
