@@ -74,6 +74,15 @@ before any physical hardware task proceeds.
      public/community gateway coverage, a dedicated off-grid gateway's
      power design is [[0096-off-grid-gateway-power-design]] — not
      triggered yet.
+- In scope (Phase 3, design captured, not yet started): automated
+  varroa (mite) drop counting via a camera eke mounted below the
+  existing mesh floor, reporting a simple daily numeric metric
+  (`varroa_mite_count_24h`, planned) through the exact same ingestion
+  contract as the Phase 1 metrics — no new entity, unlike the acoustic
+  modality below. Design in
+  [[0101-varroa-camera-sensor-hardware-design]]; build tracked as
+  [[0115-varroa-camera-sensor-hardware-build]] (backlog, low priority,
+  explicitly future-stage).
 - Out of scope (for now):
   - Acoustic sensing (pre-swarm/queenless detection) — needs edge signal
     processing HiveLog does not do; no `SensorEvent`-style entity is
@@ -178,6 +187,10 @@ Static index (in execution order):
   LoRaWAN scale-out trigger (item 3 above) actually happens, and even
   then only if no mains-powered site or public gateway coverage exists
   at the new location.
+- [[0115-varroa-camera-sensor-hardware-build]] — backlog, low priority,
+  **explicitly future-stage** — Phase 3's camera-based varroa sensor;
+  design captured in [[0101-varroa-camera-sensor-hardware-design]] but
+  build not scheduled.
 
 **Added 2026-09-22**, caught during manual UI validation ahead of
 [[ai-apiary-insights]]'s own [[0094-ai-insights-prelaunch-validation]]
@@ -267,6 +280,10 @@ reachable from the site's navigation at all.
   standard-interface extensibility contract, a real market survey of
   current off-the-shelf components, and the corrected power-component
   pairing for [[0095-renewable-power-for-apiary-equipment]])
+- [[0101-varroa-camera-sensor-hardware-design]] (accepted — Phase 3's
+  camera-based mite-drop-counting sensor: eke/optics design, distance/
+  resolution math, and confirmation that its output fits the existing
+  numeric-metric ingestion contract unchanged)
 - [[0003-code-defined-entity-schema]] (baseFieldDefinitions + update
   hooks pattern reused for both new entities)
 - [[0004-custom-controllers-over-view-builders]] (the ingestion route and
