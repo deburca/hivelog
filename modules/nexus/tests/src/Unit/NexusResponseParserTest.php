@@ -125,4 +125,51 @@ class NexusResponseParserTest extends UnitTestCase {
     ]));
   }
 
+  /**
+   * Tests a response wrapped in a ```json ... ``` fence still parses.
+   *
+   * Confirmed live against a real Anthropic call: the system prompt
+   * explicitly asks for no markdown code fences, but the model sent one
+   * anyway.
+   */
+  public function testJsonWrappedInLabelledCodeFenceParses(): void {
+    $json = json_encode([
+      'verdict' => 'act_now',
+      'recommendation' => 'Add a super',
+      'signals' => '- Weight trending up steadily',
+    ]);
+    $values = $this->parser->parse("```json\n$json\n```");
+
+    $this->assertEquals('act_now', $values['verdict']);
+    $this->assertEquals('Add a super', $values['recommendation']);
+  }
+
+  /**
+   * Tests a response wrapped in a plain ``` ... ``` fence (no language tag).
+   */
+  public function testJsonWrappedInPlainCodeFenceParses(): void {
+    $json = json_encode([
+      'verdict' => 'all_clear',
+      'recommendation' => 'No action needed',
+      'signals' => '- Nothing unusual',
+    ]);
+    $values = $this->parser->parse("```\n$json\n```");
+
+    $this->assertEquals('all_clear', $values['verdict']);
+  }
+
+  /**
+   * Tests surrounding whitespace around a fenced response is tolerated.
+   */
+  public function testFencedResponseWithSurroundingWhitespaceParses(): void {
+    $json = json_encode([
+      'verdict' => 'inspect_soon',
+      'recommendation' => 'Check for swarm cells',
+      'signals' => '- Population strong, several supers full',
+    ]);
+    $values = $this->parser->parse("  \n```json\n$json\n```\n  ");
+
+    $this->assertEquals('inspect_soon', $values['verdict']);
+  }
+
 }

@@ -43,8 +43,12 @@ class DirectApiProviderCaller implements ProviderCallerInterface {
 
   /**
    * The Phase 1 default Anthropic model — see this class's own docblock.
+   *
+   * Was `claude-3-5-haiku-latest`, which Anthropic has since retired —
+   * every call was failing with a 404 `model: claude-3-5-haiku-latest`
+   * error. Updated to the current Haiku-tier model id.
    */
-  protected const ANTHROPIC_MODEL = 'claude-3-5-haiku-latest';
+  protected const ANTHROPIC_MODEL = 'claude-haiku-4-5-20251001';
 
   /**
    * The maximum tokens requested per call.

@@ -38,6 +38,8 @@ class NexusResponseParser {
    *   first.
    */
   public function parse(string $raw): array {
+    $raw = $this->stripMarkdownCodeFence($raw);
+
     try {
       $decoded = json_decode($raw, TRUE, 512, JSON_THROW_ON_ERROR);
     }
@@ -82,6 +84,32 @@ class NexusResponseParser {
       'signals' => $signals,
       'confidence' => is_string($confidence) ? $confidence : NULL,
     ];
+  }
+
+  /**
+   * Strips a wrapping markdown code fence, if the response is wrapped in one.
+   *
+   * The system prompt explicitly asks for "no markdown code fences", but a
+   * real model call (confirmed live against Anthropic) wraps its JSON in
+   * ```json ... ``` anyway — a well-known LLM habit, not something worth
+   * relying on prompt wording alone to prevent. A response that isn't
+   * fenced passes through unchanged.
+   *
+   * @param string $raw
+   *   The provider's raw response text.
+   *
+   * @return string
+   *   $raw with a single leading/trailing code fence removed, if present.
+   */
+  protected function stripMarkdownCodeFence(string $raw): string {
+    $trimmed = trim($raw);
+    if (!str_starts_with($trimmed, '```')) {
+      return $raw;
+    }
+
+    $trimmed = preg_replace('/^```[a-zA-Z0-9]*\s*/', '', $trimmed, 1);
+    $trimmed = preg_replace('/\s*```$/', '', $trimmed, 1);
+    return trim($trimmed);
   }
 
 }
