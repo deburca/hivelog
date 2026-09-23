@@ -14,7 +14,6 @@ use Drupal\Core\Url;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\Hive;
 use Drupal\nanoprobe\Entity\SensorDevice;
-use Drupal\nanoprobe\Entity\SensorReading;
 
 /**
  * Collects sensor-driven "Needs attention" alert rows.

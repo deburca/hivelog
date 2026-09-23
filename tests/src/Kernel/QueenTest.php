@@ -96,7 +96,12 @@ class QueenTest extends KernelTestBase {
     $this->assertEquals(2024, $loaded->get('queen_year')->value);
     $this->assertEquals('buckfast', $loaded->get('breed')->value);
     $this->assertEquals('calm', $loaded->get('temperament')->value);
-    $this->assertEquals('35.50', $loaded->get('purchase_cost')->value);
+    // Compared numerically rather than as a string: SQLite's dynamic typing
+    // stores decimal columns with NUMERIC affinity, so a scale-2 value like
+    // "35.50" round-trips as "35.5" there while MySQL/PostgreSQL preserve
+    // the trailing zero. The two are the same value, just formatted
+    // differently per DB driver.
+    $this->assertEquals(35.50, (float) $loaded->get('purchase_cost')->value);
     $this->assertEquals('2024-04-01', $loaded->get('purchase_date')->value);
     $this->assertEquals($this->hive->id(), $loaded->get('hive')->target_id);
     $this->assertEquals('2024-05-10', $loaded->get('introduction_date')->value);
