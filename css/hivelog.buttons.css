@@ -22,6 +22,8 @@
  *   .hivelog-button-group                grouped button clusters (View/Edit/Delete)
  *   .hivelog-attention__row              dashboard "Needs attention" row actions
  *   .hivelog-dashboard__welcome-actions  dashboard first-run welcome card
+ *   .nanoprobe-sensor-device-actions     sensor device canonical page config action
+ *   .collective-api-client-actions       api client canonical page regenerate-token action
  */
 
 /* ------------------------------------------------------------------
@@ -44,7 +46,9 @@
   .hivelog-table-actions,
   .hivelog-button-group,
   .hivelog-attention__row,
-  .hivelog-dashboard__welcome-actions
+  .hivelog-dashboard__welcome-actions,
+  .nanoprobe-sensor-device-actions,
+  .collective-api-client-actions
 ) .button {
   display: inline-block;
   padding: var(--hivelog-btn-padding);
@@ -70,7 +74,9 @@
   .hivelog-entity-form .form-actions,
   .hivelog-table-actions,
   .hivelog-attention__row,
-  .hivelog-dashboard__welcome-actions
+  .hivelog-dashboard__welcome-actions,
+  .nanoprobe-sensor-device-actions,
+  .collective-api-client-actions
 ) .button {
   margin-right: 0.5em;
 }
@@ -85,7 +91,9 @@
   .hivelog-table-actions,
   .hivelog-button-group,
   .hivelog-attention__row,
-  .hivelog-dashboard__welcome-actions
+  .hivelog-dashboard__welcome-actions,
+  .nanoprobe-sensor-device-actions,
+  .collective-api-client-actions
 ) .button:hover {
   background-color: var(--hivelog-btn-bg-hover);
   border-color: var(--hivelog-btn-border-hover);
@@ -102,7 +110,9 @@
   .hivelog-table-actions,
   .hivelog-button-group,
   .hivelog-attention__row,
-  .hivelog-dashboard__welcome-actions
+  .hivelog-dashboard__welcome-actions,
+  .nanoprobe-sensor-device-actions,
+  .collective-api-client-actions
 ) .button--primary {
   background-color: var(--hivelog-btn-primary-bg);
   border-color: var(--hivelog-btn-primary-border);
@@ -119,7 +129,9 @@
   .hivelog-table-actions,
   .hivelog-button-group,
   .hivelog-attention__row,
-  .hivelog-dashboard__welcome-actions
+  .hivelog-dashboard__welcome-actions,
+  .nanoprobe-sensor-device-actions,
+  .collective-api-client-actions
 ) .button--primary:hover {
   background-color: var(--hivelog-btn-primary-bg-hover);
   border-color: var(--hivelog-btn-primary-border-hover);
@@ -136,7 +148,9 @@
   .hivelog-table-actions,
   .hivelog-button-group,
   .hivelog-attention__row,
-  .hivelog-dashboard__welcome-actions
+  .hivelog-dashboard__welcome-actions,
+  .nanoprobe-sensor-device-actions,
+  .collective-api-client-actions
 ) .button--danger {
   background-color: var(--hivelog-btn-danger-bg);
   border-color: var(--hivelog-btn-danger-border);
@@ -153,7 +167,9 @@
   .hivelog-table-actions,
   .hivelog-button-group,
   .hivelog-attention__row,
-  .hivelog-dashboard__welcome-actions
+  .hivelog-dashboard__welcome-actions,
+  .nanoprobe-sensor-device-actions,
+  .collective-api-client-actions
 ) .button--danger:hover {
   background-color: var(--hivelog-btn-danger-bg-hover);
   border-color: var(--hivelog-btn-danger-border-hover);

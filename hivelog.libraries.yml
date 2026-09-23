@@ -89,3 +89,11 @@ app_nav:
       css/hivelog.app-nav.css: {}
   dependencies:
     - hivelog/responsive
+
+notices:
+  version: 1.x
+  css:
+    component:
+      css/hivelog.notices.css: {}
+  dependencies:
+    - hivelog/responsive

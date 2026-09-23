@@ -31,6 +31,9 @@ Static index (in suggested execution order):
 - [[0010-define-button-tokens-and-source-of-truth]] — foundation (do first)
 - [[0011-unify-button-group-sizing]]
 - [[0012-audit-action-buttons-across-pages]]
+- [[0113-destructive-action-styling-sensor-device-api-client]] —
+  follow-up: nanoprobe/collective canonical-page buttons shipped after
+  the 0012 audit closed, and were rendering completely unstyled
 
 ## Key findings (from code scan, 2026-06-17; updated 2026-06-26)
 
@@ -56,6 +59,22 @@ Static index (in suggested execution order):
   alike.
 - Action links from `hivelog.links.action.yml` (Add Apiary, Add Queen) render
   via Drupal's local-action theming, not the SDC — another surface to reconcile.
+
+## Key findings (2026-09-23)
+- The `:is()` context-wrapper allow-list in `hivelog.buttons.css` is an
+  easy silent-failure trap: a button with fully correct `button`/
+  `button--*` classes (or built via the `hivelog:button` SDC component)
+  renders with **zero** styling if its container isn't wrapped in one
+  of the registered classes — no fallback, no visual hint anything is
+  wrong, so it can go unnoticed until someone looks closely. Found on
+  two canonical pages (`SensorDeviceController`, `ApiClientController`)
+  that shipped after [[0012-audit-action-buttons-across-pages]] closed;
+  fixed in [[0113-destructive-action-styling-sensor-device-api-client]]
+  by registering their action containers as new context wrappers,
+  matching this project's own established extension pattern rather
+  than inventing a new one. Worth a standing check whenever
+  nanoprobe/nexus/collective ship a new canonical-page action, not
+  just a one-time audit.
 
 ## Open questions
 - No major design questions remain: [[0012-action-button-design-system]] already

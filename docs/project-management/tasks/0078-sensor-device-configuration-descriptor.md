@@ -118,6 +118,15 @@ builders).
   forms, a list builder) was never in this task's scope and still doesn't
   exist; only enough was built to give the config/regenerate action
   somewhere to live.
+- **Addendum (2026-09-23, user report):** the destructive-action warning
+  paragraph and the download button on this page were both effectively
+  unstyled. Fixed, along with the same problem on the API Client
+  canonical page — see
+  [[0113-destructive-action-styling-sensor-device-api-client]] for the
+  full writeup (the root cause — `hivelog.buttons.css`'s button system
+  requires a registered "context wrapper" class, undocumented outside
+  that file's own header comment — is shared, not specific to this
+  page).
 
 ## Related
 - Project:: [[sensor-data-collection]]

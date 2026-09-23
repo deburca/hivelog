@@ -59,7 +59,8 @@ class ApiClientController extends ControllerBase {
 
     $build['endpoints'] = [
       '#type' => 'container',
-      '#attributes' => ['class' => ['collective-api-client-endpoints']],
+      '#attributes' => ['class' => ['hivelog-notice--warning', 'collective-api-client-endpoints']],
+      '#attached' => ['library' => ['hivelog/notices', 'collective/api_client']],
       'heading' => [
         '#type' => 'html_tag',
         '#tag' => 'h3',
@@ -77,10 +78,17 @@ class ApiClientController extends ControllerBase {
 
     if ($api_client->access('update')) {
       $build['regenerate'] = [
-        '#type' => 'link',
-        '#title' => $this->t('Regenerate Token'),
-        '#url' => Url::fromRoute('collective.api_client.regenerate_token', ['api_client' => $api_client->id()]),
-        '#attributes' => ['class' => ['button']],
+        '#type' => 'container',
+        '#attributes' => ['class' => ['collective-api-client-actions']],
+        'button' => [
+          '#type' => 'component',
+          '#component' => 'hivelog:button',
+          '#props' => [
+            'label' => (string) $this->t('Regenerate Token'),
+            'url' => Url::fromRoute('collective.api_client.regenerate_token', ['api_client' => $api_client->id()])->toString(),
+            'variant' => 'danger',
+          ],
+        ],
       ];
     }
 

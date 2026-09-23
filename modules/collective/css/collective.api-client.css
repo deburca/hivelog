@@ -1,0 +1,28 @@
+/**
+ * @file
+ * Styles for the API Client canonical page's endpoint reference (task
+ * 0091/0101) — content-specific styling only; the box "look" itself
+ * (left-stripe, tint, spacing) comes from the shared
+ * `.hivelog-notice--warning` class (hivelog.notices.css, task 0113),
+ * applied alongside `.collective-api-client-endpoints` on the same
+ * element so this page's notice matches the sensor device config
+ * page's own warning notice exactly.
+ */
+
+.collective-api-client-endpoints h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+
+.collective-api-client-endpoints ul {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.collective-api-client-endpoints code {
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+  background: var(--hivelog-ground);
+  font-size: 0.85em;
+  word-break: break-all;
+}

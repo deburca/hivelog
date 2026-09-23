@@ -131,7 +131,11 @@ class SensorDeviceControllerTest extends KernelTestBase {
   }
 
   /**
-   * Tests the page renders and includes a download link for an owner.
+   * Tests the page renders and includes a download button for an owner.
+   *
+   * The button uses a `danger` variant (task 0112 follow-up) since
+   * downloading a fresh configuration regenerates the device's token,
+   * invalidating any previously downloaded one.
    */
   public function testViewRendersForAuthorizedUser(): void {
     $this->setCurrentUser($this->owner);
@@ -141,7 +145,12 @@ class SensorDeviceControllerTest extends KernelTestBase {
 
     $this->assertArrayHasKey('summary', $build);
     $this->assertArrayHasKey('config', $build);
-    $this->assertEquals('nanoprobe.sensor_device.config', $build['config']['download']['#url']->getRouteName());
+    $this->assertEquals('hivelog:button', $build['config']['download']['#component']);
+    $this->assertEquals('danger', $build['config']['download']['#props']['variant']);
+    $this->assertStringContainsString(
+      '/sensor-device/' . $this->device->id() . '/config',
+      $build['config']['download']['#props']['url']
+    );
   }
 
   /**

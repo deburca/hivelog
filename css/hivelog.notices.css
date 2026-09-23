@@ -1,0 +1,26 @@
+/**
+ * @file
+ * Shared "notice" boxes for consequential-action context.
+ *
+ * A left-striped, tinted callout used ahead of an action that changes
+ * or invalidates existing state (regenerating a credential, downloading
+ * a fresh device config, …) — one shared class so every such notice
+ * looks and reads the same regardless of which module renders it,
+ * rather than each module inventing its own near-identical box.
+ * Colour/severity tokens match the dashboard's own "Needs attention"
+ * severity-stripe convention (hivelog.dashboard.css).
+ */
+
+.hivelog-notice--warning {
+  margin: 0.75rem 0 1rem;
+  padding: 0.75rem 1rem;
+  border-left: 4px solid var(--hivelog-warning);
+  border-radius: 4px;
+  background: var(--hivelog-warning-tint);
+}
+
+.hivelog-notice--warning p {
+  margin: 0;
+  color: var(--hivelog-ink);
+  font-size: 0.9rem;
+}

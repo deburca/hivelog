@@ -81,14 +81,23 @@ class SensorDeviceController extends ControllerBase {
     if ($sensor_device->access('update')) {
       $build['config'] = [
         '#type' => 'container',
+        '#attributes' => ['class' => ['nanoprobe-sensor-device-actions']],
+        '#attached' => ['library' => ['hivelog/notices']],
         'description' => [
-          '#markup' => '<p>' . $this->t('Downloading the configuration regenerates this device\'s token, immediately invalidating any previously downloaded configuration — the device (or its receiver/bridge) will need to be re-provisioned with the newly downloaded file.') . '</p>',
+          '#type' => 'container',
+          '#attributes' => ['class' => ['hivelog-notice--warning']],
+          'text' => [
+            '#markup' => '<p>' . $this->t('Downloading the configuration regenerates this device\'s token, immediately invalidating any previously downloaded configuration — the device (or its receiver/bridge) will need to be re-provisioned with the newly downloaded file.') . '</p>',
+          ],
         ],
         'download' => [
-          '#type' => 'link',
-          '#title' => $this->t('Download Configuration'),
-          '#url' => Url::fromRoute('nanoprobe.sensor_device.config', ['sensor_device' => $sensor_device->id()]),
-          '#attributes' => ['class' => ['button', 'button--primary']],
+          '#type' => 'component',
+          '#component' => 'hivelog:button',
+          '#props' => [
+            'label' => (string) $this->t('Download Configuration'),
+            'url' => Url::fromRoute('nanoprobe.sensor_device.config', ['sensor_device' => $sensor_device->id()])->toString(),
+            'variant' => 'danger',
+          ],
         ],
       ];
     }
