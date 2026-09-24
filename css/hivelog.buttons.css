@@ -29,13 +29,13 @@
 /* ------------------------------------------------------------------
    Selector shorthand.
    :is() keeps specificity at a single class level while collapsing
-   the seven context wrappers into one rule block per state.
+   every context wrapper listed above into one rule block per state.
 ------------------------------------------------------------------ */
 
 /* Base — default variant.
-   .hivelog-button-group is included as the eighth context so grouped
-   buttons (View/Edit/Delete clusters) receive module token styling
-   without needing an additional outer wrapper. */
+   .hivelog-button-group is included as one of the context wrappers so
+   grouped buttons (View/Edit/Delete clusters) receive module token
+   styling without needing an additional outer wrapper. */
 :is(
   .hivelog-list-heading,
   .hivelog-filter-form__actions,

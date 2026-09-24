@@ -10,11 +10,13 @@ here. When the module is installed into a Drupal site it lands at
 `web/modules/hivelog` (or equivalent), but all paths in this repo are
 module-relative (e.g. `src/`, `css/`, `components/`, `tests/`).
 
-The module provides a beekeeping activity logger with five custom content
-entities. Apiaries, hives and inspections form a strict parent–child
-hierarchy; queens are tracked separately and linked to the hive they are
-currently installed in (hives outlive queens); queen observations hang off
-a queen:
+The module provides a beekeeping activity logger. Core (this repo's own
+`src/`) defines 15 content entity types; four optional submodules under
+`modules/` add 6 more (5 real, 1 development-only) — see "Content entities"
+and "Submodules" below. Apiaries, hives and inspections form a strict
+parent–child hierarchy; queens are tracked separately and linked to the hive
+they are currently installed in (hives outlive queens); queen observations
+hang off a queen:
 
 ```
 Apiary → Hive → Hive Inspection
@@ -23,6 +25,11 @@ Apiary → Hive → Hive Inspection
               ↓
             Queen Observation
 ```
+
+Every other core entity type is scoped to an `Apiary` (directly, or via a
+`CalendarAction`/action log) — see "Content entities" for the full picture,
+grouped rather than diagrammed since a single ASCII tree stopped being
+readable past the five above.
 
 Required contrib dependencies: `geofield`, `leaflet` (see
 `hivelog.info.yml`). The geocoder module is intentionally NOT a dependency:
@@ -142,7 +149,11 @@ Each entity lives in `src/Entity/` as a `ContentEntityBase` subclass declared
 with the PHP 8 `#[ContentEntityType]` attribute. Fields are defined entirely
 in code via `baseFieldDefinitions()` — there is no exported config for field
 storage, view display, or form display. Changing a field definition therefore
-requires a corresponding update hook (see `hivelog.install`).
+requires a corresponding update hook (see "Entity schema changes" below).
+Core defines 15 entity types, grouped below by what they're for; each
+submodule's own entity types are in "Submodules".
+
+**The hive hierarchy** (the diagram above):
 
 - `Apiary` — top-level location; stores a `geofield` `geolocation` column
   (WKT POINT). Earlier schemas used separate lat/lng columns and the
@@ -175,6 +186,54 @@ requires a corresponding update hook (see `hivelog.install`).
   Surfaced from the hive page via an **Add Observation** button next to
   **Edit Queen**, and listed at the end of the queen canonical page.
 
+**Seasonal calendar / action logs** (ADR-0025) — a `CalendarAction` is the
+recurring "plan", scoped to one `Apiary`; the two log types are its "did it
+happen" record, one row per occurrence, starting unreported (no row, or a
+row with `status: pending`) until a beekeeper reports it `done` or `ignored`:
+
+- `CalendarAction` — references an `Apiary`. One recurring seasonal duty
+  (varroa treatment, harvest, winter prep), week-number scheduled, shared by
+  every hive in the apiary. Can be disabled without losing history the two
+  log types below may still reference.
+- `HiveActionLog` — references a `Hive` and the `CalendarAction` it reports
+  on. Per-hive execution record.
+- `ApiaryActionLog` — references an `Apiary` and the `CalendarAction` it
+  reports on. The apiary-scoped sibling of `HiveActionLog`, for
+  apiary-scoped actions; deliberately has no `inspection` field (linking an
+  inspection is inherently hive-scoped).
+
+**Inventory, products and yields** (ADR-0027, ADR-0034) — each catalog type
+is scoped to one `Apiary`; the "recipe" (`CalendarActionItemRequirement`/
+`CalendarActionProductYield`) and "actual" (`InventoryUsage`/`HarvestYield`)
+entities mirror each other one level removed (inputs vs. outputs):
+
+- `InventoryItem` — references an `Apiary`. One catalog entry for something
+  bought and used (sugar, varroa strips, frames). `item_type` branches
+  `consumable` (tracked via purchases + usage) from `durable` (purchased
+  once, depreciates over `useful_life_years`).
+- `InventoryPurchase` — references an `Apiary` and the `InventoryItem`
+  bought. One acquisition record — amount and unit price; stock on hand is
+  always computed from these, never a stored running balance.
+- `InventoryUsage` — references an `InventoryItem` and exactly one of
+  `hive_action_log` / `apiary_action_log`. How much of a *consumable* item
+  was really used when that log was reported `done`. No add/edit/delete UI
+  of its own — written as a side effect of saving the log's own form (see
+  `InventoryUsageFormTrait`).
+- `Product` — references an `Apiary`. One catalog entry for something
+  produced and sold (honey, beeswax, propolis). No separate purchase
+  ledger like `InventoryItem`'s: `expected_unit_price` lives directly on
+  the product as a single mutable current-best-guess.
+- `CalendarActionItemRequirement` — references a `CalendarAction` and an
+  `InventoryItem` (must belong to the same apiary). The "recipe" estimate:
+  this action typically requires this much of this item.
+- `CalendarActionProductYield` — references a `CalendarAction` and a
+  `Product` (must belong to the same apiary). The "recipe" estimate:
+  this action typically produces this much of this product.
+- `HarvestYield` — references a `Product` and exactly one of
+  `hive_action_log` / `apiary_action_log`. How much of a product was
+  *really* produced when that log was reported `done`. No add/edit/delete
+  UI of its own, same as `InventoryUsage`.
+
 The module also adds a `cbr_number` field to the Drupal `user` entity via
 `hook_entity_base_field_info()`. Uninstall has special handling in
 `hivelog_uninstall()` to avoid a fatal PDO exception when the column has
@@ -185,6 +244,51 @@ queen `breed` / `temperament` / `status`, and the various inspection enums
 are hard-coded in the respective `baseFieldDefinitions()`.
 Extending them requires editing the entity class **and** writing an update
 hook if existing data must be preserved.
+
+### Submodules
+
+Four optional modules live under `modules/`, each its own installable
+Drupal module with its own `src/`, routes, hooks and tests — `hivelog` core
+never depends on any of them (ADR-0098). They register with core through the
+`hook_hivelog_*` hooks documented in `hivelog.api.php`:
+`hook_hivelog_apiary_view_panels()` / `hook_hivelog_hive_view_panels()`
+(a read-only section on the apiary/hive canonical page, ADR-0099),
+`hook_hivelog_hive_insights_panels()` (the hive's separate Insights page),
+`hook_hivelog_apiary_stat_tiles()` / `hook_hivelog_hive_stat_tiles()`
+("at a glance" stat tiles), `hook_hivelog_needs_attention_alerts()` /
+`hook_hivelog_dashboard_sections()` (the dashboard), `hook_hivelog_app_nav_items()`
+(the front-end nav strip) and `hook_hivelog_delete_dependencies()` (the
+delete-dependency registry, task 0134 — a submodule declares rows for
+entity types core can't name directly).
+
+- **`nanoprobe`** — sensor device registration and automated data
+  ingestion ("the senses"). Adds `SensorDevice` (registered hardware,
+  scoped to an apiary or one hive within it), `SensorReading` (raw
+  machine-written time-series points, ingestion-endpoint-only) and
+  `SensorReadingDaily` (persisted per-day min/max/avg rollups, since raw
+  readings are purged after a retention window). Depends only on
+  `hivelog`.
+- **`collective`** — structured hive/apiary context served via a
+  credentialed HTTP API. Adds `ApiClient` (a site-level context-read
+  credential; normally exactly one row). Works from manually-logged data
+  alone, richer with `nanoprobe` sensor data too. Depends only on
+  `hivelog`.
+- **`nexus`** — in-process AI synthesis: reads structured context from
+  `collective` and calls a configured AI provider to write `HiveInsight`
+  recommendations directly (no HTTP round-trip to `collective`'s own API
+  for this). Adds `AiProviderConfig` (which integration mode and
+  credentials to use — the credential itself is resolved at call time via
+  the `key` module, never stored on the entity) and `HiveInsight` (the
+  three-way daily verdict: act now / inspect soon / all clear;
+  machine-written only, by `nexus_cron()`). Depends on `hivelog`,
+  `collective` and `key`.
+- **`assimilate`** — **development/demo only, never enable on a real
+  site.** Fabricates a demo apiary, hive and sensor devices, then keeps
+  generating plausible mock `SensorReading` data on cron so the Sensors
+  panel, dashboard and `nexus` insight generation have something to show
+  before real hardware exists. Refuses to install on a site with real
+  AI-insights-enabled data. Depends on `hivelog` and `nanoprobe`; adds no
+  entity types of its own.
 
 ### Routing, controllers and forms
 
@@ -228,8 +332,8 @@ HiveInspection and QueenObservation have no context-free add route at all
 scoped add route above), so their collection pages have no add button by
 design, with or without menu chrome.
 
-All eleven list builders extend `HivelogListBuilder` (task 0068), whose
-`buildOperations()` renders the row Operations column as a
+Every list builder, core and submodule alike, extends `HivelogListBuilder`
+(task 0068), whose `buildOperations()` renders the row Operations column as a
 `hivelog:button-group` cluster (Edit + Delete, Delete in the danger
 variant) instead of core's collapsed dropbutton — matching the flat
 action buttons on the canonical pages and the dashboard (ADR-0012). The
@@ -240,17 +344,27 @@ the ones on core's `#type => 'table'` inherit it via
 
 ### CSS and components
 
-CSS libraries are declared in `hivelog.libraries.yml`. All libraries depend
-on `hivelog/responsive` (which defines shared breakpoint tokens in
-`css/hivelog.responsive.css`). The dependency chain is:
+CSS libraries are declared in `hivelog.libraries.yml` (core) and each
+submodule's own `<module>.libraries.yml` (currently `collective`,
+`nanoprobe`; `nexus`/`assimilate` ship no CSS of their own). Every library,
+core or submodule, depends on `hivelog/responsive` (which defines shared
+breakpoint tokens in `css/hivelog.responsive.css`) — directly or
+transitively. Core's own dependency chain:
 
 ```
-hivelog/responsive  ←  hivelog/buttons  ←  hivelog/tables
-                    ←  hivelog/forms
-                    ←  hivelog/filter_form
-                    ←  hivelog/images
-                    ←  hivelog/map
-                    ←  hivelog/weight_histogram
+hivelog/responsive
+  ← hivelog/weight_histogram
+  ← hivelog/images
+  ← hivelog/map
+  ← hivelog/app_nav
+  ← hivelog/notices
+  ← hivelog/buttons
+      ← hivelog/tables
+          ← hivelog/activity_columns
+          ← hivelog/dashboard
+      ← hivelog/filter_form
+      ← hivelog/forms
+      ← hivelog/dashboard   (also depends on buttons + tables directly)
 ```
 
 When adding a new CSS library, declare `hivelog/responsive` as a dependency.
@@ -258,10 +372,13 @@ Do not add `@media` rules without following the breakpoints defined in
 `css/hivelog.responsive.css` (`≤480px` phone, `≤768px` small tablet).
 
 SDC components live in `components/` (`button/`, `button-group/`,
-`entity-table/`). `css/hivelog.buttons.css` is the **sole source of truth**
-for button appearance (ADR-0012, task 0010). Rules are scoped to eight named
-context wrappers listed in the file header. Do not add theme framework classes
-(`btn`, `btn-primary`, `btn-danger`, Tailwind utilities) to `button.twig` or
+`entity-table/`, `stat-tile/`) and, for `nanoprobe`, its own
+`components/metric-tabs/`. `css/hivelog.buttons.css` is the **sole source
+of truth** for button appearance (ADR-0012, task 0010). Rules are scoped to
+the named context wrappers listed in that file's own header — keep that
+list (not a count here) in sync when a new context wrapper is added,
+including a submodule's. Do not add theme framework classes (`btn`,
+`btn-primary`, `btn-danger`, Tailwind utilities) to `button.twig` or
 `button-group.twig` — the module has no Tailwind build step and admin-theme
 classes will conflict with the module's token rules.
 
@@ -344,8 +461,28 @@ does not yet cover. beeswax `1.0.x` expects hivelog `>= 1.8.3` (the
 
 ### Services
 
-Only one service is registered (`hivelog.services.yml`):
-`hivelog.breadcrumb` — a `BreadcrumbBuilder` with priority **1004** that produces
+Core registers its own services in `hivelog.services.yml`; each submodule
+registers its own in `<module>.services.yml` (panel/report builders, alert
+collectors, provider callers, …) — check that file rather than this one for
+a submodule's exact list, so this paragraph doesn't go stale the way the
+count it used to state already had. Core's own:
+
+- `hivelog.breadcrumb` — see below; the one with enough going on to warrant
+  its own subsection.
+- `hivelog.app_nav_builder` (`HivelogAppNavBuilder`) — builds the front-end
+  nav strip's item list, merging core's own with whatever submodules
+  contribute via `hook_hivelog_app_nav_items()`.
+- `hivelog.stat_tile_builder` (`HivelogStatTileBuilder`) — merges the
+  "at a glance" stat tiles a canonical page shows, from
+  `hook_hivelog_apiary_stat_tiles()` / `hook_hivelog_hive_stat_tiles()`.
+- `hivelog.delete_dependency_counter` (`HivelogDeleteDependencyCounter`,
+  task 0134) — counts a parent entity's children per
+  `HivelogDeleteDependencyRegistry` row (BLOCK/WARN/CASCADE/DETACH), for
+  the delete form's dependency sections and (task 0141) the BLOCK access
+  check. See `src/Delete/` and
+  `docs/project-management/decisions/0103-delete-policy-for-records-with-children.md`.
+
+`hivelog.breadcrumb` is a `BreadcrumbBuilder` with priority **1004** that produces
 the Apiary → Hive → … trail on any hivelog route. Since task 0067 `applies()`
 matches **by path**: every route whose path is `/hivelog` or under `/hivelog/`
 (the module's own entity routes, the `hivelog.*` controllers, and bolt-on
@@ -400,8 +537,9 @@ All test classes use the PHP 8 `#[Group('hivelog')]` attribute, so
 Because all field storage is defined in code, any change to
 `baseFieldDefinitions()` (new field, changed settings, removed field) must
 be paired with an update hook in `hivelog.install` using
-`\Drupal::entityDefinitionUpdateManager()`. The latest hook is
-`hivelog_update_10013`. Existing hooks are the canonical examples: read
+`\Drupal::entityDefinitionUpdateManager()`. Check the highest-numbered
+`hivelog_update_N` already in `hivelog.install` for the next number to use
+— existing hooks are the canonical examples: read
 existing column data, uninstall the old storage, install the new storage,
 then re-save entities through the entity API so derived columns (e.g.
 geofield's lat/lon/geohash) are recomputed. Do not rely on
