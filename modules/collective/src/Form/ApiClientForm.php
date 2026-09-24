@@ -7,6 +7,7 @@ namespace Drupal\collective\Form;
 use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Drupal\hivelog\Form\HivelogEntityFormTrait;
 
 /**
  * Form handler for API Client add/edit forms.
@@ -19,6 +20,8 @@ use Drupal\Core\Url;
  * plaintext ever appears.
  */
 class ApiClientForm extends ContentEntityForm {
+
+  use HivelogEntityFormTrait;
 
   /**
    * {@inheritdoc}

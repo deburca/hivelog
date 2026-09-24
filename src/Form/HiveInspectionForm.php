@@ -10,6 +10,8 @@ use Drupal\Core\Form\FormStateInterface;
  */
 class HiveInspectionForm extends ContentEntityForm {
 
+  use HivelogEntityFormTrait;
+
   /**
    * {@inheritdoc}
    */

@@ -6,16 +6,18 @@ namespace Drupal\hivelog;
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
+use Drupal\Core\Url;
 
 /**
  * The hivelog entity hierarchy.
  *
  * Which reference field names each entity type's parent. Extracted in
  * task 0127 from the parent map task 0116 introduced in
- * `HivelogBreadcrumbBuilder`, so the breadcrumb builder's ancestry trail
- * and `HivelogEntityDeleteForm`'s cancel / post-delete redirect read one
- * definition instead of two that can drift apart. See AGENTS.md
- * "Architecture > Content entities" for the apiary → hive →
+ * `HivelogBreadcrumbBuilder`, so the breadcrumb builder's ancestry trail,
+ * `HivelogEntityDeleteForm`'s cancel / post-delete redirect, and (task
+ * 0129) `HivelogEntityFormTrait`'s Cancel link on every add / edit form
+ * all read one definition instead of three that can drift apart. See
+ * AGENTS.md "Architecture > Content entities" for the apiary → hive →
  * inspection / queen → observation hierarchy this maps, and
  * "Architecture > Services" for the breadcrumb builder that also
  * consumes it.
@@ -67,6 +69,32 @@ final class HivelogEntityHierarchy {
   public static function resolveParent(FieldableEntityInterface $entity): ?EntityInterface {
     $parent_field = self::PARENT_FIELD[$entity->getEntityTypeId()] ?? NULL;
     return $parent_field ? $entity->get($parent_field)->entity : NULL;
+  }
+
+  /**
+   * The parent's canonical page, else the entity's own collection.
+   *
+   * Falls through to the dashboard when neither is available. Shared by
+   * `HivelogEntityDeleteForm` (the post-delete redirect, and the cancel
+   * fallback for a type with no canonical page of its own) and
+   * `HivelogEntityFormTrait` (the Cancel link on a new entity, which has
+   * no canonical page yet regardless of its type).
+   */
+  public static function parentOrCollectionUrl(EntityInterface $entity): Url {
+    if ($entity instanceof FieldableEntityInterface) {
+      $parent = self::resolveParent($entity);
+      if ($parent && $parent->hasLinkTemplate('canonical')) {
+        return $parent->toUrl('canonical');
+      }
+    }
+    if ($entity->hasLinkTemplate('collection')) {
+      // Not `$entity->toUrl('collection')`: core's `EntityBase::toUrl()`
+      // refuses ANY `$rel` on an entity with no ID yet, even 'collection'
+      // (which needs no ID in its URL) — and this method is called for a
+      // brand new, unsaved entity on an add form's Cancel link.
+      return Url::fromRoute("entity.{$entity->getEntityTypeId()}.collection");
+    }
+    return Url::fromRoute('hivelog.dashboard');
   }
 
 }

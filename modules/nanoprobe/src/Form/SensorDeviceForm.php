@@ -6,6 +6,7 @@ namespace Drupal\nanoprobe\Form;
 
 use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\hivelog\Form\HivelogEntityFormTrait;
 
 /**
  * Form handler for Sensor Device add/edit forms.
@@ -20,6 +21,8 @@ use Drupal\Core\Form\FormStateInterface;
  * only extra job is surfacing it.
  */
 class SensorDeviceForm extends ContentEntityForm {
+
+  use HivelogEntityFormTrait;
 
   /**
    * {@inheritdoc}

@@ -14,6 +14,7 @@ use Drupal\hivelog\Entity\HiveInspection;
  */
 class HiveActionLogForm extends ContentEntityForm {
 
+  use HivelogEntityFormTrait;
   use InventoryUsageFormTrait;
   use HarvestYieldFormTrait;
 

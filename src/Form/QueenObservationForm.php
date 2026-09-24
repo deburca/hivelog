@@ -10,6 +10,8 @@ use Drupal\Core\Form\FormStateInterface;
  */
 class QueenObservationForm extends ContentEntityForm {
 
+  use HivelogEntityFormTrait;
+
   /**
    * {@inheritdoc}
    */

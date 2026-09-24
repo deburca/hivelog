@@ -12,6 +12,7 @@ use Drupal\Core\Form\FormStateInterface;
  */
 class InventoryPurchaseForm extends ContentEntityForm {
 
+  use HivelogEntityFormTrait;
   use ApiaryScopedAutocompleteTrait;
 
   /**

@@ -12,6 +12,7 @@ use Drupal\Core\Form\FormStateInterface;
  */
 class CalendarActionItemRequirementForm extends ContentEntityForm {
 
+  use HivelogEntityFormTrait;
   use ApiaryScopedAutocompleteTrait;
 
   /**

@@ -20,6 +20,7 @@ use Drupal\Core\Form\FormStateInterface;
  */
 class ApiaryActionLogForm extends ContentEntityForm {
 
+  use HivelogEntityFormTrait;
   use InventoryUsageFormTrait;
   use HarvestYieldFormTrait;
 

@@ -12,6 +12,8 @@ use Drupal\Core\Form\FormStateInterface;
  */
 class ProductForm extends ContentEntityForm {
 
+  use HivelogEntityFormTrait;
+
   /**
    * {@inheritdoc}
    */

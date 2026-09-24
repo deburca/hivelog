@@ -12,6 +12,8 @@ use Drupal\Core\Form\FormStateInterface;
  */
 class InventoryItemForm extends ContentEntityForm {
 
+  use HivelogEntityFormTrait;
+
   /**
    * {@inheritdoc}
    */

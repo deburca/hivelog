@@ -10,6 +10,8 @@ use Drupal\Core\Form\FormStateInterface;
  */
 class ApiaryForm extends ContentEntityForm {
 
+  use HivelogEntityFormTrait;
+
   /**
    * {@inheritdoc}
    */

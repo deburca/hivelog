@@ -6,6 +6,7 @@ namespace Drupal\nexus\Form;
 
 use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\hivelog\Form\HivelogEntityFormTrait;
 
 /**
  * Form handler for AI Provider Config add/edit forms.
@@ -19,6 +20,8 @@ use Drupal\Core\Form\FormStateInterface;
  * ever building its own credential-entry UI.
  */
 class AiProviderConfigForm extends ContentEntityForm {
+
+  use HivelogEntityFormTrait;
 
   /**
    * {@inheritdoc}

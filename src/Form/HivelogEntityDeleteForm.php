@@ -6,7 +6,6 @@ namespace Drupal\hivelog\Form;
 
 use Drupal\Core\Entity\ContentEntityDeleteForm;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Url;
 use Drupal\hivelog\HivelogEntityHierarchy;
 
@@ -69,16 +68,7 @@ class HivelogEntityDeleteForm extends ContentEntityDeleteForm {
    * Falls through to the dashboard when neither is available.
    */
   protected function parentOrFallbackUrl(EntityInterface $entity): Url {
-    if ($entity instanceof FieldableEntityInterface) {
-      $parent = HivelogEntityHierarchy::resolveParent($entity);
-      if ($parent && $parent->hasLinkTemplate('canonical')) {
-        return $parent->toUrl('canonical');
-      }
-    }
-    if ($entity->hasLinkTemplate('collection')) {
-      return $entity->toUrl('collection');
-    }
-    return Url::fromRoute('hivelog.dashboard');
+    return HivelogEntityHierarchy::parentOrCollectionUrl($entity);
   }
 
 }
