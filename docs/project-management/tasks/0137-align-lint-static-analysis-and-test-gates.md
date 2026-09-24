@@ -108,16 +108,36 @@ part of why [[0133-route-level-entity-access]]'s bug shipped unnoticed.
   runs in the advisory job as genuine end-to-end HTTP/rendering
   coverage — the point was never to delete it, only to make sure
   nothing access-critical existed *only* there.
+- **The baseline's first CI run failed** — real proof the environment
+  concern above wasn't hypothetical. `phpstan-baseline.neon` was
+  generated against `cms2`'s own `vendor/`, which happens to have the
+  contrib `ai` module installed; two files that call
+  `Drupal\ai\AiProviderPluginManager` behind a runtime
+  `moduleExists('ai')` guard (`AiModuleProviderCaller.php`,
+  `AiProviderConfigController.php` — `ai` is not a real Composer
+  dependency of `hivelog`/`nexus`, only an optional integration)
+  resolved that class fine there, baselining a narrower
+  "undefined method" finding. CI's bare `drupal/recommended-project`
+  scaffold never installs `ai` at all, so the same two files produced
+  a *different* error shape (unknown class) the baseline had no entry
+  for, plus a meta-error for the now-unmatched baselined pattern.
+  Fixed by excluding both files from phpstan outright
+  (`excludePaths`) rather than chasing whichever shape the next
+  environment produces, and regenerating the baseline (436 findings,
+  down from 440) without their now-moot entries. Pushed as a second
+  commit; CI went green on the re-run.
 - **Verification**: whole-module phpcs (0 errors/warnings) and phpstan
   (0 errors against the baseline) locally; full `hivelog` kernel/unit
   suite 702 tests (up 1 from the new anonymous test), 11,984
   assertions, only the 3 pre-existing, already-documented, unrelated
-  `DashboardTest` Functional errors. CI itself verified green on
-  `feature/0137-align-lint-static-analysis-and-test-gates` — see PR
-  link in Commits below.
+  `DashboardTest` Functional errors. **CI verified green on
+  [PR #140](https://github.com/deburca/hivelog/pull/140)**: `Lint
+  (PHP 8.3)`, `Test (PHP 8.3)`, `Test (PHP 8.4)`, `Test (PHP 8.5)` all
+  passing — phpstan included, now a real hard gate for the first time.
 - Key files: `phpcs.xml.dist`, `composer.json` (`lint`/`stan` scripts),
-  `phpstan.neon` (`modules/` path, `includes: phpstan-baseline.neon`),
-  new `phpstan-baseline.neon`, `.gitignore` (dropped the line excluding
+  `phpstan.neon` (`modules/` path, `includes: phpstan-baseline.neon`,
+  `excludePaths` for the two `ai`-integration files), new
+  `phpstan-baseline.neon`, `.gitignore` (dropped the line excluding
   it), `.github/workflows/ci.yml` (phpcs/phpstan/functional-discovery
   steps), `tests/src/Kernel/RouteEntityAccessTest.php`
   (`testAnonymousDeniedOnEveryRoute()`), `AGENTS.md` ("CI Pipeline").
@@ -126,4 +146,4 @@ part of why [[0133-route-level-entity-access]]'s bug shipped unnoticed.
 - Project:: [[page-structure-consistency]]
 - Decisions:: [[0098-nanoprobe-collective-locutus-submodule-split]]
 - Tasks:: [[0133-route-level-entity-access]]
-- Commits::
+- Commits:: [PR #140](https://github.com/deburca/hivelog/pull/140)
