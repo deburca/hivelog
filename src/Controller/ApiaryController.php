@@ -160,10 +160,13 @@ class ApiaryController extends ControllerBase {
     // Heading row: the "Hives" title on the left, the Add Hive action on
     // the right. Placing the action here (rather than inline with the
     // filter form below) keeps it at the top-right of the list section
-    // where it logically belongs.
+    // where it logically belongs. The `id` (here and on the three
+    // sibling headings below) is the anchor task 0141's delete-blocked
+    // page links to via HivelogDeleteDependencyRegistry's
+    // `'parent-canonical#<id>'` manage targets.
     $build['hives_heading'] = [
       '#type' => 'container',
-      '#attributes' => ['class' => ['hivelog-list-heading']],
+      '#attributes' => ['class' => ['hivelog-list-heading'], 'id' => 'hives'],
       '#weight' => 10,
       'title' => [
         '#type' => 'html_tag',
@@ -288,7 +291,7 @@ class ApiaryController extends ControllerBase {
     $current_year = (int) date('Y');
     $build['calendar_heading'] = [
       '#type' => 'container',
-      '#attributes' => ['class' => ['hivelog-list-heading']],
+      '#attributes' => ['class' => ['hivelog-list-heading'], 'id' => 'calendar'],
       '#weight' => 20,
       'title' => [
         '#type' => 'html_tag',
@@ -448,7 +451,7 @@ class ApiaryController extends ControllerBase {
     // computed value (purchases minus usage), never directly editable.
     $build['inventory_heading'] = [
       '#type' => 'container',
-      '#attributes' => ['class' => ['hivelog-list-heading']],
+      '#attributes' => ['class' => ['hivelog-list-heading'], 'id' => 'inventory'],
       '#weight' => 25,
       'title' => [
         '#type' => 'html_tag',
@@ -576,7 +579,7 @@ class ApiaryController extends ControllerBase {
     // [[0035-product-catalog-entity-and-ui]].
     $build['products_heading'] = [
       '#type' => 'container',
-      '#attributes' => ['class' => ['hivelog-list-heading']],
+      '#attributes' => ['class' => ['hivelog-list-heading'], 'id' => 'products'],
       '#weight' => 30,
       'title' => [
         '#type' => 'html_tag',

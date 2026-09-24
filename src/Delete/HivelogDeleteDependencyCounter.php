@@ -7,6 +7,7 @@ namespace Drupal\hivelog\Delete;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityLastInstalledSchemaRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
@@ -39,6 +40,7 @@ class HivelogDeleteDependencyCounter {
 
   public function __construct(
     protected readonly EntityTypeManagerInterface $entityTypeManager,
+    protected readonly EntityLastInstalledSchemaRepositoryInterface $installedSchemaRepository,
   ) {}
 
   /**
@@ -58,6 +60,16 @@ class HivelogDeleteDependencyCounter {
 
     $counted = [];
     foreach (HivelogDeleteDependencyRegistry::rowsForParent($entity->getEntityTypeId()) as $row) {
+      // A registered row's child type is always installed on a real
+      // site — every hivelog/nanoprobe/nexus entity type ships with the
+      // module that registers it. This check exists for kernel tests
+      // that install only the schemas their own fixtures touch: without
+      // it, calling access('delete') on, say, an Apiary would need
+      // every one of the registry's ~13 apiary-rooted child schemas
+      // installed even in a test that has nothing to do with deleting.
+      if (!$this->installedSchemaRepository->getLastInstalledDefinition($row['child'])) {
+        continue;
+      }
       $storage = $this->entityTypeManager->getStorage($row['child']);
       $ids = $storage->getQuery()
         ->accessCheck(FALSE)

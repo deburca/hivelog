@@ -306,9 +306,14 @@ class ApiaryScopedAccessTest extends KernelTestBase {
 
   /**
    * Tests that the owner can delete a private apiary.
+   *
+   * `delete_route`, not `delete` — this class tests apiary-scoped
+   * *permission* access, and `$this->apiary` has a hive (among other
+   * fixtures), which correctly BLOCKs the plain `delete` op since task
+   * 0141 (see HivelogDeleteBlockRelationshipsTest for that concern).
    */
   public function testOwnerCanDeletePrivateApiary(): void {
-    $this->assertTrue($this->apiary->access('delete', $this->owner));
+    $this->assertTrue($this->apiary->access('delete_route', $this->owner));
   }
 
   /**
@@ -327,9 +332,12 @@ class ApiaryScopedAccessTest extends KernelTestBase {
 
   /**
    * Tests that the owner can delete a hive.
+   *
+   * `delete_route`, not `delete` — see testOwnerCanDeletePrivateApiary()'s
+   * own docblock; `$this->hive` has an inspection, which BLOCKs it.
    */
   public function testOwnerCanDeleteHive(): void {
-    $this->assertTrue($this->hive->access('delete', $this->owner));
+    $this->assertTrue($this->hive->access('delete_route', $this->owner));
   }
 
   /**
@@ -593,9 +601,13 @@ class ApiaryScopedAccessTest extends KernelTestBase {
 
   /**
    * Tests that the owner can delete a calendar action.
+   *
+   * `delete_route`, not `delete` — see testOwnerCanDeletePrivateApiary()'s
+   * own docblock; `$this->calendarAction` has a hive/apiary action log
+   * against it, which BLOCKs it.
    */
   public function testOwnerCanDeleteCalendarAction(): void {
-    $this->assertTrue($this->calendarAction->access('delete', $this->owner));
+    $this->assertTrue($this->calendarAction->access('delete_route', $this->owner));
   }
 
   /**

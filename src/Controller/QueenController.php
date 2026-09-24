@@ -125,10 +125,12 @@ class QueenController extends ControllerBase {
     ];
 
     // Observations list: rendered at the end of the page in the same style
-    // as the inspections table on the hive page.
+    // as the inspections table on the hive page. 'observations' is the
+    // anchor task 0141's delete-blocked page links to (ADR-0103 row #14,
+    // queen → queen_observation, BLOCK).
     $build['observations_heading'] = [
       '#type' => 'container',
-      '#attributes' => ['class' => ['hivelog-list-heading']],
+      '#attributes' => ['class' => ['hivelog-list-heading'], 'id' => 'observations'],
       '#weight' => 20,
       'title' => [
         '#type' => 'html_tag',

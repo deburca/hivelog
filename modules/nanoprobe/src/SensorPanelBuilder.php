@@ -335,7 +335,12 @@ class SensorPanelBuilder {
 
     $panel = [
       '#type' => 'container',
-      '#attributes' => ['class' => ['nanoprobe-sensors-panel']],
+      // 'sensors' is the anchor task 0141's delete-dependency registry
+      // (ADR-0103 row #7, apiary → sensor_device, BLOCK) links to from
+      // the apiary delete-blocked page — present even when $show_heading
+      // is FALSE, since the apiary panel has no heading of its own to
+      // anchor to (see buildApiaryPanel()'s docblock).
+      '#attributes' => ['class' => ['nanoprobe-sensors-panel'], 'id' => 'sensors'],
       '#weight' => 7.5,
     ];
 

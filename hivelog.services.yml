@@ -14,4 +14,4 @@ services:
 
   hivelog.delete_dependency_counter:
     class: Drupal\hivelog\Delete\HivelogDeleteDependencyCounter
-    arguments: ['@entity_type.manager']
+    arguments: ['@entity_type.manager', '@entity.last_installed_schema.repository']

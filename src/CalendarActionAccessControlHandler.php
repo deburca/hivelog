@@ -6,6 +6,7 @@ namespace Drupal\hivelog;
 
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\EntityAccessControlHandler;
+use Drupal\Core\Entity\EntityHandlerInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Session\AccountInterface;
 
@@ -16,31 +17,46 @@ use Drupal\Core\Session\AccountInterface;
  * - view: site-wide "any" OR apiary member OR public apiary.
  * - update: site-wide "any" OR apiary member (owner + beekeepers).
  * - delete: site-wide "any" OR apiary owner only (mirrors Hive — a
- *   calendar action is foundational apiary structure, not a per-visit log).
+ *   calendar action is foundational apiary structure, not a per-visit
+ *   log), AND (task 0141) no BLOCK-treatment child still referencing
+ *   the calendar action — not exempted by `administer hivelog` (see
+ *   HivelogDeleteBlockingAccessTrait).
+ * - delete_route: the same ownership check as `delete`, without the
+ *   BLOCK check — see ApiaryAccessControlHandler's docblock for why.
  */
-class CalendarActionAccessControlHandler extends EntityAccessControlHandler {
+class CalendarActionAccessControlHandler extends EntityAccessControlHandler implements EntityHandlerInterface {
 
   use ApiaryAccessTrait;
+  use HivelogDeleteBlockingAccessTrait;
 
   /**
    * {@inheritdoc}
    */
   protected function checkAccess(EntityInterface $entity, $operation, AccountInterface $account) {
-    if ($account->hasPermission('administer hivelog')) {
-      return AccessResult::allowed()->cachePerPermissions();
-    }
-
+    $is_admin = $account->hasPermission('administer hivelog');
     $apiary = $this->resolveApiary($entity);
 
     switch ($operation) {
       case 'view':
-        return $this->checkApiaryViewAccess($apiary, $account, 'view any calendar action', 'view own calendar action');
+        return $is_admin
+          ? AccessResult::allowed()->cachePerPermissions()
+          : $this->checkApiaryViewAccess($apiary, $account, 'view any calendar action', 'view own calendar action');
 
       case 'update':
-        return $this->checkApiaryEditAccess($apiary, $account, 'edit any calendar action', 'edit own calendar action');
+        return $is_admin
+          ? AccessResult::allowed()->cachePerPermissions()
+          : $this->checkApiaryEditAccess($apiary, $account, 'edit any calendar action', 'edit own calendar action');
 
       case 'delete':
-        return $this->checkApiaryOwnerDeleteAccess($apiary, $account, 'delete any calendar action', 'delete own calendar action');
+        $access = $is_admin
+          ? AccessResult::allowed()->cachePerPermissions()
+          : $this->checkApiaryOwnerDeleteAccess($apiary, $account, 'delete any calendar action', 'delete own calendar action');
+        return $this->blockDelete($access, $entity);
+
+      case 'delete_route':
+        return $is_admin
+          ? AccessResult::allowed()->cachePerPermissions()
+          : $this->checkApiaryOwnerDeleteAccess($apiary, $account, 'delete any calendar action', 'delete own calendar action');
     }
 
     return AccessResult::neutral();

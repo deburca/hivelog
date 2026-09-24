@@ -59,7 +59,12 @@ entity.apiary.delete_form:
     _title: 'Delete Apiary'
   requirements:
     _permission: 'delete own apiary+delete any apiary+administer hivelog'
-    _entity_access: 'apiary.delete'
+    # 'delete_route', not 'delete' (task 0141): the route stays reachable
+    # while a BLOCK row has children, so the form can render the
+    # "Can't delete yet" state instead of a bare 403 — the plain
+    # 'delete' op (which includes the BLOCK check) still gates every
+    # Delete button/tab that calls access('delete') directly.
+    _entity_access: 'apiary.delete_route'
   options:
     parameters:
       apiary:
@@ -138,7 +143,9 @@ entity.hive.delete_form:
     _title: 'Delete Hive'
   requirements:
     _permission: 'delete own hive+delete any hive+administer hivelog'
-    _entity_access: 'hive.delete'
+    # 'delete_route', not 'delete' (task 0141) — see entity.apiary.delete_form's
+    # own comment above.
+    _entity_access: 'hive.delete_route'
   options:
     parameters:
       hive:
@@ -270,7 +277,9 @@ entity.queen.delete_form:
     _title: 'Delete Queen'
   requirements:
     _permission: 'delete own queen+delete any queen+administer hivelog'
-    _entity_access: 'queen.delete'
+    # 'delete_route', not 'delete' (task 0141) — see entity.apiary.delete_form's
+    # own comment above.
+    _entity_access: 'queen.delete_route'
   options:
     parameters:
       queen:
@@ -394,7 +403,9 @@ entity.calendar_action.delete_form:
     _title: 'Delete Calendar Action'
   requirements:
     _permission: 'delete own calendar action+delete any calendar action+administer hivelog'
-    _entity_access: 'calendar_action.delete'
+    # 'delete_route', not 'delete' (task 0141) — see entity.apiary.delete_form's
+    # own comment above.
+    _entity_access: 'calendar_action.delete_route'
   options:
     parameters:
       calendar_action:
@@ -650,7 +661,9 @@ entity.inventory_item.delete_form:
     _title: 'Delete Inventory Item'
   requirements:
     _permission: 'delete own inventory item+delete any inventory item+administer hivelog'
-    _entity_access: 'inventory_item.delete'
+    # 'delete_route', not 'delete' (task 0141) — see entity.apiary.delete_form's
+    # own comment above.
+    _entity_access: 'inventory_item.delete_route'
   options:
     parameters:
       inventory_item:
@@ -790,7 +803,9 @@ entity.product.delete_form:
     _title: 'Delete Product'
   requirements:
     _permission: 'delete own product+delete any product+administer hivelog'
-    _entity_access: 'product.delete'
+    # 'delete_route', not 'delete' (task 0141) — see entity.apiary.delete_form's
+    # own comment above.
+    _entity_access: 'product.delete_route'
   options:
     parameters:
       product:

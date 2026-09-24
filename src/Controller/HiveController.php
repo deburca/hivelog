@@ -215,9 +215,11 @@ class HiveController extends ControllerBase {
     // useful information, so the suffix is omitted there.
     $current_week = (int) date('W');
     $current_year = (int) date('Y');
+    // 'calendar' is the anchor task 0141's delete-blocked page links to
+    // (ADR-0103 row #10, hive → hive_action_log, BLOCK).
     $build['calendar_heading'] = [
       '#type' => 'container',
-      '#attributes' => ['class' => ['hivelog-list-heading']],
+      '#attributes' => ['class' => ['hivelog-list-heading'], 'id' => 'calendar'],
       '#weight' => 25,
       'title' => [
         '#type' => 'html_tag',
@@ -624,9 +626,12 @@ class HiveController extends ControllerBase {
       ];
     }
 
+    // The outer 'inspections' id is the anchor task 0141's delete-
+    // blocked page links to (ADR-0103 row #9, hive → hive_inspection,
+    // BLOCK).
     $build = [
       '#type' => 'container',
-      '#attributes' => ['class' => ['hivelog-activity-column']],
+      '#attributes' => ['class' => ['hivelog-activity-column'], 'id' => 'inspections'],
       'heading' => [
         '#type' => 'container',
         '#attributes' => ['class' => ['hivelog-list-heading']],

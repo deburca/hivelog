@@ -67,7 +67,19 @@ final class HivelogDeleteDependencyRegistry {
    * page, which is where the established pattern embeds a management
    * table of exactly this child type — Apiary's hives/items/products,
    * Hive's inspections/action-logs, Queen's observations), or a route
-   * name with no parameters (a global collection).
+   * name with no parameters (a global collection). Either of the last
+   * two may carry a `#fragment` suffix (task 0141, e.g.
+   * `'parent-canonical#hives'`) naming the `id` attribute of the
+   * section on that page the link should jump to — `manageUrl()`
+   * splits it off before resolving the base target. NULL stays NULL
+   * whenever the real management page belongs to neither the parent
+   * nor a fixed collection — rows #17/#18 (a calendar action's
+   * blocking hive/apiary action logs live on *their own* hive's/
+   * apiary's page, a different entity per row) and #24/#25 (an
+   * inventory item/product can be required by more than one calendar
+   * action, so there is no single target) are BLOCK rows precisely
+   * like the others but deliberately keep `manage: NULL` for this
+   * reason.
    */
   protected const ROWS = [
     [
@@ -76,7 +88,7 @@ final class HivelogDeleteDependencyRegistry {
       'child' => 'hive',
       'field' => 'apiary',
       'treatment' => self::BLOCK,
-      'manage' => 'parent-canonical',
+      'manage' => 'parent-canonical#hives',
     ],
     [
       'adr_row' => '2',
@@ -92,7 +104,7 @@ final class HivelogDeleteDependencyRegistry {
       'child' => 'apiary_action_log',
       'field' => 'apiary',
       'treatment' => self::BLOCK,
-      'manage' => 'parent-canonical',
+      'manage' => 'parent-canonical#calendar',
     ],
     [
       'adr_row' => '4',
@@ -100,7 +112,7 @@ final class HivelogDeleteDependencyRegistry {
       'child' => 'inventory_item',
       'field' => 'apiary',
       'treatment' => self::BLOCK,
-      'manage' => 'parent-canonical',
+      'manage' => 'parent-canonical#inventory',
     ],
     [
       'adr_row' => '5',
@@ -116,7 +128,7 @@ final class HivelogDeleteDependencyRegistry {
       'child' => 'product',
       'field' => 'apiary',
       'treatment' => self::BLOCK,
-      'manage' => 'parent-canonical',
+      'manage' => 'parent-canonical#products',
     ],
     [
       'adr_row' => '9',
@@ -124,7 +136,7 @@ final class HivelogDeleteDependencyRegistry {
       'child' => 'hive_inspection',
       'field' => 'hive',
       'treatment' => self::BLOCK,
-      'manage' => 'parent-canonical',
+      'manage' => 'parent-canonical#inspections',
     ],
     [
       'adr_row' => '10',
@@ -132,7 +144,7 @@ final class HivelogDeleteDependencyRegistry {
       'child' => 'hive_action_log',
       'field' => 'hive',
       'treatment' => self::BLOCK,
-      'manage' => 'parent-canonical',
+      'manage' => 'parent-canonical#calendar',
     ],
     [
       'adr_row' => '11',
@@ -148,7 +160,7 @@ final class HivelogDeleteDependencyRegistry {
       'child' => 'queen_observation',
       'field' => 'queen',
       'treatment' => self::BLOCK,
-      'manage' => 'parent-canonical',
+      'manage' => 'parent-canonical#observations',
     ],
     [
       'adr_row' => '15',
@@ -290,15 +302,28 @@ final class HivelogDeleteDependencyRegistry {
 
   /**
    * The URL a row's `manage` value resolves to for `$parent`, or NULL.
+   *
+   * A trailing `#fragment` (e.g. `'parent-canonical#hives'`) is split off
+   * and applied to the resolved URL as its fragment, so the link jumps
+   * straight to the relevant section instead of the top of the page.
    */
   public static function manageUrl(array $row, EntityInterface $parent): ?Url {
     if (empty($row['manage'])) {
       return NULL;
     }
-    if ($row['manage'] === 'parent-canonical') {
-      return $parent->hasLinkTemplate('canonical') ? $parent->toUrl('canonical') : NULL;
+    [$target, $fragment] = array_pad(explode('#', $row['manage'], 2), 2, NULL);
+
+    if ($target === 'parent-canonical') {
+      $url = $parent->hasLinkTemplate('canonical') ? $parent->toUrl('canonical') : NULL;
     }
-    return Url::fromRoute($row['manage']);
+    else {
+      $url = Url::fromRoute($target);
+    }
+
+    if ($url && $fragment !== NULL) {
+      $url->setOption('fragment', $fragment);
+    }
+    return $url;
   }
 
 }

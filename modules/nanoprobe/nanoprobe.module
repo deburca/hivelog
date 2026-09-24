@@ -113,7 +113,7 @@ function nanoprobe_hivelog_delete_dependencies() {
       'child' => 'sensor_device',
       'field' => 'apiary',
       'treatment' => HivelogDeleteDependencyRegistry::BLOCK,
-      'manage' => 'parent-canonical',
+      'manage' => 'parent-canonical#sensors',
     ],
     [
       'adr_row' => '12',
