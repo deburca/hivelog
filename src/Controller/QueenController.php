@@ -8,16 +8,21 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\EntityFormBuilderInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Entity\FieldableEntityInterface;
+use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Url;
 use Drupal\hivelog\Entity\Hive;
 use Drupal\hivelog\Entity\Queen;
+use Drupal\hivelog\HivelogDetailPageTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Controller for Queen pages.
  */
 class QueenController extends ControllerBase {
+
+  use HivelogDetailPageTrait;
 
   /**
    * Default number of observations shown per page in the embedded list.
@@ -238,94 +243,10 @@ class QueenController extends ControllerBase {
   }
 
   /**
-   * Builds Edit and Delete action links for the queen view.
+   * {@inheritdoc}
    */
-  protected function buildActions(Queen $queen): array {
-    $buttons = [];
-    if ($queen->access('update')) {
-      $buttons[] = ['label' => (string) $this->t('Edit'), 'url' => $queen->toUrl('edit-form')->toString()];
-    }
-    if ($queen->access('delete')) {
-      $buttons[] = [
-        'label' => (string) $this->t('Delete'),
-        'url' => $queen->toUrl('delete-form')->toString(),
-        'variant' => 'danger',
-      ];
-    }
-    if (empty($buttons)) {
-      return [];
-    }
-    return [
-      '#type' => 'component',
-      '#component' => 'hivelog:button-group',
-      '#props' => ['buttons' => $buttons],
-      '#weight' => -10,
-    ];
-  }
-
-  /**
-   * Builds a consistently formatted queen section.
-   */
-  protected function buildSection($title, Queen $queen, array $fields): array {
-    return [
-      '#type' => 'container',
-      '#attributes' => [
-        'class' => ['hivelog-queen-section'],
-      ],
-      'heading' => [
-        '#type' => 'html_tag',
-        '#tag' => 'h3',
-        '#value' => $title,
-      ],
-      'table' => [
-        '#type' => 'table',
-        '#header' => [
-          $this->t('Field'),
-          $this->t('Value'),
-        ],
-        '#rows' => $this->buildRows($queen, $fields),
-        '#attributes' => [
-          'class' => ['hivelog-queen-table'],
-        ],
-        '#attached' => ['library' => ['hivelog/tables']],
-      ],
-    ];
-  }
-
-  /**
-   * Builds rows for a section table.
-   */
-  protected function buildRows(Queen $queen, array $fields): array {
-    $rows = [];
-
-    foreach ($fields as $field_name) {
-      $rows[] = [
-        [
-          'data' => [
-            '#plain_text' => (string) $queen->get($field_name)->getFieldDefinition()->getLabel(),
-          ],
-        ],
-        [
-          'data' => $this->buildFieldValue($queen, $field_name),
-        ],
-      ];
-    }
-
-    return $rows;
-  }
-
-  /**
-   * Builds the display value for a single queen field.
-   */
-  protected function buildFieldValue(Queen $queen, string $field_name): array {
-    $field = $queen->get($field_name);
-
-    if ($field->isEmpty()) {
-      return [
-        '#plain_text' => (string) $this->t('—'),
-      ];
-    }
-
+  protected function formatFieldValue(FieldableEntityInterface $entity, string $field_name, FieldItemListInterface $field): array {
+    /** @var \Drupal\hivelog\Entity\Queen $entity */
     switch ($field_name) {
       case 'hive':
       case 'uid':

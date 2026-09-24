@@ -8,14 +8,19 @@ use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityFormBuilderInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Entity\FieldableEntityInterface;
+use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\Product;
+use Drupal\hivelog\HivelogDetailPageTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Controller for Product pages.
  */
 class ProductController extends ControllerBase {
+
+  use HivelogDetailPageTrait;
 
   /**
    * Constructs a ProductController.
@@ -85,94 +90,10 @@ class ProductController extends ControllerBase {
   }
 
   /**
-   * Builds Edit and Delete action links for the product view.
+   * {@inheritdoc}
    */
-  protected function buildActions(Product $product): array {
-    $buttons = [];
-    if ($product->access('update')) {
-      $buttons[] = ['label' => (string) $this->t('Edit'), 'url' => $product->toUrl('edit-form')->toString()];
-    }
-    if ($product->access('delete')) {
-      $buttons[] = [
-        'label' => (string) $this->t('Delete'),
-        'url' => $product->toUrl('delete-form')->toString(),
-        'variant' => 'danger',
-      ];
-    }
-    if (empty($buttons)) {
-      return [];
-    }
-    return [
-      '#type' => 'component',
-      '#component' => 'hivelog:button-group',
-      '#props' => ['buttons' => $buttons],
-      '#weight' => -10,
-    ];
-  }
-
-  /**
-   * Builds a consistently formatted product section.
-   */
-  protected function buildSection($title, Product $product, array $fields): array {
-    return [
-      '#type' => 'container',
-      '#attributes' => [
-        'class' => ['hivelog-product-section'],
-      ],
-      'heading' => [
-        '#type' => 'html_tag',
-        '#tag' => 'h3',
-        '#value' => $title,
-      ],
-      'table' => [
-        '#type' => 'table',
-        '#header' => [
-          $this->t('Field'),
-          $this->t('Value'),
-        ],
-        '#rows' => $this->buildRows($product, $fields),
-        '#attributes' => [
-          'class' => ['hivelog-product-table'],
-        ],
-        '#attached' => ['library' => ['hivelog/tables']],
-      ],
-    ];
-  }
-
-  /**
-   * Builds rows for a section table.
-   */
-  protected function buildRows(Product $product, array $fields): array {
-    $rows = [];
-
-    foreach ($fields as $field_name) {
-      $rows[] = [
-        [
-          'data' => [
-            '#plain_text' => (string) $product->get($field_name)->getFieldDefinition()->getLabel(),
-          ],
-        ],
-        [
-          'data' => $this->buildFieldValue($product, $field_name),
-        ],
-      ];
-    }
-
-    return $rows;
-  }
-
-  /**
-   * Builds the display value for a single product field.
-   */
-  protected function buildFieldValue(Product $product, string $field_name): array {
-    $field = $product->get($field_name);
-
-    if ($field->isEmpty()) {
-      return [
-        '#plain_text' => (string) $this->t('—'),
-      ];
-    }
-
+  protected function formatFieldValue(FieldableEntityInterface $entity, string $field_name, FieldItemListInterface $field): array {
+    /** @var \Drupal\hivelog\Entity\Product $entity */
     switch ($field_name) {
       case 'apiary':
         return $field->entity ? $field->entity->toLink()->toRenderable() : [

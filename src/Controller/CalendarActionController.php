@@ -8,13 +8,16 @@ use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityFormBuilderInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Entity\Query\QueryInterface;
+use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Url;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\CalendarAction;
 use Drupal\hivelog\Form\HivelogCalendarActionsFilterForm;
+use Drupal\hivelog\HivelogDetailPageTrait;
 use Drupal\hivelog\Utility\SimpleBulletText;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -23,6 +26,8 @@ use Symfony\Component\HttpFoundation\RequestStack;
  * Controller for Calendar Action pages.
  */
 class CalendarActionController extends ControllerBase {
+
+  use HivelogDetailPageTrait;
 
   /**
    * Default number of calendar actions shown per page on the collection page.
@@ -361,32 +366,6 @@ class CalendarActionController extends ControllerBase {
   }
 
   /**
-   * Builds Edit and Delete action links for the calendar action view.
-   */
-  protected function buildActions(CalendarAction $calendar_action): array {
-    $buttons = [];
-    if ($calendar_action->access('update')) {
-      $buttons[] = ['label' => (string) $this->t('Edit'), 'url' => $calendar_action->toUrl('edit-form')->toString()];
-    }
-    if ($calendar_action->access('delete')) {
-      $buttons[] = [
-        'label' => (string) $this->t('Delete'),
-        'url' => $calendar_action->toUrl('delete-form')->toString(),
-        'variant' => 'danger',
-      ];
-    }
-    if (empty($buttons)) {
-      return [];
-    }
-    return [
-      '#type' => 'component',
-      '#component' => 'hivelog:button-group',
-      '#props' => ['buttons' => $buttons],
-      '#weight' => -10,
-    ];
-  }
-
-  /**
    * Builds the embedded "Required Items" section of the calendar action view.
    *
    * This is the recipe that a "done" report's inventory usage form pre-fills
@@ -583,68 +562,10 @@ class CalendarActionController extends ControllerBase {
   }
 
   /**
-   * Builds a consistently formatted calendar action section.
+   * {@inheritdoc}
    */
-  protected function buildSection($title, CalendarAction $calendar_action, array $fields): array {
-    return [
-      '#type' => 'container',
-      '#attributes' => [
-        'class' => ['hivelog-calendar-action-section'],
-      ],
-      'heading' => [
-        '#type' => 'html_tag',
-        '#tag' => 'h3',
-        '#value' => $title,
-      ],
-      'table' => [
-        '#type' => 'table',
-        '#header' => [
-          $this->t('Field'),
-          $this->t('Value'),
-        ],
-        '#rows' => $this->buildRows($calendar_action, $fields),
-        '#attributes' => [
-          'class' => ['hivelog-calendar-action-table'],
-        ],
-        '#attached' => ['library' => ['hivelog/tables']],
-      ],
-    ];
-  }
-
-  /**
-   * Builds rows for a section table.
-   */
-  protected function buildRows(CalendarAction $calendar_action, array $fields): array {
-    $rows = [];
-
-    foreach ($fields as $field_name) {
-      $rows[] = [
-        [
-          'data' => [
-            '#plain_text' => (string) $calendar_action->get($field_name)->getFieldDefinition()->getLabel(),
-          ],
-        ],
-        [
-          'data' => $this->buildFieldValue($calendar_action, $field_name),
-        ],
-      ];
-    }
-
-    return $rows;
-  }
-
-  /**
-   * Builds the display value for a single calendar action field.
-   */
-  protected function buildFieldValue(CalendarAction $calendar_action, string $field_name): array {
-    $field = $calendar_action->get($field_name);
-
-    if ($field->isEmpty()) {
-      return [
-        '#plain_text' => (string) $this->t('—'),
-      ];
-    }
-
+  protected function formatFieldValue(FieldableEntityInterface $entity, string $field_name, FieldItemListInterface $field): array {
+    /** @var \Drupal\hivelog\Entity\CalendarAction $entity */
     switch ($field_name) {
       case 'apiary':
         return $field->entity ? $field->entity->toLink()->toRenderable() : [

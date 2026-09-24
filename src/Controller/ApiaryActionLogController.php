@@ -9,10 +9,13 @@ use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityFormBuilderInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Entity\FieldableEntityInterface;
+use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\ApiaryActionLog;
 use Drupal\hivelog\Entity\CalendarAction;
+use Drupal\hivelog\HivelogDetailPageTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -24,6 +27,8 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
  * (there is no apiary-level equivalent of a hive inspection).
  */
 class ApiaryActionLogController extends ControllerBase {
+
+  use HivelogDetailPageTrait;
 
   /**
    * The request stack.
@@ -138,94 +143,10 @@ class ApiaryActionLogController extends ControllerBase {
   }
 
   /**
-   * Builds Edit and Delete action links for the apiary action log view.
+   * {@inheritdoc}
    */
-  protected function buildActions(ApiaryActionLog $apiary_action_log): array {
-    $buttons = [];
-    if ($apiary_action_log->access('update')) {
-      $buttons[] = ['label' => (string) $this->t('Edit'), 'url' => $apiary_action_log->toUrl('edit-form')->toString()];
-    }
-    if ($apiary_action_log->access('delete')) {
-      $buttons[] = [
-        'label' => (string) $this->t('Delete'),
-        'url' => $apiary_action_log->toUrl('delete-form')->toString(),
-        'variant' => 'danger',
-      ];
-    }
-    if (empty($buttons)) {
-      return [];
-    }
-    return [
-      '#type' => 'component',
-      '#component' => 'hivelog:button-group',
-      '#props' => ['buttons' => $buttons],
-      '#weight' => -10,
-    ];
-  }
-
-  /**
-   * Builds a consistently formatted apiary action log section.
-   */
-  protected function buildSection($title, ApiaryActionLog $apiary_action_log, array $fields): array {
-    return [
-      '#type' => 'container',
-      '#attributes' => [
-        'class' => ['hivelog-apiary-action-log-section'],
-      ],
-      'heading' => [
-        '#type' => 'html_tag',
-        '#tag' => 'h3',
-        '#value' => $title,
-      ],
-      'table' => [
-        '#type' => 'table',
-        '#header' => [
-          $this->t('Field'),
-          $this->t('Value'),
-        ],
-        '#rows' => $this->buildRows($apiary_action_log, $fields),
-        '#attributes' => [
-          'class' => ['hivelog-apiary-action-log-table'],
-        ],
-        '#attached' => ['library' => ['hivelog/tables']],
-      ],
-    ];
-  }
-
-  /**
-   * Builds rows for a section table.
-   */
-  protected function buildRows(ApiaryActionLog $apiary_action_log, array $fields): array {
-    $rows = [];
-
-    foreach ($fields as $field_name) {
-      $rows[] = [
-        [
-          'data' => [
-            '#plain_text' => (string) $apiary_action_log->get($field_name)->getFieldDefinition()->getLabel(),
-          ],
-        ],
-        [
-          'data' => $this->buildFieldValue($apiary_action_log, $field_name),
-        ],
-      ];
-    }
-
-    return $rows;
-  }
-
-  /**
-   * Builds the display value for a single apiary action log field.
-   */
-  protected function buildFieldValue(ApiaryActionLog $apiary_action_log, string $field_name): array {
-    $field = $apiary_action_log->get($field_name);
-
-    if ($field->isEmpty()) {
-      return [
-        '#plain_text' => (string) $this->t('—'),
-      ];
-    }
-
+  protected function formatFieldValue(FieldableEntityInterface $entity, string $field_name, FieldItemListInterface $field): array {
+    /** @var \Drupal\hivelog\Entity\ApiaryActionLog $entity */
     switch ($field_name) {
       case 'apiary':
       case 'calendar_action':

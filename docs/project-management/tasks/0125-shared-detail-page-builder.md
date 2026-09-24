@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: todo
+status: review
 priority: medium
 project: "[[page-structure-consistency]]"
 area: routing
@@ -37,7 +37,7 @@ SensorDevice, ApiClient, AiProviderConfig) have no page-owned Edit /
 Delete; see [[0118-page-owned-edit-delete-then-retire-local-tasks]].
 
 ## Acceptance criteria
-- [ ] One shared implementation (a trait such as
+- [x] One shared implementation (a trait such as
       `HivelogDetailPageTrait`, or a small `hivelog.detail_page_builder`
       service; pick one and justify it in Implementation notes)
       provides:
@@ -50,32 +50,63 @@ Delete; see [[0118-page-owned-edit-delete-then-retire-local-tasks]].
         method (or per-field callback map) that controllers override for
         their own special cases.
       - `buildPhotosGrid(EntityInterface $entity, string $field = 'images')`.
-- [ ] All nine controllers use it. Their copies are deleted and only
+- [x] All nine controllers use it. Their copies are deleted and only
       genuinely type-specific field rendering remains in each.
-- [ ] Rendered output is **unchanged** for all nine page types (same
+- [x] Rendered output is **unchanged** for all nine page types (same
       markup and classes). The class names are kept here;
       [[0131-single-detail-table-css-class]] changes them separately.
-- [ ] Available to submodules (`hivelog` core namespace, no submodule
+- [x] Available to submodules (`hivelog` core namespace, no submodule
       dependency), so
       [[0118-page-owned-edit-delete-then-retire-local-tasks]] can use it
       for SensorDevice / ApiClient / AiProviderConfig.
-- [ ] Existing controller kernel tests pass unchanged. Add a direct test
+- [x] Existing controller kernel tests pass unchanged. Add a direct test
       of the shared `buildActions()` access behaviour (buttons present
       with update / delete access, absent without).
-- [ ] phpcs clean; kernel + unit suite green against `cms2`.
+- [x] phpcs clean; kernel + unit suite green against `cms2`.
 
 ## Implementation notes
-- A trait keeps each controller's `create()` / DI untouched and matches
-  how `ApiaryScopedAutocompleteTrait` is already used in `src/Form/`. A
-  service is easier to unit-test. Both are fine; don't do both.
-- Section / table classes are currently built from the entity type ID
-  (`hivelog-queen-section`, `hivelog-inventory-purchase-table`). Derive
-  them the same way (`str_replace('_', '-', $entity->getEntityTypeId())`)
-  to keep output identical. Watch `hive_inspection` →
-  `hivelog-inspection-*` (not `hivelog-hive-inspection-*`), which needs
-  an explicit mapping or a class-prefix parameter.
-- Key files: the nine controllers in `src/Controller/`, plus the new
-  trait or service.
+**Implemented 2026-09-24.**
+- **Trait, not a service**: `src/HivelogDetailPageTrait.php`. Keeps each
+  controller's `create()` / DI untouched, matches
+  `ApiaryScopedAutocompleteTrait`'s existing precedent in `src/Form/`,
+  and lets `formatFieldValue()` — the per-type hook — stay a normal
+  overridable method rather than a callback-map argument threaded
+  through a service call.
+- **Hook method, not a callback map**: `buildFieldValue()` does the one
+  shared thing every copy did (empty → em dash) and delegates to an
+  `abstract protected function formatFieldValue(FieldableEntityInterface
+  $entity, string $field_name, FieldItemListInterface $field): array`
+  that each controller implements — the type-specific `switch`
+  statement moved over verbatim (module-private field-name string, so a
+  callback map would have added indirection for no benefit).
+- **`FieldableEntityInterface`, not `EntityInterface`**, on every trait
+  method — `EntityInterface` has no `get()`; every hivelog entity is
+  fieldable (and any future submodule consumer — SensorDevice,
+  ApiClient, AiProviderConfig — is too), so this is the correct, not
+  just convenient, type. Avoids ~50 spurious `method.notFound` phpstan
+  findings the plain `EntityInterface` would have caused across nine
+  consuming classes.
+- **Class-prefix mapping**: `detailPageClassPrefix()` special-cases
+  `hive_inspection` → `inspection`; every other type mechanically
+  `str_replace('_', '-', $entity->getEntityTypeId())`. Verified live on
+  `cms2` (`/hivelog/inspection/7` renders `hivelog-inspection-*`, not
+  `hivelog-hive-inspection-*`).
+- **Verification**: all 9 controllers' existing kernel test suites
+  (121 tests, 2055 assertions) pass unchanged — the strongest signal
+  the rendered markup didn't move. New
+  `tests/src/Kernel/HivelogDetailPageTraitTest.php` exercises
+  `buildActions()` directly via reflection on `QueenController` across
+  four permission combinations. Full `hivelog` suite (645 tests) green;
+  spot-checked queen/inspection/product pages live on `cms2`.
+- **`buildPhotosGrid()`** requires `$this->fileUrlGenerator` on the
+  consuming class; only `HiveInspectionController` and
+  `QueenObservationController` declare it and call it. The other seven
+  don't call it, so it's inert there — documented in the trait's own
+  docblock rather than split into a second trait, since the task asks
+  for "one shared implementation" providing all four builders.
+- Key files: the nine controllers in `src/Controller/`, the new
+  `src/HivelogDetailPageTrait.php`, new
+  `tests/src/Kernel/HivelogDetailPageTraitTest.php`.
 
 ## Related
 - Project:: [[page-structure-consistency]]

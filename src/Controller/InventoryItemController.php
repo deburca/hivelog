@@ -8,14 +8,19 @@ use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityFormBuilderInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Entity\FieldableEntityInterface;
+use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\InventoryItem;
+use Drupal\hivelog\HivelogDetailPageTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Controller for Inventory Item pages.
  */
 class InventoryItemController extends ControllerBase {
+
+  use HivelogDetailPageTrait;
 
   /**
    * Constructs an InventoryItemController.
@@ -114,94 +119,10 @@ class InventoryItemController extends ControllerBase {
   }
 
   /**
-   * Builds Edit and Delete action links for the inventory item view.
+   * {@inheritdoc}
    */
-  protected function buildActions(InventoryItem $inventory_item): array {
-    $buttons = [];
-    if ($inventory_item->access('update')) {
-      $buttons[] = ['label' => (string) $this->t('Edit'), 'url' => $inventory_item->toUrl('edit-form')->toString()];
-    }
-    if ($inventory_item->access('delete')) {
-      $buttons[] = [
-        'label' => (string) $this->t('Delete'),
-        'url' => $inventory_item->toUrl('delete-form')->toString(),
-        'variant' => 'danger',
-      ];
-    }
-    if (empty($buttons)) {
-      return [];
-    }
-    return [
-      '#type' => 'component',
-      '#component' => 'hivelog:button-group',
-      '#props' => ['buttons' => $buttons],
-      '#weight' => -10,
-    ];
-  }
-
-  /**
-   * Builds a consistently formatted inventory item section.
-   */
-  protected function buildSection($title, InventoryItem $inventory_item, array $fields): array {
-    return [
-      '#type' => 'container',
-      '#attributes' => [
-        'class' => ['hivelog-inventory-item-section'],
-      ],
-      'heading' => [
-        '#type' => 'html_tag',
-        '#tag' => 'h3',
-        '#value' => $title,
-      ],
-      'table' => [
-        '#type' => 'table',
-        '#header' => [
-          $this->t('Field'),
-          $this->t('Value'),
-        ],
-        '#rows' => $this->buildRows($inventory_item, $fields),
-        '#attributes' => [
-          'class' => ['hivelog-inventory-item-table'],
-        ],
-        '#attached' => ['library' => ['hivelog/tables']],
-      ],
-    ];
-  }
-
-  /**
-   * Builds rows for a section table.
-   */
-  protected function buildRows(InventoryItem $inventory_item, array $fields): array {
-    $rows = [];
-
-    foreach ($fields as $field_name) {
-      $rows[] = [
-        [
-          'data' => [
-            '#plain_text' => (string) $inventory_item->get($field_name)->getFieldDefinition()->getLabel(),
-          ],
-        ],
-        [
-          'data' => $this->buildFieldValue($inventory_item, $field_name),
-        ],
-      ];
-    }
-
-    return $rows;
-  }
-
-  /**
-   * Builds the display value for a single inventory item field.
-   */
-  protected function buildFieldValue(InventoryItem $inventory_item, string $field_name): array {
-    $field = $inventory_item->get($field_name);
-
-    if ($field->isEmpty()) {
-      return [
-        '#plain_text' => (string) $this->t('—'),
-      ];
-    }
-
+  protected function formatFieldValue(FieldableEntityInterface $entity, string $field_name, FieldItemListInterface $field): array {
+    /** @var \Drupal\hivelog\Entity\InventoryItem $entity */
     switch ($field_name) {
       case 'apiary':
         return $field->entity ? $field->entity->toLink()->toRenderable() : [
@@ -218,7 +139,7 @@ class InventoryItemController extends ControllerBase {
 
       case 'low_stock_threshold':
         return [
-          '#plain_text' => rtrim(rtrim(number_format((float) $field->value, 3, '.', ''), '0'), '.') . ' ' . $inventory_item->get('unit')->value,
+          '#plain_text' => rtrim(rtrim(number_format((float) $field->value, 3, '.', ''), '0'), '.') . ' ' . $entity->get('unit')->value,
         ];
 
       default:

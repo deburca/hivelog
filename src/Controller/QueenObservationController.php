@@ -8,16 +8,21 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\EntityFormBuilderInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Entity\FieldableEntityInterface;
+use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\File\FileUrlGeneratorInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\hivelog\Entity\Queen;
 use Drupal\hivelog\Entity\QueenObservation;
+use Drupal\hivelog\HivelogDetailPageTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Controller for Queen Observation pages.
  */
 class QueenObservationController extends ControllerBase {
+
+  use HivelogDetailPageTrait;
 
   /**
    * The file URL generator.
@@ -122,152 +127,10 @@ class QueenObservationController extends ControllerBase {
   }
 
   /**
-   * Builds Edit and Delete action links for the observation view.
+   * {@inheritdoc}
    */
-  protected function buildActions(QueenObservation $queen_observation): array {
-    $buttons = [];
-    if ($queen_observation->access('update')) {
-      $buttons[] = ['label' => (string) $this->t('Edit'), 'url' => $queen_observation->toUrl('edit-form')->toString()];
-    }
-    if ($queen_observation->access('delete')) {
-      $buttons[] = [
-        'label' => (string) $this->t('Delete'),
-        'url' => $queen_observation->toUrl('delete-form')->toString(),
-        'variant' => 'danger',
-      ];
-    }
-    if (empty($buttons)) {
-      return [];
-    }
-    return [
-      '#type' => 'component',
-      '#component' => 'hivelog:button-group',
-      '#props' => ['buttons' => $buttons],
-      '#weight' => -10,
-    ];
-  }
-
-  /**
-   * Builds a grid of observation photos with links to the full-size image.
-   */
-  protected function buildPhotosGrid(QueenObservation $queen_observation): array {
-    if ($queen_observation->get('images')->isEmpty()) {
-      return [];
-    }
-
-    $image_style = $this->entityTypeManager
-      ->getStorage('image_style')
-      ->load('thumbnail');
-
-    $items = [];
-    foreach ($queen_observation->get('images') as $delta => $item) {
-      /** @var \Drupal\file\FileInterface|null $file */
-      $file = $item->entity;
-      if (!$file) {
-        continue;
-      }
-
-      $full_url = $this->fileUrlGenerator->generateAbsoluteString($file->getFileUri());
-      $thumb_url = $image_style ? $image_style->buildUrl($file->getFileUri()) : $full_url;
-      $alt = (string) ($item->alt ?? '');
-
-      $items[] = [
-        'full_url' => $full_url,
-        'thumb_url' => $thumb_url,
-        'alt' => $alt,
-      ];
-    }
-
-    if (empty($items)) {
-      return [];
-    }
-
-    return [
-      '#type' => 'container',
-      '#attributes' => [
-        'class' => ['hivelog-queen-observation-section', 'hivelog-queen-observation-photos'],
-      ],
-      '#attached' => [
-        'library' => ['hivelog/images'],
-      ],
-      'heading' => [
-        '#type' => 'html_tag',
-        '#tag' => 'h3',
-        '#value' => $this->t('Photos'),
-      ],
-      'grid' => [
-        '#type' => 'inline_template',
-        '#template' => '<div class="hivelog-photos-grid">{% for item in items %}<a class="hivelog-photos-grid__item" href="{{ item.full_url }}" target="_blank" rel="noopener"><img src="{{ item.thumb_url }}" alt="{{ item.alt }}" loading="lazy" /></a>{% endfor %}</div>',
-        '#context' => [
-          'items' => $items,
-        ],
-      ],
-    ];
-  }
-
-  /**
-   * Builds a consistently formatted observation section.
-   */
-  protected function buildSection($title, QueenObservation $queen_observation, array $fields): array {
-    return [
-      '#type' => 'container',
-      '#attributes' => [
-        'class' => ['hivelog-queen-observation-section'],
-      ],
-      'heading' => [
-        '#type' => 'html_tag',
-        '#tag' => 'h3',
-        '#value' => $title,
-      ],
-      'table' => [
-        '#type' => 'table',
-        '#header' => [
-          $this->t('Field'),
-          $this->t('Value'),
-        ],
-        '#rows' => $this->buildRows($queen_observation, $fields),
-        '#attributes' => [
-          'class' => ['hivelog-queen-observation-table'],
-        ],
-        '#attached' => ['library' => ['hivelog/tables']],
-      ],
-    ];
-  }
-
-  /**
-   * Builds rows for a section table.
-   */
-  protected function buildRows(QueenObservation $queen_observation, array $fields): array {
-    $rows = [];
-
-    foreach ($fields as $field_name) {
-      $rows[] = [
-        [
-          'data' => [
-            '#plain_text' => (string) $queen_observation->get($field_name)->getFieldDefinition()->getLabel(),
-          ],
-        ],
-        [
-          'data' => $this->buildFieldValue($queen_observation, $field_name),
-        ],
-      ];
-    }
-
-    return $rows;
-  }
-
-  /**
-   * Builds the display value for a single observation field.
-   */
-  protected function buildFieldValue(QueenObservation $queen_observation, string $field_name): array {
-    $field = $queen_observation->get($field_name);
-
-    if ($field->isEmpty()) {
-      return [
-        '#plain_text' => (string) $this->t('—'),
-      ];
-    }
-
+  protected function formatFieldValue(FieldableEntityInterface $entity, string $field_name, FieldItemListInterface $field): array {
+    /** @var \Drupal\hivelog\Entity\QueenObservation $entity */
     switch ($field_name) {
       case 'queen':
       case 'uid':

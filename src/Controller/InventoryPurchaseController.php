@@ -10,14 +10,19 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\EntityFormBuilderInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Entity\FieldableEntityInterface;
+use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\InventoryPurchase;
+use Drupal\hivelog\HivelogDetailPageTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Controller for Inventory Purchase pages.
  */
 class InventoryPurchaseController extends ControllerBase {
+
+  use HivelogDetailPageTrait;
 
   /**
    * The date formatter.
@@ -113,94 +118,10 @@ class InventoryPurchaseController extends ControllerBase {
   }
 
   /**
-   * Builds Edit and Delete action links for the purchase view.
+   * {@inheritdoc}
    */
-  protected function buildActions(InventoryPurchase $inventory_purchase): array {
-    $buttons = [];
-    if ($inventory_purchase->access('update')) {
-      $buttons[] = ['label' => (string) $this->t('Edit'), 'url' => $inventory_purchase->toUrl('edit-form')->toString()];
-    }
-    if ($inventory_purchase->access('delete')) {
-      $buttons[] = [
-        'label' => (string) $this->t('Delete'),
-        'url' => $inventory_purchase->toUrl('delete-form')->toString(),
-        'variant' => 'danger',
-      ];
-    }
-    if (empty($buttons)) {
-      return [];
-    }
-    return [
-      '#type' => 'component',
-      '#component' => 'hivelog:button-group',
-      '#props' => ['buttons' => $buttons],
-      '#weight' => -10,
-    ];
-  }
-
-  /**
-   * Builds a consistently formatted purchase section.
-   */
-  protected function buildSection($title, InventoryPurchase $inventory_purchase, array $fields): array {
-    return [
-      '#type' => 'container',
-      '#attributes' => [
-        'class' => ['hivelog-inventory-purchase-section'],
-      ],
-      'heading' => [
-        '#type' => 'html_tag',
-        '#tag' => 'h3',
-        '#value' => $title,
-      ],
-      'table' => [
-        '#type' => 'table',
-        '#header' => [
-          $this->t('Field'),
-          $this->t('Value'),
-        ],
-        '#rows' => $this->buildRows($inventory_purchase, $fields),
-        '#attributes' => [
-          'class' => ['hivelog-inventory-purchase-table'],
-        ],
-        '#attached' => ['library' => ['hivelog/tables']],
-      ],
-    ];
-  }
-
-  /**
-   * Builds rows for a section table.
-   */
-  protected function buildRows(InventoryPurchase $inventory_purchase, array $fields): array {
-    $rows = [];
-
-    foreach ($fields as $field_name) {
-      $rows[] = [
-        [
-          'data' => [
-            '#plain_text' => (string) $inventory_purchase->get($field_name)->getFieldDefinition()->getLabel(),
-          ],
-        ],
-        [
-          'data' => $this->buildFieldValue($inventory_purchase, $field_name),
-        ],
-      ];
-    }
-
-    return $rows;
-  }
-
-  /**
-   * Builds the display value for a single purchase field.
-   */
-  protected function buildFieldValue(InventoryPurchase $inventory_purchase, string $field_name): array {
-    $field = $inventory_purchase->get($field_name);
-
-    if ($field->isEmpty()) {
-      return [
-        '#plain_text' => (string) $this->t('—'),
-      ];
-    }
-
+  protected function formatFieldValue(FieldableEntityInterface $entity, string $field_name, FieldItemListInterface $field): array {
+    /** @var \Drupal\hivelog\Entity\InventoryPurchase $entity */
     switch ($field_name) {
       case 'apiary':
       case 'item':

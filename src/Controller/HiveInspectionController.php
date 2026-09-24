@@ -8,16 +8,21 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\EntityFormBuilderInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Entity\FieldableEntityInterface;
+use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\File\FileUrlGeneratorInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\hivelog\Entity\Hive;
 use Drupal\hivelog\Entity\HiveInspection;
+use Drupal\hivelog\HivelogDetailPageTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Controller for Hive Inspection pages.
  */
 class HiveInspectionController extends ControllerBase {
+
+  use HivelogDetailPageTrait;
 
   /**
    * The file URL generator.
@@ -144,90 +149,6 @@ class HiveInspectionController extends ControllerBase {
   }
 
   /**
-   * Builds a grid of inspection photos with links to the full-size image.
-   */
-  protected function buildPhotosGrid(HiveInspection $hive_inspection): array {
-    if ($hive_inspection->get('images')->isEmpty()) {
-      return [];
-    }
-
-    $image_style = $this->entityTypeManager
-      ->getStorage('image_style')
-      ->load('thumbnail');
-
-    $items = [];
-    foreach ($hive_inspection->get('images') as $delta => $item) {
-      /** @var \Drupal\file\FileInterface|null $file */
-      $file = $item->entity;
-      if (!$file) {
-        continue;
-      }
-
-      $full_url = $this->fileUrlGenerator->generateAbsoluteString($file->getFileUri());
-      $thumb_url = $image_style ? $image_style->buildUrl($file->getFileUri()) : $full_url;
-      $alt = (string) ($item->alt ?? '');
-
-      $items[] = [
-        'full_url' => $full_url,
-        'thumb_url' => $thumb_url,
-        'alt' => $alt,
-      ];
-    }
-
-    if (empty($items)) {
-      return [];
-    }
-
-    return [
-      '#type' => 'container',
-      '#attributes' => [
-        'class' => ['hivelog-inspection-section', 'hivelog-inspection-photos'],
-      ],
-      '#attached' => [
-        'library' => ['hivelog/images'],
-      ],
-      'heading' => [
-        '#type' => 'html_tag',
-        '#tag' => 'h3',
-        '#value' => $this->t('Photos'),
-      ],
-      'grid' => [
-        '#type' => 'inline_template',
-        '#template' => '<div class="hivelog-photos-grid">{% for item in items %}<a class="hivelog-photos-grid__item" href="{{ item.full_url }}" target="_blank" rel="noopener"><img src="{{ item.thumb_url }}" alt="{{ item.alt }}" loading="lazy" /></a>{% endfor %}</div>',
-        '#context' => [
-          'items' => $items,
-        ],
-      ],
-    ];
-  }
-
-  /**
-   * Builds Edit and Delete action links for the inspection view.
-   */
-  protected function buildActions(HiveInspection $hive_inspection): array {
-    $buttons = [];
-    if ($hive_inspection->access('update')) {
-      $buttons[] = ['label' => (string) $this->t('Edit'), 'url' => $hive_inspection->toUrl('edit-form')->toString()];
-    }
-    if ($hive_inspection->access('delete')) {
-      $buttons[] = [
-        'label' => (string) $this->t('Delete'),
-        'url' => $hive_inspection->toUrl('delete-form')->toString(),
-        'variant' => 'danger',
-      ];
-    }
-    if (empty($buttons)) {
-      return [];
-    }
-    return [
-      '#type' => 'component',
-      '#component' => 'hivelog:button-group',
-      '#props' => ['buttons' => $buttons],
-      '#weight' => -10,
-    ];
-  }
-
-  /**
    * Title callback for the inspection view page.
    */
   public function title(HiveInspection $hive_inspection) {
@@ -235,68 +156,10 @@ class HiveInspectionController extends ControllerBase {
   }
 
   /**
-   * Builds a consistently formatted inspection section.
+   * {@inheritdoc}
    */
-  protected function buildSection($title, HiveInspection $hive_inspection, array $fields): array {
-    return [
-      '#type' => 'container',
-      '#attributes' => [
-        'class' => ['hivelog-inspection-section'],
-      ],
-      'heading' => [
-        '#type' => 'html_tag',
-        '#tag' => 'h3',
-        '#value' => $title,
-      ],
-      'table' => [
-        '#type' => 'table',
-        '#header' => [
-          $this->t('Field'),
-          $this->t('Value'),
-        ],
-        '#rows' => $this->buildRows($hive_inspection, $fields),
-        '#attributes' => [
-          'class' => ['hivelog-inspection-table'],
-        ],
-        '#attached' => ['library' => ['hivelog/tables']],
-      ],
-    ];
-  }
-
-  /**
-   * Builds rows for a section table.
-   */
-  protected function buildRows(HiveInspection $hive_inspection, array $fields): array {
-    $rows = [];
-
-    foreach ($fields as $field_name) {
-      $rows[] = [
-        [
-          'data' => [
-            '#plain_text' => (string) $hive_inspection->get($field_name)->getFieldDefinition()->getLabel(),
-          ],
-        ],
-        [
-          'data' => $this->buildFieldValue($hive_inspection, $field_name),
-        ],
-      ];
-    }
-
-    return $rows;
-  }
-
-  /**
-   * Builds the display value for a single inspection field.
-   */
-  protected function buildFieldValue(HiveInspection $hive_inspection, string $field_name): array {
-    $field = $hive_inspection->get($field_name);
-
-    if ($field->isEmpty()) {
-      return [
-        '#plain_text' => (string) $this->t('—'),
-      ];
-    }
-
+  protected function formatFieldValue(FieldableEntityInterface $entity, string $field_name, FieldItemListInterface $field): array {
+    /** @var \Drupal\hivelog\Entity\HiveInspection $entity */
     switch ($field_name) {
       case 'hive':
       case 'uid':

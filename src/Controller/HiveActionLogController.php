@@ -9,10 +9,13 @@ use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityFormBuilderInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Entity\FieldableEntityInterface;
+use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\hivelog\Entity\CalendarAction;
 use Drupal\hivelog\Entity\Hive;
 use Drupal\hivelog\Entity\HiveActionLog;
+use Drupal\hivelog\HivelogDetailPageTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -21,6 +24,8 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
  * Controller for Hive Action Log pages.
  */
 class HiveActionLogController extends ControllerBase {
+
+  use HivelogDetailPageTrait;
 
   /**
    * The request stack.
@@ -140,94 +145,10 @@ class HiveActionLogController extends ControllerBase {
   }
 
   /**
-   * Builds Edit and Delete action links for the hive action log view.
+   * {@inheritdoc}
    */
-  protected function buildActions(HiveActionLog $hive_action_log): array {
-    $buttons = [];
-    if ($hive_action_log->access('update')) {
-      $buttons[] = ['label' => (string) $this->t('Edit'), 'url' => $hive_action_log->toUrl('edit-form')->toString()];
-    }
-    if ($hive_action_log->access('delete')) {
-      $buttons[] = [
-        'label' => (string) $this->t('Delete'),
-        'url' => $hive_action_log->toUrl('delete-form')->toString(),
-        'variant' => 'danger',
-      ];
-    }
-    if (empty($buttons)) {
-      return [];
-    }
-    return [
-      '#type' => 'component',
-      '#component' => 'hivelog:button-group',
-      '#props' => ['buttons' => $buttons],
-      '#weight' => -10,
-    ];
-  }
-
-  /**
-   * Builds a consistently formatted hive action log section.
-   */
-  protected function buildSection($title, HiveActionLog $hive_action_log, array $fields): array {
-    return [
-      '#type' => 'container',
-      '#attributes' => [
-        'class' => ['hivelog-hive-action-log-section'],
-      ],
-      'heading' => [
-        '#type' => 'html_tag',
-        '#tag' => 'h3',
-        '#value' => $title,
-      ],
-      'table' => [
-        '#type' => 'table',
-        '#header' => [
-          $this->t('Field'),
-          $this->t('Value'),
-        ],
-        '#rows' => $this->buildRows($hive_action_log, $fields),
-        '#attributes' => [
-          'class' => ['hivelog-hive-action-log-table'],
-        ],
-        '#attached' => ['library' => ['hivelog/tables']],
-      ],
-    ];
-  }
-
-  /**
-   * Builds rows for a section table.
-   */
-  protected function buildRows(HiveActionLog $hive_action_log, array $fields): array {
-    $rows = [];
-
-    foreach ($fields as $field_name) {
-      $rows[] = [
-        [
-          'data' => [
-            '#plain_text' => (string) $hive_action_log->get($field_name)->getFieldDefinition()->getLabel(),
-          ],
-        ],
-        [
-          'data' => $this->buildFieldValue($hive_action_log, $field_name),
-        ],
-      ];
-    }
-
-    return $rows;
-  }
-
-  /**
-   * Builds the display value for a single hive action log field.
-   */
-  protected function buildFieldValue(HiveActionLog $hive_action_log, string $field_name): array {
-    $field = $hive_action_log->get($field_name);
-
-    if ($field->isEmpty()) {
-      return [
-        '#plain_text' => (string) $this->t('—'),
-      ];
-    }
-
+  protected function formatFieldValue(FieldableEntityInterface $entity, string $field_name, FieldItemListInterface $field): array {
+    /** @var \Drupal\hivelog\Entity\HiveActionLog $entity */
     switch ($field_name) {
       case 'hive':
       case 'calendar_action':
