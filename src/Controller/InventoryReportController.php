@@ -132,7 +132,8 @@ class InventoryReportController extends ControllerBase {
       '#attributes' => ['class' => ['hivelog-inventory-report-breakdown']],
       'heading' => [
         '#type' => 'html_tag',
-        '#tag' => 'h3',
+        // H2 (task 0128) — a top-level section on this standalone report page.
+        '#tag' => 'h2',
         '#value' => $this->t('Breakdown by item'),
       ],
       'table' => [
@@ -168,7 +169,8 @@ class InventoryReportController extends ControllerBase {
       '#attributes' => ['class' => ['hivelog-inventory-report-trend']],
       'heading' => [
         '#type' => 'html_tag',
-        '#tag' => 'h3',
+        // H2 (task 0128) — a top-level section on this standalone report page.
+        '#tag' => 'h2',
         '#value' => $this->t('5-Year Trend'),
       ],
       'table' => [
@@ -302,7 +304,8 @@ class InventoryReportController extends ControllerBase {
       '#attributes' => ['class' => ['hivelog-inventory-report-trend']],
       'heading' => [
         '#type' => 'html_tag',
-        '#tag' => 'h3',
+        // H2 (task 0128) — a top-level section on this standalone report page.
+        '#tag' => 'h2',
         '#value' => $this->t('5-Year Trend'),
       ],
       'table' => [

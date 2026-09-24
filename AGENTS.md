@@ -252,6 +252,24 @@ and compact sizing (`--hivelog-btn-compact-padding-*` tokens with a
 in `css/hivelog.buttons.css`. See ADR-0012 and ADR-0024 in
 `docs/project-management/decisions/`.
 
+#### Heading hierarchy (task 0128)
+
+Every page's title is the theme's own H1. Below it: **a page's top-level
+sections are H2; subsections nested inside a section are H3; nothing goes
+deeper without a parent level.** This applies uniformly — detail-page
+sections (`HivelogDetailPageTrait::buildSection()`/`buildPhotosGrid()`),
+embedded-list headings (`hivelog-list-heading__title`, whether built inline
+by a controller or via `HivelogListBuilder`), delete-form dependency notices
+(`HivelogEntityDeleteForm`), and submodule panels contributed through
+`hook_hivelog_*_panels()` (nanoprobe's Sensors panel, nexus's AI Insight
+panel) — a panel injected into a page is always a top-level section there,
+so it always emits H2, never a level passed in by the hook caller. The one
+place a nested H3 is correct today is the Hive page's "Hive Activity" H2
+wrapping its Inspections/Queen Observations H3 sub-lists. Skipped or
+out-of-order levels break screen-reader heading navigation (WCAG 2.2
+SC 1.3.1 / 2.4.6) and stop a theme from styling "section heading"
+consistently.
+
 ### Theming HiveLog
 
 The module ships a complete, neutral look that works on any admin theme.

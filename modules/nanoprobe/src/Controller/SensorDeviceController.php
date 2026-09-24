@@ -142,7 +142,9 @@ class SensorDeviceController extends ControllerBase {
           '#attributes' => ['class' => ['nanoprobe-sensor-metric']],
           'heading' => [
             '#type' => 'html_tag',
-            '#tag' => 'h3',
+            // H2 (task 0128) — a top-level section on this dedicated
+            // readings page, one per metric.
+            '#tag' => 'h2',
             '#value' => $metric_label,
           ],
           'chart' => $chart,

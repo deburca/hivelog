@@ -38,12 +38,12 @@
 }
 
 .hivelog-notice--critical p,
-.hivelog-notice--critical h3 {
+.hivelog-notice--critical h2 {
   margin: 0;
   color: var(--hivelog-ink);
 }
 
-.hivelog-notice--warning h3 {
+.hivelog-notice--warning h2 {
   margin: 0 0 0.35rem;
   color: var(--hivelog-ink);
   font-size: 1rem;

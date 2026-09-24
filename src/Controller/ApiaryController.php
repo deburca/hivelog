@@ -170,7 +170,8 @@ class ApiaryController extends ControllerBase {
       '#weight' => 10,
       'title' => [
         '#type' => 'html_tag',
-        '#tag' => 'h3',
+        // H2 (task 0128) — a top-level apiary-page section.
+        '#tag' => 'h2',
         '#value' => $this->t('Hives'),
         '#attributes' => ['class' => ['hivelog-list-heading__title']],
       ],
@@ -295,7 +296,8 @@ class ApiaryController extends ControllerBase {
       '#weight' => 20,
       'title' => [
         '#type' => 'html_tag',
-        '#tag' => 'h3',
+        // H2 (task 0128) — a top-level apiary-page section.
+        '#tag' => 'h2',
         '#value' => $this->t('Seasonal Calendar (current week: @week)', ['@week' => $current_week]),
         '#attributes' => ['class' => ['hivelog-list-heading__title']],
       ],
@@ -455,7 +457,8 @@ class ApiaryController extends ControllerBase {
       '#weight' => 25,
       'title' => [
         '#type' => 'html_tag',
-        '#tag' => 'h3',
+        // H2 (task 0128) — a top-level apiary-page section.
+        '#tag' => 'h2',
         '#value' => $this->t('Inventory'),
         '#attributes' => ['class' => ['hivelog-list-heading__title']],
       ],
@@ -583,7 +586,8 @@ class ApiaryController extends ControllerBase {
       '#weight' => 30,
       'title' => [
         '#type' => 'html_tag',
-        '#tag' => 'h3',
+        // H2 (task 0128) — a top-level apiary-page section.
+        '#tag' => 'h2',
         '#value' => $this->t('Products'),
         '#attributes' => ['class' => ['hivelog-list-heading__title']],
       ],

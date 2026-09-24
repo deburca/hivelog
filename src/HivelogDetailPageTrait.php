@@ -55,6 +55,11 @@ trait HivelogDetailPageTrait {
 
   /**
    * Builds a consistently formatted detail-page section.
+   *
+   * The heading is an H2 (task 0128) — every detail page's only
+   * structure below its H1 page title is a flat run of these sections
+   * (Overview, Identity, …), so each one is a top-level section, never
+   * nested inside another.
    */
   protected function buildSection($title, FieldableEntityInterface $entity, array $fields): array {
     $prefix = $this->detailPageClassPrefix($entity);
@@ -65,7 +70,7 @@ trait HivelogDetailPageTrait {
       ],
       'heading' => [
         '#type' => 'html_tag',
-        '#tag' => 'h3',
+        '#tag' => 'h2',
         '#value' => $title,
       ],
       'table' => [
@@ -190,7 +195,7 @@ trait HivelogDetailPageTrait {
       ],
       'heading' => [
         '#type' => 'html_tag',
-        '#tag' => 'h3',
+        '#tag' => 'h2',
         '#value' => $this->t('Photos'),
       ],
       'grid' => [

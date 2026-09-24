@@ -223,7 +223,8 @@ class HiveController extends ControllerBase {
       '#weight' => 25,
       'title' => [
         '#type' => 'html_tag',
-        '#tag' => 'h3',
+        // H2 (task 0128) — a top-level hive-page section.
+        '#tag' => 'h2',
         '#value' => $this->t('Seasonal Calendar (current week: @week)', ['@week' => $current_week]),
         '#attributes' => ['class' => ['hivelog-list-heading__title']],
       ],
@@ -487,7 +488,8 @@ class HiveController extends ControllerBase {
       '#attributes' => ['class' => ['hivelog-list-heading']],
       'title' => [
         '#type' => 'html_tag',
-        '#tag' => 'h3',
+        // H2 (task 0128) — a top-level hive-page section.
+        '#tag' => 'h2',
         '#value' => $this->t('Queen'),
         '#attributes' => ['class' => ['hivelog-list-heading__title']],
       ],
@@ -637,6 +639,7 @@ class HiveController extends ControllerBase {
         '#attributes' => ['class' => ['hivelog-list-heading']],
         'title' => [
           '#type' => 'html_tag',
+          // Stays H3 (task 0128) — nested inside the "Hive Activity" H2.
           '#tag' => 'h3',
           '#value' => $this->t('Inspections'),
           '#attributes' => ['class' => ['hivelog-list-heading__title']],
@@ -756,6 +759,7 @@ class HiveController extends ControllerBase {
       '#attributes' => ['class' => ['hivelog-list-heading']],
       'title' => [
         '#type' => 'html_tag',
+        // Stays H3 (task 0128) — nested inside the "Hive Activity" H2.
         '#tag' => 'h3',
         '#value' => $this->t('Queen Observations'),
         '#attributes' => ['class' => ['hivelog-list-heading__title']],
@@ -1236,7 +1240,8 @@ class HiveController extends ControllerBase {
       ],
       'heading' => [
         '#type' => 'html_tag',
-        '#tag' => 'h3',
+        // H2 (task 0128) — a top-level hive-page section.
+        '#tag' => 'h2',
         '#value' => $this->t('Pictures'),
       ],
       'grid' => [
@@ -1382,7 +1387,9 @@ class HiveController extends ControllerBase {
       ],
       'heading' => [
         '#type' => 'html_tag',
-        '#tag' => 'h4',
+        // H2, not H4 (task 0128) — a top-level hive-page section; the
+        // class name (not the tag) still drives its visual size.
+        '#tag' => 'h2',
         '#value' => $this->t('Inspection weights for @year', ['@year' => $year]),
         '#attributes' => ['class' => ['hivelog-weight-histogram__title']],
       ],

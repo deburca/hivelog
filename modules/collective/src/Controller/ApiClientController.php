@@ -63,7 +63,8 @@ class ApiClientController extends ControllerBase {
       '#attached' => ['library' => ['hivelog/notices', 'collective/api_client']],
       'heading' => [
         '#type' => 'html_tag',
-        '#tag' => 'h3',
+        // H2 (task 0128) — the only section on this detail page.
+        '#tag' => 'h2',
         '#value' => $this->t('API endpoint'),
       ],
       'list' => [

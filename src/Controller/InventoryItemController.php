@@ -93,7 +93,9 @@ class InventoryItemController extends ControllerBase {
         '#attributes' => ['class' => ['hivelog-inventory-item-section']],
         'heading' => [
           '#type' => 'html_tag',
-          '#tag' => 'h3',
+          // H2 (task 0128) — a top-level section, sibling to buildSection()'s
+          // own Overview/Type & Depreciation headings.
+          '#tag' => 'h2',
           '#value' => $this->t('Stock on Hand'),
         ],
         'value' => [

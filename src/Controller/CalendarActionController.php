@@ -434,7 +434,9 @@ class CalendarActionController extends ControllerBase {
         '#attributes' => ['class' => ['hivelog-list-heading']],
         'title' => [
           '#type' => 'html_tag',
-          '#tag' => 'h3',
+          // H2 (task 0128) — a top-level section, sibling to
+          // buildSection()'s own Overview/Schedule/Description headings.
+          '#tag' => 'h2',
           '#value' => $this->t('Required Items'),
           '#attributes' => ['class' => ['hivelog-list-heading__title']],
         ],
@@ -533,7 +535,9 @@ class CalendarActionController extends ControllerBase {
         '#attributes' => ['class' => ['hivelog-list-heading']],
         'title' => [
           '#type' => 'html_tag',
-          '#tag' => 'h3',
+          // H2 (task 0128) — a top-level section, sibling to
+          // buildSection()'s own Overview/Schedule/Description headings.
+          '#tag' => 'h2',
           '#value' => $this->t('Expected Yield'),
           '#attributes' => ['class' => ['hivelog-list-heading__title']],
         ],

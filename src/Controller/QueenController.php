@@ -134,7 +134,9 @@ class QueenController extends ControllerBase {
       '#weight' => 20,
       'title' => [
         '#type' => 'html_tag',
-        '#tag' => 'h3',
+        // H2 (task 0128) — a top-level section, sibling to buildSection()'s
+        // own Overview/Identity/etc. headings.
+        '#tag' => 'h2',
         '#value' => $this->t('Observations'),
         '#attributes' => ['class' => ['hivelog-list-heading__title']],
       ],

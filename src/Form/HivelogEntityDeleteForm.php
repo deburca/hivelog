@@ -174,7 +174,9 @@ class HivelogEntityDeleteForm extends ContentEntityDeleteForm {
       '#attributes' => ['class' => ["hivelog-notice--$variant"]],
       'heading' => [
         '#type' => 'html_tag',
-        '#tag' => 'h3',
+        // H2 (task 0128) — these are the delete form's only top-level
+        // sections below its H1 page title.
+        '#tag' => 'h2',
         '#value' => $heading,
       ],
       'items' => [
