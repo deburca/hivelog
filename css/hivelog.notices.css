@@ -24,3 +24,33 @@
   color: var(--hivelog-ink);
   font-size: 0.9rem;
 }
+
+/**
+ * Critical variant — the delete-dependency BLOCK section (task 0134):
+ * the action genuinely cannot proceed, not just "proceed with caution".
+ */
+.hivelog-notice--critical {
+  margin: 0.75rem 0 1rem;
+  padding: 0.75rem 1rem;
+  border-left: 4px solid var(--hivelog-critical);
+  border-radius: 4px;
+  background: var(--hivelog-critical-tint);
+}
+
+.hivelog-notice--critical p,
+.hivelog-notice--critical h3 {
+  margin: 0;
+  color: var(--hivelog-ink);
+}
+
+.hivelog-notice--warning h3 {
+  margin: 0 0 0.35rem;
+  color: var(--hivelog-ink);
+  font-size: 1rem;
+}
+
+.hivelog-notice--warning ul,
+.hivelog-notice--critical ul {
+  margin: 0;
+  padding-left: 1.25rem;
+}

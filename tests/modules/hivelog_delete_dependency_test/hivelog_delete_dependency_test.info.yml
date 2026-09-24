@@ -1,0 +1,7 @@
+name: 'HiveLog Delete Dependency Test'
+type: module
+description: 'Test-only entity type and hook_hivelog_delete_dependencies() row for HivelogDeleteDependencyRegistry/Counter kernel tests (task 0134). Not part of the distributed module.'
+package: Testing
+core_version_requirement: ^11
+dependencies:
+  - hivelog:hivelog

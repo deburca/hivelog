@@ -1,0 +1,4 @@
+delete own hivelog_delete_test_child:
+  title: 'Delete own Delete Test Child records'
+delete any hivelog_delete_test_child:
+  title: 'Delete any Delete Test Child record'

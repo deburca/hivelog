@@ -278,5 +278,42 @@ function hook_hivelog_apiary_stat_tiles(Apiary $apiary) {
 }
 
 /**
+ * Contributes rows to the delete-dependency registry (task 0134).
+ *
+ * The same optional-submodule-extends-core-without-a-dependency problem
+ * as the other hooks in this file, applied to
+ * `Drupal\hivelog\Delete\HivelogDeleteDependencyRegistry` — six of
+ * ADR-0103's inventory rows involve a submodule entity type
+ * (`sensor_device`, `hive_insight`) that `hivelog` core can't name
+ * directly. `hivelog` core defines and invokes this hook (via
+ * `HivelogDeleteDependencyRegistry::rows()`); it implements nothing
+ * here itself.
+ *
+ * @return array[]
+ *   A list of rows, each shaped exactly like a
+ *   `HivelogDeleteDependencyRegistry::ROWS` entry: `adr_row` (the
+ *   ADR-0103 inventory row number, as a string, for cross-reference),
+ *   `parent` / `child` (entity type IDs), `field` (the child's
+ *   reference field naming the parent), `treatment` (one of
+ *   `HivelogDeleteDependencyRegistry::BLOCK` / `::WARN` / `::CASCADE` /
+ *   `::DETACH`), and `manage` (NULL, the literal string
+ *   `'parent-canonical'`, or a parameterless route name — see
+ *   `HivelogDeleteDependencyRegistry`'s own class docblock for what
+ *   each means).
+ */
+function hook_hivelog_delete_dependencies() {
+  return [
+    [
+      'adr_row' => '7',
+      'parent' => 'apiary',
+      'child' => 'my_thing',
+      'field' => 'apiary',
+      'treatment' => \Drupal\hivelog\Delete\HivelogDeleteDependencyRegistry::BLOCK,
+      'manage' => 'parent-canonical',
+    ],
+  ];
+}
+
+/**
  * @} End of "addtogroup hooks".
  */

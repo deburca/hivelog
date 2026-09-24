@@ -11,3 +11,7 @@ services:
   hivelog.stat_tile_builder:
     class: Drupal\hivelog\HivelogStatTileBuilder
     arguments: ['@module_handler']
+
+  hivelog.delete_dependency_counter:
+    class: Drupal\hivelog\Delete\HivelogDeleteDependencyCounter
+    arguments: ['@entity_type.manager']

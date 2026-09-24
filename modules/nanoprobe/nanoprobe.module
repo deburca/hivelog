@@ -7,6 +7,7 @@
 
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Url;
+use Drupal\hivelog\Delete\HivelogDeleteDependencyRegistry;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\Hive;
 
@@ -95,4 +96,48 @@ function nanoprobe_hivelog_app_nav_items() {
  */
 function nanoprobe_cron() {
   \Drupal::service('nanoprobe.sensor_reading_retention')->runDailyMaintenance();
+}
+
+/**
+ * Implements hook_hivelog_delete_dependencies().
+ *
+ * ADR-0103 rows #7, #12, #27 and #28 — the four sensor_device rows
+ * `hivelog` core can't declare itself, since it doesn't depend on this
+ * module. See hivelog.api.php.
+ */
+function nanoprobe_hivelog_delete_dependencies() {
+  return [
+    [
+      'adr_row' => '7',
+      'parent' => 'apiary',
+      'child' => 'sensor_device',
+      'field' => 'apiary',
+      'treatment' => HivelogDeleteDependencyRegistry::BLOCK,
+      'manage' => 'parent-canonical',
+    ],
+    [
+      'adr_row' => '12',
+      'parent' => 'hive',
+      'child' => 'sensor_device',
+      'field' => 'hive',
+      'treatment' => HivelogDeleteDependencyRegistry::DETACH,
+      'manage' => 'parent-canonical',
+    ],
+    [
+      'adr_row' => '27',
+      'parent' => 'sensor_device',
+      'child' => 'sensor_reading',
+      'field' => 'sensor_device',
+      'treatment' => HivelogDeleteDependencyRegistry::CASCADE,
+      'manage' => NULL,
+    ],
+    [
+      'adr_row' => '28',
+      'parent' => 'sensor_device',
+      'child' => 'sensor_reading_daily',
+      'field' => 'sensor_device',
+      'treatment' => HivelogDeleteDependencyRegistry::CASCADE,
+      'manage' => NULL,
+    ],
+  ];
 }

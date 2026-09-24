@@ -1,15 +1,16 @@
 ---
 type: decision
 tags: [hivelog/decision]
-status: proposed
+status: accepted
 date: 2026-09-23
 supersedes:
 ---
 # ADR-0103: Delete policy for records with children
 
 ## Status
-proposed. The policy comes from user direction during the 2026-09-23
-gap analysis, refined twice the same day before anything was committed:
+accepted, 2026-09-24. The policy comes from user direction during the
+2026-09-23 gap analysis, refined twice the same day before anything was
+committed:
 1. "block the delete of a record while children exist"
 2. "warn, with a link on how to delete the specific children; if the
    warning is ignored, the parent can be deleted"
@@ -19,9 +20,9 @@ gap analysis, refined twice the same day before anything was committed:
    ignored, the parent record can be deleted"**, with an inventory of
    the cases and whether children should be deleted before their parent.
 
-This ADR is that inventory. It stays `proposed` until the user confirms
-the two recommended treatments that go beyond block / warn (**cascade**
-and **detach**, below) and answers the Open questions.
+This ADR is that inventory. All three Open questions were confirmed as
+recommended on 2026-09-24 — see their resolutions below — clearing the
+way for [[0134-delete-dependency-framework]].
 
 ## Context
 No HiveLog entity has any delete handling: no `preDelete()` /
@@ -169,19 +170,22 @@ Rules that follow from the table:
     They need a separate report / cleanup tool.
 
 ## Open questions
+All three confirmed 2026-09-24, as recommended:
 - **Confirm CASCADE and DETACH.** They go beyond the "block, else warn"
   direction, and are recommended because neither block nor
-  warn-with-link can work for those rows (see Decision). Confirm, or
-  name rows to treat differently.
+  warn-with-link can work for those rows (see Decision). **Confirmed as
+  written** — all 9 CASCADE rows and all 3 DETACH rows in the inventory
+  stand as listed.
 - **Children the current user can't delete.** On a BLOCK row, the
   blocking children may belong to another apiary member, or the user
-  may lack `delete` access to them. Recommended: stay blocked, and the
+  may lack `delete` access to them. **Confirmed: stay blocked**, and the
   message says "N records you can't delete, so ask their owner or a site
   administrator". An `administer hivelog` user can always resolve it.
   The alternative (fall back to WARN) would let one member orphan
   another's records.
 - **User accounts.** Deleting a Drupal user who owns HiveLog records is
-  core's cancel-account flow. Out of scope unless wanted.
+  core's cancel-account flow. **Confirmed out of scope** for this ADR
+  and task 0134.
 
 ## Related
 - Project:: [[page-structure-consistency]]

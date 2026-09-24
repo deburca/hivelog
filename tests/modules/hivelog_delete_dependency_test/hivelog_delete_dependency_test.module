@@ -1,0 +1,27 @@
+<?php
+
+/**
+ * @file
+ * Registers the test-only delete-dependency row task 0134's kernel tests use.
+ *
+ * Not part of the distributed module — see
+ * hivelog_delete_dependency_test.info.yml.
+ */
+
+use Drupal\hivelog\Delete\HivelogDeleteDependencyRegistry;
+
+/**
+ * Implements hook_hivelog_delete_dependencies().
+ */
+function hivelog_delete_dependency_test_hivelog_delete_dependencies() {
+  return [
+    [
+      'adr_row' => 'test',
+      'parent' => 'apiary',
+      'child' => 'hivelog_delete_test_child',
+      'field' => 'parent',
+      'treatment' => HivelogDeleteDependencyRegistry::BLOCK,
+      'manage' => 'parent-canonical',
+    ],
+  ];
+}
