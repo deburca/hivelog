@@ -194,7 +194,8 @@ class ApiaryController extends ControllerBase {
     $build['hives_filter']['#weight'] = 11;
 
     // Build the query with filters and pagination applied.
-    $filters = $this->extractHiveFilters();
+    $request = $this->requestStack->getCurrentRequest();
+    $filters = $request ? HivelogHiveFilterForm::extract($request) : [];
     $query = $this->entityTypeManager
       ->getStorage('hive')
       ->getQuery()
@@ -202,7 +203,7 @@ class ApiaryController extends ControllerBase {
       ->condition('apiary', $apiary->id())
       ->sort('name', 'ASC')
       ->pager(static::HIVES_PER_PAGE, static::HIVES_PAGER_ELEMENT);
-    $this->applyHiveFilters($query, $filters);
+    HivelogHiveFilterForm::apply($query, $filters);
     $hive_ids = $query->execute();
 
     $hives = $hive_ids
@@ -993,84 +994,14 @@ class ApiaryController extends ControllerBase {
   }
 
   /**
-   * Extracts hive filter values from the current request.
-   *
-   * @return array<string, string>
-   *   Associative array keyed by filter name. Only non-empty values are
-   *   included.
-   */
-  protected function extractHiveFilters(): array {
-    $request = $this->requestStack->getCurrentRequest();
-    if (!$request) {
-      return [];
-    }
-    $filters = [];
-    foreach (['status', 'breed', 'temperament', 'name'] as $key) {
-      $value = trim((string) $request->query->get($key, ''));
-      if ($value !== '') {
-        $filters[$key] = $value;
-      }
-    }
-    return $filters;
-  }
-
-  /**
-   * Applies hive filters to an entity query.
-   */
-  protected function applyHiveFilters(QueryInterface $query, array $filters): void {
-    if (isset($filters['status'])) {
-      $query->condition('status', $filters['status']);
-    }
-    if (isset($filters['breed'])) {
-      // Breed lives on the active queen, not the hive, so resolve matching
-      // hive ids via the queen entity first (see Hive::getActiveQueen()).
-      $hive_ids = $this->hiveIdsForActiveQueenBreed($filters['breed']);
-      $query->condition('id', $hive_ids, 'IN');
-    }
-    if (isset($filters['temperament'])) {
-      $query->condition('temperament', $filters['temperament']);
-    }
-    if (isset($filters['name'])) {
-      $query->condition('name', '%' . $this->escapeLike($filters['name']) . '%', 'LIKE');
-    }
-  }
-
-  /**
    * Escapes LIKE wildcard characters for safe use inside a LIKE condition.
+   *
+   * Only used by the calendar filter (`applyFullCalendarFilters()`) now —
+   * the hive filter's own copy moved to `HivelogHiveFilterForm::escapeLike()`
+   * with the rest of that filter's extract/apply logic (task 0132).
    */
   protected function escapeLike(string $value): string {
     return addcslashes($value, '\\%_');
-  }
-
-  /**
-   * Finds hive ids whose active queen has the given breed.
-   *
-   * @param string $breed
-   *   One of the `breed` field's allowed values on the Queen entity.
-   *
-   * @return int[]
-   *   Matching hive ids, or `[0]` (a value no hive can have) if none match,
-   *   so callers can pass the result straight into an `IN` condition.
-   */
-  protected function hiveIdsForActiveQueenBreed(string $breed): array {
-    $queen_storage = $this->entityTypeManager->getStorage('queen');
-    $queen_ids = $queen_storage->getQuery()
-      ->accessCheck(TRUE)
-      ->condition('breed', $breed)
-      ->condition('status', 'active')
-      ->execute();
-
-    $hive_ids = [];
-    if ($queen_ids) {
-      foreach ($queen_storage->loadMultiple($queen_ids) as $queen) {
-        $hive_id = $queen->get('hive')->target_id;
-        if ($hive_id) {
-          $hive_ids[] = $hive_id;
-        }
-      }
-    }
-
-    return $hive_ids ?: [0];
   }
 
   /**

@@ -7,9 +7,12 @@ namespace Drupal\hivelog;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityListBuilder;
 use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Entity\Query\QueryInterface;
+use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Session\AccountInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Base list builder for HiveLog entity collection pages.
@@ -37,6 +40,13 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * paginates the *filtered* set (task 0126) — in that order, so filtering
  * doesn't shorten pages the way filtering after a DB-level `LIMIT`/
  * `OFFSET` would. See `HivelogListPageTrait::paginateEntities()`.
+ *
+ * A subclass with a filter form (task 0132: Hive, HiveInspection,
+ * QueenObservation) additionally overrides `getFilterForm()` and
+ * `applyFilters()` together — both extract the same values from the
+ * current request (typically via the filter form class's own static
+ * `extract()`), so the rendered form's `#default_value`s and the query
+ * conditions can never drift apart.
  */
 abstract class HivelogListBuilder extends EntityListBuilder {
 
@@ -53,16 +63,28 @@ abstract class HivelogListBuilder extends EntityListBuilder {
   protected RendererInterface $renderer;
 
   /**
+   * The form builder, used to render a subclass's filter form, if any.
+   */
+  protected FormBuilderInterface $formBuilder;
+
+  /**
+   * The request stack, passed to a subclass's filter extraction.
+   */
+  protected RequestStack $requestStack;
+
+  /**
    * {@inheritdoc}
    *
    * Subclasses that override createInstance() to inject additional
-   * services must still set $instance->currentUser and
-   * $instance->renderer themselves.
+   * services must still set $instance->currentUser, ->renderer,
+   * ->formBuilder and ->requestStack themselves.
    */
   public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type) {
     $instance = parent::createInstance($container, $entity_type);
     $instance->currentUser = $container->get('current_user');
     $instance->renderer = $container->get('renderer');
+    $instance->formBuilder = $container->get('form_builder');
+    $instance->requestStack = $container->get('request_stack');
     return $instance;
   }
 
@@ -73,13 +95,43 @@ abstract class HivelogListBuilder extends EntityListBuilder {
    * the ones the current user may view, then slices to the current page.
    */
   public function load() {
-    $ids = $this->getStorage()->getQuery()
+    $query = $this->getStorage()->getQuery()
       ->accessCheck(TRUE)
-      ->sort($this->entityType->getKey(static::SORT_KEY))
-      ->execute();
+      ->sort($this->entityType->getKey(static::SORT_KEY));
+    $this->applyFilters($query);
+    $ids = $query->execute();
     $entities = $ids ? $this->getStorage()->loadMultiple($ids) : [];
     $accessible = array_filter($entities, fn(EntityInterface $entity) => $entity->access('view', $this->currentUser));
     return $this->paginateEntities($accessible, (int) $this->limit);
+  }
+
+  /**
+   * The rendered filter form for this list, or `[]` for none.
+   *
+   * Default: no filter form. A subclass with one typically returns
+   * `$this->formBuilder->getForm(SomeFilterForm::class)`.
+   */
+  protected function getFilterForm(): array {
+    return [];
+  }
+
+  /**
+   * Adds this list's active filter conditions to `$query`, if any.
+   *
+   * Default: no-op. A subclass with a filter form overrides this,
+   * typically delegating to that form class's own static `apply()` with
+   * values from its own static `extract()`.
+   */
+  protected function applyFilters(QueryInterface $query): void {}
+
+  /**
+   * Whether any filter is currently active, for the empty-state message.
+   *
+   * Default: `FALSE`. A subclass with a filter form overrides this to
+   * match whatever `applyFilters()` extracted.
+   */
+  protected function hasActiveFilters(): bool {
+    return FALSE;
   }
 
   /**
@@ -162,13 +214,26 @@ abstract class HivelogListBuilder extends EntityListBuilder {
       ];
     }
 
+    $filter_form = $this->getFilterForm();
+    $cache_contexts = $this->entityType->getListCacheContexts();
+    if ($filter_form) {
+      $build['filter'] = $filter_form + ['#weight' => -80];
+      // The table's own cache varies by the filter query string too, not
+      // just the entity type's own default contexts — the filter form
+      // already declares this on itself, but the table is a sibling
+      // render element, not a parent/child of the form.
+      $cache_contexts[] = 'url.query_args';
+    }
+
     $build['table'] = $this->buildEntityTable(
       $headers,
       $rows,
-      (string) $this->t('There are no @label yet.', ['@label' => $this->entityType->getPluralLabel()])
+      $this->hasActiveFilters()
+        ? (string) $this->t('No @label match the current filters.', ['@label' => $this->entityType->getPluralLabel()])
+        : (string) $this->t('There are no @label yet.', ['@label' => $this->entityType->getPluralLabel()])
     );
     $build['table']['#cache'] = [
-      'contexts' => $this->entityType->getListCacheContexts(),
+      'contexts' => $cache_contexts,
       'tags' => $this->entityType->getListCacheTags(),
     ];
 

@@ -7,7 +7,6 @@ use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityFormBuilderInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Entity\Query\QueryInterface;
 use Drupal\Core\File\FileUrlGeneratorInterface;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Render\RendererInterface;
@@ -571,7 +570,8 @@ class HiveController extends ControllerBase {
    *   Tuple of [render array, loaded inspection entities for cache deps].
    */
   protected function buildInspectionsColumn(Hive $hive): array {
-    $filters = $this->extractInspectionFilters();
+    $request = $this->requestStack->getCurrentRequest();
+    $filters = $request ? HivelogInspectionFilterForm::extract($request) : [];
     $query = $this->entityTypeManager
       ->getStorage('hive_inspection')
       ->getQuery()
@@ -579,7 +579,7 @@ class HiveController extends ControllerBase {
       ->condition('hive', $hive->id())
       ->sort('inspection_date', 'DESC')
       ->pager(static::INSPECTIONS_PER_PAGE, static::INSPECTIONS_PAGER_ELEMENT);
-    $this->applyInspectionFilters($query, $filters);
+    HivelogInspectionFilterForm::apply($query, $filters);
     $inspection_ids = $query->execute();
 
     $inspections = $inspection_ids
@@ -696,7 +696,8 @@ class HiveController extends ControllerBase {
    */
   protected function buildObservationsColumn(Hive $hive, ?Queen $active_queen): array {
     $queen_ids = array_map(fn(Queen $queen) => $queen->id(), $hive->getQueens());
-    $filters = $this->extractObservationFilters();
+    $request = $this->requestStack->getCurrentRequest();
+    $filters = $request ? HivelogQueenObservationFilterForm::extract($request) : [];
 
     $observations = [];
     if ($queen_ids) {
@@ -707,7 +708,7 @@ class HiveController extends ControllerBase {
         ->condition('queen', $queen_ids, 'IN')
         ->sort('observation_date', 'DESC')
         ->pager(static::OBSERVATIONS_PER_PAGE, static::OBSERVATIONS_PAGER_ELEMENT);
-      $this->applyObservationFilters($query, $filters);
+      HivelogQueenObservationFilterForm::apply($query, $filters);
       $observation_ids = $query->execute();
       $observations = $observation_ids
         ? $this->entityTypeManager->getStorage('queen_observation')->loadMultiple($observation_ids)
@@ -801,96 +802,6 @@ class HiveController extends ControllerBase {
     ];
 
     return [$build, $observations];
-  }
-
-  /**
-   * Extracts inspection filter values from the current request.
-   *
-   * @return array<string, string>
-   *   Associative array keyed by filter name. Only non-empty values are
-   *   included.
-   */
-  protected function extractInspectionFilters(): array {
-    $request = $this->requestStack->getCurrentRequest();
-    if (!$request) {
-      return [];
-    }
-    $filters = [];
-    foreach (['date_from', 'date_to', 'queen_seen', 'brood_pattern'] as $key) {
-      $value = trim((string) $request->query->get($key, ''));
-      if ($value !== '') {
-        $filters[$key] = $value;
-      }
-    }
-    return $filters;
-  }
-
-  /**
-   * Applies inspection filters to an entity query.
-   */
-  protected function applyInspectionFilters(QueryInterface $query, array $filters): void {
-    if (isset($filters['date_from'])) {
-      $query->condition('inspection_date', $filters['date_from'], '>=');
-    }
-    if (isset($filters['date_to'])) {
-      $query->condition('inspection_date', $filters['date_to'], '<=');
-    }
-    if (isset($filters['queen_seen']) && in_array($filters['queen_seen'], ['0', '1'], TRUE)) {
-      $query->condition('queen_seen', (int) $filters['queen_seen']);
-    }
-    if (isset($filters['brood_pattern'])) {
-      $query->condition('brood_pattern', $filters['brood_pattern']);
-    }
-  }
-
-  /**
-   * Extracts queen observation filter values from the current request.
-   *
-   * Keys are prefixed `obs_` (see HivelogQueenObservationFilterForm) since
-   * this filter form shares a query string with the inspection filter
-   * form on the same page.
-   *
-   * @return array<string, string>
-   *   Associative array keyed by filter name (with the `obs_` prefix
-   *   stripped). Only non-empty values are included.
-   */
-  protected function extractObservationFilters(): array {
-    $request = $this->requestStack->getCurrentRequest();
-    if (!$request) {
-      return [];
-    }
-    $filters = [];
-    foreach (['date_from', 'date_to', 'health', 'temperament', 'active', 'queen'] as $key) {
-      $value = trim((string) $request->query->get('obs_' . $key, ''));
-      if ($value !== '') {
-        $filters[$key] = $value;
-      }
-    }
-    return $filters;
-  }
-
-  /**
-   * Applies queen observation filters to an entity query.
-   */
-  protected function applyObservationFilters(QueryInterface $query, array $filters): void {
-    if (isset($filters['date_from'])) {
-      $query->condition('observation_date', $filters['date_from'], '>=');
-    }
-    if (isset($filters['date_to'])) {
-      $query->condition('observation_date', $filters['date_to'], '<=');
-    }
-    if (isset($filters['health'])) {
-      $query->condition('health', $filters['health']);
-    }
-    if (isset($filters['temperament'])) {
-      $query->condition('temperament', $filters['temperament']);
-    }
-    if (isset($filters['active']) && in_array($filters['active'], ['0', '1'], TRUE)) {
-      $query->condition('active', (int) $filters['active']);
-    }
-    if (isset($filters['queen'])) {
-      $query->condition('queen', $filters['queen']);
-    }
   }
 
   /**

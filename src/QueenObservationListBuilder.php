@@ -3,13 +3,19 @@
 namespace Drupal\hivelog;
 
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\Query\QueryInterface;
+use Drupal\hivelog\Form\HivelogQueenObservationFilterForm;
 
 /**
  * Provides a list builder for Queen Observation entities.
  *
  * No context-free add route exists for QueenObservation (always added
  * from a queen's own page), so the collection page has no heading action
- * — see AGENTS.md "Routing, controllers and forms".
+ * — see AGENTS.md "Routing, controllers and forms". Filtered by the same
+ * `HivelogQueenObservationFilterForm` as the hive page's embedded
+ * observations table (task 0132) — built with no parent hive, so its
+ * Reset targets this collection route instead of a hive page, and its
+ * hive-scoped `obs_queen` option list never appears here.
  */
 class QueenObservationListBuilder extends HivelogListBuilder {
 
@@ -43,6 +49,35 @@ class QueenObservationListBuilder extends HivelogListBuilder {
     $row['active'] = $entity->get('active')->value ? $this->t('Yes') : $this->t('No');
 
     return $row;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getFilterForm(): array {
+    return $this->formBuilder->getForm(HivelogQueenObservationFilterForm::class);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function applyFilters(QueryInterface $query): void {
+    HivelogQueenObservationFilterForm::apply($query, $this->currentFilters());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function hasActiveFilters(): bool {
+    return (bool) $this->currentFilters();
+  }
+
+  /**
+   * The current request's observation filter values, or `[]` with no request.
+   */
+  protected function currentFilters(): array {
+    $request = $this->requestStack->getCurrentRequest();
+    return $request ? HivelogQueenObservationFilterForm::extract($request) : [];
   }
 
 }
