@@ -10,56 +10,24 @@ use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\hivelog\HivelogEntityHierarchy;
 
 /**
  * Provides breadcrumbs for hivelog entity routes.
  *
- * Built around one declarative parent map (task 0116): entity type ID →
- * the reference field that names its parent. `build()` picks the route's
- * "subject" entity (the one upcast route parameter the trail is built
- * from — see `resolveSubject()`), then `addAncestryLinks()` walks the
- * map from the subject up to the root, adding one crumb per ancestor in
- * root-to-leaf order. A missing reference (a deleted apiary, an
- * unassigned queen) just stops the walk there, shortening the trail —
- * the same behaviour the previous per-type blocks had.
+ * Built around one declarative parent map (task 0116, extracted to
+ * `HivelogEntityHierarchy` in task 0127): entity type ID → the reference
+ * field that names its parent. `build()` picks the route's "subject"
+ * entity (the one upcast route parameter the trail is built from — see
+ * `resolveSubject()`), then `addAncestryLinks()` walks the map from the
+ * subject up to the root, adding one crumb per ancestor in root-to-leaf
+ * order. A missing reference (a deleted apiary, an unassigned queen)
+ * just stops the walk there, shortening the trail — the same behaviour
+ * the previous per-type blocks had.
  */
 class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
 
   use StringTranslationTrait;
-
-  /**
-   * Entity type ID → the reference field naming its parent.
-   *
-   * Entity types with no entry here (`apiary`, and the three
-   * collection-threaded types in `COLLECTION_THREADED_TYPES`) are the
-   * root of their own trail.
-   */
-  protected const PARENT_FIELD = [
-    'hive' => 'apiary',
-    'hive_inspection' => 'hive',
-    'queen' => 'hive',
-    'queen_observation' => 'queen',
-    'calendar_action' => 'apiary',
-    'hive_action_log' => 'hive',
-    'apiary_action_log' => 'apiary',
-    'inventory_item' => 'apiary',
-    'inventory_purchase' => 'apiary',
-    'product' => 'apiary',
-    'calendar_action_item_requirement' => 'calendar_action',
-    'calendar_action_product_yield' => 'calendar_action',
-  ];
-
-  /**
-   * Entity types threaded through their own collection page, not a parent.
-   *
-   * Global config/credential entities and sensor devices with no
-   * apiary/hive ancestor in their trail — see `addAncestryLinks()`.
-   */
-  protected const COLLECTION_THREADED_TYPES = [
-    'sensor_device',
-    'ai_provider_config',
-    'api_client',
-  ];
 
   /**
    * Route parameter names to check for the route's subject entity.
@@ -284,7 +252,7 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
   protected function addAncestryLinks(Breadcrumb $breadcrumb, FieldableEntityInterface $entity, array $collections): void {
     $type_id = $entity->getEntityTypeId();
 
-    if (in_array($type_id, self::COLLECTION_THREADED_TYPES, TRUE)) {
+    if (in_array($type_id, HivelogEntityHierarchy::COLLECTION_THREADED_TYPES, TRUE)) {
       $breadcrumb->addLink(Link::createFromRoute($collections["entity.$type_id.collection"], "entity.$type_id.collection"));
       $this->addEntityLink($breadcrumb, $entity);
       return;
@@ -294,8 +262,7 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
     $current = $entity;
     while ($current instanceof FieldableEntityInterface) {
       $chain[] = $current;
-      $parent_field = self::PARENT_FIELD[$current->getEntityTypeId()] ?? NULL;
-      $current = $parent_field ? $current->get($parent_field)->entity : NULL;
+      $current = HivelogEntityHierarchy::resolveParent($current);
     }
 
     foreach (array_reverse($chain) as $ancestor) {

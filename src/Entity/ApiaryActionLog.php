@@ -15,7 +15,7 @@ use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\hivelog\ApiaryActionLogAccessControlHandler;
 use Drupal\hivelog\ApiaryActionLogListBuilder;
-use Drupal\hivelog\Form\ApiaryActionLogDeleteForm;
+use Drupal\hivelog\Form\HivelogEntityDeleteForm;
 use Drupal\hivelog\Form\ApiaryActionLogForm;
 use Drupal\hivelog\HivelogEntityStorage;
 use Drupal\user\EntityOwnerInterface;
@@ -53,7 +53,7 @@ use Drupal\user\EntityOwnerTrait;
       'default' => ApiaryActionLogForm::class,
       'add' => ApiaryActionLogForm::class,
       'edit' => ApiaryActionLogForm::class,
-      'delete' => ApiaryActionLogDeleteForm::class,
+      'delete' => HivelogEntityDeleteForm::class,
     ],
     'access' => ApiaryActionLogAccessControlHandler::class,
   ],

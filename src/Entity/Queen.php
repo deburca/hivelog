@@ -12,7 +12,7 @@ use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\hivelog\Form\QueenDeleteForm;
+use Drupal\hivelog\Form\HivelogEntityDeleteForm;
 use Drupal\hivelog\Form\QueenForm;
 use Drupal\hivelog\HivelogEntityStorage;
 use Drupal\hivelog\QueenAccessControlHandler;
@@ -42,7 +42,7 @@ use Drupal\user\EntityOwnerTrait;
       'default' => QueenForm::class,
       'add' => QueenForm::class,
       'edit' => QueenForm::class,
-      'delete' => QueenDeleteForm::class,
+      'delete' => HivelogEntityDeleteForm::class,
     ],
     'access' => QueenAccessControlHandler::class,
   ],

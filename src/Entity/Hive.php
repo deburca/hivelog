@@ -12,7 +12,7 @@ use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\hivelog\Form\HiveDeleteForm;
+use Drupal\hivelog\Form\HivelogEntityDeleteForm;
 use Drupal\hivelog\Form\HiveForm;
 use Drupal\hivelog\HiveAccessControlHandler;
 use Drupal\hivelog\HiveListBuilder;
@@ -36,7 +36,7 @@ use Drupal\user\EntityOwnerTrait;
       'default' => HiveForm::class,
       'add' => HiveForm::class,
       'edit' => HiveForm::class,
-      'delete' => HiveDeleteForm::class,
+      'delete' => HivelogEntityDeleteForm::class,
     ],
     'access' => HiveAccessControlHandler::class,
   ],

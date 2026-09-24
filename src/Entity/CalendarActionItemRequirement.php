@@ -13,7 +13,7 @@ use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\hivelog\CalendarActionItemRequirementAccessControlHandler;
-use Drupal\hivelog\Form\CalendarActionItemRequirementDeleteForm;
+use Drupal\hivelog\Form\HivelogEntityDeleteForm;
 use Drupal\hivelog\Form\CalendarActionItemRequirementForm;
 use Drupal\hivelog\HivelogEntityStorage;
 use Drupal\user\EntityOwnerInterface;
@@ -45,7 +45,7 @@ use Drupal\user\EntityOwnerTrait;
       'default' => CalendarActionItemRequirementForm::class,
       'add' => CalendarActionItemRequirementForm::class,
       'edit' => CalendarActionItemRequirementForm::class,
-      'delete' => CalendarActionItemRequirementDeleteForm::class,
+      'delete' => HivelogEntityDeleteForm::class,
     ],
     'access' => CalendarActionItemRequirementAccessControlHandler::class,
   ],

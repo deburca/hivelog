@@ -12,7 +12,7 @@ use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\hivelog\Form\QueenObservationDeleteForm;
+use Drupal\hivelog\Form\HivelogEntityDeleteForm;
 use Drupal\hivelog\Form\QueenObservationForm;
 use Drupal\hivelog\HivelogEntityStorage;
 use Drupal\hivelog\QueenObservationAccessControlHandler;
@@ -41,7 +41,7 @@ use Drupal\user\EntityOwnerTrait;
       'default' => QueenObservationForm::class,
       'add' => QueenObservationForm::class,
       'edit' => QueenObservationForm::class,
-      'delete' => QueenObservationDeleteForm::class,
+      'delete' => HivelogEntityDeleteForm::class,
     ],
     'access' => QueenObservationAccessControlHandler::class,
   ],

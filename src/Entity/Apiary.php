@@ -17,7 +17,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\hivelog\ApiaryAccessControlHandler;
 use Drupal\hivelog\ApiaryListBuilder;
 use Drupal\hivelog\HivelogEntityStorage;
-use Drupal\hivelog\Form\ApiaryDeleteForm;
+use Drupal\hivelog\Form\HivelogEntityDeleteForm;
 use Drupal\hivelog\Form\ApiaryForm;
 use Drupal\user\EntityOwnerInterface;
 use Drupal\user\EntityOwnerTrait;
@@ -38,7 +38,7 @@ use Drupal\user\EntityOwnerTrait;
       'default' => ApiaryForm::class,
       'add' => ApiaryForm::class,
       'edit' => ApiaryForm::class,
-      'delete' => ApiaryDeleteForm::class,
+      'delete' => HivelogEntityDeleteForm::class,
     ],
     'access' => ApiaryAccessControlHandler::class,
   ],

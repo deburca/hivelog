@@ -13,7 +13,7 @@ use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\hivelog\Form\HiveActionLogDeleteForm;
+use Drupal\hivelog\Form\HivelogEntityDeleteForm;
 use Drupal\hivelog\Form\HiveActionLogForm;
 use Drupal\hivelog\HiveActionLogAccessControlHandler;
 use Drupal\hivelog\HiveActionLogListBuilder;
@@ -48,7 +48,7 @@ use Drupal\user\EntityOwnerTrait;
       'default' => HiveActionLogForm::class,
       'add' => HiveActionLogForm::class,
       'edit' => HiveActionLogForm::class,
-      'delete' => HiveActionLogDeleteForm::class,
+      'delete' => HivelogEntityDeleteForm::class,
     ],
     'access' => HiveActionLogAccessControlHandler::class,
   ],

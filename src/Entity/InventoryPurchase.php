@@ -12,7 +12,7 @@ use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\hivelog\Form\InventoryPurchaseDeleteForm;
+use Drupal\hivelog\Form\HivelogEntityDeleteForm;
 use Drupal\hivelog\Form\InventoryPurchaseForm;
 use Drupal\hivelog\HivelogEntityStorage;
 use Drupal\hivelog\InventoryPurchaseAccessControlHandler;
@@ -44,7 +44,7 @@ use Drupal\user\EntityOwnerTrait;
       'default' => InventoryPurchaseForm::class,
       'add' => InventoryPurchaseForm::class,
       'edit' => InventoryPurchaseForm::class,
-      'delete' => InventoryPurchaseDeleteForm::class,
+      'delete' => HivelogEntityDeleteForm::class,
     ],
     'access' => InventoryPurchaseAccessControlHandler::class,
   ],

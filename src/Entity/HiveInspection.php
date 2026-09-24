@@ -12,7 +12,7 @@ use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\hivelog\Form\HiveInspectionDeleteForm;
+use Drupal\hivelog\Form\HivelogEntityDeleteForm;
 use Drupal\hivelog\Form\HiveInspectionForm;
 use Drupal\hivelog\HiveInspectionAccessControlHandler;
 use Drupal\hivelog\HiveInspectionListBuilder;
@@ -36,7 +36,7 @@ use Drupal\user\EntityOwnerTrait;
       'default' => HiveInspectionForm::class,
       'add' => HiveInspectionForm::class,
       'edit' => HiveInspectionForm::class,
-      'delete' => HiveInspectionDeleteForm::class,
+      'delete' => HivelogEntityDeleteForm::class,
     ],
     'access' => HiveInspectionAccessControlHandler::class,
   ],
