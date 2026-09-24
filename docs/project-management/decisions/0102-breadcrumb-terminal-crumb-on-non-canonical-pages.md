@@ -1,15 +1,16 @@
 ---
 type: decision
 tags: [hivelog/decision]
-status: proposed
+status: accepted
 date: 2026-09-23
 supersedes:
 ---
 # ADR-0102: Breadcrumb — terminal crumb on non-canonical pages
 
 ## Status
-proposed. **Amends** [[0013-breadcrumb-policy]] rule 2 only, the same
-way [[0057-dashboard-information-architecture]] amended its root-crumb
+accepted, implemented by [[0117-breadcrumb-terminal-crumb-on-form-pages]].
+**Amends** [[0013-breadcrumb-policy]] rule 2 only, the same way
+[[0057-dashboard-information-architecture]] amended its root-crumb
 target. It does not supersede it; rules 1, 3 and 4 stand unchanged.
 
 ## Context

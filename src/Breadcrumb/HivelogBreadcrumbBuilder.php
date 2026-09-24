@@ -24,6 +24,12 @@ use Drupal\hivelog\HivelogEntityHierarchy;
  * order. A missing reference (a deleted apiary, an unassigned queen)
  * just stops the walk there, shortening the trail — the same behaviour
  * the previous per-type blocks had.
+ *
+ * Every trail ends with a crumb naming the current page (ADR-0102, task
+ * 0117): the entity's own label on a canonical page, "Edit" / "Delete"
+ * on those forms, and the route's own title everywhere else (add forms,
+ * scoped or site-wide, and any other bolt-on route under `/hivelog`) —
+ * see `addGenericTerminalCrumb()`.
  */
 class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
 
@@ -162,13 +168,15 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
     }
 
     // Site-wide "add" forms (entity.<type>.add_form, no parent in the
-    // path) hang off their collection: Home › HiveLog › <Plural>.
+    // path) hang off their collection: Home › HiveLog › <Plural> › Add
+    // <Type>.
     if (preg_match('/^entity\.([a-z_]+)\.add_form$/', $route_name, $m)
       && isset($collections["entity.{$m[1]}.collection"])) {
       $breadcrumb->addLink(Link::createFromRoute(
         $collections["entity.{$m[1]}.collection"],
         "entity.{$m[1]}.collection",
       ));
+      $this->addGenericTerminalCrumb($breadcrumb, $route_match, $route_name);
       return $breadcrumb;
     }
 
@@ -181,11 +189,21 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
 
     $terminal_param = self::TERMINAL_CRUMB_PARAM[$route_name] ?? NULL;
     if ($terminal_param) {
+      // Named sub-pages already follow the rule (task 0102): their own
+      // short label, linked to the current route.
       $breadcrumb->addLink(Link::createFromRoute(
         $this->terminalCrumbLabel($route_name),
         $route_name,
         [$terminal_param => $subject->id()],
       ));
+    }
+    elseif (!str_ends_with($route_name, '.canonical')) {
+      // Canonical pages already got their terminal crumb from
+      // `addEntityLink()` above (the entity's own label, task 0013).
+      // Everything else that reaches here — edit / delete forms, scoped
+      // add forms, and any bolt-on route such as a Layout Builder
+      // override — needs one of its own (task 0117 / ADR-0102).
+      $this->addGenericTerminalCrumb($breadcrumb, $route_match, $route_name);
     }
 
     return $breadcrumb;
@@ -206,6 +224,64 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
       'nanoprobe.sensor_device.config' => $this->t('Download Configuration'),
       'collective.api_client.regenerate_token' => $this->t('Regenerate Token'),
     };
+  }
+
+  /**
+   * Adds a terminal crumb for an edit / delete / add / bolt-on page.
+   *
+   * Edit and delete forms get the short fixed label "Edit" / "Delete"
+   * (ADR-0102) — the preceding crumb, already a link to the entity,
+   * names it, so repeating the entity's own label here would be
+   * redundant. Everything else (scoped and site-wide add forms, a
+   * Layout Builder override, or any other bolt-on route) gets its own
+   * route title, a self-link to the current page built from the
+   * route's own raw parameters — the same shape whatever those
+   * parameters are (a single entity ID, or an entity plus a calendar
+   * action, or none at all for a site-wide add form).
+   */
+  protected function addGenericTerminalCrumb(Breadcrumb $breadcrumb, RouteMatchInterface $route_match, string $route_name): void {
+    if (str_ends_with($route_name, '.edit_form')) {
+      $label = $this->t('Edit');
+    }
+    elseif (str_ends_with($route_name, '.delete_form')) {
+      $label = $this->t('Delete');
+    }
+    else {
+      $label = $this->routeTitle($route_match);
+    }
+    if ($label === NULL) {
+      return;
+    }
+    $breadcrumb->addLink(Link::createFromRoute($label, $route_name, $route_match->getRawParameters()->all()));
+  }
+
+  /**
+   * The current route's own title, static or resolved, or NULL.
+   *
+   * Every add route in this module declares a static `_title`
+   * (routing.yml), read directly here per this task's own design — no
+   * need for the title resolver in the common case. A route with a
+   * `_title_callback` instead (a hypothetical Layout Builder override;
+   * none of this module's own routes use one outside the named
+   * sub-pages `TERMINAL_CRUMB_PARAM` already covers) falls back to
+   * resolving it the same way core would when rendering the page title.
+   */
+  protected function routeTitle(RouteMatchInterface $route_match): ?string {
+    $route = $route_match->getRouteObject();
+    if (!$route) {
+      return NULL;
+    }
+    $title = $route->getDefault('_title');
+    if ($title) {
+      return $title;
+    }
+    if ($route->getDefault('_title_callback')) {
+      /** @var \Drupal\Core\Controller\TitleResolverInterface $title_resolver */
+      $title_resolver = \Drupal::service('title_resolver');
+      $title = $title_resolver->getTitle(\Drupal::request(), $route);
+      return $title === NULL ? NULL : (string) $title;
+    }
+    return NULL;
   }
 
   /**

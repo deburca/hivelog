@@ -7,6 +7,7 @@ use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\hivelog\Breadcrumb\HivelogBreadcrumbBuilder;
 use Drupal\Tests\UnitTestCase;
+use Symfony\Component\HttpFoundation\ParameterBag;
 use Symfony\Component\Routing\Route;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -372,49 +373,56 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
-   * Site-wide add forms hang off their collection: Home › HiveLog › <Plural>.
+   * Site-wide add forms hang off their collection: Home › HiveLog › <Plural> › Add <Type>.
+   *
+   * The terminal crumb (task 0117) is the route's own static title, a
+   * self-link the theme renders as plain text.
    */
   #[DataProvider('addFormProvider')]
-  public function testBuildAddFormThreadsToCollection(string $route_name, string $collection_route, string $text): void {
-    $route_match = $this->createRouteMatch($route_name);
+  public function testBuildAddFormThreadsToCollection(string $route_name, string $collection_route, string $text, string $add_title): void {
+    $route_match = $this->createRouteMatch($route_name, NULL, [], $add_title);
     $route_match->method('getParameter')->willReturn(NULL);
 
     $links = $this->builder->build($route_match)->getLinks();
 
-    $this->assertCount(3, $links);
+    $this->assertCount(4, $links);
     $this->assertEquals($text, (string) $links[2]->getText());
     $this->assertEquals($collection_route, $links[2]->getUrl()->getRouteName());
+    $this->assertEquals($add_title, (string) $links[3]->getText());
+    $this->assertEquals($route_name, $links[3]->getUrl()->getRouteName());
   }
 
   /**
-   * Data provider: global add-form routes → their collection crumb.
+   * Data provider: global add-form routes → their collection crumb + title.
    */
   public static function addFormProvider(): array {
     return [
       'apiary' => [
-        'entity.apiary.add_form', 'entity.apiary.collection', 'Apiaries',
+        'entity.apiary.add_form', 'entity.apiary.collection', 'Apiaries', 'Add Apiary',
       ],
       'inventory item' => [
         'entity.inventory_item.add_form',
         'entity.inventory_item.collection',
         'Inventory Items',
+        'Add Inventory Item',
       ],
       'inventory purchase' => [
         'entity.inventory_purchase.add_form',
         'entity.inventory_purchase.collection',
         'Inventory Purchases',
+        'Add Inventory Purchase',
       ],
       'product' => [
-        'entity.product.add_form', 'entity.product.collection', 'Products',
+        'entity.product.add_form', 'entity.product.collection', 'Products', 'Add Product',
       ],
       'sensor device' => [
-        'entity.sensor_device.add_form', 'entity.sensor_device.collection', 'Sensor Devices',
+        'entity.sensor_device.add_form', 'entity.sensor_device.collection', 'Sensor Devices', 'Add Sensor Device',
       ],
       'ai provider config' => [
-        'entity.ai_provider_config.add_form', 'entity.ai_provider_config.collection', 'AI Provider Configs',
+        'entity.ai_provider_config.add_form', 'entity.ai_provider_config.collection', 'AI Provider Configs', 'Add AI Provider Config',
       ],
       'api client' => [
-        'entity.api_client.add_form', 'entity.api_client.collection', 'API Clients',
+        'entity.api_client.add_form', 'entity.api_client.collection', 'API Clients', 'Add API Client',
       ],
     ];
   }
@@ -458,6 +466,10 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
 
   /**
    * A product's Layout Builder override page still threads the full trail.
+   *
+   * No `_title` default and no `_title_callback` on this mocked route, so
+   * `routeTitle()` (task 0117) finds nothing to add — the entity trail is
+   * unaffected, exactly like before this task, rather than erroring.
    */
   public function testBuildLayoutBuilderRouteThreadsEntityTrail(): void {
     $apiary = $this->createApiaryMock(7, 'Ravnholt Home');
@@ -473,6 +485,37 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $links = $this->builder->build($route_match)->getLinks();
     $this->assertCount(4, $links);
     $this->assertEquals('Honey', (string) $links[3]->getText());
+  }
+
+  /**
+   * A bolt-on route with a static `_title` gets a terminal crumb from it.
+   *
+   * Stands in for a Layout Builder override or any other route this
+   * module doesn't itself define — `routeTitle()` reads whatever the
+   * route declares, the same way it does for this module's own add
+   * routes, rather than special-casing Layout Builder by name.
+   */
+  public function testBuildBoltOnRouteWithStaticTitleGetsTerminalCrumb(): void {
+    $apiary = $this->createApiaryMock(7, 'Ravnholt Home');
+    $product = $this->createApiaryScopedMock('product', 12, 'Honey', $apiary);
+    $route_match = $this->createRouteMatch(
+      'layout_builder.overrides.product.view',
+      '/hivelog/product/12/layout',
+      ['product' => 12],
+      'Layout',
+    );
+    $route_match->method('getParameter')->willReturnMap([
+      ['apiary', NULL],
+      ['hive', NULL],
+      ['product', $product],
+    ]);
+
+    $links = $this->builder->build($route_match)->getLinks();
+    $this->assertCount(5, $links);
+    $this->assertEquals('Honey', (string) $links[3]->getText());
+    $this->assertEquals('Layout', (string) $links[4]->getText());
+    $this->assertEquals('layout_builder.overrides.product.view', $links[4]->getUrl()->getRouteName());
+    $this->assertEquals(['product' => 12], $links[4]->getUrl()->getRouteParameters());
   }
 
   /**
@@ -637,7 +680,7 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $apiary = $this->createApiaryMock(1, 'Home Apiary');
     $action = $this->createCalendarActionMock(40, 'Feed winter stores', $apiary);
     $sub = $this->createSubEntityMock($entity_type, 5, 'Syrup × 6 kg', $action);
-    $route_match = $this->createRouteMatch($route_name);
+    $route_match = $this->createRouteMatch($route_name, NULL, [$param => 5]);
     $route_match->method('getParameter')->willReturnMap([
       ['apiary', NULL],
       ['hive', NULL],
@@ -647,12 +690,15 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
 
     $links = $this->builder->build($route_match)->getLinks();
 
-    $this->assertCount(5, $links);
+    $this->assertCount(6, $links);
     $this->assertEquals('Home Apiary', (string) $links[2]->getText());
     $this->assertEquals('Feed winter stores', (string) $links[3]->getText());
     $this->assertEquals('entity.calendar_action.canonical', $links[3]->getUrl()->getRouteName());
     $this->assertEquals('Syrup × 6 kg', (string) $links[4]->getText());
     $this->assertFalse($links[4]->getUrl()->isRouted() && $links[4]->getUrl()->getRouteName() !== '<nolink>');
+    $this->assertEquals('Edit', (string) $links[5]->getText());
+    $this->assertEquals($route_name, $links[5]->getUrl()->getRouteName());
+    $this->assertEquals([$param => 5], $links[5]->getUrl()->getRouteParameters());
   }
 
   /**
@@ -679,7 +725,12 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   public function testBuildRequirementAddThreadsCalendarAction(): void {
     $apiary = $this->createApiaryMock(1, 'Home Apiary');
     $action = $this->createCalendarActionMock(40, 'Feed winter stores', $apiary);
-    $route_match = $this->createRouteMatch('hivelog.calendar_action_item_requirement.add');
+    $route_match = $this->createRouteMatch(
+      'hivelog.calendar_action_item_requirement.add',
+      NULL,
+      ['calendar_action' => 40],
+      'Add Required Item',
+    );
     $route_match->method('getParameter')->willReturnMap([
       ['apiary', NULL],
       ['hive', NULL],
@@ -690,9 +741,12 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
 
     $links = $this->builder->build($route_match)->getLinks();
 
-    $this->assertCount(4, $links);
+    $this->assertCount(5, $links);
     $this->assertEquals('Feed winter stores', (string) $links[3]->getText());
     $this->assertEquals('entity.calendar_action.canonical', $links[3]->getUrl()->getRouteName());
+    $this->assertEquals('Add Required Item', (string) $links[4]->getText());
+    $this->assertEquals('hivelog.calendar_action_item_requirement.add', $links[4]->getUrl()->getRouteName());
+    $this->assertEquals(['calendar_action' => 40], $links[4]->getUrl()->getRouteParameters());
   }
 
   /**
@@ -762,7 +816,7 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
    */
   public function testBuildApiaryEditForm(): void {
     $apiary = $this->createApiaryMock(2, 'Mountain Apiary');
-    $route_match = $this->createRouteMatch('entity.apiary.edit_form');
+    $route_match = $this->createRouteMatch('entity.apiary.edit_form', NULL, ['apiary' => 2]);
     $route_match->method('getParameter')->willReturnMap([
       ['apiary', $apiary],
       ['hive', NULL],
@@ -772,10 +826,13 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $breadcrumb = $this->builder->build($route_match);
     $links = $breadcrumb->getLinks();
 
-    $this->assertCount(3, $links);
+    $this->assertCount(4, $links);
     $this->assertEquals('Mountain Apiary', (string) $links[2]->getText());
     $this->assertEquals('entity.apiary.canonical', $links[2]->getUrl()->getRouteName());
     $this->assertEquals(['apiary' => 2], $links[2]->getUrl()->getRouteParameters());
+    $this->assertEquals('Edit', (string) $links[3]->getText());
+    $this->assertEquals('entity.apiary.edit_form', $links[3]->getUrl()->getRouteName());
+    $this->assertEquals(['apiary' => 2], $links[3]->getUrl()->getRouteParameters());
     $this->assertContains('apiary:2', $breadcrumb->getCacheTags());
   }
 
@@ -837,7 +894,7 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   public function testBuildHiveEditForm(): void {
     $apiary = $this->createApiaryMock(1, 'Home Apiary');
     $hive = $this->createHiveMock(5, 'Hive Alpha', $apiary);
-    $route_match = $this->createRouteMatch('entity.hive.edit_form');
+    $route_match = $this->createRouteMatch('entity.hive.edit_form', NULL, ['hive' => 5]);
     $route_match->method('getParameter')->willReturnMap([
       ['apiary', NULL],
       ['hive', $hive],
@@ -847,11 +904,14 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $breadcrumb = $this->builder->build($route_match);
     $links = $breadcrumb->getLinks();
 
-    $this->assertCount(4, $links);
+    $this->assertCount(5, $links);
     $this->assertEquals('Home Apiary', (string) $links[2]->getText());
     $this->assertEquals('Hive Alpha', (string) $links[3]->getText());
     $this->assertEquals('entity.hive.canonical', $links[3]->getUrl()->getRouteName());
     $this->assertEquals(['hive' => 5], $links[3]->getUrl()->getRouteParameters());
+    $this->assertEquals('Edit', (string) $links[4]->getText());
+    $this->assertEquals('entity.hive.edit_form', $links[4]->getUrl()->getRouteName());
+    $this->assertEquals(['hive' => 5], $links[4]->getUrl()->getRouteParameters());
   }
 
   /**
@@ -888,7 +948,7 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $apiary = $this->createApiaryMock(1, 'Home Apiary');
     $hive = $this->createHiveMock(5, 'Hive Alpha', $apiary);
     $inspection = $this->createInspectionMock(10, 'Inspection on 2024-06-15', $hive);
-    $route_match = $this->createRouteMatch('entity.hive_inspection.edit_form');
+    $route_match = $this->createRouteMatch('entity.hive_inspection.edit_form', NULL, ['hive_inspection' => 10]);
     $route_match->method('getParameter')->willReturnMap([
       ['apiary', NULL],
       ['hive', NULL],
@@ -898,12 +958,15 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $breadcrumb = $this->builder->build($route_match);
     $links = $breadcrumb->getLinks();
 
-    $this->assertCount(5, $links);
+    $this->assertCount(6, $links);
     $this->assertEquals('Home Apiary', (string) $links[2]->getText());
     $this->assertEquals('Hive Alpha', (string) $links[3]->getText());
     $this->assertEquals('Inspection on 2024-06-15', (string) $links[4]->getText());
     $this->assertEquals('entity.hive_inspection.canonical', $links[4]->getUrl()->getRouteName());
     $this->assertEquals(['hive_inspection' => 10], $links[4]->getUrl()->getRouteParameters());
+    $this->assertEquals('Edit', (string) $links[5]->getText());
+    $this->assertEquals('entity.hive_inspection.edit_form', $links[5]->getUrl()->getRouteName());
+    $this->assertEquals(['hive_inspection' => 10], $links[5]->getUrl()->getRouteParameters());
   }
 
   /**
@@ -911,7 +974,7 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
    */
   public function testBuildHiveAddRoute(): void {
     $apiary = $this->createApiaryMock(3, 'Garden Apiary');
-    $route_match = $this->createRouteMatch('hivelog.hive.add');
+    $route_match = $this->createRouteMatch('hivelog.hive.add', NULL, ['apiary' => 3], 'Add Hive');
     $route_match->method('getParameter')->willReturnMap([
       ['apiary', $apiary],
       ['hive', NULL],
@@ -921,9 +984,12 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $breadcrumb = $this->builder->build($route_match);
     $links = $breadcrumb->getLinks();
 
-    $this->assertCount(3, $links);
+    $this->assertCount(4, $links);
     $this->assertEquals('Garden Apiary', (string) $links[2]->getText());
     $this->assertEquals('entity.apiary.canonical', $links[2]->getUrl()->getRouteName());
+    $this->assertEquals('Add Hive', (string) $links[3]->getText());
+    $this->assertEquals('hivelog.hive.add', $links[3]->getUrl()->getRouteName());
+    $this->assertEquals(['apiary' => 3], $links[3]->getUrl()->getRouteParameters());
   }
 
   /**
@@ -932,7 +998,7 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   public function testBuildInspectionAddRoute(): void {
     $apiary = $this->createApiaryMock(1, 'Home Apiary');
     $hive = $this->createHiveMock(7, 'Hive Beta', $apiary);
-    $route_match = $this->createRouteMatch('hivelog.inspection.add');
+    $route_match = $this->createRouteMatch('hivelog.inspection.add', NULL, ['hive' => 7], 'Add Inspection');
     $route_match->method('getParameter')->willReturnMap([
       ['apiary', NULL],
       ['hive', $hive],
@@ -942,10 +1008,13 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $breadcrumb = $this->builder->build($route_match);
     $links = $breadcrumb->getLinks();
 
-    $this->assertCount(4, $links);
+    $this->assertCount(5, $links);
     $this->assertEquals('Home Apiary', (string) $links[2]->getText());
     $this->assertEquals('Hive Beta', (string) $links[3]->getText());
     $this->assertEquals('entity.hive.canonical', $links[3]->getUrl()->getRouteName());
+    $this->assertEquals('Add Inspection', (string) $links[4]->getText());
+    $this->assertEquals('hivelog.inspection.add', $links[4]->getUrl()->getRouteName());
+    $this->assertEquals(['hive' => 7], $links[4]->getUrl()->getRouteParameters());
   }
 
   /**
@@ -983,7 +1052,7 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $apiary = $this->createApiaryMock(1, 'Home Apiary');
     $hive = $this->createHiveMock(5, 'Hive Alpha', $apiary);
     $queen = $this->createQueenMock(20, 'Q-2024-001', $hive);
-    $route_match = $this->createRouteMatch('entity.queen.edit_form');
+    $route_match = $this->createRouteMatch('entity.queen.edit_form', NULL, ['queen' => 20]);
     $route_match->method('getParameter')->willReturnMap([
       ['apiary', NULL],
       ['hive', NULL],
@@ -994,12 +1063,15 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $breadcrumb = $this->builder->build($route_match);
     $links = $breadcrumb->getLinks();
 
-    $this->assertCount(5, $links);
+    $this->assertCount(6, $links);
     $this->assertEquals('Home Apiary', (string) $links[2]->getText());
     $this->assertEquals('Hive Alpha', (string) $links[3]->getText());
     $this->assertEquals('Q-2024-001', (string) $links[4]->getText());
     $this->assertEquals('entity.queen.canonical', $links[4]->getUrl()->getRouteName());
     $this->assertEquals(['queen' => 20], $links[4]->getUrl()->getRouteParameters());
+    $this->assertEquals('Edit', (string) $links[5]->getText());
+    $this->assertEquals('entity.queen.edit_form', $links[5]->getUrl()->getRouteName());
+    $this->assertEquals(['queen' => 20], $links[5]->getUrl()->getRouteParameters());
   }
 
   /**
@@ -1042,7 +1114,7 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $hive = $this->createHiveMock(5, 'Hive Alpha', $apiary);
     $queen = $this->createQueenMock(20, 'Q-2024-001', $hive);
     $observation = $this->createObservationMock(30, 'Observation A', $queen);
-    $route_match = $this->createRouteMatch('entity.queen_observation.edit_form');
+    $route_match = $this->createRouteMatch('entity.queen_observation.edit_form', NULL, ['queen_observation' => 30]);
     $route_match->method('getParameter')->willReturnMap([
       ['apiary', NULL],
       ['hive', NULL],
@@ -1054,12 +1126,15 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $breadcrumb = $this->builder->build($route_match);
     $links = $breadcrumb->getLinks();
 
-    $this->assertCount(6, $links);
+    $this->assertCount(7, $links);
     $this->assertEquals('Home Apiary', (string) $links[2]->getText());
     $this->assertEquals('Hive Alpha', (string) $links[3]->getText());
     $this->assertEquals('Q-2024-001', (string) $links[4]->getText());
     $this->assertEquals('Observation A', (string) $links[5]->getText());
     $this->assertEquals('entity.queen_observation.canonical', $links[5]->getUrl()->getRouteName());
+    $this->assertEquals('Edit', (string) $links[6]->getText());
+    $this->assertEquals('entity.queen_observation.edit_form', $links[6]->getUrl()->getRouteName());
+    $this->assertEquals(['queen_observation' => 30], $links[6]->getUrl()->getRouteParameters());
   }
 
   /**
@@ -1069,7 +1144,7 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $apiary = $this->createApiaryMock(1, 'Home Apiary');
     $hive = $this->createHiveMock(5, 'Hive Alpha', $apiary);
     $queen = $this->createQueenMock(20, 'Q-2024-001', $hive);
-    $route_match = $this->createRouteMatch('hivelog.queen_observation.add');
+    $route_match = $this->createRouteMatch('hivelog.queen_observation.add', NULL, ['queen' => 20], 'Add Queen Observation');
     $route_match->method('getParameter')->willReturnMap([
       ['apiary', NULL],
       ['hive', NULL],
@@ -1081,11 +1156,14 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $breadcrumb = $this->builder->build($route_match);
     $links = $breadcrumb->getLinks();
 
-    $this->assertCount(5, $links);
+    $this->assertCount(6, $links);
     $this->assertEquals('Home Apiary', (string) $links[2]->getText());
     $this->assertEquals('Hive Alpha', (string) $links[3]->getText());
     $this->assertEquals('Q-2024-001', (string) $links[4]->getText());
     $this->assertEquals('entity.queen.canonical', $links[4]->getUrl()->getRouteName());
+    $this->assertEquals('Add Queen Observation', (string) $links[5]->getText());
+    $this->assertEquals('hivelog.queen_observation.add', $links[5]->getUrl()->getRouteName());
+    $this->assertEquals(['queen' => 20], $links[5]->getUrl()->getRouteParameters());
   }
 
   /**
@@ -1094,7 +1172,7 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   public function testBuildQueenAddRoute(): void {
     $apiary = $this->createApiaryMock(1, 'Home Apiary');
     $hive = $this->createHiveMock(9, 'Hive Gamma', $apiary);
-    $route_match = $this->createRouteMatch('hivelog.queen.add');
+    $route_match = $this->createRouteMatch('hivelog.queen.add', NULL, ['hive' => 9], 'Add Queen');
     $route_match->method('getParameter')->willReturnMap([
       ['apiary', NULL],
       ['hive', $hive],
@@ -1105,10 +1183,13 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $breadcrumb = $this->builder->build($route_match);
     $links = $breadcrumb->getLinks();
 
-    $this->assertCount(4, $links);
+    $this->assertCount(5, $links);
     $this->assertEquals('Home Apiary', (string) $links[2]->getText());
     $this->assertEquals('Hive Gamma', (string) $links[3]->getText());
     $this->assertEquals('entity.hive.canonical', $links[3]->getUrl()->getRouteName());
+    $this->assertEquals('Add Queen', (string) $links[4]->getText());
+    $this->assertEquals('hivelog.queen.add', $links[4]->getUrl()->getRouteName());
+    $this->assertEquals(['hive' => 9], $links[4]->getUrl()->getRouteParameters());
   }
 
   /**
@@ -1116,7 +1197,7 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
    */
   public function testBuildApiaryDeleteForm(): void {
     $apiary = $this->createApiaryMock(2, 'Mountain Apiary');
-    $route_match = $this->createRouteMatch('entity.apiary.delete_form');
+    $route_match = $this->createRouteMatch('entity.apiary.delete_form', NULL, ['apiary' => 2]);
     $route_match->method('getParameter')->willReturnMap([
       ['apiary', $apiary],
       ['hive', NULL],
@@ -1126,9 +1207,12 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $breadcrumb = $this->builder->build($route_match);
     $links = $breadcrumb->getLinks();
 
-    $this->assertCount(3, $links);
+    $this->assertCount(4, $links);
     $this->assertEquals('Mountain Apiary', (string) $links[2]->getText());
     $this->assertEquals('entity.apiary.canonical', $links[2]->getUrl()->getRouteName());
+    $this->assertEquals('Delete', (string) $links[3]->getText());
+    $this->assertEquals('entity.apiary.delete_form', $links[3]->getUrl()->getRouteName());
+    $this->assertEquals(['apiary' => 2], $links[3]->getUrl()->getRouteParameters());
   }
 
   /**
@@ -1137,7 +1221,7 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   public function testBuildHiveDeleteForm(): void {
     $apiary = $this->createApiaryMock(1, 'Home Apiary');
     $hive = $this->createHiveMock(5, 'Hive Alpha', $apiary);
-    $route_match = $this->createRouteMatch('entity.hive.delete_form');
+    $route_match = $this->createRouteMatch('entity.hive.delete_form', NULL, ['hive' => 5]);
     $route_match->method('getParameter')->willReturnMap([
       ['apiary', NULL],
       ['hive', $hive],
@@ -1147,10 +1231,13 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $breadcrumb = $this->builder->build($route_match);
     $links = $breadcrumb->getLinks();
 
-    $this->assertCount(4, $links);
+    $this->assertCount(5, $links);
     $this->assertEquals('Home Apiary', (string) $links[2]->getText());
     $this->assertEquals('Hive Alpha', (string) $links[3]->getText());
     $this->assertEquals('entity.hive.canonical', $links[3]->getUrl()->getRouteName());
+    $this->assertEquals('Delete', (string) $links[4]->getText());
+    $this->assertEquals('entity.hive.delete_form', $links[4]->getUrl()->getRouteName());
+    $this->assertEquals(['hive' => 5], $links[4]->getUrl()->getRouteParameters());
   }
 
   /**
@@ -1160,7 +1247,7 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $apiary = $this->createApiaryMock(1, 'Home Apiary');
     $hive = $this->createHiveMock(5, 'Hive Alpha', $apiary);
     $inspection = $this->createInspectionMock(10, 'Inspection on 2024-06-15', $hive);
-    $route_match = $this->createRouteMatch('entity.hive_inspection.delete_form');
+    $route_match = $this->createRouteMatch('entity.hive_inspection.delete_form', NULL, ['hive_inspection' => 10]);
     $route_match->method('getParameter')->willReturnMap([
       ['apiary', NULL],
       ['hive', NULL],
@@ -1170,11 +1257,14 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $breadcrumb = $this->builder->build($route_match);
     $links = $breadcrumb->getLinks();
 
-    $this->assertCount(5, $links);
+    $this->assertCount(6, $links);
     $this->assertEquals('Home Apiary', (string) $links[2]->getText());
     $this->assertEquals('Hive Alpha', (string) $links[3]->getText());
     $this->assertEquals('Inspection on 2024-06-15', (string) $links[4]->getText());
     $this->assertEquals('entity.hive_inspection.canonical', $links[4]->getUrl()->getRouteName());
+    $this->assertEquals('Delete', (string) $links[5]->getText());
+    $this->assertEquals('entity.hive_inspection.delete_form', $links[5]->getUrl()->getRouteName());
+    $this->assertEquals(['hive_inspection' => 10], $links[5]->getUrl()->getRouteParameters());
   }
 
   /**
@@ -1184,7 +1274,7 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $apiary = $this->createApiaryMock(1, 'Home Apiary');
     $hive = $this->createHiveMock(5, 'Hive Alpha', $apiary);
     $queen = $this->createQueenMock(20, 'Q-2024-001', $hive);
-    $route_match = $this->createRouteMatch('entity.queen.delete_form');
+    $route_match = $this->createRouteMatch('entity.queen.delete_form', NULL, ['queen' => 20]);
     $route_match->method('getParameter')->willReturnMap([
       ['apiary', NULL],
       ['hive', NULL],
@@ -1195,11 +1285,14 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $breadcrumb = $this->builder->build($route_match);
     $links = $breadcrumb->getLinks();
 
-    $this->assertCount(5, $links);
+    $this->assertCount(6, $links);
     $this->assertEquals('Home Apiary', (string) $links[2]->getText());
     $this->assertEquals('Hive Alpha', (string) $links[3]->getText());
     $this->assertEquals('Q-2024-001', (string) $links[4]->getText());
     $this->assertEquals('entity.queen.canonical', $links[4]->getUrl()->getRouteName());
+    $this->assertEquals('Delete', (string) $links[5]->getText());
+    $this->assertEquals('entity.queen.delete_form', $links[5]->getUrl()->getRouteName());
+    $this->assertEquals(['queen' => 20], $links[5]->getUrl()->getRouteParameters());
   }
 
   /**
@@ -1210,7 +1303,7 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $hive = $this->createHiveMock(5, 'Hive Alpha', $apiary);
     $queen = $this->createQueenMock(20, 'Q-2024-001', $hive);
     $observation = $this->createObservationMock(30, 'Observation A', $queen);
-    $route_match = $this->createRouteMatch('entity.queen_observation.delete_form');
+    $route_match = $this->createRouteMatch('entity.queen_observation.delete_form', NULL, ['queen_observation' => 30]);
     $route_match->method('getParameter')->willReturnMap([
       ['apiary', NULL],
       ['hive', NULL],
@@ -1222,12 +1315,15 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $breadcrumb = $this->builder->build($route_match);
     $links = $breadcrumb->getLinks();
 
-    $this->assertCount(6, $links);
+    $this->assertCount(7, $links);
     $this->assertEquals('Home Apiary', (string) $links[2]->getText());
     $this->assertEquals('Hive Alpha', (string) $links[3]->getText());
     $this->assertEquals('Q-2024-001', (string) $links[4]->getText());
     $this->assertEquals('Observation A', (string) $links[5]->getText());
     $this->assertEquals('entity.queen_observation.canonical', $links[5]->getUrl()->getRouteName());
+    $this->assertEquals('Delete', (string) $links[6]->getText());
+    $this->assertEquals('entity.queen_observation.delete_form', $links[6]->getUrl()->getRouteName());
+    $this->assertEquals(['queen_observation' => 30], $links[6]->getUrl()->getRouteParameters());
   }
 
   /**
@@ -1260,7 +1356,7 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
    */
   public function testBuildQueenEditFormUnassigned(): void {
     $queen = $this->createUnassignedQueenMock(21, 'Q-2023-archived');
-    $route_match = $this->createRouteMatch('entity.queen.edit_form');
+    $route_match = $this->createRouteMatch('entity.queen.edit_form', NULL, ['queen' => 21]);
     $route_match->method('getParameter')->willReturnMap([
       ['apiary', NULL],
       ['hive', NULL],
@@ -1271,10 +1367,13 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $breadcrumb = $this->builder->build($route_match);
     $links = $breadcrumb->getLinks();
 
-    // Home + HiveLog + Queen (no apiary or hive).
-    $this->assertCount(3, $links);
+    // Home + HiveLog + Queen + Edit (no apiary or hive).
+    $this->assertCount(4, $links);
     $this->assertEquals('Q-2023-archived', (string) $links[2]->getText());
     $this->assertEquals('entity.queen.canonical', $links[2]->getUrl()->getRouteName());
+    $this->assertEquals('Edit', (string) $links[3]->getText());
+    $this->assertEquals('entity.queen.edit_form', $links[3]->getUrl()->getRouteName());
+    $this->assertEquals(['queen' => 21], $links[3]->getUrl()->getRouteParameters());
   }
 
   /**
@@ -1315,7 +1414,7 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   public function testBuildObservationEditFormQueenUnassigned(): void {
     $queen = $this->createUnassignedQueenMock(21, 'Q-2023-archived');
     $observation = $this->createObservationMock(31, 'Observation B', $queen);
-    $route_match = $this->createRouteMatch('entity.queen_observation.edit_form');
+    $route_match = $this->createRouteMatch('entity.queen_observation.edit_form', NULL, ['queen_observation' => 31]);
     $route_match->method('getParameter')->willReturnMap([
       ['apiary', NULL],
       ['hive', NULL],
@@ -1327,11 +1426,14 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $breadcrumb = $this->builder->build($route_match);
     $links = $breadcrumb->getLinks();
 
-    // Home + HiveLog + Queen + Observation.
-    $this->assertCount(4, $links);
+    // Home + HiveLog + Queen + Observation + Edit.
+    $this->assertCount(5, $links);
     $this->assertEquals('Q-2023-archived', (string) $links[2]->getText());
     $this->assertEquals('Observation B', (string) $links[3]->getText());
     $this->assertEquals('entity.queen_observation.canonical', $links[3]->getUrl()->getRouteName());
+    $this->assertEquals('Edit', (string) $links[4]->getText());
+    $this->assertEquals('entity.queen_observation.edit_form', $links[4]->getUrl()->getRouteName());
+    $this->assertEquals(['queen_observation' => 31], $links[4]->getUrl()->getRouteParameters());
   }
 
   /**
@@ -1367,7 +1469,7 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   public function testBuildCalendarActionEditForm(): void {
     $apiary = $this->createApiaryMock(1, 'Home Apiary');
     $calendarAction = $this->createCalendarActionMock(40, 'Harvest Spring Honey', $apiary);
-    $route_match = $this->createRouteMatch('entity.calendar_action.edit_form');
+    $route_match = $this->createRouteMatch('entity.calendar_action.edit_form', NULL, ['calendar_action' => 40]);
     $route_match->method('getParameter')->willReturnMap([
       ['apiary', NULL],
       ['hive', NULL],
@@ -1378,11 +1480,14 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $breadcrumb = $this->builder->build($route_match);
     $links = $breadcrumb->getLinks();
 
-    $this->assertCount(4, $links);
+    $this->assertCount(5, $links);
     $this->assertEquals('Home Apiary', (string) $links[2]->getText());
     $this->assertEquals('Harvest Spring Honey', (string) $links[3]->getText());
     $this->assertEquals('entity.calendar_action.canonical', $links[3]->getUrl()->getRouteName());
     $this->assertEquals(['calendar_action' => 40], $links[3]->getUrl()->getRouteParameters());
+    $this->assertEquals('Edit', (string) $links[4]->getText());
+    $this->assertEquals('entity.calendar_action.edit_form', $links[4]->getUrl()->getRouteName());
+    $this->assertEquals(['calendar_action' => 40], $links[4]->getUrl()->getRouteParameters());
   }
 
   /**
@@ -1390,7 +1495,7 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
    */
   public function testBuildCalendarActionAddRoute(): void {
     $apiary = $this->createApiaryMock(3, 'Garden Apiary');
-    $route_match = $this->createRouteMatch('hivelog.calendar_action.add');
+    $route_match = $this->createRouteMatch('hivelog.calendar_action.add', NULL, ['apiary' => 3], 'Add Calendar Action');
     $route_match->method('getParameter')->willReturnMap([
       ['apiary', $apiary],
       ['hive', NULL],
@@ -1401,9 +1506,12 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $breadcrumb = $this->builder->build($route_match);
     $links = $breadcrumb->getLinks();
 
-    $this->assertCount(3, $links);
+    $this->assertCount(4, $links);
     $this->assertEquals('Garden Apiary', (string) $links[2]->getText());
     $this->assertEquals('entity.apiary.canonical', $links[2]->getUrl()->getRouteName());
+    $this->assertEquals('Add Calendar Action', (string) $links[3]->getText());
+    $this->assertEquals('hivelog.calendar_action.add', $links[3]->getUrl()->getRouteName());
+    $this->assertEquals(['apiary' => 3], $links[3]->getUrl()->getRouteParameters());
   }
 
   /**
@@ -1442,7 +1550,7 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $apiary = $this->createApiaryMock(1, 'Home Apiary');
     $hive = $this->createHiveMock(5, 'Hive Alpha', $apiary);
     $log = $this->createHiveActionLogMock(50, 'Varroa Treatment for Hive Alpha (2026)', $hive);
-    $route_match = $this->createRouteMatch('entity.hive_action_log.edit_form');
+    $route_match = $this->createRouteMatch('entity.hive_action_log.edit_form', NULL, ['hive_action_log' => 50]);
     $route_match->method('getParameter')->willReturnMap([
       ['apiary', NULL],
       ['hive', NULL],
@@ -1454,12 +1562,15 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $breadcrumb = $this->builder->build($route_match);
     $links = $breadcrumb->getLinks();
 
-    $this->assertCount(5, $links);
+    $this->assertCount(6, $links);
     $this->assertEquals('Home Apiary', (string) $links[2]->getText());
     $this->assertEquals('Hive Alpha', (string) $links[3]->getText());
     $this->assertEquals('Varroa Treatment for Hive Alpha (2026)', (string) $links[4]->getText());
     $this->assertEquals('entity.hive_action_log.canonical', $links[4]->getUrl()->getRouteName());
     $this->assertEquals(['hive_action_log' => 50], $links[4]->getUrl()->getRouteParameters());
+    $this->assertEquals('Edit', (string) $links[5]->getText());
+    $this->assertEquals('entity.hive_action_log.edit_form', $links[5]->getUrl()->getRouteName());
+    $this->assertEquals(['hive_action_log' => 50], $links[5]->getUrl()->getRouteParameters());
   }
 
   /**
@@ -1476,7 +1587,12 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $apiary = $this->createApiaryMock(1, 'Home Apiary');
     $hive = $this->createHiveMock(5, 'Hive Alpha', $apiary);
     $calendarAction = $this->createCalendarActionMock(40, 'Harvest Spring Honey', $apiary);
-    $route_match = $this->createRouteMatch('hivelog.hive_action_log.add');
+    $route_match = $this->createRouteMatch(
+      'hivelog.hive_action_log.add',
+      NULL,
+      ['hive' => 5, 'calendar_action' => 40],
+      'Add Hive Action Log',
+    );
     $route_match->method('getParameter')->willReturnMap([
       ['apiary', NULL],
       ['hive', $hive],
@@ -1488,15 +1604,21 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $breadcrumb = $this->builder->build($route_match);
     $links = $breadcrumb->getLinks();
 
-    // Home + HiveLog + Apiary + Hive — no CalendarAction crumb, and no
-    // duplicate Apiary crumb from the calendar_action block.
-    $this->assertCount(4, $links);
+    // Home + HiveLog + Apiary + Hive + "Add Hive Action Log" — no
+    // CalendarAction crumb, and no duplicate Apiary crumb from the
+    // calendar_action block. The terminal crumb's own raw parameters
+    // (task 0117) still carry both {hive} and {calendar_action}, since
+    // that's what the route actually needs to reconstruct its URL.
+    $this->assertCount(5, $links);
     $this->assertEquals('Home', (string) $links[0]->getText());
     $this->assertEquals('HiveLog', (string) $links[1]->getText());
     $this->assertEquals('Home Apiary', (string) $links[2]->getText());
     $this->assertEquals('entity.apiary.canonical', $links[2]->getUrl()->getRouteName());
     $this->assertEquals('Hive Alpha', (string) $links[3]->getText());
     $this->assertEquals('entity.hive.canonical', $links[3]->getUrl()->getRouteName());
+    $this->assertEquals('Add Hive Action Log', (string) $links[4]->getText());
+    $this->assertEquals('hivelog.hive_action_log.add', $links[4]->getUrl()->getRouteName());
+    $this->assertEquals(['hive' => 5, 'calendar_action' => 40], $links[4]->getUrl()->getRouteParameters());
     $this->assertStringNotContainsString('Harvest Spring Honey', implode(' ', array_map(
       fn($link) => (string) $link->getText(),
       $links
@@ -1539,7 +1661,7 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   public function testBuildApiaryActionLogEditForm(): void {
     $apiary = $this->createApiaryMock(1, 'Home Apiary');
     $log = $this->createApiaryActionLogMock(60, 'Renew CBR for Home Apiary (2026)', $apiary);
-    $route_match = $this->createRouteMatch('entity.apiary_action_log.edit_form');
+    $route_match = $this->createRouteMatch('entity.apiary_action_log.edit_form', NULL, ['apiary_action_log' => 60]);
     $route_match->method('getParameter')->willReturnMap([
       ['apiary', NULL],
       ['hive', NULL],
@@ -1552,11 +1674,14 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $breadcrumb = $this->builder->build($route_match);
     $links = $breadcrumb->getLinks();
 
-    $this->assertCount(4, $links);
+    $this->assertCount(5, $links);
     $this->assertEquals('Home Apiary', (string) $links[2]->getText());
     $this->assertEquals('Renew CBR for Home Apiary (2026)', (string) $links[3]->getText());
     $this->assertEquals('entity.apiary_action_log.canonical', $links[3]->getUrl()->getRouteName());
     $this->assertEquals(['apiary_action_log' => 60], $links[3]->getUrl()->getRouteParameters());
+    $this->assertEquals('Edit', (string) $links[4]->getText());
+    $this->assertEquals('entity.apiary_action_log.edit_form', $links[4]->getUrl()->getRouteName());
+    $this->assertEquals(['apiary_action_log' => 60], $links[4]->getUrl()->getRouteParameters());
   }
 
   /**
@@ -1570,7 +1695,12 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   public function testBuildApiaryActionLogAddRouteDoesNotAddCalendarActionCrumb(): void {
     $apiary = $this->createApiaryMock(1, 'Home Apiary');
     $calendarAction = $this->createCalendarActionMock(40, 'Renew Central Beehive Registration (CBR)', $apiary);
-    $route_match = $this->createRouteMatch('hivelog.apiary_action_log.add');
+    $route_match = $this->createRouteMatch(
+      'hivelog.apiary_action_log.add',
+      NULL,
+      ['apiary' => 1, 'calendar_action' => 40],
+      'Add Apiary Action Log',
+    );
     $route_match->method('getParameter')->willReturnMap([
       ['apiary', $apiary],
       ['hive', NULL],
@@ -1583,12 +1713,16 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $breadcrumb = $this->builder->build($route_match);
     $links = $breadcrumb->getLinks();
 
-    // Home + HiveLog + Apiary — no CalendarAction crumb.
-    $this->assertCount(3, $links);
+    // Home + HiveLog + Apiary + "Add Apiary Action Log" — no
+    // CalendarAction crumb.
+    $this->assertCount(4, $links);
     $this->assertEquals('Home', (string) $links[0]->getText());
     $this->assertEquals('HiveLog', (string) $links[1]->getText());
     $this->assertEquals('Home Apiary', (string) $links[2]->getText());
     $this->assertEquals('entity.apiary.canonical', $links[2]->getUrl()->getRouteName());
+    $this->assertEquals('Add Apiary Action Log', (string) $links[3]->getText());
+    $this->assertEquals('hivelog.apiary_action_log.add', $links[3]->getUrl()->getRouteName());
+    $this->assertEquals(['apiary' => 1, 'calendar_action' => 40], $links[3]->getUrl()->getRouteParameters());
     $this->assertStringNotContainsString('Renew Central Beehive Registration (CBR)', implode(' ', array_map(
       fn($link) => (string) $link->getText(),
       $links
@@ -1601,8 +1735,22 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
 
   /**
    * Creates a mock RouteMatchInterface for the given route name.
+   *
+   * @param string $route_name
+   *   The route name.
+   * @param string|null $path
+   *   The route's path, for `applies()`'s path match. Defaults to a
+   *   path under `/hivelog` (or outside it, for a handful of known
+   *   unrelated routes).
+   * @param array $raw_parameters
+   *   The route's raw (un-upcast) path parameters, as `getRawParameters()`
+   *   would return them — what the new generic terminal crumb
+   *   (task 0117) rebuilds its self-link from.
+   * @param string|null $title
+   *   The route's static `_title` default, matching what routing.yml
+   *   declares for it — read directly by `routeTitle()` for add routes.
    */
-  private function createRouteMatch(string $route_name, ?string $path = NULL): RouteMatchInterface {
+  private function createRouteMatch(string $route_name, ?string $path = NULL, array $raw_parameters = [], ?string $title = NULL): RouteMatchInterface {
     if ($path === NULL) {
       // applies() now matches on the route's path; give unrelated routes a
       // path outside /hivelog and everything else a path inside it.
@@ -1615,9 +1763,11 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
       ];
       $path = $unrelated[$route_name] ?? '/hivelog/_test';
     }
+    $defaults = $title !== NULL ? ['_title' => $title] : [];
     $route_match = $this->createMock(RouteMatchInterface::class);
     $route_match->method('getRouteName')->willReturn($route_name);
-    $route_match->method('getRouteObject')->willReturn(new Route($path));
+    $route_match->method('getRouteObject')->willReturn(new Route($path, $defaults));
+    $route_match->method('getRawParameters')->willReturn(new ParameterBag($raw_parameters));
     return $route_match;
   }
 
