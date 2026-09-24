@@ -193,12 +193,6 @@ parameters:
 			path: modules/nexus/src/AiProviderConfigListBuilder.php
 
 		-
-			message: '#^\\Drupal calls should be avoided in classes, use dependency injection instead$#'
-			identifier: globalDrupalDependencyInjection.useDependencyInjection
-			count: 2
-			path: modules/nexus/src/Controller/AiProviderConfigController.php
-
-		-
 			message: '#^Call to an undefined method Drupal\\Core\\Field\\FieldDefinitionInterface\:\:setLabel\(\)\.$#'
 			identifier: method.notFound
 			count: 1
@@ -209,18 +203,6 @@ parameters:
 			identifier: method.notFound
 			count: 4
 			path: modules/nexus/src/Form/AiProviderConfigForm.php
-
-		-
-			message: '#^Call to an undefined method Drupal\\ai\\Plugin\\ProviderProxy\:\:chat\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: modules/nexus/src/ProviderCaller/AiModuleProviderCaller.php
-
-		-
-			message: '#^\\Drupal calls should be avoided in classes, use dependency injection instead$#'
-			identifier: globalDrupalDependencyInjection.useDependencyInjection
-			count: 1
-			path: modules/nexus/src/ProviderCaller/AiModuleProviderCaller.php
 
 		-
 			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
