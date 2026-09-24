@@ -1,0 +1,973 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: modules/assimilate/src/MockReadingGenerator.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: modules/assimilate/tests/src/Kernel/MockReadingGeneratorTest.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: modules/collective/src/ApiClientListBuilder.php
+
+		-
+			message: '#^\\Drupal calls should be avoided in classes, use dependency injection instead$#'
+			identifier: globalDrupalDependencyInjection.useDependencyInjection
+			count: 1
+			path: modules/collective/src/ApiClientListBuilder.php
+
+		-
+			message: '#^Unsafe usage of new static\(\)\.$#'
+			identifier: new.static
+			count: 1
+			path: modules/collective/src/Controller/ApiClientApiController.php
+
+		-
+			message: '#^\\Drupal calls should be avoided in classes, use dependency injection instead$#'
+			identifier: globalDrupalDependencyInjection.useDependencyInjection
+			count: 1
+			path: modules/collective/src/Controller/ApiClientApiController.php
+
+		-
+			message: '#^\\Drupal calls should be avoided in classes, use dependency injection instead$#'
+			identifier: globalDrupalDependencyInjection.useDependencyInjection
+			count: 1
+			path: modules/collective/src/Controller/ApiClientController.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Field\\FieldDefinitionInterface\:\:setLabel\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: modules/collective/src/Entity/ApiClient.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\ContentEntityInterface\|Drupal\\Core\\Entity\\RevisionLogInterface\:\:getPlainTextToken\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: modules/collective/src/Form/ApiClientForm.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 13
+			path: modules/collective/src/HiveContextBuilder.php
+
+		-
+			message: '#^Call to method getRouteByName\(\) on an unknown class Symfony\\Component\\Routing\\RouteProviderInterface\.$#'
+			identifier: class.notFound
+			count: 1
+			path: modules/collective/tests/src/Kernel/ApiClientApiControllerTest.php
+
+		-
+			message: '#^PHPDoc tag @var for variable \$route_provider contains unknown class Symfony\\Component\\Routing\\RouteProviderInterface\.$#'
+			identifier: class.notFound
+			count: 1
+			path: modules/collective/tests/src/Kernel/ApiClientApiControllerTest.php
+
+		-
+			message: '#^Call to method getRouteByName\(\) on an unknown class Symfony\\Component\\Routing\\RouteProviderInterface\.$#'
+			identifier: class.notFound
+			count: 1
+			path: modules/collective/tests/src/Kernel/ApiClientControllerTest.php
+
+		-
+			message: '#^PHPDoc tag @var for variable \$route_provider contains unknown class Symfony\\Component\\Routing\\RouteProviderInterface\.$#'
+			identifier: class.notFound
+			count: 1
+			path: modules/collective/tests/src/Kernel/ApiClientControllerTest.php
+
+		-
+			message: '#^\\Drupal calls should be avoided in classes, use dependency injection instead$#'
+			identifier: globalDrupalDependencyInjection.useDependencyInjection
+			count: 4
+			path: modules/nanoprobe/src/Controller/SensorDeviceController.php
+
+		-
+			message: '#^\\Drupal calls should be avoided in classes, use dependency injection instead$#'
+			identifier: globalDrupalDependencyInjection.useDependencyInjection
+			count: 1
+			path: modules/nanoprobe/src/Controller/SensorIngestController.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Field\\FieldDefinitionInterface\:\:setLabel\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: modules/nanoprobe/src/Entity/SensorDevice.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\ContentEntityInterface\|Drupal\\Core\\Entity\\RevisionLogInterface\:\:getPlainTextToken\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: modules/nanoprobe/src/Form/SensorDeviceForm.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: modules/nanoprobe/src/Form/SensorDeviceForm.php
+
+		-
+			message: '#^Unsafe usage of new static\(\)\.$#'
+			identifier: new.static
+			count: 1
+			path: modules/nanoprobe/src/Form/SensorReadingFilterForm.php
+
+		-
+			message: '#^\\Drupal calls should be avoided in classes, use dependency injection instead$#'
+			identifier: globalDrupalDependencyInjection.useDependencyInjection
+			count: 1
+			path: modules/nanoprobe/src/SensorDeviceListBuilder.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 3
+			path: modules/nanoprobe/src/SensorReadingRetentionService.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:set\(\)\.$#'
+			identifier: method.notFound
+			count: 4
+			path: modules/nanoprobe/src/SensorReadingRetentionService.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 6
+			path: modules/nanoprobe/src/SensorTrendChartBuilder.php
+
+		-
+			message: '#^Call to method getRouteByName\(\) on an unknown class Symfony\\Component\\Routing\\RouteProviderInterface\.$#'
+			identifier: class.notFound
+			count: 1
+			path: modules/nanoprobe/tests/src/Kernel/SensorDeviceConfigDownloadFormTest.php
+
+		-
+			message: '#^PHPDoc tag @var for variable \$route_provider contains unknown class Symfony\\Component\\Routing\\RouteProviderInterface\.$#'
+			identifier: class.notFound
+			count: 1
+			path: modules/nanoprobe/tests/src/Kernel/SensorDeviceConfigDownloadFormTest.php
+
+		-
+			message: '#^Call to method getRouteByName\(\) on an unknown class Symfony\\Component\\Routing\\RouteProviderInterface\.$#'
+			identifier: class.notFound
+			count: 1
+			path: modules/nanoprobe/tests/src/Kernel/SensorDeviceControllerTest.php
+
+		-
+			message: '#^PHPDoc tag @var for variable \$route_provider contains unknown class Symfony\\Component\\Routing\\RouteProviderInterface\.$#'
+			identifier: class.notFound
+			count: 1
+			path: modules/nanoprobe/tests/src/Kernel/SensorDeviceControllerTest.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 6
+			path: modules/nanoprobe/tests/src/Kernel/SensorDeviceManagementUiTest.php
+
+		-
+			message: '#^Call to method getRouteByName\(\) on an unknown class Symfony\\Component\\Routing\\RouteProviderInterface\.$#'
+			identifier: class.notFound
+			count: 1
+			path: modules/nanoprobe/tests/src/Kernel/SensorIngestControllerTest.php
+
+		-
+			message: '#^PHPDoc tag @var for variable \$route_provider contains unknown class Symfony\\Component\\Routing\\RouteProviderInterface\.$#'
+			identifier: class.notFound
+			count: 1
+			path: modules/nanoprobe/tests/src/Kernel/SensorIngestControllerTest.php
+
+		-
+			message: '#^\\Drupal calls should be avoided in classes, use dependency injection instead$#'
+			identifier: globalDrupalDependencyInjection.useDependencyInjection
+			count: 1
+			path: modules/nexus/src/AiProviderConfigListBuilder.php
+
+		-
+			message: '#^\\Drupal calls should be avoided in classes, use dependency injection instead$#'
+			identifier: globalDrupalDependencyInjection.useDependencyInjection
+			count: 2
+			path: modules/nexus/src/Controller/AiProviderConfigController.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Field\\FieldDefinitionInterface\:\:setLabel\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: modules/nexus/src/Entity/AiProviderConfig.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 4
+			path: modules/nexus/src/Form/AiProviderConfigForm.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\ai\\Plugin\\ProviderProxy\:\:chat\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: modules/nexus/src/ProviderCaller/AiModuleProviderCaller.php
+
+		-
+			message: '#^\\Drupal calls should be avoided in classes, use dependency injection instead$#'
+			identifier: globalDrupalDependencyInjection.useDependencyInjection
+			count: 1
+			path: modules/nexus/src/ProviderCaller/AiModuleProviderCaller.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 6
+			path: src/ApiaryActionLogListBuilder.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: src/ApiaryListBuilder.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:getOwner\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/ApiaryListBuilder.php
+
+		-
+			message: '#^\\Drupal calls should be avoided in classes, use dependency injection instead$#'
+			identifier: globalDrupalDependencyInjection.useDependencyInjection
+			count: 2
+			path: src/Breadcrumb/HivelogBreadcrumbBuilder.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 8
+			path: src/CalendarActionListBuilder.php
+
+		-
+			message: '#^Access to an undefined property Drupal\\Core\\Field\\FieldItemInterface\:\:\$entity\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Controller/ApiaryActionLogController.php
+
+		-
+			message: '#^Access to an undefined property Drupal\\hivelog\\Controller\\ApiaryActionLogController\:\:\$fileUrlGenerator\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Controller/ApiaryActionLogController.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Controller/ApiaryActionLogController.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:set\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Controller/ApiaryActionLogController.php
+
+		-
+			message: '#^Unsafe usage of new static\(\)\.$#'
+			identifier: new.static
+			count: 1
+			path: src/Controller/ApiaryActionLogController.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 23
+			path: src/Controller/ApiaryController.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:getActiveQueen\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Controller/ApiaryController.php
+
+		-
+			message: '#^Unsafe usage of new static\(\)\.$#'
+			identifier: new.static
+			count: 1
+			path: src/Controller/ApiaryController.php
+
+		-
+			message: '#^Access to an undefined property Drupal\\Core\\Field\\FieldItemInterface\:\:\$entity\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Controller/CalendarActionController.php
+
+		-
+			message: '#^Access to an undefined property Drupal\\hivelog\\Controller\\CalendarActionController\:\:\$fileUrlGenerator\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Controller/CalendarActionController.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 4
+			path: src/Controller/CalendarActionController.php
+
+		-
+			message: '#^Unsafe usage of new static\(\)\.$#'
+			identifier: new.static
+			count: 1
+			path: src/Controller/CalendarActionController.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 12
+			path: src/Controller/DashboardController.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:getStockOnHand\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Controller/DashboardController.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:isLowStock\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Controller/DashboardController.php
+
+		-
+			message: '#^Unsafe usage of new static\(\)\.$#'
+			identifier: new.static
+			count: 1
+			path: src/Controller/DashboardController.php
+
+		-
+			message: '#^Access to an undefined property Drupal\\Core\\Field\\FieldItemInterface\:\:\$entity\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Controller/HiveActionLogController.php
+
+		-
+			message: '#^Access to an undefined property Drupal\\hivelog\\Controller\\HiveActionLogController\:\:\$fileUrlGenerator\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Controller/HiveActionLogController.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Controller/HiveActionLogController.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:set\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Controller/HiveActionLogController.php
+
+		-
+			message: '#^Unsafe usage of new static\(\)\.$#'
+			identifier: new.static
+			count: 1
+			path: src/Controller/HiveActionLogController.php
+
+		-
+			message: '#^Access to an undefined property Drupal\\Core\\Field\\FieldItemInterface\:\:\$entity\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Controller/HiveController.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 27
+			path: src/Controller/HiveController.php
+
+		-
+			message: '#^Unsafe usage of new static\(\)\.$#'
+			identifier: new.static
+			count: 1
+			path: src/Controller/HiveController.php
+
+		-
+			message: '#^Access to an undefined property Drupal\\Core\\Field\\FieldItemInterface\:\:\$entity\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Controller/HiveInspectionController.php
+
+		-
+			message: '#^Unsafe usage of new static\(\)\.$#'
+			identifier: new.static
+			count: 1
+			path: src/Controller/HiveInspectionController.php
+
+		-
+			message: '#^Access to an undefined property Drupal\\Core\\Field\\FieldItemInterface\:\:\$entity\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Controller/InventoryItemController.php
+
+		-
+			message: '#^Access to an undefined property Drupal\\hivelog\\Controller\\InventoryItemController\:\:\$fileUrlGenerator\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Controller/InventoryItemController.php
+
+		-
+			message: '#^Unsafe usage of new static\(\)\.$#'
+			identifier: new.static
+			count: 1
+			path: src/Controller/InventoryItemController.php
+
+		-
+			message: '#^Access to an undefined property Drupal\\Core\\Field\\FieldItemInterface\:\:\$entity\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Controller/InventoryPurchaseController.php
+
+		-
+			message: '#^Access to an undefined property Drupal\\hivelog\\Controller\\InventoryPurchaseController\:\:\$fileUrlGenerator\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Controller/InventoryPurchaseController.php
+
+		-
+			message: '#^Unsafe usage of new static\(\)\.$#'
+			identifier: new.static
+			count: 1
+			path: src/Controller/InventoryPurchaseController.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 6
+			path: src/Controller/InventoryReportController.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:getAnnualDepreciation\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Controller/InventoryReportController.php
+
+		-
+			message: '#^Unsafe usage of new static\(\)\.$#'
+			identifier: new.static
+			count: 1
+			path: src/Controller/InventoryReportController.php
+
+		-
+			message: '#^Access to an undefined property Drupal\\Core\\Field\\FieldItemInterface\:\:\$entity\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Controller/ProductController.php
+
+		-
+			message: '#^Access to an undefined property Drupal\\hivelog\\Controller\\ProductController\:\:\$fileUrlGenerator\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Controller/ProductController.php
+
+		-
+			message: '#^Unsafe usage of new static\(\)\.$#'
+			identifier: new.static
+			count: 1
+			path: src/Controller/ProductController.php
+
+		-
+			message: '#^Access to an undefined property Drupal\\Core\\Field\\FieldItemInterface\:\:\$entity\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Controller/QueenController.php
+
+		-
+			message: '#^Access to an undefined property Drupal\\hivelog\\Controller\\QueenController\:\:\$fileUrlGenerator\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Controller/QueenController.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 6
+			path: src/Controller/QueenController.php
+
+		-
+			message: '#^Unsafe usage of new static\(\)\.$#'
+			identifier: new.static
+			count: 1
+			path: src/Controller/QueenController.php
+
+		-
+			message: '#^Access to an undefined property Drupal\\Core\\Field\\FieldItemInterface\:\:\$entity\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Controller/QueenObservationController.php
+
+		-
+			message: '#^Unsafe usage of new static\(\)\.$#'
+			identifier: new.static
+			count: 1
+			path: src/Controller/QueenObservationController.php
+
+		-
+			message: '#^Access to an undefined property Drupal\\Core\\Field\\FieldItemInterface\:\:\$target_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Entity/Apiary.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Field\\FieldDefinitionInterface\:\:setLabel\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Entity/Apiary.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Field\\FieldDefinitionInterface\:\:setLabel\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Entity/ApiaryActionLog.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Field\\FieldDefinitionInterface\:\:setLabel\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Entity/CalendarAction.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 3
+			path: src/Entity/CalendarActionItemRequirement.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Field\\FieldDefinitionInterface\:\:setLabel\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Entity/CalendarActionItemRequirement.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 3
+			path: src/Entity/CalendarActionProductYield.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Field\\FieldDefinitionInterface\:\:setLabel\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Entity/CalendarActionProductYield.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: src/Entity/HarvestYield.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Field\\FieldDefinitionInterface\:\:setLabel\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Entity/HarvestYield.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Field\\FieldDefinitionInterface\:\:setLabel\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Entity/Hive.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Field\\FieldDefinitionInterface\:\:setLabel\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Entity/HiveActionLog.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Field\\FieldDefinitionInterface\:\:setLabel\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Entity/HiveInspection.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 7
+			path: src/Entity/InventoryItem.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Field\\FieldDefinitionInterface\:\:setLabel\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Entity/InventoryItem.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 3
+			path: src/Entity/InventoryPurchase.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Field\\FieldDefinitionInterface\:\:setLabel\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Entity/InventoryPurchase.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: src/Entity/InventoryUsage.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:getWeightedAverageUnitCost\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Entity/InventoryUsage.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Field\\FieldDefinitionInterface\:\:setLabel\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Entity/InventoryUsage.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Field\\FieldDefinitionInterface\:\:setLabel\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Entity/Product.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:set\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Entity/Queen.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Field\\FieldDefinitionInterface\:\:setLabel\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Entity/Queen.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Field\\FieldDefinitionInterface\:\:setLabel\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Entity/QueenObservation.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 9
+			path: src/Form/ApiaryActionLogForm.php
+
+		-
+			message: '#^Method Drupal\\hivelog\\Form\\ApiaryActionLogForm\:\:save\(\) should return int but return statement is missing\.$#'
+			identifier: return.missing
+			count: 2
+			path: src/Form/ApiaryActionLogForm.php
+
+		-
+			message: '#^Method Drupal\\hivelog\\Form\\ApiaryForm\:\:save\(\) should return int but return statement is missing\.$#'
+			identifier: return.missing
+			count: 1
+			path: src/Form/ApiaryForm.php
+
+		-
+			message: '#^Method Drupal\\hivelog\\Form\\CalendarActionForm\:\:save\(\) should return int but return statement is missing\.$#'
+			identifier: return.missing
+			count: 2
+			path: src/Form/CalendarActionForm.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 3
+			path: src/Form/CalendarActionItemRequirementForm.php
+
+		-
+			message: '#^Method Drupal\\hivelog\\Form\\CalendarActionItemRequirementForm\:\:save\(\) should return int but return statement is missing\.$#'
+			identifier: return.missing
+			count: 2
+			path: src/Form/CalendarActionItemRequirementForm.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 3
+			path: src/Form/CalendarActionProductYieldForm.php
+
+		-
+			message: '#^Method Drupal\\hivelog\\Form\\CalendarActionProductYieldForm\:\:save\(\) should return int but return statement is missing\.$#'
+			identifier: return.missing
+			count: 2
+			path: src/Form/CalendarActionProductYieldForm.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 9
+			path: src/Form/HiveActionLogForm.php
+
+		-
+			message: '#^Method Drupal\\hivelog\\Form\\HiveActionLogForm\:\:save\(\) should return int but return statement is missing\.$#'
+			identifier: return.missing
+			count: 2
+			path: src/Form/HiveActionLogForm.php
+
+		-
+			message: '#^\\Drupal calls should be avoided in classes, use dependency injection instead$#'
+			identifier: globalDrupalDependencyInjection.useDependencyInjection
+			count: 1
+			path: src/Form/HiveActionLogForm.php
+
+		-
+			message: '#^Method Drupal\\hivelog\\Form\\HiveForm\:\:save\(\) should return int but return statement is missing\.$#'
+			identifier: return.missing
+			count: 2
+			path: src/Form/HiveForm.php
+
+		-
+			message: '#^Method Drupal\\hivelog\\Form\\HiveInspectionForm\:\:save\(\) should return int but return statement is missing\.$#'
+			identifier: return.missing
+			count: 2
+			path: src/Form/HiveInspectionForm.php
+
+		-
+			message: '#^Unsafe usage of new static\(\)\.$#'
+			identifier: new.static
+			count: 1
+			path: src/Form/HivelogCalendarActionsFilterForm.php
+
+		-
+			message: '#^Unsafe usage of new static\(\)\.$#'
+			identifier: new.static
+			count: 1
+			path: src/Form/HivelogCalendarFilterForm.php
+
+		-
+			message: '#^Unsafe usage of new static\(\)\.$#'
+			identifier: new.static
+			count: 1
+			path: src/Form/HivelogFullCalendarFilterForm.php
+
+		-
+			message: '#^Unsafe usage of new static\(\)\.$#'
+			identifier: new.static
+			count: 1
+			path: src/Form/HivelogHiveFilterForm.php
+
+		-
+			message: '#^Unsafe usage of new static\(\)\.$#'
+			identifier: new.static
+			count: 1
+			path: src/Form/HivelogInspectionFilterForm.php
+
+		-
+			message: '#^Unsafe usage of new static\(\)\.$#'
+			identifier: new.static
+			count: 1
+			path: src/Form/HivelogQueenObservationFilterForm.php
+
+		-
+			message: '#^Method Drupal\\hivelog\\Form\\InventoryItemForm\:\:save\(\) should return int but return statement is missing\.$#'
+			identifier: return.missing
+			count: 1
+			path: src/Form/InventoryItemForm.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 4
+			path: src/Form/InventoryPurchaseForm.php
+
+		-
+			message: '#^Method Drupal\\hivelog\\Form\\InventoryPurchaseForm\:\:save\(\) should return int but return statement is missing\.$#'
+			identifier: return.missing
+			count: 1
+			path: src/Form/InventoryPurchaseForm.php
+
+		-
+			message: '#^Method Drupal\\hivelog\\Form\\ProductForm\:\:save\(\) should return int but return statement is missing\.$#'
+			identifier: return.missing
+			count: 2
+			path: src/Form/ProductForm.php
+
+		-
+			message: '#^Method Drupal\\hivelog\\Form\\QueenForm\:\:save\(\) should return int but return statement is missing\.$#'
+			identifier: return.missing
+			count: 2
+			path: src/Form/QueenForm.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Form/QueenObservationForm.php
+
+		-
+			message: '#^Method Drupal\\hivelog\\Form\\QueenObservationForm\:\:save\(\) should return int but return statement is missing\.$#'
+			identifier: return.missing
+			count: 3
+			path: src/Form/QueenObservationForm.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 6
+			path: src/HiveActionLogListBuilder.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 6
+			path: src/HiveInspectionListBuilder.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:getOwner\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: src/HiveInspectionListBuilder.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 3
+			path: src/HiveListBuilder.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:getActiveQueen\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/HiveListBuilder.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 6
+			path: src/InventoryItemListBuilder.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 7
+			path: src/InventoryPurchaseListBuilder.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 5
+			path: src/ProductListBuilder.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 6
+			path: src/QueenListBuilder.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 7
+			path: src/QueenObservationListBuilder.php
+
+		-
+			message: '#^Cannot call method getReferenceableEntities\(\) on object\|false\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/src/Kernel/ApiaryScopedAutocompleteTest.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityListBuilderInterface\:\:buildHeader\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/src/Kernel/CbrFieldTest.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityListBuilderInterface\:\:buildRow\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: tests/src/Kernel/CbrFieldTest.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Field\\FieldDefinitionInterface\:\:getCardinality\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/src/Kernel/CbrFieldTest.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Field\\FieldDefinitionInterface\:\:getProvider\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/src/Kernel/CbrFieldTest.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 5
+			path: tests/src/Kernel/HarvestYieldReportingIntegrationTest.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/src/Kernel/HiveInspectionTest.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityStorageInterface\:\:getTableMapping\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/src/Kernel/HiveInspectionTest.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 4
+			path: tests/src/Kernel/InventoryEndToEndTest.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityFormInterface\:\:getDescription\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: tests/src/Kernel/InventoryItemTest.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 5
+			path: tests/src/Kernel/InventoryUsageReportingIntegrationTest.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityFormInterface\:\:getDescription\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: tests/src/Kernel/ProductTest.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/src/Kernel/QueenObservationTest.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:set\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: tests/src/Kernel/RouteEntityAccessTest.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 6
+			path: tests/src/Kernel/YieldEndToEndTest.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Routing\\RouteMatchInterface\:\:method\(\)\.$#'
+			identifier: method.notFound
+			count: 51
+			path: tests/src/Unit/Breadcrumb/HivelogBreadcrumbBuilderTest.php

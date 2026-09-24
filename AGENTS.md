@@ -33,17 +33,42 @@ reintroduce the dependency without adding and documenting a concrete use.
 ## CI Pipeline
 
 A GitHub Actions workflow runs on every push and on every published release:
-`.github/workflows/ci.yml`.
+`.github/workflows/ci.yml`. As of task 0137, local (`composer lint` /
+`composer stan`) and CI checks read the exact same config files
+(`phpcs.xml.dist`, `phpstan.neon`) with no separate path/extension lists to
+drift out of sync — every `phpcs`/`phpstan` invocation, local or CI, covers
+`src/`, `tests/` **and every submodule under `modules/`** (nanoprobe,
+collective, nexus, assimilate). A submodule with zero test/lint coverage is
+the gap ADR-0098 §7 warns about; every discovery loop below (phpcs, phpstan,
+Kernel/Unit/Functional test dirs) exists specifically to avoid it.
 
-**`lint` job (PHP 8.3 only):** runs `phpcs` (Drupal + DrupalPractice standards)
-and `phpstan` (level 2, mglaman/phpstan-drupal) against `src/` and `tests/`.
-No database required. Config files: `phpcs.xml.dist`, `phpstan.neon`.
+**`lint` job (PHP 8.3 only, no database):** runs bare `phpcs --warning-severity=0`
+(reads `phpcs.xml.dist`) as a hard gate. Its own `phpstan` step is a no-op
+placeholder — mglaman/phpstan-drupal (needed for Drupal-aware analysis without
+a full scaffold) isn't installed in this job's isolated tool directory: real
+phpstan runs in the `test` job instead, where `drupal/core` is available.
 
 **`test` job (PHP 8.3 / 8.4 / 8.5 matrix):** builds a full `drupal/recommended-project`
 scaffold, installs the module via a Composer `path` repository (symlink:false),
-runs `phpunit --group hivelog` against kernel + unit tests (hard gate) and
-functional tests (continue-on-error: true until ChromeDriver is confirmed
-stable).
+then runs, per matrix cell unless noted:
+- **PHPUnit kernel + unit (hard gate).** Test directories are discovered via
+  `find "$MODULE_PATH" -type d -path '*/tests/src/Kernel'` (and `/Unit`), not
+  a fixed path — a submodule's own `tests/src/Kernel` is picked up
+  automatically.
+- **phpstan (PHP 8.3 only, hard gate).** `phpstan analyse -c "$MODULE_PATH/phpstan.neon"`
+  — the module's own config, so it covers `modules/` and reads
+  `phpstan-baseline.neon` (440 pre-existing level-2 findings, all the
+  Drupal-specific false positives bare phpstan produces without the mglaman
+  extension — see `phpstan.neon`'s own comment for why that extension can't
+  run here). The baseline is a ratchet, not a pass: fails on any *new*
+  finding, baselined file or not; only shrinks when a baselined finding's
+  code is fixed or removed.
+- **PHPUnit functional (`continue-on-error: true` until ChromeDriver is
+  confirmed stable).** Discovered the same way as kernel/unit
+  (`*/tests/src/Functional`). Being advisory is why `RouteEntityAccessTest`
+  (kernel, hard gate) carries every access-critical assertion
+  `PermissionMatrixTest` (functional) also makes — a real access regression
+  must be caught by the hard gate on its own, not rely on this job.
 
 **Patch-path constraint (important):** `composer.json` records geofield patch
 paths relative to the Drupal project root at Packagist install time
