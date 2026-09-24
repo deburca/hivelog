@@ -28,6 +28,7 @@ entity.ai_provider_config.canonical:
     _title_callback: '\Drupal\nexus\Controller\AiProviderConfigController::title'
   requirements:
     _permission: 'view own ai provider config+view any ai provider config+administer hivelog'
+    _entity_access: 'ai_provider_config.view'
   options:
     parameters:
       ai_provider_config:
@@ -40,6 +41,7 @@ entity.ai_provider_config.edit_form:
     _title: 'Edit AI Provider Config'
   requirements:
     _permission: 'edit own ai provider config+edit any ai provider config+administer hivelog'
+    _entity_access: 'ai_provider_config.update'
   options:
     parameters:
       ai_provider_config:
@@ -52,6 +54,7 @@ entity.ai_provider_config.delete_form:
     _title: 'Delete AI Provider Config'
   requirements:
     _permission: 'delete own ai provider config+delete any ai provider config+administer hivelog'
+    _entity_access: 'ai_provider_config.delete'
   options:
     parameters:
       ai_provider_config:

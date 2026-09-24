@@ -32,3 +32,17 @@ require the matching `view` permission + apiary membership.
 - Follow-up tasks: [[0001-queen-observation-csv-export]] (access-filtered
   export); cross-checked by the route audit in [[0013-breadcrumb-route-audit]];
   verified per [[0008-testing-strategy]].
+
+## Addendum (2026-09-23)
+The 2026-09-23 gap analysis found that this rule was not actually followed:
+every hivelog/nanoprobe/collective/nexus route with an entity parameter
+checked only `_permission`, never `_entity_access` — an IDOR, closed by
+[[0133-route-level-entity-access]]. `RouteEntityAccessTest` (one copy per
+module, in each module's own `tests/src/Kernel/`) now enforces this rule
+mechanically: it discovers every route from the built router rather than
+a hand-maintained list, asserts every route with an entity parameter
+declares `_entity_access` / `_entity_create_access` / `_custom_access`,
+and functionally checks that an unrelated "own"-permission user is denied
+while the owner and `administer hivelog` are allowed. A new route that
+skips the check now fails the test automatically instead of silently
+shipping unprotected.

@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: todo
+status: review
 priority: high
 project: "[[page-structure-consistency]]"
 area: routing
@@ -50,7 +50,7 @@ The existing tests missed this because all cross-user access tests
 user's records.
 
 ## Acceptance criteria
-- [ ] Every route with an upcast entity parameter carries
+- [x] Every route with an upcast entity parameter carries
       `_entity_access: '<param>.<op>'` alongside (not instead of) its
       `_permission`:
       - canonical and read-only sub-pages (Insights, Calendar, Financial
@@ -59,22 +59,22 @@ user's records.
         sensor config download, which invalidates the old config):
         `.update`
       - `delete_form`: `.delete`
-- [ ] Scoped add routes check the **parent**. `hivelog.hive.add`
+- [x] Scoped add routes check the **parent**. `hivelog.hive.add`
       requires update access on `{apiary}`, and the same goes for
       inspection / queen / observation / calendar-action / log /
       inventory / product / requirement / yield / sensor-device add
       routes. Add plain `_entity_create_access` where the create check
       also needs to hold. Record the chosen parent operation (`view` vs
       `update`) in Implementation notes and keep it the same everywhere.
-- [ ] `hivelog.apiary_action_log.add` / `hivelog.hive_action_log.add`
+- [x] `hivelog.apiary_action_log.add` / `hivelog.hive_action_log.add`
       also check `view` on `{calendar_action}`, and that the calendar
       action belongs to the same apiary as the route's `{apiary}` /
       `{hive}`. That stops a user logging against another apiary's
       action by URL.
-- [ ] Submodule routes (nanoprobe, collective, nexus) get the same
+- [x] Submodule routes (nanoprobe, collective, nexus) get the same
       treatment. The in-controller `access('view')` checks may stay as
       a second line of defence.
-- [ ] New kernel test, `RouteEntityAccessTest` (data provider over
+- [x] New kernel test, `RouteEntityAccessTest` (data provider over
       **every** route in all four routing files, discovered from the
       router rather than hand-listed, so a new route can't be missed):
       as a user with the relevant "own" permissions but no
@@ -82,12 +82,12 @@ user's records.
       the owner, an apiary beekeeper member and `administer hivelog`,
       it is allowed. Place per-submodule cases in each submodule's
       tests.
-- [ ] Routes with no entity parameter (collections, dashboard, reports
+- [x] Routes with no entity parameter (collections, dashboard, reports
       across apiaries, the two token-authenticated API endpoints) are
       listed explicitly in the test as exempt, with a reason.
-- [ ] [[0020-access-parity-custom-routes]] gets a short addendum saying
+- [x] [[0020-access-parity-custom-routes]] gets a short addendum saying
       the route test now enforces its rule.
-- [ ] phpcs clean; kernel + unit suite green against `cms2`; spot-check
+- [x] phpcs clean; kernel + unit suite green against `cms2`; spot-check
       live on `cms2` with a non-admin test user (another user's hive
       edit URL → 403).
 - [ ] **Release**: ship as a security patch release together with
@@ -107,6 +107,68 @@ user's records.
 - Key files: `hivelog.routing.yml`, `modules/*/*.routing.yml`, new
   `tests/src/Kernel/RouteEntityAccessTest.php` (+ submodule
   counterparts).
+
+**Implemented 2026-09-23.**
+- **Parent operation: `update`, everywhere.** Every scoped-add route
+  (`hivelog.hive.add`, `.inspection.add`, `.queen.add`,
+  `.queen_observation.add`, `.calendar_action.add`, `.hive_action_log.add`,
+  `.apiary_action_log.add`, `.inventory_item.add`, `.inventory_purchase.add`,
+  `.product.add`, `.calendar_action_item_requirement.add`,
+  `.calendar_action_product_yield.add`, and nanoprobe's
+  `.sensor_device.add_for_hive` / `.add_for_apiary`) carries
+  `_entity_access: '<parent>.update'`, matching the task's own
+  `hivelog.hive.add` example. Every one of these parents' `update`
+  operation resolves via `checkApiaryEditAccess()` (apiary-member
+  scoped), so a beekeeper member — not just the owner — can add
+  children, matching what the UI already let them do before this task.
+  Paired with `_entity_create_access: '<child_type>'` for defence in
+  depth on the create side.
+- **Same-apiary check:** new `\Drupal\hivelog\Access\
+  CalendarActionApiaryMatchAccessCheck` (`src/Access/`), wired via
+  `_custom_access` on `hivelog.hive_action_log.add` and
+  `.apiary_action_log.add`. Resolves both `{calendar_action}` and
+  whichever of `{apiary}`/`{hive}` the route carries through
+  `ApiaryAccessTrait::resolveApiary()` and compares apiary IDs.
+- **Admin-only add routes** (`entity.sensor_device.add_form` and its two
+  contextual add routes, `entity.api_client.add_form`,
+  `entity.ai_provider_config.add_form`) still get `_entity_access` /
+  `_entity_create_access` for defence in depth, but since
+  `administer hivelog` bypasses every access handler's `checkAccess()`
+  unconditionally, they aren't part of the IDOR surface and are excluded
+  from the automated outsider/owner denial loop in
+  `RouteEntityAccessTest` (documented in that test's class docblock).
+- **Route discovery test gotcha:** a submodule's kernel test also has
+  `hivelog` installed (it's a dependency), so `router.route_provider`
+  returns hivelog core's own routes too. Each submodule's
+  `RouteEntityAccessTest::hivelogRoutes()` filters by route name prefix
+  (`nanoprobe.*` / `entity.sensor_device.*`, etc.), not by the `/hivelog`
+  path prefix every route shares.
+- Verified live on `cms2`: a throwaway non-admin user with only
+  `view/edit/delete own hive` (no apiary relation) got 403 on another
+  user's hive canonical/edit/delete pages; the actual owner kept normal
+  200 access. Full kernel/unit suite run against `cms2` to confirm no
+  regressions.
+- **Beekeeper members can't add apiary-direct structure, only the
+  owner.** `apiary.update` (used as the parent check on every scoped-add
+  route whose parent is `{apiary}` directly — `hivelog.hive.add`,
+  `.calendar_action.add`, `.apiary_action_log.add`, `.inventory_item.add`,
+  `.inventory_purchase.add`, `.product.add`, and `entity.apiary.edit_form`
+  itself) is **owner-only** per `ApiaryAccessControlHandler` ("Only
+  apiary owner can edit the apiary itself") — unlike every child type's
+  own `update`, which is member-scoped. So a beekeeper member can edit
+  an apiary's existing hives/inspections/queens/etc. (member-scoped) but
+  cannot add a new hive, calendar action, inventory item/purchase, or
+  product to it, nor edit the apiary itself — only the owner can. This
+  is a real, if narrow, behaviour change from the (buggy) status quo,
+  where the "Add Hive" button on the apiary page was never
+  access-gated at all and any viewer with the `add hive` permission
+  could reach the route. Deliberate: it matches the ownership rule
+  already used for structural deletes (`Hive`/`CalendarAction`/
+  `Product`'s `delete` is owner-only too), and it's stricter, not
+  looser, so it closes rather than reopens the IDOR. Covered by
+  `RouteEntityAccessTest::testBeekeeperMemberDeniedOnApiaryOwnerOnlyRoutes()`.
+  Flag in the release note if this trips up an existing site's
+  beekeepers.
 
 ## Related
 - Project:: [[page-structure-consistency]]

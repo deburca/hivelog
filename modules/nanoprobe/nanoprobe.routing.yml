@@ -47,6 +47,7 @@ entity.sensor_device.canonical:
     _title_callback: '\Drupal\nanoprobe\Controller\SensorDeviceController::title'
   requirements:
     _permission: 'view own sensor device+view any sensor device+administer hivelog'
+    _entity_access: 'sensor_device.view'
   options:
     parameters:
       sensor_device:
@@ -62,6 +63,7 @@ entity.sensor_device.readings:
     _title_callback: '\Drupal\nanoprobe\Controller\SensorDeviceController::readingsTitle'
   requirements:
     _permission: 'view own sensor device+view any sensor device+administer hivelog'
+    _entity_access: 'sensor_device.view'
   options:
     parameters:
       sensor_device:
@@ -74,6 +76,7 @@ entity.sensor_device.edit_form:
     _title: 'Edit Sensor Device'
   requirements:
     _permission: 'edit own sensor device+edit any sensor device+administer hivelog'
+    _entity_access: 'sensor_device.update'
   options:
     parameters:
       sensor_device:
@@ -86,6 +89,7 @@ entity.sensor_device.delete_form:
     _title: 'Delete Sensor Device'
   requirements:
     _permission: 'delete own sensor device+delete any sensor device+administer hivelog'
+    _entity_access: 'sensor_device.delete'
   options:
     parameters:
       sensor_device:
@@ -103,6 +107,8 @@ nanoprobe.sensor_device.add_for_hive:
     _title: 'Add Sensor Device'
   requirements:
     _permission: 'administer hivelog'
+    _entity_access: 'hive.update'
+    _entity_create_access: 'sensor_device'
   options:
     parameters:
       hive:
@@ -115,6 +121,8 @@ nanoprobe.sensor_device.add_for_apiary:
     _title: 'Add Sensor Device'
   requirements:
     _permission: 'administer hivelog'
+    _entity_access: 'apiary.update'
+    _entity_create_access: 'sensor_device'
   options:
     parameters:
       apiary:
@@ -131,6 +139,7 @@ nanoprobe.sensor_device.config:
     _title: 'Download Configuration'
   requirements:
     _permission: 'edit own sensor device+edit any sensor device+administer hivelog'
+    _entity_access: 'sensor_device.update'
   options:
     parameters:
       sensor_device:

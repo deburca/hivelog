@@ -33,6 +33,7 @@ entity.apiary.canonical:
     _title_callback: '\Drupal\hivelog\Controller\ApiaryController::title'
   requirements:
     _permission: 'view own apiary+view any apiary+administer hivelog'
+    _entity_access: 'apiary.view'
   options:
     parameters:
       apiary:
@@ -45,6 +46,7 @@ entity.apiary.edit_form:
     _title: 'Edit Apiary'
   requirements:
     _permission: 'edit own apiary+edit any apiary+administer hivelog'
+    _entity_access: 'apiary.update'
   options:
     parameters:
       apiary:
@@ -57,6 +59,7 @@ entity.apiary.delete_form:
     _title: 'Delete Apiary'
   requirements:
     _permission: 'delete own apiary+delete any apiary+administer hivelog'
+    _entity_access: 'apiary.delete'
   options:
     parameters:
       apiary:
@@ -78,6 +81,8 @@ hivelog.hive.add:
     _title: 'Add Hive'
   requirements:
     _permission: 'add hive+administer hivelog'
+    _entity_access: 'apiary.update'
+    _entity_create_access: 'hive'
   options:
     parameters:
       apiary:
@@ -90,6 +95,7 @@ entity.hive.canonical:
     _title_callback: '\Drupal\hivelog\Controller\HiveController::title'
   requirements:
     _permission: 'view own hive+view any hive+administer hivelog'
+    _entity_access: 'hive.view'
   options:
     parameters:
       hive:
@@ -106,6 +112,7 @@ entity.hive.insights:
     _title_callback: '\Drupal\hivelog\Controller\HiveController::insightsTitle'
   requirements:
     _permission: 'view own hive+view any hive+administer hivelog'
+    _entity_access: 'hive.view'
   options:
     parameters:
       hive:
@@ -118,6 +125,7 @@ entity.hive.edit_form:
     _title: 'Edit Hive'
   requirements:
     _permission: 'edit own hive+edit any hive+administer hivelog'
+    _entity_access: 'hive.update'
   options:
     parameters:
       hive:
@@ -130,6 +138,7 @@ entity.hive.delete_form:
     _title: 'Delete Hive'
   requirements:
     _permission: 'delete own hive+delete any hive+administer hivelog'
+    _entity_access: 'hive.delete'
   options:
     parameters:
       hive:
@@ -151,6 +160,8 @@ hivelog.inspection.add:
     _title: 'Add Inspection'
   requirements:
     _permission: 'add hive inspection+administer hivelog'
+    _entity_access: 'hive.update'
+    _entity_create_access: 'hive_inspection'
   options:
     parameters:
       hive:
@@ -163,6 +174,7 @@ entity.hive_inspection.canonical:
     _title_callback: '\Drupal\hivelog\Controller\HiveInspectionController::title'
   requirements:
     _permission: 'view own hive inspection+view any hive inspection+administer hivelog'
+    _entity_access: 'hive_inspection.view'
   options:
     parameters:
       hive_inspection:
@@ -175,6 +187,7 @@ entity.hive_inspection.edit_form:
     _title: 'Edit Inspection'
   requirements:
     _permission: 'edit own hive inspection+edit any hive inspection+administer hivelog'
+    _entity_access: 'hive_inspection.update'
   options:
     parameters:
       hive_inspection:
@@ -187,6 +200,7 @@ entity.hive_inspection.delete_form:
     _title: 'Delete Inspection'
   requirements:
     _permission: 'delete own hive inspection+delete any hive inspection+administer hivelog'
+    _entity_access: 'hive_inspection.delete'
   options:
     parameters:
       hive_inspection:
@@ -216,6 +230,8 @@ hivelog.queen.add:
     _title: 'Add Queen'
   requirements:
     _permission: 'add queen+administer hivelog'
+    _entity_access: 'hive.update'
+    _entity_create_access: 'queen'
   options:
     parameters:
       hive:
@@ -228,6 +244,7 @@ entity.queen.canonical:
     _title_callback: '\Drupal\hivelog\Controller\QueenController::title'
   requirements:
     _permission: 'view own queen+view any queen+administer hivelog'
+    _entity_access: 'queen.view'
   options:
     parameters:
       queen:
@@ -240,6 +257,7 @@ entity.queen.edit_form:
     _title: 'Edit Queen'
   requirements:
     _permission: 'edit own queen+edit any queen+administer hivelog'
+    _entity_access: 'queen.update'
   options:
     parameters:
       queen:
@@ -252,6 +270,7 @@ entity.queen.delete_form:
     _title: 'Delete Queen'
   requirements:
     _permission: 'delete own queen+delete any queen+administer hivelog'
+    _entity_access: 'queen.delete'
   options:
     parameters:
       queen:
@@ -273,6 +292,8 @@ hivelog.queen_observation.add:
     _title: 'Add Queen Observation'
   requirements:
     _permission: 'add queen observation+administer hivelog'
+    _entity_access: 'queen.update'
+    _entity_create_access: 'queen_observation'
   options:
     parameters:
       queen:
@@ -285,6 +306,7 @@ entity.queen_observation.canonical:
     _title_callback: '\Drupal\hivelog\Controller\QueenObservationController::title'
   requirements:
     _permission: 'view own queen observation+view any queen observation+administer hivelog'
+    _entity_access: 'queen_observation.view'
   options:
     parameters:
       queen_observation:
@@ -297,6 +319,7 @@ entity.queen_observation.edit_form:
     _title: 'Edit Queen Observation'
   requirements:
     _permission: 'edit own queen observation+edit any queen observation+administer hivelog'
+    _entity_access: 'queen_observation.update'
   options:
     parameters:
       queen_observation:
@@ -309,6 +332,7 @@ entity.queen_observation.delete_form:
     _title: 'Delete Queen Observation'
   requirements:
     _permission: 'delete own queen observation+delete any queen observation+administer hivelog'
+    _entity_access: 'queen_observation.delete'
   options:
     parameters:
       queen_observation:
@@ -330,6 +354,8 @@ hivelog.calendar_action.add:
     _title: 'Add Calendar Action'
   requirements:
     _permission: 'add calendar action+administer hivelog'
+    _entity_access: 'apiary.update'
+    _entity_create_access: 'calendar_action'
   options:
     parameters:
       apiary:
@@ -342,6 +368,7 @@ entity.calendar_action.canonical:
     _title_callback: '\Drupal\hivelog\Controller\CalendarActionController::title'
   requirements:
     _permission: 'view own calendar action+view any calendar action+administer hivelog'
+    _entity_access: 'calendar_action.view'
   options:
     parameters:
       calendar_action:
@@ -354,6 +381,7 @@ entity.calendar_action.edit_form:
     _title: 'Edit Calendar Action'
   requirements:
     _permission: 'edit own calendar action+edit any calendar action+administer hivelog'
+    _entity_access: 'calendar_action.update'
   options:
     parameters:
       calendar_action:
@@ -366,6 +394,7 @@ entity.calendar_action.delete_form:
     _title: 'Delete Calendar Action'
   requirements:
     _permission: 'delete own calendar action+delete any calendar action+administer hivelog'
+    _entity_access: 'calendar_action.delete'
   options:
     parameters:
       calendar_action:
@@ -380,6 +409,10 @@ entity.hive_action_log.collection:
   requirements:
     _permission: 'view own hive action log+view any hive action log+administer hivelog'
 
+# The `_custom_access` check confirms {calendar_action} belongs to the
+# same apiary as {hive} — without it, a user could log against another
+# apiary's calendar action by editing the URL, since {calendar_action}
+# upcasts independently of {hive} (task 0133).
 hivelog.hive_action_log.add:
   path: '/hivelog/hive/{hive}/calendar-action/{calendar_action}/log/add'
   defaults:
@@ -387,6 +420,9 @@ hivelog.hive_action_log.add:
     _title: 'Add Hive Action Log'
   requirements:
     _permission: 'add hive action log+administer hivelog'
+    _entity_access: 'hive.update'
+    _entity_create_access: 'hive_action_log'
+    _custom_access: '\Drupal\hivelog\Access\CalendarActionApiaryMatchAccessCheck::access'
   options:
     parameters:
       hive:
@@ -401,6 +437,7 @@ entity.hive_action_log.canonical:
     _title_callback: '\Drupal\hivelog\Controller\HiveActionLogController::title'
   requirements:
     _permission: 'view own hive action log+view any hive action log+administer hivelog'
+    _entity_access: 'hive_action_log.view'
   options:
     parameters:
       hive_action_log:
@@ -413,6 +450,7 @@ entity.hive_action_log.edit_form:
     _title: 'Edit Hive Action Log'
   requirements:
     _permission: 'edit own hive action log+edit any hive action log+administer hivelog'
+    _entity_access: 'hive_action_log.update'
   options:
     parameters:
       hive_action_log:
@@ -425,6 +463,7 @@ entity.hive_action_log.delete_form:
     _title: 'Delete Hive Action Log'
   requirements:
     _permission: 'delete own hive action log+delete any hive action log+administer hivelog'
+    _entity_access: 'hive_action_log.delete'
   options:
     parameters:
       hive_action_log:
@@ -439,6 +478,8 @@ entity.apiary_action_log.collection:
   requirements:
     _permission: 'view own apiary action log+view any apiary action log+administer hivelog'
 
+# Same {calendar_action} vs {apiary} same-apiary check as
+# hivelog.hive_action_log.add above.
 hivelog.apiary_action_log.add:
   path: '/hivelog/apiary/{apiary}/calendar-action/{calendar_action}/log/add'
   defaults:
@@ -446,6 +487,9 @@ hivelog.apiary_action_log.add:
     _title: 'Add Apiary Action Log'
   requirements:
     _permission: 'add apiary action log+administer hivelog'
+    _entity_access: 'apiary.update'
+    _entity_create_access: 'apiary_action_log'
+    _custom_access: '\Drupal\hivelog\Access\CalendarActionApiaryMatchAccessCheck::access'
   options:
     parameters:
       apiary:
@@ -460,6 +504,7 @@ entity.apiary_action_log.canonical:
     _title_callback: '\Drupal\hivelog\Controller\ApiaryActionLogController::title'
   requirements:
     _permission: 'view own apiary action log+view any apiary action log+administer hivelog'
+    _entity_access: 'apiary_action_log.view'
   options:
     parameters:
       apiary_action_log:
@@ -472,6 +517,7 @@ entity.apiary_action_log.edit_form:
     _title: 'Edit Apiary Action Log'
   requirements:
     _permission: 'edit own apiary action log+edit any apiary action log+administer hivelog'
+    _entity_access: 'apiary_action_log.update'
   options:
     parameters:
       apiary_action_log:
@@ -484,6 +530,7 @@ entity.apiary_action_log.delete_form:
     _title: 'Delete Apiary Action Log'
   requirements:
     _permission: 'delete own apiary action log+delete any apiary action log+administer hivelog'
+    _entity_access: 'apiary_action_log.delete'
   options:
     parameters:
       apiary_action_log:
@@ -500,16 +547,16 @@ hivelog.apiary.calendar_action.collection:
     _title_callback: '\Drupal\hivelog\Controller\ApiaryController::fullCalendarTitle'
   requirements:
     _permission: 'view own calendar action+view any calendar action+administer hivelog'
+    _entity_access: 'apiary.view'
   options:
     parameters:
       apiary:
         type: entity:apiary
 
 # Per-apiary, per-year inventory cost & depreciation report (task 0032).
-# Read-side aggregation only — no schema, no _entity_access, matching
-# hivelog.apiary.calendar_action.collection's pattern (global permission
-# only, no per-apiary custom access check, consistent with every other
-# apiary-scoped controller route in this file).
+# Read-side aggregation only. _entity_access added (task 0133) so this
+# deeper view of one apiary's data requires the same access as the apiary
+# itself, matching every other per-apiary read-only page in this file.
 hivelog.apiary.inventory_cost_report:
   path: '/hivelog/apiary/{apiary}/inventory/cost-report'
   defaults:
@@ -517,6 +564,7 @@ hivelog.apiary.inventory_cost_report:
     _title_callback: '\Drupal\hivelog\Controller\InventoryReportController::costReportTitle'
   requirements:
     _permission: 'view own inventory item+view any inventory item+administer hivelog'
+    _entity_access: 'apiary.view'
   options:
     parameters:
       apiary:
@@ -526,7 +574,10 @@ hivelog.apiary.inventory_cost_report:
 # 0059). Same read-side aggregation as the per-apiary report above, run
 # once per viewable apiary and summed; it is the dashboard "Net YTD"
 # tile's target when more than one apiary is visible. Global permission
-# only, matching hivelog.apiary.inventory_cost_report.
+# only, matching hivelog.apiary.inventory_cost_report. No {apiary}
+# parameter to check — deliberately exempt from _entity_access (task
+# 0133), since it aggregates across every apiary the caller can already
+# view rather than resolving to a single one.
 hivelog.apiaries.financial_report:
   path: '/hivelog/apiaries/financial-report'
   defaults:
@@ -559,6 +610,8 @@ hivelog.inventory_item.add:
     _title: 'Add Inventory Item'
   requirements:
     _permission: 'add inventory item+administer hivelog'
+    _entity_access: 'apiary.update'
+    _entity_create_access: 'inventory_item'
   options:
     parameters:
       apiary:
@@ -571,6 +624,7 @@ entity.inventory_item.canonical:
     _title_callback: '\Drupal\hivelog\Controller\InventoryItemController::title'
   requirements:
     _permission: 'view own inventory item+view any inventory item+administer hivelog'
+    _entity_access: 'inventory_item.view'
   options:
     parameters:
       inventory_item:
@@ -583,6 +637,7 @@ entity.inventory_item.edit_form:
     _title: 'Edit Inventory Item'
   requirements:
     _permission: 'edit own inventory item+edit any inventory item+administer hivelog'
+    _entity_access: 'inventory_item.update'
   options:
     parameters:
       inventory_item:
@@ -595,6 +650,7 @@ entity.inventory_item.delete_form:
     _title: 'Delete Inventory Item'
   requirements:
     _permission: 'delete own inventory item+delete any inventory item+administer hivelog'
+    _entity_access: 'inventory_item.delete'
   options:
     parameters:
       inventory_item:
@@ -624,6 +680,8 @@ hivelog.inventory_purchase.add:
     _title: 'Add Inventory Purchase'
   requirements:
     _permission: 'add inventory purchase+administer hivelog'
+    _entity_access: 'apiary.update'
+    _entity_create_access: 'inventory_purchase'
   options:
     parameters:
       apiary:
@@ -636,6 +694,7 @@ entity.inventory_purchase.canonical:
     _title_callback: '\Drupal\hivelog\Controller\InventoryPurchaseController::title'
   requirements:
     _permission: 'view own inventory purchase+view any inventory purchase+administer hivelog'
+    _entity_access: 'inventory_purchase.view'
   options:
     parameters:
       inventory_purchase:
@@ -648,6 +707,7 @@ entity.inventory_purchase.edit_form:
     _title: 'Edit Inventory Purchase'
   requirements:
     _permission: 'edit own inventory purchase+edit any inventory purchase+administer hivelog'
+    _entity_access: 'inventory_purchase.update'
   options:
     parameters:
       inventory_purchase:
@@ -660,6 +720,7 @@ entity.inventory_purchase.delete_form:
     _title: 'Delete Inventory Purchase'
   requirements:
     _permission: 'delete own inventory purchase+delete any inventory purchase+administer hivelog'
+    _entity_access: 'inventory_purchase.delete'
   options:
     parameters:
       inventory_purchase:
@@ -689,6 +750,8 @@ hivelog.product.add:
     _title: 'Add Product'
   requirements:
     _permission: 'add product+administer hivelog'
+    _entity_access: 'apiary.update'
+    _entity_create_access: 'product'
   options:
     parameters:
       apiary:
@@ -701,6 +764,7 @@ entity.product.canonical:
     _title_callback: '\Drupal\hivelog\Controller\ProductController::title'
   requirements:
     _permission: 'view own product+view any product+administer hivelog'
+    _entity_access: 'product.view'
   options:
     parameters:
       product:
@@ -713,6 +777,7 @@ entity.product.edit_form:
     _title: 'Edit Product'
   requirements:
     _permission: 'edit own product+edit any product+administer hivelog'
+    _entity_access: 'product.update'
   options:
     parameters:
       product:
@@ -725,6 +790,7 @@ entity.product.delete_form:
     _title: 'Delete Product'
   requirements:
     _permission: 'delete own product+delete any product+administer hivelog'
+    _entity_access: 'product.delete'
   options:
     parameters:
       product:
@@ -741,6 +807,8 @@ hivelog.calendar_action_item_requirement.add:
     _title: 'Add Required Item'
   requirements:
     _permission: 'add calendar action item requirement+administer hivelog'
+    _entity_access: 'calendar_action.update'
+    _entity_create_access: 'calendar_action_item_requirement'
   options:
     parameters:
       calendar_action:
@@ -753,6 +821,7 @@ entity.calendar_action_item_requirement.edit_form:
     _title: 'Edit Requirement'
   requirements:
     _permission: 'edit own calendar action item requirement+edit any calendar action item requirement+administer hivelog'
+    _entity_access: 'calendar_action_item_requirement.update'
   options:
     parameters:
       calendar_action_item_requirement:
@@ -765,6 +834,7 @@ entity.calendar_action_item_requirement.delete_form:
     _title: 'Delete Requirement'
   requirements:
     _permission: 'delete own calendar action item requirement+delete any calendar action item requirement+administer hivelog'
+    _entity_access: 'calendar_action_item_requirement.delete'
   options:
     parameters:
       calendar_action_item_requirement:
@@ -781,6 +851,8 @@ hivelog.calendar_action_product_yield.add:
     _title: 'Add Expected Yield'
   requirements:
     _permission: 'add calendar action product yield+administer hivelog'
+    _entity_access: 'calendar_action.update'
+    _entity_create_access: 'calendar_action_product_yield'
   options:
     parameters:
       calendar_action:
@@ -793,6 +865,7 @@ entity.calendar_action_product_yield.edit_form:
     _title: 'Edit Yield'
   requirements:
     _permission: 'edit own calendar action product yield+edit any calendar action product yield+administer hivelog'
+    _entity_access: 'calendar_action_product_yield.update'
   options:
     parameters:
       calendar_action_product_yield:
@@ -805,6 +878,7 @@ entity.calendar_action_product_yield.delete_form:
     _title: 'Delete Yield'
   requirements:
     _permission: 'delete own calendar action product yield+delete any calendar action product yield+administer hivelog'
+    _entity_access: 'calendar_action_product_yield.delete'
   options:
     parameters:
       calendar_action_product_yield:

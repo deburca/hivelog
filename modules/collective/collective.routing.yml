@@ -43,6 +43,7 @@ entity.api_client.canonical:
     _title_callback: '\Drupal\collective\Controller\ApiClientController::title'
   requirements:
     _permission: 'view own api client+view any api client+administer hivelog'
+    _entity_access: 'api_client.view'
   options:
     parameters:
       api_client:
@@ -55,6 +56,7 @@ entity.api_client.edit_form:
     _title: 'Edit API Client'
   requirements:
     _permission: 'edit own api client+edit any api client+administer hivelog'
+    _entity_access: 'api_client.update'
   options:
     parameters:
       api_client:
@@ -67,6 +69,7 @@ entity.api_client.delete_form:
     _title: 'Delete API Client'
   requirements:
     _permission: 'delete own api client+delete any api client+administer hivelog'
+    _entity_access: 'api_client.delete'
   options:
     parameters:
       api_client:
@@ -79,6 +82,7 @@ collective.api_client.regenerate_token:
     _title: 'Regenerate Token'
   requirements:
     _permission: 'edit own api client+edit any api client+administer hivelog'
+    _entity_access: 'api_client.update'
   options:
     parameters:
       api_client:
