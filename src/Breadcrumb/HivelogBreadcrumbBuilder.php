@@ -5,34 +5,118 @@ namespace Drupal\hivelog\Breadcrumb;
 use Drupal\Core\Breadcrumb\Breadcrumb;
 use Drupal\Core\Breadcrumb\BreadcrumbBuilderInterface;
 use Drupal\Core\Cache\CacheableMetadata;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 
 /**
  * Provides breadcrumbs for hivelog entity routes.
+ *
+ * Built around one declarative parent map (task 0116): entity type ID →
+ * the reference field that names its parent. `build()` picks the route's
+ * "subject" entity (the one upcast route parameter the trail is built
+ * from — see `resolveSubject()`), then `addAncestryLinks()` walks the
+ * map from the subject up to the root, adding one crumb per ancestor in
+ * root-to-leaf order. A missing reference (a deleted apiary, an
+ * unassigned queen) just stops the walk there, shortening the trail —
+ * the same behaviour the previous per-type blocks had.
  */
 class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
 
   use StringTranslationTrait;
 
   /**
-   * The entity type manager.
+   * Entity type ID → the reference field naming its parent.
    *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   * Entity types with no entry here (`apiary`, and the three
+   * collection-threaded types in `COLLECTION_THREADED_TYPES`) are the
+   * root of their own trail.
    */
-  protected EntityTypeManagerInterface $entityTypeManager;
+  protected const PARENT_FIELD = [
+    'hive' => 'apiary',
+    'hive_inspection' => 'hive',
+    'queen' => 'hive',
+    'queen_observation' => 'queen',
+    'calendar_action' => 'apiary',
+    'hive_action_log' => 'hive',
+    'apiary_action_log' => 'apiary',
+    'inventory_item' => 'apiary',
+    'inventory_purchase' => 'apiary',
+    'product' => 'apiary',
+    'calendar_action_item_requirement' => 'calendar_action',
+    'calendar_action_product_yield' => 'calendar_action',
+  ];
 
   /**
-   * Constructs a HivelogBreadcrumbBuilder.
+   * Entity types threaded through their own collection page, not a parent.
    *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manager.
+   * Global config/credential entities and sensor devices with no
+   * apiary/hive ancestor in their trail — see `addAncestryLinks()`.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager) {
-    $this->entityTypeManager = $entity_type_manager;
-  }
+  protected const COLLECTION_THREADED_TYPES = [
+    'sensor_device',
+    'ai_provider_config',
+    'api_client',
+  ];
+
+  /**
+   * Route parameter names to check for the route's subject entity.
+   *
+   * Order does not affect the result for any current route — at most one
+   * of these ever upcasts to an object on a given route, except the two
+   * action-log "add" routes below, which are resolved explicitly first.
+   */
+  protected const SUBJECT_PARAMS = [
+    'apiary',
+    'hive',
+    'hive_inspection',
+    'queen',
+    'queen_observation',
+    'calendar_action',
+    'hive_action_log',
+    'apiary_action_log',
+    'inventory_item',
+    'inventory_purchase',
+    'product',
+    'sensor_device',
+    'ai_provider_config',
+    'api_client',
+    'calendar_action_item_requirement',
+    'calendar_action_product_yield',
+  ];
+
+  /**
+   * Routes where {calendar_action} is present but is not the subject.
+   *
+   * `hivelog.hive_action_log.add` and `hivelog.apiary_action_log.add`
+   * carry `{calendar_action}` only to say which action is being logged;
+   * the trail threads via `{hive}` / `{apiary}` instead.
+   */
+  protected const CALENDAR_ACTION_NOT_SUBJECT_ROUTES = [
+    'hivelog.hive_action_log.add',
+    'hivelog.apiary_action_log.add',
+  ];
+
+  /**
+   * Route → the route parameter its terminal crumb link is built with.
+   *
+   * The subject's own ID. Used for named sub-pages that are not an
+   * entity's canonical page: reports, Insights, sensor readings /
+   * config download, token regeneration. See `terminalCrumbLabel()` for
+   * the matching label per route — kept as literal `t()` calls rather
+   * than a variable-driven one, per Drupal coding standards (translated
+   * strings must be extractable as literals).
+   */
+  protected const TERMINAL_CRUMB_PARAM = [
+    'hivelog.apiary.inventory_cost_report' => 'apiary',
+    'hivelog.apiary.calendar_action.collection' => 'apiary',
+    'entity.hive.insights' => 'hive',
+    'entity.sensor_device.readings' => 'sensor_device',
+    'nanoprobe.sensor_device.config' => 'sensor_device',
+    'collective.api_client.regenerate_token' => 'api_client',
+  ];
 
   /**
    * {@inheritdoc}
@@ -70,18 +154,18 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
     $route_name = $route_match->getRouteName();
 
     // Home > HiveLog. "HiveLog" links to the dashboard landing page
-    // (ADR-0057); on the dashboard route itself it is the terminal crumb,
-    // which the theme renders as plain text.
+    // (ADR-0057); on the dashboard route itself it is the terminal crumb.
+    // Every hivelog route ends up with the last-added crumb rendered as
+    // plain text by the theme (task 0013), regardless of what route it
+    // is — this builder always emits a Link either way.
     $breadcrumb->addLink(Link::createFromRoute($this->t('Home'), '<front>'));
     $breadcrumb->addLink(Link::createFromRoute($this->t('HiveLog'), 'hivelog.dashboard'));
 
     // Collection listings and the cross-apiary report page carry no
-    // entity-ancestor chain: "HiveLog" points at the dashboard (ADR-0057),
-    // so each needs its own terminal crumb — the page's own name, a
-    // self-link the theme renders as plain text. Every hivelog list page
-    // gets the same "Home › HiveLog › <Name>" shape this way, matching
-    // what the menu breadcrumb gives the collections that are not routed
-    // through this builder.
+    // entity-ancestor chain: every hivelog route is covered by this
+    // builder (task 0067), so each of these needs its own terminal
+    // crumb — the page's own name, a self-link the theme renders as
+    // plain text — rather than falling through to a menu-derived one.
     $collections = [
       'entity.apiary.collection' => $this->t('Apiaries'),
       'entity.hive.collection' => $this->t('Hives'),
@@ -120,254 +204,119 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
       return $breadcrumb;
     }
 
-    // Apiary-level routes: add the apiary crumb. On canonical pages the apiary
-    // label becomes the terminal crumb (rendered as plain text by the theme);
-    // on edit/delete pages it is a navigable ancestor link.
-    $apiary = $route_match->getParameter('apiary');
-    if ($apiary && is_object($apiary)) {
-      $breadcrumb->addCacheableDependency($apiary);
-      $breadcrumb->addLink(Link::createFromRoute($apiary->label(), 'entity.apiary.canonical', ['apiary' => $apiary->id()]));
-
-      // Apiary-scoped pages that are not the canonical page itself add a
-      // terminal crumb naming the page, so the trail ends with the page's
-      // own name rather than a linked apiary label.
-      $apiary_page_crumbs = [
-        'hivelog.apiary.inventory_cost_report' => $this->t('Financial Report'),
-        'hivelog.apiary.calendar_action.collection' => $this->t('Calendar'),
-      ];
-      if (isset($apiary_page_crumbs[$route_name])) {
-        $breadcrumb->addLink(Link::createFromRoute($apiary_page_crumbs[$route_name], $route_name, ['apiary' => $apiary->id()]));
-        return $breadcrumb;
-      }
+    $subject = $this->resolveSubject($route_match, $route_name);
+    if (!$subject) {
+      return $breadcrumb;
     }
 
-    // Hive-level routes: add apiary ancestor link then hive crumb. Named
-    // sub-pages (task 0111's Insights page) add a terminal crumb after
-    // the hive link, mirroring $apiary_page_crumbs above.
-    $hive = $route_match->getParameter('hive');
-    if ($hive && is_object($hive)) {
-      $breadcrumb->addCacheableDependency($hive);
-      $hive_apiary = $hive->get('apiary')->entity;
-      if ($hive_apiary) {
-        $breadcrumb->addCacheableDependency($hive_apiary);
-        $breadcrumb->addLink(Link::createFromRoute($hive_apiary->label(), 'entity.apiary.canonical', ['apiary' => $hive_apiary->id()]));
-      }
-      $breadcrumb->addLink(Link::createFromRoute($hive->label(), 'entity.hive.canonical', ['hive' => $hive->id()]));
+    $this->addAncestryLinks($breadcrumb, $subject, $collections);
 
-      $hive_page_crumbs = [
-        'entity.hive.insights' => $this->t('Insights'),
-      ];
-      if (isset($hive_page_crumbs[$route_name])) {
-        $breadcrumb->addLink(Link::createFromRoute($hive_page_crumbs[$route_name], $route_name, ['hive' => $hive->id()]));
-        return $breadcrumb;
-      }
-    }
-
-    // Inspection-level routes: add apiary and hive ancestor links then
-    // inspection crumb.
-    $inspection = $route_match->getParameter('hive_inspection');
-    if ($inspection && is_object($inspection)) {
-      $breadcrumb->addCacheableDependency($inspection);
-      $inspection_hive = $inspection->get('hive')->entity;
-      if ($inspection_hive) {
-        $breadcrumb->addCacheableDependency($inspection_hive);
-        $inspection_apiary = $inspection_hive->get('apiary')->entity;
-        if ($inspection_apiary) {
-          $breadcrumb->addCacheableDependency($inspection_apiary);
-          $breadcrumb->addLink(Link::createFromRoute($inspection_apiary->label(), 'entity.apiary.canonical', ['apiary' => $inspection_apiary->id()]));
-        }
-        $breadcrumb->addLink(Link::createFromRoute($inspection_hive->label(), 'entity.hive.canonical', ['hive' => $inspection_hive->id()]));
-      }
-      $breadcrumb->addLink(Link::createFromRoute($inspection->label(), 'entity.hive_inspection.canonical', ['hive_inspection' => $inspection->id()]));
-    }
-
-    // Queen-level routes: thread Apiary → Hive ancestry when the queen has a
-    // hive; unassigned queens get just the base trail plus queen crumb.
-    $queen = $route_match->getParameter('queen');
-    if ($queen && is_object($queen)) {
-      $breadcrumb->addCacheableDependency($queen);
-      $queen_hive = $queen->get('hive')->entity;
-      if ($queen_hive) {
-        $breadcrumb->addCacheableDependency($queen_hive);
-        $queen_apiary = $queen_hive->get('apiary')->entity;
-        if ($queen_apiary) {
-          $breadcrumb->addCacheableDependency($queen_apiary);
-          $breadcrumb->addLink(Link::createFromRoute($queen_apiary->label(), 'entity.apiary.canonical', ['apiary' => $queen_apiary->id()]));
-        }
-        $breadcrumb->addLink(Link::createFromRoute($queen_hive->label(), 'entity.hive.canonical', ['hive' => $queen_hive->id()]));
-      }
-      $breadcrumb->addLink(Link::createFromRoute($queen->label(), 'entity.queen.canonical', ['queen' => $queen->id()]));
-    }
-
-    // Queen observation routes: thread Apiary → Hive → Queen ancestry then
-    // observation crumb.
-    $observation = $route_match->getParameter('queen_observation');
-    if ($observation && is_object($observation)) {
-      $breadcrumb->addCacheableDependency($observation);
-      $observation_queen = $observation->get('queen')->entity;
-      if ($observation_queen) {
-        $breadcrumb->addCacheableDependency($observation_queen);
-        $observation_hive = $observation_queen->get('hive')->entity;
-        if ($observation_hive) {
-          $breadcrumb->addCacheableDependency($observation_hive);
-          $observation_apiary = $observation_hive->get('apiary')->entity;
-          if ($observation_apiary) {
-            $breadcrumb->addCacheableDependency($observation_apiary);
-            $breadcrumb->addLink(Link::createFromRoute($observation_apiary->label(), 'entity.apiary.canonical', ['apiary' => $observation_apiary->id()]));
-          }
-          $breadcrumb->addLink(Link::createFromRoute($observation_hive->label(), 'entity.hive.canonical', ['hive' => $observation_hive->id()]));
-        }
-        $breadcrumb->addLink(Link::createFromRoute($observation_queen->label(), 'entity.queen.canonical', ['queen' => $observation_queen->id()]));
-      }
-      $breadcrumb->addLink(Link::createFromRoute($observation->label(), 'entity.queen_observation.canonical', ['queen_observation' => $observation->id()]));
-    }
-
-    // Calendar action routes: add apiary ancestor link then calendar action
-    // crumb. Fires wherever a `calendar_action` route parameter identifies
-    // the page's subject — its own CRUD + Layout Builder routes, and the
-    // requirement / yield "add" forms nested under it — but NOT the
-    // hive/apiary action-log "add" routes, which carry `calendar_action`
-    // only to say which action is being logged (they thread via the
-    // hive / apiary instead).
-    $calendar_action = $route_match->getParameter('calendar_action');
-    if ($calendar_action && is_object($calendar_action)
-      && !in_array($route_name, ['hivelog.hive_action_log.add', 'hivelog.apiary_action_log.add'], TRUE)) {
-      $breadcrumb->addCacheableDependency($calendar_action);
-      $calendar_action_apiary = $calendar_action->get('apiary')->entity;
-      if ($calendar_action_apiary) {
-        $breadcrumb->addCacheableDependency($calendar_action_apiary);
-        $breadcrumb->addLink(Link::createFromRoute($calendar_action_apiary->label(), 'entity.apiary.canonical', ['apiary' => $calendar_action_apiary->id()]));
-      }
-      $breadcrumb->addLink(Link::createFromRoute($calendar_action->label(), 'entity.calendar_action.canonical', ['calendar_action' => $calendar_action->id()]));
-    }
-
-    // Hive action log routes: thread Apiary → Hive ancestry then log crumb.
-    $hive_action_log = $route_match->getParameter('hive_action_log');
-    if ($hive_action_log && is_object($hive_action_log)) {
-      $breadcrumb->addCacheableDependency($hive_action_log);
-      $log_hive = $hive_action_log->get('hive')->entity;
-      if ($log_hive) {
-        $breadcrumb->addCacheableDependency($log_hive);
-        $log_apiary = $log_hive->get('apiary')->entity;
-        if ($log_apiary) {
-          $breadcrumb->addCacheableDependency($log_apiary);
-          $breadcrumb->addLink(Link::createFromRoute($log_apiary->label(), 'entity.apiary.canonical', ['apiary' => $log_apiary->id()]));
-        }
-        $breadcrumb->addLink(Link::createFromRoute($log_hive->label(), 'entity.hive.canonical', ['hive' => $log_hive->id()]));
-      }
-      $breadcrumb->addLink(Link::createFromRoute($hive_action_log->label(), 'entity.hive_action_log.canonical', ['hive_action_log' => $hive_action_log->id()]));
-    }
-
-    // Apiary action log routes: add apiary ancestor link then log crumb.
-    // Simpler than the hive action log block above — apiary_action_log
-    // references its apiary directly, no hive level to traverse.
-    $apiary_action_log = $route_match->getParameter('apiary_action_log');
-    if ($apiary_action_log && is_object($apiary_action_log)) {
-      $breadcrumb->addCacheableDependency($apiary_action_log);
-      $log_apiary = $apiary_action_log->get('apiary')->entity;
-      if ($log_apiary) {
-        $breadcrumb->addCacheableDependency($log_apiary);
-        $breadcrumb->addLink(Link::createFromRoute($log_apiary->label(), 'entity.apiary.canonical', ['apiary' => $log_apiary->id()]));
-      }
-      $breadcrumb->addLink(Link::createFromRoute($apiary_action_log->label(), 'entity.apiary_action_log.canonical', ['apiary_action_log' => $apiary_action_log->id()]));
-    }
-
-    // Inventory item / inventory purchase / product routes — each
-    // references its apiary directly (like apiary_action_log). Covers the
-    // canonical / edit / delete / Layout Builder routes for all three.
-    foreach ([
-      'inventory_item' => 'entity.inventory_item.canonical',
-      'inventory_purchase' => 'entity.inventory_purchase.canonical',
-      'product' => 'entity.product.canonical',
-    ] as $param => $canonical_route) {
-      $entity = $route_match->getParameter($param);
-      if ($entity && is_object($entity)) {
-        $breadcrumb->addCacheableDependency($entity);
-        $entity_apiary = $entity->get('apiary')->entity;
-        if ($entity_apiary) {
-          $breadcrumb->addCacheableDependency($entity_apiary);
-          $breadcrumb->addLink(Link::createFromRoute($entity_apiary->label(), 'entity.apiary.canonical', ['apiary' => $entity_apiary->id()]));
-        }
-        $breadcrumb->addLink(Link::createFromRoute($entity->label(), $canonical_route, [$param => $entity->id()]));
-      }
-    }
-
-    // Sensor device routes: threaded through the device's own collection
-    // page rather than its apiary/hive ancestor — devices are managed
-    // from /hivelog/sensor-devices (task 0106) regardless of scope, and
-    // an apiary/hive trail was getting collapsed behind the theme's own
-    // ellipsis truncation, effectively hiding where the user actually
-    // navigated from. Named sub-pages (the full-history readings page,
-    // task 0110; the config download page) add a terminal crumb after
-    // the device link, mirroring $hive_page_crumbs above.
-    $sensor_device = $route_match->getParameter('sensor_device');
-    if ($sensor_device && is_object($sensor_device)) {
-      $breadcrumb->addCacheableDependency($sensor_device);
-      $breadcrumb->addLink(Link::createFromRoute($collections['entity.sensor_device.collection'], 'entity.sensor_device.collection'));
-      $breadcrumb->addLink(Link::createFromRoute($sensor_device->label(), 'entity.sensor_device.canonical', ['sensor_device' => $sensor_device->id()]));
-
-      $sensor_device_page_crumbs = [
-        'entity.sensor_device.readings' => $this->t('Readings'),
-        'nanoprobe.sensor_device.config' => $this->t('Download Configuration'),
-      ];
-      if (isset($sensor_device_page_crumbs[$route_name])) {
-        $breadcrumb->addLink(Link::createFromRoute($sensor_device_page_crumbs[$route_name], $route_name, ['sensor_device' => $sensor_device->id()]));
-        return $breadcrumb;
-      }
-    }
-
-    // AI Provider Config routes (task 0102/0104): a global config entity
-    // with no apiary/hive ancestor, so its own collection page is the
-    // closest thing it has to a parent — thread through it, unlike
-    // Apiary (which skips its own collection per ADR-0057, since it
-    // sits above the whole apiary/hive/… hierarchy rather than beside
-    // it).
-    $ai_provider_config = $route_match->getParameter('ai_provider_config');
-    if ($ai_provider_config && is_object($ai_provider_config)) {
-      $breadcrumb->addCacheableDependency($ai_provider_config);
-      $breadcrumb->addLink(Link::createFromRoute($collections['entity.ai_provider_config.collection'], 'entity.ai_provider_config.collection'));
-      $breadcrumb->addLink(Link::createFromRoute($ai_provider_config->label(), 'entity.ai_provider_config.canonical', ['ai_provider_config' => $ai_provider_config->id()]));
-    }
-
-    // API Client routes (task 0101): same top-level shape as AI Provider
-    // Config above — a global credential entity with no apiary/hive
-    // ancestor, threaded through its own collection page. The
-    // token-regeneration confirmation form adds a named terminal crumb
-    // after the client link.
-    $api_client = $route_match->getParameter('api_client');
-    if ($api_client && is_object($api_client)) {
-      $breadcrumb->addCacheableDependency($api_client);
-      $breadcrumb->addLink(Link::createFromRoute($collections['entity.api_client.collection'], 'entity.api_client.collection'));
-      $breadcrumb->addLink(Link::createFromRoute($api_client->label(), 'entity.api_client.canonical', ['api_client' => $api_client->id()]));
-
-      if ($route_name === 'collective.api_client.regenerate_token') {
-        $breadcrumb->addLink(Link::createFromRoute($this->t('Regenerate Token'), $route_name, ['api_client' => $api_client->id()]));
-        return $breadcrumb;
-      }
-    }
-
-    // Calendar-action requirement / yield edit + delete routes: thread
-    // Apiary → Calendar action, then a non-linked terminal (these
-    // sub-entities have no canonical page of their own).
-    foreach (['calendar_action_item_requirement', 'calendar_action_product_yield'] as $param) {
-      $sub = $route_match->getParameter($param);
-      if ($sub && is_object($sub)) {
-        $breadcrumb->addCacheableDependency($sub);
-        $sub_action = $sub->get('calendar_action')->entity;
-        if ($sub_action) {
-          $breadcrumb->addCacheableDependency($sub_action);
-          $sub_apiary = $sub_action->get('apiary')->entity;
-          if ($sub_apiary) {
-            $breadcrumb->addCacheableDependency($sub_apiary);
-            $breadcrumb->addLink(Link::createFromRoute($sub_apiary->label(), 'entity.apiary.canonical', ['apiary' => $sub_apiary->id()]));
-          }
-          $breadcrumb->addLink(Link::createFromRoute($sub_action->label(), 'entity.calendar_action.canonical', ['calendar_action' => $sub_action->id()]));
-        }
-        $breadcrumb->addLink(Link::createFromRoute($sub->label(), '<nolink>'));
-      }
+    $terminal_param = self::TERMINAL_CRUMB_PARAM[$route_name] ?? NULL;
+    if ($terminal_param) {
+      $breadcrumb->addLink(Link::createFromRoute(
+        $this->terminalCrumbLabel($route_name),
+        $route_name,
+        [$terminal_param => $subject->id()],
+      ));
     }
 
     return $breadcrumb;
+  }
+
+  /**
+   * The terminal crumb label for one of `TERMINAL_CRUMB_PARAM`'s routes.
+   *
+   * A `match()` rather than a variable-keyed array so every label stays
+   * a literal `t()` call.
+   */
+  protected function terminalCrumbLabel(string $route_name) {
+    return match ($route_name) {
+      'hivelog.apiary.inventory_cost_report' => $this->t('Financial Report'),
+      'hivelog.apiary.calendar_action.collection' => $this->t('Calendar'),
+      'entity.hive.insights' => $this->t('Insights'),
+      'entity.sensor_device.readings' => $this->t('Readings'),
+      'nanoprobe.sensor_device.config' => $this->t('Download Configuration'),
+      'collective.api_client.regenerate_token' => $this->t('Regenerate Token'),
+    };
+  }
+
+  /**
+   * Picks the route's subject entity — the one the trail is built from.
+   *
+   * At most one of `SUBJECT_PARAMS` ever upcasts to an object on a given
+   * route, except the two routes in
+   * `CALENDAR_ACTION_NOT_SUBJECT_ROUTES`, which also carry
+   * `{calendar_action}` — excluded there explicitly rather than by
+   * checking which other params are present, so the rule stays anchored
+   * to specific routes instead of a coincidence of parameter names.
+   */
+  protected function resolveSubject(RouteMatchInterface $route_match, string $route_name): ?FieldableEntityInterface {
+    foreach (self::SUBJECT_PARAMS as $param) {
+      if ($param === 'calendar_action' && in_array($route_name, self::CALENDAR_ACTION_NOT_SUBJECT_ROUTES, TRUE)) {
+        continue;
+      }
+      $value = $route_match->getParameter($param);
+      if ($value instanceof FieldableEntityInterface) {
+        return $value;
+      }
+    }
+    return NULL;
+  }
+
+  /**
+   * Adds one crumb per ancestor, root to leaf, ending with `$entity`.
+   *
+   * Collection-threaded types (`COLLECTION_THREADED_TYPES`) get their
+   * own collection link first instead of an apiary/hive ancestor chain.
+   * Every other type walks `PARENT_FIELD` from `$entity` up to whichever
+   * ancestor has no parent field (or a NULL reference, which just stops
+   * the walk there — a missing parent shortens the trail rather than
+   * breaking it).
+   *
+   * @param \Drupal\Core\Breadcrumb\Breadcrumb $breadcrumb
+   *   The breadcrumb being built.
+   * @param \Drupal\Core\Entity\FieldableEntityInterface $entity
+   *   The route's subject entity.
+   * @param array $collections
+   *   Entity type ID → collection route name/label pairs, from `build()`,
+   *   reused here for the collection-threaded types' own collection link.
+   */
+  protected function addAncestryLinks(Breadcrumb $breadcrumb, FieldableEntityInterface $entity, array $collections): void {
+    $type_id = $entity->getEntityTypeId();
+
+    if (in_array($type_id, self::COLLECTION_THREADED_TYPES, TRUE)) {
+      $breadcrumb->addLink(Link::createFromRoute($collections["entity.$type_id.collection"], "entity.$type_id.collection"));
+      $this->addEntityLink($breadcrumb, $entity);
+      return;
+    }
+
+    $chain = [];
+    $current = $entity;
+    while ($current instanceof FieldableEntityInterface) {
+      $chain[] = $current;
+      $parent_field = self::PARENT_FIELD[$current->getEntityTypeId()] ?? NULL;
+      $current = $parent_field ? $current->get($parent_field)->entity : NULL;
+    }
+
+    foreach (array_reverse($chain) as $ancestor) {
+      $this->addEntityLink($breadcrumb, $ancestor);
+    }
+  }
+
+  /**
+   * Adds one crumb for a single entity.
+   *
+   * Its own canonical link, or `<nolink>` for types with no canonical
+   * page (today's requirement / yield behaviour).
+   */
+  protected function addEntityLink(Breadcrumb $breadcrumb, EntityInterface $entity): void {
+    $breadcrumb->addCacheableDependency($entity);
+    if ($entity->hasLinkTemplate('canonical')) {
+      $type_id = $entity->getEntityTypeId();
+      $breadcrumb->addLink(Link::createFromRoute($entity->label(), "entity.$type_id.canonical", [$type_id => $entity->id()]));
+      return;
+    }
+    $breadcrumb->addLink(Link::createFromRoute($entity->label(), '<nolink>'));
   }
 
 }

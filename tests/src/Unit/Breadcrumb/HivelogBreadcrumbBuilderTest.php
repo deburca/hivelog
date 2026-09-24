@@ -4,7 +4,6 @@ namespace Drupal\Tests\hivelog\Unit\Breadcrumb;
 
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Entity\ContentEntityInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\hivelog\Breadcrumb\HivelogBreadcrumbBuilder;
 use Drupal\Tests\UnitTestCase;
@@ -50,8 +49,7 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $container->set('cache_contexts_manager', $cache_contexts_manager);
     \Drupal::setContainer($container);
 
-    $entity_type_manager = $this->createMock(EntityTypeManagerInterface::class);
-    $this->builder = new HivelogBreadcrumbBuilder($entity_type_manager);
+    $this->builder = new HivelogBreadcrumbBuilder();
     $this->builder->setStringTranslation($this->getStringTranslationStub());
   }
 
@@ -1630,6 +1628,8 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $apiary = $this->createMock(ContentEntityInterface::class);
     $apiary->method('id')->willReturn($id);
     $apiary->method('label')->willReturn($label);
+    $apiary->method('getEntityTypeId')->willReturn('apiary');
+    $apiary->method('hasLinkTemplate')->willReturn(TRUE);
     $apiary->method('getCacheTags')->willReturn(["apiary:$id"]);
     $apiary->method('getCacheContexts')->willReturn([]);
     $apiary->method('getCacheMaxAge')->willReturn(-1);
@@ -1643,6 +1643,8 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $hive = $this->createMock(ContentEntityInterface::class);
     $hive->method('id')->willReturn($id);
     $hive->method('label')->willReturn($label);
+    $hive->method('getEntityTypeId')->willReturn('hive');
+    $hive->method('hasLinkTemplate')->willReturn(TRUE);
     $hive->method('getCacheTags')->willReturn(["hive:$id"]);
     $hive->method('getCacheContexts')->willReturn([]);
     $hive->method('getCacheMaxAge')->willReturn(-1);
@@ -1661,6 +1663,8 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $inspection = $this->createMock(ContentEntityInterface::class);
     $inspection->method('id')->willReturn($id);
     $inspection->method('label')->willReturn($label);
+    $inspection->method('getEntityTypeId')->willReturn('hive_inspection');
+    $inspection->method('hasLinkTemplate')->willReturn(TRUE);
     $inspection->method('getCacheTags')->willReturn(["hive_inspection:$id"]);
     $inspection->method('getCacheContexts')->willReturn([]);
     $inspection->method('getCacheMaxAge')->willReturn(-1);
@@ -1679,6 +1683,8 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $queen = $this->createMock(ContentEntityInterface::class);
     $queen->method('id')->willReturn($id);
     $queen->method('label')->willReturn($label);
+    $queen->method('getEntityTypeId')->willReturn('queen');
+    $queen->method('hasLinkTemplate')->willReturn(TRUE);
     $queen->method('getCacheTags')->willReturn(["queen:$id"]);
     $queen->method('getCacheContexts')->willReturn([]);
     $queen->method('getCacheMaxAge')->willReturn(-1);
@@ -1697,6 +1703,8 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $queen = $this->createMock(ContentEntityInterface::class);
     $queen->method('id')->willReturn($id);
     $queen->method('label')->willReturn($label);
+    $queen->method('getEntityTypeId')->willReturn('queen');
+    $queen->method('hasLinkTemplate')->willReturn(TRUE);
     $queen->method('getCacheTags')->willReturn(["queen:$id"]);
     $queen->method('getCacheContexts')->willReturn([]);
     $queen->method('getCacheMaxAge')->willReturn(-1);
@@ -1715,6 +1723,8 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $observation = $this->createMock(ContentEntityInterface::class);
     $observation->method('id')->willReturn($id);
     $observation->method('label')->willReturn($label);
+    $observation->method('getEntityTypeId')->willReturn('queen_observation');
+    $observation->method('hasLinkTemplate')->willReturn(TRUE);
     $observation->method('getCacheTags')->willReturn(["queen_observation:$id"]);
     $observation->method('getCacheContexts')->willReturn([]);
     $observation->method('getCacheMaxAge')->willReturn(-1);
@@ -1733,6 +1743,8 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $calendar_action = $this->createMock(ContentEntityInterface::class);
     $calendar_action->method('id')->willReturn($id);
     $calendar_action->method('label')->willReturn($label);
+    $calendar_action->method('getEntityTypeId')->willReturn('calendar_action');
+    $calendar_action->method('hasLinkTemplate')->willReturn(TRUE);
     $calendar_action->method('getCacheTags')->willReturn(["calendar_action:$id"]);
     $calendar_action->method('getCacheContexts')->willReturn([]);
     $calendar_action->method('getCacheMaxAge')->willReturn(-1);
@@ -1751,6 +1763,8 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $log = $this->createMock(ContentEntityInterface::class);
     $log->method('id')->willReturn($id);
     $log->method('label')->willReturn($label);
+    $log->method('getEntityTypeId')->willReturn('hive_action_log');
+    $log->method('hasLinkTemplate')->willReturn(TRUE);
     $log->method('getCacheTags')->willReturn(["hive_action_log:$id"]);
     $log->method('getCacheContexts')->willReturn([]);
     $log->method('getCacheMaxAge')->willReturn(-1);
@@ -1769,6 +1783,8 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $log = $this->createMock(ContentEntityInterface::class);
     $log->method('id')->willReturn($id);
     $log->method('label')->willReturn($label);
+    $log->method('getEntityTypeId')->willReturn('apiary_action_log');
+    $log->method('hasLinkTemplate')->willReturn(TRUE);
     $log->method('getCacheTags')->willReturn(["apiary_action_log:$id"]);
     $log->method('getCacheContexts')->willReturn([]);
     $log->method('getCacheMaxAge')->willReturn(-1);
@@ -1787,6 +1803,8 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $entity = $this->createMock(ContentEntityInterface::class);
     $entity->method('id')->willReturn($id);
     $entity->method('label')->willReturn($label);
+    $entity->method('getEntityTypeId')->willReturn($entity_type_id);
+    $entity->method('hasLinkTemplate')->willReturn(TRUE);
     $entity->method('getCacheTags')->willReturn(["$entity_type_id:$id"]);
     $entity->method('getCacheContexts')->willReturn([]);
     $entity->method('getCacheMaxAge')->willReturn(-1);
@@ -1809,6 +1827,8 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $device = $this->createMock(ContentEntityInterface::class);
     $device->method('id')->willReturn($id);
     $device->method('label')->willReturn($label);
+    $device->method('getEntityTypeId')->willReturn('sensor_device');
+    $device->method('hasLinkTemplate')->willReturn(TRUE);
     $device->method('getCacheTags')->willReturn(["sensor_device:$id"]);
     $device->method('getCacheContexts')->willReturn([]);
     $device->method('getCacheMaxAge')->willReturn(-1);
@@ -1835,6 +1855,8 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $entity = $this->createMock(ContentEntityInterface::class);
     $entity->method('id')->willReturn($id);
     $entity->method('label')->willReturn($label);
+    $entity->method('getEntityTypeId')->willReturn($entity_type_id);
+    $entity->method('hasLinkTemplate')->willReturn(TRUE);
     $entity->method('getCacheTags')->willReturn(["$entity_type_id:$id"]);
     $entity->method('getCacheContexts')->willReturn([]);
     $entity->method('getCacheMaxAge')->willReturn(-1);
@@ -1843,11 +1865,17 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
 
   /**
    * Creates a mock calendar-action sub-entity (requirement / yield).
+   *
+   * No canonical page of its own — `hasLinkTemplate()` returns FALSE, so
+   * the builder falls back to `<nolink>` (today's requirement/yield
+   * behaviour).
    */
   private function createSubEntityMock(string $entity_type_id, int $id, string $label, ContentEntityInterface $calendar_action): ContentEntityInterface {
     $entity = $this->createMock(ContentEntityInterface::class);
     $entity->method('id')->willReturn($id);
     $entity->method('label')->willReturn($label);
+    $entity->method('getEntityTypeId')->willReturn($entity_type_id);
+    $entity->method('hasLinkTemplate')->willReturn(FALSE);
     $entity->method('getCacheTags')->willReturn(["$entity_type_id:$id"]);
     $entity->method('getCacheContexts')->willReturn([]);
     $entity->method('getCacheMaxAge')->willReturn(-1);
