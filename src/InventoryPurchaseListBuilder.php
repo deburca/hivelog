@@ -5,11 +5,7 @@ declare(strict_types=1);
 namespace Drupal\hivelog;
 
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\EntityStorageInterface;
-use Drupal\Core\Entity\EntityTypeInterface;
-use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Url;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a list builder for Inventory Purchase entities.
@@ -19,32 +15,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * rationale (mirrors ApiaryListBuilder/QueenListBuilder).
  */
 class InventoryPurchaseListBuilder extends HivelogListBuilder {
-
-  /**
-   * The renderer.
-   */
-  protected RendererInterface $renderer;
-
-  /**
-   * Constructs a new InventoryPurchaseListBuilder.
-   */
-  public function __construct(EntityTypeInterface $entity_type, EntityStorageInterface $storage, RendererInterface $renderer) {
-    parent::__construct($entity_type, $storage);
-    $this->renderer = $renderer;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type) {
-    $instance = new static(
-      $entity_type,
-      $container->get('entity_type.manager')->getStorage($entity_type->id()),
-      $container->get('renderer'),
-    );
-    $instance->currentUser = $container->get('current_user');
-    return $instance;
-  }
 
   /**
    * {@inheritdoc}
@@ -57,14 +27,11 @@ class InventoryPurchaseListBuilder extends HivelogListBuilder {
     $header['unit_price'] = $this->t('Unit Price');
     $header['total_cost'] = $this->t('Total Cost');
     $header['supplier'] = $this->t('Supplier');
-    return $header + parent::buildHeader();
+    return $header;
   }
 
   /**
    * {@inheritdoc}
-   *
-   * Builds operations as plain button links instead of the default
-   * dropbutton widget, matching every other list on the module.
    */
   public function buildRow(EntityInterface $entity) {
     $item = $entity->get('item')->entity;
@@ -79,84 +46,27 @@ class InventoryPurchaseListBuilder extends HivelogListBuilder {
     $row['total_cost'] = $entity->get('total_cost')->value ?? '';
     $row['supplier'] = $entity->get('supplier')->value ?? '';
 
-    $row['operations']['data'] = $this->buildOperations($entity);
-
     return $row;
   }
 
   /**
    * {@inheritdoc}
+   *
+   * "Add Purchase" plus a cross-link to Inventory Items — a real
+   * workflow shortcut, kept per task 0126's heading cross-link review.
    */
-  public function render() {
-    $headers = array_map('strval', array_values($this->buildHeader()));
-    $rows = [];
-    foreach ($this->load() as $entity) {
-      $row = $this->buildRow($entity);
-      if (!$row) {
-        continue;
-      }
-      $ops = $row['operations']['data'] ?? [];
-      $ops_html = !empty($ops) ? $this->renderer->renderInIsolation($ops) : '';
-
-      $rows[] = [
-        'cells' => [
-          $row['item'],
-          $row['apiary'] ?? '',
-          $row['purchase_date'] ?? '',
-          $row['quantity'] ?? '',
-          $row['unit_price'] ?? '',
-          $row['total_cost'] ?? '',
-          $row['supplier'] ?? '',
-          $ops_html,
-        ],
-      ];
-    }
-
-    $build['heading'] = [
-      '#type' => 'container',
-      '#attributes' => ['class' => ['hivelog-list-heading']],
-      '#weight' => -90,
-      'actions' => [
-        '#type' => 'container',
-        '#attributes' => ['class' => ['hivelog-list-heading__action']],
-        'buttons' => [
-          '#type' => 'component',
-          '#component' => 'hivelog:button-group',
-          '#props' => [
-            'buttons' => [
-              [
-                'label' => (string) $this->t('Add Purchase'),
-                'url' => Url::fromRoute('entity.inventory_purchase.add_form')->toString(),
-                'variant' => 'primary',
-              ],
-              [
-                'label' => (string) $this->t('View Inventory Items'),
-                'url' => Url::fromRoute('entity.inventory_item.collection')->toString(),
-              ],
-            ],
-          ],
-        ],
+  protected function getHeadingActions(): array {
+    return [
+      [
+        'label' => (string) $this->t('Add Purchase'),
+        'url' => Url::fromRoute('entity.inventory_purchase.add_form')->toString(),
+        'variant' => 'primary',
       ],
-      '#attached' => ['library' => ['hivelog/buttons']],
-    ];
-
-    $build['table'] = [
-      '#type' => 'component',
-      '#component' => 'hivelog:entity-table',
-      '#props' => [
-        'headers' => $headers,
-        'rows' => $rows,
-        'empty_message' => (string) $this->t('There are no @label yet.', [
-          '@label' => $this->entityType->getPluralLabel(),
-        ]),
-      ],
-      '#cache' => [
-        'contexts' => $this->entityType->getListCacheContexts(),
-        'tags' => $this->entityType->getListCacheTags(),
+      [
+        'label' => (string) $this->t('View Inventory Items'),
+        'url' => Url::fromRoute('entity.inventory_item.collection')->toString(),
       ],
     ];
-
-    return $build;
   }
 
 }

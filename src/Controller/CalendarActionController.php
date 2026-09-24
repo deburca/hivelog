@@ -18,6 +18,7 @@ use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\CalendarAction;
 use Drupal\hivelog\Form\HivelogCalendarActionsFilterForm;
 use Drupal\hivelog\HivelogDetailPageTrait;
+use Drupal\hivelog\HivelogListPageTrait;
 use Drupal\hivelog\Utility\SimpleBulletText;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -28,6 +29,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
 class CalendarActionController extends ControllerBase {
 
   use HivelogDetailPageTrait;
+  use HivelogListPageTrait;
 
   /**
    * Default number of calendar actions shown per page on the collection page.
@@ -110,8 +112,7 @@ class CalendarActionController extends ControllerBase {
       ->getStorage('calendar_action')
       ->getQuery()
       ->accessCheck(TRUE)
-      ->sort('week_start', 'ASC')
-      ->pager(static::CALENDAR_ACTIONS_PER_PAGE, static::CALENDAR_ACTIONS_PAGER_ELEMENT);
+      ->sort('week_start', 'ASC');
     $this->applyCollectionFilters($query, $filters);
     $calendar_action_ids = $query->execute();
 
@@ -122,6 +123,10 @@ class CalendarActionController extends ControllerBase {
       $calendar_actions,
       fn($calendar_action) => $calendar_action->access('view')
     );
+    // Filter before paging (task 0126) — the query itself carries no
+    // LIMIT/OFFSET, so the access filter above can't shorten a page that
+    // was already sliced at the database level.
+    $calendar_actions = $this->paginateEntities($calendar_actions, static::CALENDAR_ACTIONS_PER_PAGE, static::CALENDAR_ACTIONS_PAGER_ELEMENT);
 
     $scope_labels = [
       'hive' => $this->t('Hive'),
@@ -191,18 +196,14 @@ class CalendarActionController extends ControllerBase {
       ];
     }
 
-    $build['table'] = [
-      '#type' => 'component',
-      '#component' => 'hivelog:entity-table',
-      '#props' => [
-        'headers' => array_map('strval', $header),
-        'rows' => $rows,
-        'empty_message' => (string) (!empty($filters)
-          ? $this->t('No calendar actions match the current filters.')
-          : $this->t('No calendar actions have been added yet.')),
-      ],
-      '#weight' => 1,
-    ];
+    $build['table'] = $this->buildEntityTable(
+      $header,
+      $rows,
+      (string) (!empty($filters)
+        ? $this->t('No calendar actions match the current filters.')
+        : $this->t('No calendar actions have been added yet.'))
+    );
+    $build['table']['#weight'] = 1;
 
     $build['pager'] = [
       '#type' => 'pager',

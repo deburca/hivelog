@@ -5,11 +5,7 @@ declare(strict_types=1);
 namespace Drupal\hivelog;
 
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\EntityStorageInterface;
-use Drupal\Core\Entity\EntityTypeInterface;
-use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Url;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a list builder for Product entities.
@@ -22,32 +18,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class ProductListBuilder extends HivelogListBuilder {
 
   /**
-   * The renderer.
-   */
-  protected RendererInterface $renderer;
-
-  /**
-   * Constructs a new ProductListBuilder.
-   */
-  public function __construct(EntityTypeInterface $entity_type, EntityStorageInterface $storage, RendererInterface $renderer) {
-    parent::__construct($entity_type, $storage);
-    $this->renderer = $renderer;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type) {
-    $instance = new static(
-      $entity_type,
-      $container->get('entity_type.manager')->getStorage($entity_type->id()),
-      $container->get('renderer'),
-    );
-    $instance->currentUser = $container->get('current_user');
-    return $instance;
-  }
-
-  /**
    * {@inheritdoc}
    */
   public function buildHeader() {
@@ -56,14 +26,11 @@ class ProductListBuilder extends HivelogListBuilder {
     $header['unit'] = $this->t('Unit');
     $header['expected_unit_price'] = $this->t('Expected Unit Price');
     $header['status'] = $this->t('Status');
-    return $header + parent::buildHeader();
+    return $header;
   }
 
   /**
    * {@inheritdoc}
-   *
-   * Builds operations as plain button links instead of the default
-   * dropbutton widget, matching every other list on the module.
    */
   public function buildRow(EntityInterface $entity) {
     $row['name'] = $entity->toLink()->toString();
@@ -79,74 +46,20 @@ class ProductListBuilder extends HivelogListBuilder {
     $status = $entity->get('status')->value;
     $row['status'] = $entity->get('status')->getSetting('allowed_values')[$status] ?? $status;
 
-    $row['operations']['data'] = $this->buildOperations($entity);
-
     return $row;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function render() {
-    $headers = array_map('strval', array_values($this->buildHeader()));
-    $rows = [];
-    foreach ($this->load() as $entity) {
-      $row = $this->buildRow($entity);
-      if (!$row) {
-        continue;
-      }
-      $ops = $row['operations']['data'] ?? [];
-      $ops_html = !empty($ops) ? $this->renderer->renderInIsolation($ops) : '';
-
-      $rows[] = [
-        'cells' => [
-          $row['name'],
-          $row['apiary'] ?? '',
-          $row['unit'] ?? '',
-          $row['expected_unit_price'] ?? '',
-          $row['status'] ?? '',
-          $ops_html,
-        ],
-      ];
-    }
-
-    $build['heading'] = [
-      '#type' => 'container',
-      '#attributes' => ['class' => ['hivelog-list-heading']],
-      '#weight' => -90,
-      'actions' => [
-        '#type' => 'container',
-        '#attributes' => ['class' => ['hivelog-list-heading__action']],
-        'add' => [
-          '#type' => 'component',
-          '#component' => 'hivelog:button',
-          '#props' => [
-            'label' => (string) $this->t('Add Product'),
-            'url' => Url::fromRoute('entity.product.add_form')->toString(),
-            'variant' => 'primary',
-          ],
-        ],
-      ],
-      '#attached' => ['library' => ['hivelog/buttons']],
-    ];
-
-    $build['table'] = [
-      '#type' => 'component',
-      '#component' => 'hivelog:entity-table',
-      '#props' => [
-        'headers' => $headers,
-        'rows' => $rows,
-        'empty_message' => (string) $this->t('There are no @label yet.', [
-          '@label' => $this->entityType->getPluralLabel(),
-        ]),
-      ],
-      '#cache' => [
-        'contexts' => $this->entityType->getListCacheContexts(),
-        'tags' => $this->entityType->getListCacheTags(),
+  protected function getHeadingActions(): array {
+    return [
+      [
+        'label' => (string) $this->t('Add Product'),
+        'url' => Url::fromRoute('entity.product.add_form')->toString(),
+        'variant' => 'primary',
       ],
     ];
-
-    return $build;
   }
 
 }

@@ -601,7 +601,6 @@ class HiveController extends ControllerBase {
         '#component' => 'hivelog:button-group',
         '#props' => [
           'buttons' => [
-            ['label' => (string) $this->t('View'), 'url' => $inspection->toUrl('canonical')->toString()],
             ['label' => (string) $this->t('Edit'), 'url' => $inspection->toUrl('edit-form')->toString()],
             [
               'label' => (string) $this->t('Delete'),
@@ -726,7 +725,6 @@ class HiveController extends ControllerBase {
         '#component' => 'hivelog:button-group',
         '#props' => [
           'buttons' => [
-            ['label' => (string) $this->t('View'), 'url' => $observation->toUrl('canonical')->toString()],
             ['label' => (string) $this->t('Edit'), 'url' => $observation->toUrl('edit-form')->toString()],
             [
               'label' => (string) $this->t('Delete'),

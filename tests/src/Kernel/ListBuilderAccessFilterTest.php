@@ -380,21 +380,24 @@ class ListBuilderAccessFilterTest extends KernelTestBase {
   }
 
   /**
-   * Tests HiveListBuilder::render() (core's #type => 'table') hides rows.
+   * Tests HiveListBuilder::render() hides other users' rows.
    *
-   * HiveListBuilder does not override render(), so this exercises core
-   * EntityListBuilder::render()'s `#rows`, keyed by entity id.
+   * Since task 0126, every HivelogListBuilder subclass — Hive included —
+   * renders through the same `hivelog:entity-table` component as
+   * ApiaryListBuilder; there is no longer a separate core `#type =>
+   * 'table'` shape to exercise here.
    */
   public function testHiveRenderHidesOtherUsersRow(): void {
-    $hive_id = $this->fixtures['hive']->id();
-
     $this->setCurrentUser($this->outsider);
     $build = \Drupal::entityTypeManager()->getListBuilder('hive')->render();
-    $this->assertArrayNotHasKey($hive_id, $build['table']['#rows']);
+    $rows = $build['table']['#props']['rows'] ?? [];
+    $this->assertCount(0, $rows);
 
     $this->setCurrentUser($this->owner);
     $build = \Drupal::entityTypeManager()->getListBuilder('hive')->render();
-    $this->assertArrayHasKey($hive_id, $build['table']['#rows']);
+    $rows = $build['table']['#props']['rows'] ?? [];
+    $this->assertCount(1, $rows);
+    $this->assertStringContainsString('Owner Hive', (string) $rows[0]['cells'][0]);
   }
 
 }

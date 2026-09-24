@@ -178,7 +178,6 @@ class QueenController extends ControllerBase {
         '#component' => 'hivelog:button-group',
         '#props' => [
           'buttons' => [
-            ['label' => (string) $this->t('View'), 'url' => $observation->toUrl('canonical')->toString()],
             ['label' => (string) $this->t('Edit'), 'url' => $observation->toUrl('edit-form')->toString()],
             [
               'label' => (string) $this->t('Delete'),

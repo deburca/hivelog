@@ -3,13 +3,9 @@
 namespace Drupal\hivelog;
 
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\EntityStorageInterface;
-use Drupal\Core\Entity\EntityTypeInterface;
-use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\user\UserInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a list builder for Apiary entities.
@@ -26,36 +22,6 @@ class ApiaryListBuilder extends HivelogListBuilder {
   protected $limit = 20;
 
   /**
-   * The renderer.
-   */
-  protected RendererInterface $renderer;
-
-  /**
-   * Constructs a new ApiaryListBuilder.
-   */
-  public function __construct(
-    EntityTypeInterface $entity_type,
-    EntityStorageInterface $storage,
-    RendererInterface $renderer,
-  ) {
-    parent::__construct($entity_type, $storage);
-    $this->renderer = $renderer;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type) {
-    $instance = new static(
-      $entity_type,
-      $container->get('entity_type.manager')->getStorage($entity_type->id()),
-      $container->get('renderer'),
-    );
-    $instance->currentUser = $container->get('current_user');
-    return $instance;
-  }
-
-  /**
    * {@inheritdoc}
    */
   public function buildHeader() {
@@ -63,7 +29,7 @@ class ApiaryListBuilder extends HivelogListBuilder {
     $header['name'] = $this->t('Name');
     $header['location'] = $this->t('Location');
     $header['owner'] = $this->t('Owner');
-    return $header + parent::buildHeader();
+    return $header;
   }
 
   /**
@@ -78,95 +44,28 @@ class ApiaryListBuilder extends HivelogListBuilder {
       : '';
     $row['owner'] = $owner ? $owner->getDisplayName() : '';
 
-    $row['operations']['data'] = $this->buildOperations($entity);
-
     return $row;
   }
 
   /**
    * {@inheritdoc}
+   *
+   * "Add Apiary" plus a cross-link to the Queens collection — a real
+   * workflow shortcut (queens are only reachable from the Apiary list
+   * otherwise), kept per task 0126's heading cross-link review.
    */
-  public function render() {
-    // Build the table using the SDC component instead of the inherited
-    // #type => 'table' from EntityListBuilder::render().
-    $headers = array_map('strval', array_values($this->buildHeader()));
-    $rows = [];
-    foreach ($this->load() as $entity) {
-      $row = $this->buildRow($entity);
-      if (!$row) {
-        continue;
-      }
-      // Pre-render the operations cell (which contains render arrays).
-      $ops = $row['operations']['data'] ?? [];
-      $ops_html = !empty($ops) ? $this->renderer->renderInIsolation($ops) : '';
-
-      $rows[] = [
-        'cells' => [
-          $row['cbr'],
-          $row['name'],
-          $row['location'] ?? '',
-          $row['owner'] ?? '',
-          $ops_html,
-        ],
-      ];
-    }
-
-    // Heading row with "Add Apiary" action, matching the pattern used on
-    // all other list pages in the module.
-    $build['heading'] = [
-      '#type' => 'container',
-      '#attributes' => ['class' => ['hivelog-list-heading']],
-      '#weight' => -90,
-      'actions' => [
-        '#type' => 'container',
-        '#attributes' => ['class' => ['hivelog-list-heading__action']],
-        'buttons' => [
-          '#type' => 'component',
-          '#component' => 'hivelog:button-group',
-          '#props' => [
-            'buttons' => [
-              [
-                'label' => (string) $this->t('Add Apiary'),
-                'url' => Url::fromRoute('entity.apiary.add_form')->toString(),
-                'variant' => 'primary',
-              ],
-              [
-                'label' => (string) $this->t('View all Queens'),
-                'url' => Url::fromRoute('entity.queen.collection')->toString(),
-              ],
-            ],
-          ],
-        ],
+  protected function getHeadingActions(): array {
+    return [
+      [
+        'label' => (string) $this->t('Add Apiary'),
+        'url' => Url::fromRoute('entity.apiary.add_form')->toString(),
+        'variant' => 'primary',
       ],
-      '#attached' => ['library' => ['hivelog/buttons']],
-    ];
-
-    $build['table'] = [
-      '#type' => 'component',
-      '#component' => 'hivelog:entity-table',
-      '#props' => [
-        'headers' => $headers,
-        'rows' => $rows,
-        'empty_message' => (string) $this->t('There are no @label yet.', [
-          '@label' => $this->entityType->getPluralLabel(),
-        ]),
-      ],
-      '#cache' => [
-        'contexts' => $this->entityType->getListCacheContexts(),
-        'tags' => $this->entityType->getListCacheTags(),
+      [
+        'label' => (string) $this->t('View all Queens'),
+        'url' => Url::fromRoute('entity.queen.collection')->toString(),
       ],
     ];
-
-    // Add pager since $this->limit is set.
-    $build['pager'] = [
-      '#type' => 'pager',
-      '#weight' => 10,
-    ];
-
-    // The current user's CBR summary banner moved to the dashboard landing
-    // page (DashboardController, ADR-0057 / task 0056). The per-row CBR
-    // column below — the apiary owner's number — stays here.
-    return $build;
   }
 
   /**

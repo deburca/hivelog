@@ -8,6 +8,10 @@ use Drupal\Core\Entity\EntityInterface;
 
 /**
  * Provides a list builder for Hive Action Log entities.
+ *
+ * No context-free add route exists for HiveActionLog (always added from
+ * a hive + calendar action context), so the collection page has no
+ * heading action — see AGENTS.md "Routing, controllers and forms".
  */
 class HiveActionLogListBuilder extends HivelogListBuilder {
 
@@ -20,7 +24,7 @@ class HiveActionLogListBuilder extends HivelogListBuilder {
     $header['year'] = $this->t('Year');
     $header['status'] = $this->t('Status');
     $header['week_completed'] = $this->t('Week Completed');
-    return $header + parent::buildHeader();
+    return $header;
   }
 
   /**
@@ -37,8 +41,8 @@ class HiveActionLogListBuilder extends HivelogListBuilder {
     // (there is no other natural "primary" text field to hang the link
     // off); the hive column separately links to the hive itself, mirroring
     // QueenObservationListBuilder's date/queen split.
-    $row['hive'] = $hive ? $hive->toLink() : '';
-    $row['calendar_action'] = $entity->toLink($calendar_action ? $calendar_action->label() : $this->t('Unknown action'));
+    $row['hive'] = $hive ? $hive->toLink()->toString() : '';
+    $row['calendar_action'] = $entity->toLink($calendar_action ? $calendar_action->label() : $this->t('Unknown action'))->toString();
 
     $row['year'] = (string) $entity->get('year')->value;
 
@@ -52,7 +56,7 @@ class HiveActionLogListBuilder extends HivelogListBuilder {
       ? (string) $week_completed
       : '';
 
-    return $row + parent::buildRow($entity);
+    return $row;
   }
 
 }

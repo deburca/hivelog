@@ -5,12 +5,8 @@ declare(strict_types=1);
 namespace Drupal\nanoprobe;
 
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\EntityStorageInterface;
-use Drupal\Core\Entity\EntityTypeInterface;
-use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Url;
 use Drupal\hivelog\HivelogListBuilder;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a list builder for Sensor Device entities.
@@ -19,37 +15,11 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * `hivelog:entity-table` SDC component, its own "Add" heading) — reusing
  * core's `HivelogListBuilder` base class, since `nanoprobe` depends on
  * `hivelog`. Per-row `access('view')` filtering (SensorDevice is
- * apiary-scoped and multi-tenant) now lives in `HivelogListBuilder::
- * load()`, the way `SensorPanelBuilder::loadAccessibleDevices()` already
- * filters elsewhere.
+ * apiary-scoped and multi-tenant) lives in `HivelogListBuilder::load()`,
+ * the way `SensorPanelBuilder::loadAccessibleDevices()` already filters
+ * elsewhere.
  */
 class SensorDeviceListBuilder extends HivelogListBuilder {
-
-  /**
-   * The renderer.
-   */
-  protected RendererInterface $renderer;
-
-  /**
-   * Constructs a new SensorDeviceListBuilder.
-   */
-  public function __construct(EntityTypeInterface $entity_type, EntityStorageInterface $storage, RendererInterface $renderer) {
-    parent::__construct($entity_type, $storage);
-    $this->renderer = $renderer;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type) {
-    $instance = new static(
-      $entity_type,
-      $container->get('entity_type.manager')->getStorage($entity_type->id()),
-      $container->get('renderer'),
-    );
-    $instance->currentUser = $container->get('current_user');
-    return $instance;
-  }
 
   /**
    * {@inheritdoc}
@@ -61,7 +31,7 @@ class SensorDeviceListBuilder extends HivelogListBuilder {
     $header['device_type'] = $this->t('Device Type');
     $header['enabled'] = $this->t('Enabled');
     $header['last_seen'] = $this->t('Last Seen');
-    return $header + parent::buildHeader();
+    return $header;
   }
 
   /**
@@ -88,75 +58,20 @@ class SensorDeviceListBuilder extends HivelogListBuilder {
     $last_seen = $entity->get('last_seen')->value;
     $row['last_seen'] = $last_seen ? $this->dateFormatter()->format((int) $last_seen) : $this->t('Never');
 
-    $row['operations']['data'] = $this->buildOperations($entity);
-
     return $row;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function render() {
-    $headers = array_map('strval', array_values($this->buildHeader()));
-    $rows = [];
-    foreach ($this->load() as $entity) {
-      $row = $this->buildRow($entity);
-      if (!$row) {
-        continue;
-      }
-      $ops = $row['operations']['data'] ?? [];
-      $ops_html = !empty($ops) ? $this->renderer->renderInIsolation($ops) : '';
-
-      $rows[] = [
-        'cells' => [
-          $row['label'],
-          $row['location'],
-          $row['scope'],
-          $row['device_type'],
-          $row['enabled'],
-          $row['last_seen'],
-          $ops_html,
-        ],
-      ];
-    }
-
-    $build['heading'] = [
-      '#type' => 'container',
-      '#attributes' => ['class' => ['hivelog-list-heading']],
-      '#weight' => -90,
-      'actions' => [
-        '#type' => 'container',
-        '#attributes' => ['class' => ['hivelog-list-heading__action']],
-        'add' => [
-          '#type' => 'component',
-          '#component' => 'hivelog:button',
-          '#props' => [
-            'label' => (string) $this->t('Add Sensor Device'),
-            'url' => Url::fromRoute('entity.sensor_device.add_form')->toString(),
-            'variant' => 'primary',
-          ],
-        ],
-      ],
-      '#attached' => ['library' => ['hivelog/buttons']],
-    ];
-
-    $build['table'] = [
-      '#type' => 'component',
-      '#component' => 'hivelog:entity-table',
-      '#props' => [
-        'headers' => $headers,
-        'rows' => $rows,
-        'empty_message' => (string) $this->t('There are no @label yet.', [
-          '@label' => $this->entityType->getPluralLabel(),
-        ]),
-      ],
-      '#cache' => [
-        'contexts' => $this->entityType->getListCacheContexts(),
-        'tags' => $this->entityType->getListCacheTags(),
+  protected function getHeadingActions(): array {
+    return [
+      [
+        'label' => (string) $this->t('Add Sensor Device'),
+        'url' => Url::fromRoute('entity.sensor_device.add_form')->toString(),
+        'variant' => 'primary',
       ],
     ];
-
-    return $build;
   }
 
   /**

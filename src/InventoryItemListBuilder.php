@@ -5,11 +5,7 @@ declare(strict_types=1);
 namespace Drupal\hivelog;
 
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\EntityStorageInterface;
-use Drupal\Core\Entity\EntityTypeInterface;
-use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Url;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a list builder for Inventory Item entities.
@@ -25,32 +21,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class InventoryItemListBuilder extends HivelogListBuilder {
 
   /**
-   * The renderer.
-   */
-  protected RendererInterface $renderer;
-
-  /**
-   * Constructs a new InventoryItemListBuilder.
-   */
-  public function __construct(EntityTypeInterface $entity_type, EntityStorageInterface $storage, RendererInterface $renderer) {
-    parent::__construct($entity_type, $storage);
-    $this->renderer = $renderer;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type) {
-    $instance = new static(
-      $entity_type,
-      $container->get('entity_type.manager')->getStorage($entity_type->id()),
-      $container->get('renderer'),
-    );
-    $instance->currentUser = $container->get('current_user');
-    return $instance;
-  }
-
-  /**
    * {@inheritdoc}
    */
   public function buildHeader() {
@@ -61,14 +31,11 @@ class InventoryItemListBuilder extends HivelogListBuilder {
     $header['item_type'] = $this->t('Type');
     $header['stock'] = $this->t('Stock on Hand');
     $header['status'] = $this->t('Status');
-    return $header + parent::buildHeader();
+    return $header;
   }
 
   /**
    * {@inheritdoc}
-   *
-   * Builds operations as plain button links instead of the default
-   * dropbutton widget, matching every other list on the module.
    */
   public function buildRow(EntityInterface $entity) {
     $row['name'] = $entity->toLink()->toString();
@@ -93,84 +60,28 @@ class InventoryItemListBuilder extends HivelogListBuilder {
     $status = $entity->get('status')->value;
     $row['status'] = $entity->get('status')->getSetting('allowed_values')[$status] ?? $status;
 
-    $row['operations']['data'] = $this->buildOperations($entity);
-
     return $row;
   }
 
   /**
    * {@inheritdoc}
+   *
+   * "Add Inventory Item" plus a cross-link to Purchases — a real
+   * workflow shortcut (recording a purchase is the very next step after
+   * cataloguing an item), kept per task 0126's heading cross-link review.
    */
-  public function render() {
-    $headers = array_map('strval', array_values($this->buildHeader()));
-    $rows = [];
-    foreach ($this->load() as $entity) {
-      $row = $this->buildRow($entity);
-      if (!$row) {
-        continue;
-      }
-      $ops = $row['operations']['data'] ?? [];
-      $ops_html = !empty($ops) ? $this->renderer->renderInIsolation($ops) : '';
-
-      $rows[] = [
-        'cells' => [
-          $row['name'],
-          $row['apiary'] ?? '',
-          $row['category'] ?? '',
-          $row['unit'] ?? '',
-          $row['item_type'] ?? '',
-          $row['stock'] ?? '',
-          $row['status'] ?? '',
-          $ops_html,
-        ],
-      ];
-    }
-
-    $build['heading'] = [
-      '#type' => 'container',
-      '#attributes' => ['class' => ['hivelog-list-heading']],
-      '#weight' => -90,
-      'actions' => [
-        '#type' => 'container',
-        '#attributes' => ['class' => ['hivelog-list-heading__action']],
-        'buttons' => [
-          '#type' => 'component',
-          '#component' => 'hivelog:button-group',
-          '#props' => [
-            'buttons' => [
-              [
-                'label' => (string) $this->t('Add Inventory Item'),
-                'url' => Url::fromRoute('entity.inventory_item.add_form')->toString(),
-                'variant' => 'primary',
-              ],
-              [
-                'label' => (string) $this->t('View Purchases'),
-                'url' => Url::fromRoute('entity.inventory_purchase.collection')->toString(),
-              ],
-            ],
-          ],
-        ],
+  protected function getHeadingActions(): array {
+    return [
+      [
+        'label' => (string) $this->t('Add Inventory Item'),
+        'url' => Url::fromRoute('entity.inventory_item.add_form')->toString(),
+        'variant' => 'primary',
       ],
-      '#attached' => ['library' => ['hivelog/buttons']],
-    ];
-
-    $build['table'] = [
-      '#type' => 'component',
-      '#component' => 'hivelog:entity-table',
-      '#props' => [
-        'headers' => $headers,
-        'rows' => $rows,
-        'empty_message' => (string) $this->t('There are no @label yet.', [
-          '@label' => $this->entityType->getPluralLabel(),
-        ]),
-      ],
-      '#cache' => [
-        'contexts' => $this->entityType->getListCacheContexts(),
-        'tags' => $this->entityType->getListCacheTags(),
+      [
+        'label' => (string) $this->t('View Purchases'),
+        'url' => Url::fromRoute('entity.inventory_purchase.collection')->toString(),
       ],
     ];
-
-    return $build;
   }
 
 }

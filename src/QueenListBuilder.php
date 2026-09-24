@@ -3,11 +3,7 @@
 namespace Drupal\hivelog;
 
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\EntityStorageInterface;
-use Drupal\Core\Entity\EntityTypeInterface;
-use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Url;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a list builder for Queen entities.
@@ -15,32 +11,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * Columns follow issue #51: colour, hive, date of introduction.
  */
 class QueenListBuilder extends HivelogListBuilder {
-
-  /**
-   * The renderer.
-   */
-  protected RendererInterface $renderer;
-
-  /**
-   * Constructs a new QueenListBuilder.
-   */
-  public function __construct(EntityTypeInterface $entity_type, EntityStorageInterface $storage, RendererInterface $renderer) {
-    parent::__construct($entity_type, $storage);
-    $this->renderer = $renderer;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type) {
-    $instance = new static(
-      $entity_type,
-      $container->get('entity_type.manager')->getStorage($entity_type->id()),
-      $container->get('renderer'),
-    );
-    $instance->currentUser = $container->get('current_user');
-    return $instance;
-  }
 
   /**
    * {@inheritdoc}
@@ -51,15 +21,11 @@ class QueenListBuilder extends HivelogListBuilder {
     $header['hive'] = $this->t('Hive');
     $header['introduced'] = $this->t('Introduced');
     $header['status'] = $this->t('Status');
-    return $header + parent::buildHeader();
+    return $header;
   }
 
   /**
    * {@inheritdoc}
-   *
-   * Builds operations as plain button links instead of the default
-   * dropbutton widget, matching every other list on the module (see
-   * ApiaryListBuilder::buildRow()).
    */
   public function buildRow(EntityInterface $entity) {
     $row['name'] = $entity->toLink()->toString();
@@ -75,79 +41,24 @@ class QueenListBuilder extends HivelogListBuilder {
     $status = $entity->get('status')->value;
     $row['status'] = $entity->get('status')->getSetting('allowed_values')[$status] ?? $status;
 
-    $row['operations']['data'] = $this->buildOperations($entity);
-
     return $row;
   }
 
   /**
    * {@inheritdoc}
    *
-   * Builds the table using the hivelog:entity-table SDC component (rather
-   * than the inherited #type => 'table') and its own "Add Queen" heading,
-   * matching every other list page in the module — see
-   * ApiaryListBuilder::render(). The heading is self-built rather than
-   * relying on the core Local Actions block, since this page moved onto
-   * the site's front-end main menu where that block isn't guaranteed to
-   * be placed.
+   * Self-built rather than relying on the core Local Actions block, since
+   * this page moved onto the site's front-end main menu where that block
+   * isn't guaranteed to be placed.
    */
-  public function render() {
-    $headers = array_map('strval', array_values($this->buildHeader()));
-    $rows = [];
-    foreach ($this->load() as $entity) {
-      $row = $this->buildRow($entity);
-      if (!$row) {
-        continue;
-      }
-      $ops = $row['operations']['data'] ?? [];
-      $ops_html = !empty($ops) ? $this->renderer->renderInIsolation($ops) : '';
-
-      $rows[] = [
-        'cells' => [
-          $row['name'],
-          $row['colour'] ?? '',
-          $row['hive'] ?? '',
-          $row['introduced'] ?? '',
-          $row['status'] ?? '',
-          $ops_html,
-        ],
-      ];
-    }
-
-    $build['heading'] = [
-      '#type' => 'container',
-      '#attributes' => ['class' => ['hivelog-list-heading']],
-      '#weight' => -90,
-      'add' => [
-        '#type' => 'component',
-        '#component' => 'hivelog:button',
-        '#props' => [
-          'label' => (string) $this->t('Add Queen'),
-          'url' => Url::fromRoute('entity.queen.add_form')->toString(),
-          'variant' => 'primary',
-          'extra_classes' => 'hivelog-list-heading__action',
-        ],
-      ],
-      '#attached' => ['library' => ['hivelog/buttons']],
-    ];
-
-    $build['table'] = [
-      '#type' => 'component',
-      '#component' => 'hivelog:entity-table',
-      '#props' => [
-        'headers' => $headers,
-        'rows' => $rows,
-        'empty_message' => (string) $this->t('There are no @label yet.', [
-          '@label' => $this->entityType->getPluralLabel(),
-        ]),
-      ],
-      '#cache' => [
-        'contexts' => $this->entityType->getListCacheContexts(),
-        'tags' => $this->entityType->getListCacheTags(),
+  protected function getHeadingActions(): array {
+    return [
+      [
+        'label' => (string) $this->t('Add Queen'),
+        'url' => Url::fromRoute('entity.queen.add_form')->toString(),
+        'variant' => 'primary',
       ],
     ];
-
-    return $build;
   }
 
 }
