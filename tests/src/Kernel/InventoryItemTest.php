@@ -59,6 +59,10 @@ class InventoryItemTest extends KernelTestBase {
     $this->installEntitySchema('product');
     $this->installSchema('file', ['file_usage']);
 
+    // The first user is uid 1 (superuser), so list-builder access passes.
+    User::create(['name' => 'root', 'mail' => 'root@example.com'])->save();
+    \Drupal::currentUser()->setAccount(User::load(1));
+
     $this->apiary = Apiary::create(['name' => 'Test Apiary']);
     $this->apiary->save();
   }
@@ -366,15 +370,8 @@ class InventoryItemTest extends KernelTestBase {
    */
   public function testApiaryPageFlagsLowStockItem(): void {
     // ApiaryController::view() applies real access control to every row it
-    // renders. The default anonymous current user has no permissions, so a
-    // real user is needed here — created with no explicit role, relying on
-    // it becoming uid 1 (Drupal's hardcoded all-permissions bypass),
-    // matching ProductTest::testApiaryPageEmbedsProductsTable's identical
-    // pattern for the same reason.
-    $user = User::create(['name' => 'tester', 'mail' => 'tester@example.com']);
-    $user->save();
-    \Drupal::currentUser()->setAccount($user);
-
+    // renders. setUp() already made the current user uid 1 (Drupal's
+    // hardcoded all-permissions bypass), so no extra user is needed here.
     $low_item = InventoryItem::create([
       'apiary' => $this->apiary->id(),
       'name' => 'Low Sugar',

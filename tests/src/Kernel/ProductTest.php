@@ -63,6 +63,10 @@ class ProductTest extends KernelTestBase {
     $this->installEntitySchema('harvest_yield');
     $this->installSchema('file', ['file_usage']);
 
+    // The first user is uid 1 (superuser), so list-builder access passes.
+    User::create(['name' => 'root', 'mail' => 'root@example.com'])->save();
+    \Drupal::currentUser()->setAccount(User::load(1));
+
     $this->apiary = Apiary::create(['name' => 'Test Apiary']);
     $this->apiary->save();
   }
@@ -200,16 +204,8 @@ class ProductTest extends KernelTestBase {
    */
   public function testApiaryPageEmbedsProductsTable(): void {
     // ApiaryController::view() applies real access control to every row it
-    // renders, unlike this file's other tests (which operate on entities
-    // directly). The default anonymous current user has no permissions, so
-    // a real user is needed here — created with no explicit role, relying
-    // on it becoming uid 1 (Drupal's hardcoded all-permissions bypass),
-    // matching EmbeddedTableFilterPaginationTest/ApiaryCalendarChecklistTest's
-    // identical pattern for the same reason.
-    $user = User::create(['name' => 'tester', 'mail' => 'tester@example.com']);
-    $user->save();
-    \Drupal::currentUser()->setAccount($user);
-
+    // renders. setUp() already made the current user uid 1 (Drupal's
+    // hardcoded all-permissions bypass), so no extra user is needed here.
     Product::create([
       'apiary' => $this->apiary->id(),
       'name' => 'Propolis Tincture',

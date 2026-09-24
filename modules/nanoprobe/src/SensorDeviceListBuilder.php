@@ -8,7 +8,6 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Render\RendererInterface;
-use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
 use Drupal\hivelog\HivelogListBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -16,17 +15,13 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * Provides a list builder for Sensor Device entities.
  *
- * Mostly mirrors `\Drupal\collective\ApiClientListBuilder`'s shape (the
+ * Mirrors `\Drupal\collective\ApiClientListBuilder`'s shape (the
  * `hivelog:entity-table` SDC component, its own "Add" heading) — reusing
  * core's `HivelogListBuilder` base class, since `nanoprobe` depends on
- * `hivelog`. One deliberate difference: `load()` is overridden to filter
- * by per-entity `access('view')`, the way `SensorPanelBuilder::
- * loadAccessibleDevices()` already does. `ApiClient`/`AiProviderConfig`
- * never needed this — their "own" access is a flat owner check on a
- * handful of site-level rows — but `SensorDevice` access is genuinely
- * apiary-scoped and multi-tenant, and `EntityListBuilder::load()`'s
- * default `accessCheck(TRUE)` on the query doesn't actually filter rows
- * for an entity type with no `query_access` handler.
+ * `hivelog`. Per-row `access('view')` filtering (SensorDevice is
+ * apiary-scoped and multi-tenant) now lives in `HivelogListBuilder::
+ * load()`, the way `SensorPanelBuilder::loadAccessibleDevices()` already
+ * filters elsewhere.
  */
 class SensorDeviceListBuilder extends HivelogListBuilder {
 
@@ -36,37 +31,24 @@ class SensorDeviceListBuilder extends HivelogListBuilder {
   protected RendererInterface $renderer;
 
   /**
-   * The current user.
-   */
-  protected AccountInterface $currentUser;
-
-  /**
    * Constructs a new SensorDeviceListBuilder.
    */
-  public function __construct(EntityTypeInterface $entity_type, EntityStorageInterface $storage, RendererInterface $renderer, AccountInterface $current_user) {
+  public function __construct(EntityTypeInterface $entity_type, EntityStorageInterface $storage, RendererInterface $renderer) {
     parent::__construct($entity_type, $storage);
     $this->renderer = $renderer;
-    $this->currentUser = $current_user;
   }
 
   /**
    * {@inheritdoc}
    */
   public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type) {
-    return new static(
+    $instance = new static(
       $entity_type,
       $container->get('entity_type.manager')->getStorage($entity_type->id()),
       $container->get('renderer'),
-      $container->get('current_user'),
     );
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function load() {
-    $entities = parent::load();
-    return array_filter($entities, fn(EntityInterface $entity) => $entity->access('view', $this->currentUser));
+    $instance->currentUser = $container->get('current_user');
+    return $instance;
   }
 
   /**

@@ -8,6 +8,7 @@ use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\InventoryItem;
 use Drupal\hivelog\Entity\InventoryPurchase;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\user\Entity\User;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
@@ -59,6 +60,10 @@ class InventoryPurchaseTest extends KernelTestBase {
     $this->installEntitySchema('inventory_item');
     $this->installEntitySchema('inventory_purchase');
     $this->installSchema('file', ['file_usage']);
+
+    // The first user is uid 1 (superuser), so list-builder access passes.
+    User::create(['name' => 'root', 'mail' => 'root@example.com'])->save();
+    \Drupal::currentUser()->setAccount(User::load(1));
 
     $this->apiary = Apiary::create(['name' => 'Test Apiary']);
     $this->apiary->save();

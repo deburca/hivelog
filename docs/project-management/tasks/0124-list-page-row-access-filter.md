@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: todo
+status: review
 priority: high
 project: "[[page-structure-consistency]]"
 area: entity
@@ -56,24 +56,24 @@ Affected builders (12): `ApiaryListBuilder`, `HiveListBuilder`,
 (collective), `AiProviderConfigListBuilder` (nexus).
 
 ## Acceptance criteria
-- [ ] `HivelogListBuilder::load()` filters loaded entities by
+- [x] `HivelogListBuilder::load()` filters loaded entities by
       `access('view')` for the current user. The per-class override in
       `SensorDeviceListBuilder` is removed as redundant, and its
       docblock rationale moved to the base class.
-- [ ] Every affected builder inherits it. None overrides `load()`
+- [x] Every affected builder inherits it. None overrides `load()`
       without calling the parent.
-- [ ] New kernel test (one data-provider-driven class is fine): for each
+- [x] New kernel test (one data-provider-driven class is fine): for each
       of the 12 entity types, a second user with only the `view own …`
       permission does **not** see the first user's row in `load()` or in
       the rendered `render()` output. The owner, and a user with
       `view any …` / `administer hivelog`, still do. Apiary-descended
       types also cover a **beekeeper member** of the apiary seeing the
       row (membership, not just ownership).
-- [ ] Collective / nexus: the same test for `ApiClient` /
+- [x] Collective / nexus: the same test for `ApiClient` /
       `AiProviderConfig`, placed in each submodule's own
       `tests/src/Kernel/`.
-- [ ] Verified live on `cms2` with a non-admin test user.
-- [ ] phpcs clean; kernel + unit suite green against `cms2`.
+- [x] Verified live on `cms2` with a non-admin test user.
+- [x] phpcs clean; kernel + unit suite green against `cms2`.
 - [ ] Release: this is a security-relevant fix. Ship it in its own patch
       release rather than bundled with the refactors in this project,
       and say so in the release note.
