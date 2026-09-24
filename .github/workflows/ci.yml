@@ -62,13 +62,12 @@ jobs:
 
       - name: phpcs — Drupal coding standards
         run: |
-          # modules/ picks up every submodule (nanoprobe, and later
-          # collective/locutus) recursively — see ADR-0098 §7: without
-          # this, a submodule's code ships with zero lint coverage.
-          phpcs --standard=Drupal,DrupalPractice \
-            --extensions=php,module,install,inc,profile,theme \
-            --warning-severity=0 \
-            src/ tests/ hivelog.module hivelog.install modules/
+          # No path/extension/standard arguments (task 0137) — phpcs
+          # reads phpcs.xml.dist, the same config `composer lint` reads
+          # locally, so the two can't drift again. modules/ is in that
+          # config's own <file> list, picking up every submodule
+          # (nanoprobe, collective, nexus) recursively — see ADR-0098 §7.
+          phpcs --warning-severity=0
 
       - name: phpstan — static analysis
         # phpstan requires drupal/core to be present in the same vendor tree —
@@ -217,27 +216,28 @@ jobs:
       - name: phpstan — static analysis (PHP 8.3 only, in project context)
         # Run phpstan only once (PHP 8.3) — static analysis is not
         # PHP-version-sensitive. Drupal core is available in vendor/ but
-        # bare phpstan level 2 still produces Drupal-specific false positives
-        # (new static(), EntityInterface::get(), etc.) without the mglaman
-        # extension. Marked continue-on-error until a clean phpstan config is
-        # established; phpcs and PHPUnit remain the hard gates.
+        # bare phpstan level 2 still produces Drupal-specific false
+        # positives (new static(), EntityInterface::get(), etc.)
+        # without the mglaman extension — the module's own
+        # phpstan-baseline.neon (task 0137) absorbs those 440
+        # pre-existing findings, so this is now a hard gate: it fails
+        # only on a *new* finding, baselined or not.
         if: matrix.php-version == '8.3'
-        continue-on-error: true
         working-directory: drupal-project
         run: |
           MODULE_PATH=$(find web/modules -maxdepth 3 -name "hivelog.info.yml" | head -1 | xargs dirname)
           echo "Running phpstan on: $MODULE_PATH"
-          # Run bare phpstan at level 2. The mglaman/phpstan-drupal extension
-          # causes "file included multiple times" errors in the full Drupal
-          # project context (core-dev also ships phpstan-deprecation-rules).
-          # Level 2 type analysis is sufficient to catch real regressions.
-          # modules/ picks up every submodule (nanoprobe, and later
-          # collective/locutus) — see ADR-0098 §7.
+          # -c reads the module's own phpstan.neon, which sets level 2,
+          # the src/tests/modules paths (modules/ picks up every
+          # submodule — nanoprobe, collective, nexus, assimilate — see
+          # ADR-0098 §7) and includes phpstan-baseline.neon. The
+          # mglaman/phpstan-drupal extension is deliberately NOT in that
+          # config — it causes "file included multiple times" errors in
+          # this full Drupal project context (core-dev also ships
+          # phpstan-deprecation-rules) — so this is the same bare,
+          # extension-free analysis the baseline was generated against.
           vendor/bin/phpstan analyse \
-            "$MODULE_PATH/src" \
-            "$MODULE_PATH/tests" \
-            "$MODULE_PATH/modules" \
-            --level=2 \
+            -c "$MODULE_PATH/phpstan.neon" \
             --no-progress \
             --memory-limit=512M \
             --error-format=github
@@ -251,8 +251,15 @@ jobs:
           MINK_DRIVER_ARGS_WEBDRIVER: '["chrome", {"browserName":"chrome","goog:chromeOptions":{"args":["--disable-gpu","--headless","--no-sandbox","--disable-dev-shm-usage"]}}, "http://localhost:9515"]'
         run: |
           MODULE_PATH=$(find web/modules -maxdepth 3 -name "hivelog.info.yml" | head -1 | xargs dirname)
+          # Discover Functional test directories in hivelog core AND
+          # every submodule, the same way the Kernel/Unit step above
+          # does — see ADR-0098 §7: a fixed path here would silently
+          # skip a submodule's own functional tests (task 0137; none
+          # exist yet, but a fixed path would still miss the first one).
+          FUNCTIONAL_PATHS=$(find "$MODULE_PATH" -type d -path '*/tests/src/Functional')
+          echo "Functional test dirs: $FUNCTIONAL_PATHS"
           vendor/bin/phpunit \
             -c web/core \
-            "$MODULE_PATH/tests/src/Functional" \
+            $FUNCTIONAL_PATHS \
             --group hivelog \
             --testdox

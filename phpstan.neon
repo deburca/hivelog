@@ -1,6 +1,40 @@
+includes:
+  # Pre-existing findings (440, all level-2 advisories phpstan produces
+  # without the mglaman/phpstan-drupal extension — Entity::get(), "new
+  # static()", RouteMatchInterface::method(), etc. — see CI's own
+  # comment on why that extension can't run inside a full Drupal
+  # project) as of task 0137, when phpstan first covered modules/ and
+  # became a hard gate. Ratchet only: fix findings as you touch that
+  # code, but a PR must not introduce a *new* one anywhere, baselined
+  # file or not. Regenerate with `phpstan analyse --generate-baseline`
+  # only to drop entries for code that's been fixed or removed — never
+  # to wave through a new failure.
+  - phpstan-baseline.neon
+
 parameters:
   level: 2
-  # Paths are relative to this file (module root).
+  # Paths are relative to this file (module root). modules/ picks up
+  # every submodule (nanoprobe, collective, nexus, assimilate) — task
+  # 0137: previously only `composer stan`'s own explicit CLI arguments
+  # covered them, so a bare `phpstan analyse` (reading only this file)
+  # silently skipped every submodule.
   paths:
     - src/
     - tests/
+    - modules/
+  # Both files call into contrib `ai` module classes (Drupal\ai\...) —
+  # a genuinely optional integration, guarded at runtime by
+  # moduleHandler()->moduleExists('ai') (see
+  # AiProviderConfigController::view()), never a real Composer
+  # dependency of this module. Whether phpstan can resolve
+  # Drupal\ai\AiProviderPluginManager depends entirely on whether the
+  # analysing site happens to have that contrib module installed — it
+  # was present in the environment phpstan-baseline.neon was generated
+  # against, absent in CI's bare drupal/recommended-project scaffold,
+  # producing a *different* error shape each time (task 0137: this is
+  # what broke CI's first run as a hard gate). Excluded outright rather
+  # than chasing whichever shape one more environment happens to
+  # produce.
+  excludePaths:
+    - modules/nexus/src/ProviderCaller/AiModuleProviderCaller.php
+    - modules/nexus/src/Controller/AiProviderConfigController.php

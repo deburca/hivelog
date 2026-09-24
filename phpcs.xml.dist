@@ -2,13 +2,23 @@
 <ruleset name="HiveLog">
   <description>Drupal coding standards for the HiveLog module.</description>
 
-  <!-- Files to check -->
+  <!-- Files to check. modules/ picks up every submodule (nanoprobe,
+       collective, nexus) recursively — task 0137: without this, a bare
+       `phpcs` (no path arguments) checked only core, and a submodule
+       change could pass locally and only fail in CI, which always
+       passed its own explicit path list. -->
   <file>src/</file>
   <file>tests/</file>
+  <file>modules/</file>
 
   <!-- Module root PHP files -->
   <file>hivelog.module</file>
   <file>hivelog.install</file>
+
+  <!-- Extensions to check — matches every file type a submodule's own
+       root ships (.module, .install) plus the wider set CI already
+       used (.inc, .profile, .theme), so the two can't drift again. -->
+  <arg name="extensions" value="php,module,install,inc,profile,theme"/>
 
   <!-- Standards -->
   <rule ref="Drupal"/>

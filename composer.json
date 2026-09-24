@@ -37,8 +37,8 @@
         "phpstan/phpstan-deprecation-rules": "^1.0"
     },
     "scripts": {
-        "lint": "phpcs --standard=Drupal,DrupalPractice --extensions=php,module,install src/ tests/ hivelog.module hivelog.install modules/",
-        "stan": "phpstan analyse src/ tests/ modules/ --level=2 --configuration=phpstan.neon"
+        "lint": "phpcs",
+        "stan": "phpstan analyse --configuration=phpstan.neon"
     },
     "minimum-stability": "dev",
     "prefer-stable": true

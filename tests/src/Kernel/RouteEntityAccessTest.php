@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\hivelog\Kernel;
 
+use Drupal\Core\Session\AnonymousUserSession;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\ApiaryActionLog;
 use Drupal\hivelog\Entity\CalendarAction;
@@ -394,6 +395,34 @@ class RouteEntityAccessTest extends KernelTestBase {
       $this->assertTrue(
         $access_manager->checkNamedRoute($name, $route_params, $this->admin),
         "administer hivelog must be allowed on route '$name'."
+      );
+    }
+  }
+
+  /**
+   * Tests a truly anonymous account (no roles, no permissions) is denied.
+   *
+   * Ported from `PermissionMatrixTest::testAnonymousHasNoAccess()`
+   * (task 0137) — that functional test's assertion is advisory-only in
+   * CI, so the same claim needed a kernel-test copy in the hard gate.
+   * Unlike `$this->outsider` (holds every "own" permission, just no
+   * relationship to the fixture — the IDOR case this class otherwise
+   * tests), a real `AnonymousUserSession` has no permissions at all, so
+   * every route — not just entity-parameterized ones — must deny it.
+   */
+  public function testAnonymousDeniedOnEveryRoute(): void {
+    $anonymous = new AnonymousUserSession();
+    $access_manager = \Drupal::service('access_manager');
+
+    foreach ($this->hivelogRoutes() as $name => $route) {
+      $route_params = [];
+      foreach ($this->entityParameterNames($route) as $param_name) {
+        $route_params[$param_name] = $this->fixtures[$param_name]->id();
+      }
+
+      $this->assertFalse(
+        $access_manager->checkNamedRoute($name, $route_params, $anonymous),
+        "Anonymous must be denied on route '$name'."
       );
     }
   }
