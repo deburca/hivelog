@@ -59,7 +59,7 @@ class HivelogDeleteDependencyExecutor {
           break;
 
         case HivelogDeleteDependencyRegistry::DETACH:
-          // Populated by task 0143.
+          $this->detach($entity, $row);
           break;
       }
     }
@@ -96,6 +96,78 @@ class HivelogDeleteDependencyExecutor {
         break;
       }
       $storage->delete($storage->loadMultiple($ids));
+    }
+  }
+
+  /**
+   * Clears every one of `$row`'s children's reference to `$entity` (0143).
+   *
+   * Unlike `cascade()`, children are kept — each is loaded, its
+   * reference field cleared, any row-specific side effect applied
+   * (`applyDetachSideEffects()`), and saved back through the entity API
+   * (never a raw query) so derived logic runs: `Queen::preSave()`'s
+   * queen-colour/one-active-queen logic, and `SensorDevice::preSave()`'s
+   * scope/hive invariant. Chunked the same way `cascade()` is: clearing
+   * the field removes each child from the next iteration's query, so
+   * the loop shrinks and terminates exactly like a delete would.
+   */
+  protected function detach(EntityInterface $entity, array $row): void {
+    if (!$this->installedSchemaRepository->getLastInstalledDefinition($row['child'])) {
+      return;
+    }
+
+    $storage = $this->entityTypeManager->getStorage($row['child']);
+    while (TRUE) {
+      $ids = $storage->getQuery()
+        ->accessCheck(FALSE)
+        ->condition($row['field'], $entity->id())
+        ->range(0, self::CHUNK_SIZE)
+        ->execute();
+      if (!$ids) {
+        break;
+      }
+      foreach ($storage->loadMultiple($ids) as $child) {
+        // Every registered row's child is a hivelog/submodule content
+        // entity, always FieldableEntityInterface — EntityInterface
+        // itself doesn't declare set().
+        // @phpstan-ignore-next-line
+        $child->set($row['field'], NULL);
+        $this->applyDetachSideEffects($child, $row);
+        $child->save();
+      }
+    }
+  }
+
+  /**
+   * Row-specific field changes a DETACH needs beyond clearing the reference.
+   *
+   * ADR-0103 #11 (Hive → Queen): a queen detached from its hive is no
+   * longer "the" active queen of anything, so it's set `inactive` in
+   * the same save that clears `hive` — avoids a transient "active queen
+   * with no hive" state that would otherwise exist between two separate
+   * saves, and `Queen::preSave()`'s one-active-queen-per-hive query only
+   * ever runs when `status === 'active'`, so setting both together
+   * before `save()` skips it correctly rather than tripping it.
+   *
+   * ADR-0103 #12 (Hive → SensorDevice, registered by nanoprobe): a
+   * hive-scoped device requires a non-empty `hive`
+   * (`SensorDevice::preSave()`'s own invariant) — clearing it without
+   * also flipping `scope` to `apiary` would throw on save. Matches the
+   * ADR's own stated outcome ("device becomes apiary-scoped"); see this
+   * task's own Implementation notes for the caveat that not every
+   * `device_type` genuinely suits an apiary-wide scope.
+   */
+  protected function applyDetachSideEffects(EntityInterface $child, array $row): void {
+    switch ($row['adr_row']) {
+      case '11':
+        // @phpstan-ignore-next-line
+        $child->set('status', 'inactive');
+        break;
+
+      case '12':
+        // @phpstan-ignore-next-line
+        $child->set('scope', 'apiary');
+        break;
     }
   }
 

@@ -371,6 +371,10 @@ class HivelogDeleteDependencyFrameworkTest extends KernelTestBase {
 
   /**
    * DETACH section: "Will be kept but unlinked", Delete stays.
+   *
+   * Also checks the row's specific consequence parenthetical (task
+   * 0143) renders — "1 queen (they will become unassigned and
+   * inactive)" — not just that the section exists.
    */
   public function testDeleteFormShowsDetachSection(): void {
     $hive = Hive::create(['name' => 'Detach Test Hive', 'apiary' => $this->apiary->id(), 'status' => 'active']);
@@ -380,6 +384,9 @@ class HivelogDeleteDependencyFrameworkTest extends KernelTestBase {
     $build = \Drupal::service('entity.form_builder')->getForm($hive, 'delete');
     $this->assertArrayHasKey('detach', $build['hivelog_delete_dependencies']);
     $this->assertArrayHasKey('submit', $build['actions']);
+
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build['hivelog_delete_dependencies']['detach']);
+    $this->assertStringContainsString('they will become unassigned and inactive', $html);
   }
 
 }

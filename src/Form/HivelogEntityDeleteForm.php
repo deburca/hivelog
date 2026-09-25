@@ -8,6 +8,7 @@ use Drupal\Core\Entity\ContentEntityDeleteForm;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\hivelog\Delete\HivelogDeleteDependencyCounter;
 use Drupal\hivelog\Delete\HivelogDeleteDependencyRegistry;
@@ -190,7 +191,9 @@ class HivelogEntityDeleteForm extends ContentEntityDeleteForm {
    * The render array for a single counted row.
    *
    * The count, with a link when the current user may access it and the
-   * row names one.
+   * row names one, plus — for a DETACH row — a short parenthetical
+   * naming the specific consequence (task 0143), e.g. "2 queens (they
+   * will become unassigned and inactive)".
    */
   protected function buildRowItem(array $row): array {
     $entity_type = $this->entityTypeManager->getDefinition($row['child']);
@@ -210,11 +213,34 @@ class HivelogEntityDeleteForm extends ContentEntityDeleteForm {
       );
     }
 
+    if ($row['treatment'] === HivelogDeleteDependencyRegistry::DETACH) {
+      $note = $this->detachConsequenceNote($row);
+      if ($note) {
+        $text = $this->t('@text (@note)', ['@text' => $text, '@note' => $note]);
+      }
+    }
+
     $url = HivelogDeleteDependencyRegistry::manageUrl($row, $this->getEntity());
     if ($url && $url->access()) {
       return ['#markup' => Link::fromTextAndUrl($text, $url)->toString()];
     }
     return ['#markup' => $text];
+  }
+
+  /**
+   * The specific consequence a DETACH row's children face (task 0143).
+   *
+   * A literal `match()` rather than a variable-keyed array, per Drupal
+   * coding standards (translated strings must be statically
+   * extractable) — matches `HivelogBreadcrumbBuilder::terminalCrumbLabel()`'s
+   * own established pattern for the same reason.
+   */
+  protected function detachConsequenceNote(array $row): ?TranslatableMarkup {
+    return match ($row['adr_row']) {
+      '11' => $this->t('they will become unassigned and inactive'),
+      '12' => $this->t('it will become apiary-scoped'),
+      default => NULL,
+    };
   }
 
   /**
