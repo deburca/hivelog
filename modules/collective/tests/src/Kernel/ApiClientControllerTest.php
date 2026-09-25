@@ -45,7 +45,13 @@ class ApiClientControllerTest extends KernelTestBase {
   protected ApiClient $client;
 
   /**
-   * The client's owner (has view + update access).
+   * The client's owner (has view-own + edit-any access).
+   *
+   * Update access has no "own" path since task 0135 removed `edit own
+   * api client` as dead config, so this fixture grants `edit any api
+   * client` to exercise the regenerate button's update-access branch —
+   * it happens to also be this client's owner, but that ownership plays
+   * no role in the update check itself anymore.
    */
   protected User $owner;
 
@@ -67,9 +73,14 @@ class ApiClientControllerTest extends KernelTestBase {
     $this->installEntitySchema('user');
     $this->installEntitySchema('api_client');
 
+    // Update has no "own" path since task 0135 removed `edit own api
+    // client` as dead config, so the owner fixture is granted `edit any
+    // api client` directly to exercise the regenerate button's
+    // update-access branch — happens to also own the fixture client,
+    // but that ownership plays no role in the update check anymore.
     $role = Role::create(['id' => 'client_owner', 'label' => 'Client owner']);
     $role->grantPermission('view own api client');
-    $role->grantPermission('edit own api client');
+    $role->grantPermission('edit any api client');
     $role->save();
 
     // "any" (not "own") — ApiClient's access model is pure ownership
@@ -79,12 +90,19 @@ class ApiClientControllerTest extends KernelTestBase {
     $view_only_role->grantPermission('view any api client');
     $view_only_role->save();
 
+    // Plain "view own" only — no edit — so denial in
+    // testViewDeniedForOutsider is purely about not owning the fixture
+    // client, not incidentally about lacking edit access too.
+    $outsider_role = Role::create(['id' => 'client_outsider', 'label' => 'Client outsider']);
+    $outsider_role->grantPermission('view own api client');
+    $outsider_role->save();
+
     $this->owner = User::create(['name' => 'owner', 'mail' => 'owner@example.com']);
     $this->owner->addRole('client_owner');
     $this->owner->save();
 
     $this->outsider = User::create(['name' => 'outsider', 'mail' => 'outsider@example.com']);
-    $this->outsider->addRole('client_owner');
+    $this->outsider->addRole('client_outsider');
     $this->outsider->save();
 
     $this->viewOnlyMember = User::create(['name' => 'view_only', 'mail' => 'view_only@example.com']);

@@ -5,6 +5,28 @@
  * Install, update and uninstall functions for the Collective module.
  */
 
+use Drupal\user\Entity\Role;
+
+/**
+ * Revokes `edit own`/`delete own api client` from every role (task 0135).
+ *
+ * Both permissions are removed from `collective.permissions.yml` in the
+ * same commit — with `ApiClient` create access staying
+ * `administer hivelog`-only, the entity's owner is always an admin
+ * already covered by `edit any`/`delete any api client`, so neither
+ * permission was ever reachable through the UI. `user_role_revoke_permissions()`
+ * is a no-op for a role that doesn't have the permission, so this is
+ * safe to run unconditionally against every role.
+ */
+function collective_update_10001(&$sandbox) {
+  $permissions = ['edit own api client', 'delete own api client'];
+  foreach (Role::loadMultiple() as $role) {
+    user_role_revoke_permissions($role->id(), $permissions);
+  }
+
+  return t('Revoked the removed edit own/delete own api client permissions from every role.');
+}
+
 /**
  * Implements hook_uninstall().
  *

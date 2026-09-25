@@ -19,15 +19,17 @@ use Symfony\Component\Routing\Route;
  * Tests every nanoprobe.routing.yml route with an entity parameter (0133).
  *
  * Mirrors `\Drupal\Tests\hivelog\Kernel\RouteEntityAccessTest`, scoped to
- * this submodule's own routing file. `entity.sensor_device.add_form` and
- * the two hive/apiary-contextual add routes are `administer hivelog`
- * only (no "add sensor device" permission exists at all), so they are
- * not IDOR-exploitable by an "own"-permission user the way the
- * own/any-gated routes are — `administer hivelog` bypasses every
- * per-entity check by design (see every *AccessControlHandler's first
- * line). They still carry `_entity_access` / `_entity_create_access` for
- * defense in depth, verified structurally below, but are excluded from
- * the functional outsider/owner loop for that reason.
+ * this submodule's own routing file. `entity.sensor_device.add_form` is
+ * `administer hivelog` only (no hive/apiary in the URL to scope against),
+ * so it stays excluded — see `EXEMPT_ROUTES`. The two hive/apiary-scoped
+ * add routes (`nanoprobe.sensor_device.add_for_hive`/`_apiary`) gained a
+ * non-admin `add sensor device` permission in task 0135; they are
+ * included in the functional outsider/owner loop below like every other
+ * own/any-gated route, and the owner/outsider fixtures both hold that
+ * permission at the role level so the loop actually exercises the
+ * `_entity_access: hive.update`/`apiary.update` scoping — an outsider
+ * with the bare permission but no access to this specific hive/apiary
+ * must still be denied.
  */
 #[Group('hivelog')]
 #[RunTestsInSeparateProcesses]
@@ -58,16 +60,6 @@ class RouteEntityAccessTest extends KernelTestBase {
     'nanoprobe.sensor_reading.ingest' => 'token-authenticated device endpoint, no Drupal session',
     'entity.sensor_device.collection' => 'collection page; row filtering is HivelogListBuilder::load() (task 0124)',
     'entity.sensor_device.add_form' => 'administer hivelog only, no parent context to check',
-  ];
-
-  /**
-   * Admin-gated routes excluded from the functional outsider/owner loop.
-   *
-   * @see class docblock
-   */
-  protected const ADMIN_ONLY_ENTITY_ROUTES = [
-    'nanoprobe.sensor_device.add_for_hive',
-    'nanoprobe.sensor_device.add_for_apiary',
   ];
 
   /**
@@ -115,6 +107,7 @@ class RouteEntityAccessTest extends KernelTestBase {
     $role->grantPermission('view own sensor device');
     $role->grantPermission('edit own sensor device');
     $role->grantPermission('delete own sensor device');
+    $role->grantPermission('add sensor device');
     $role->save();
 
     $this->owner = User::create(['name' => 'owner', 'mail' => 'owner@example.com']);
@@ -226,16 +219,11 @@ class RouteEntityAccessTest extends KernelTestBase {
 
   /**
    * Tests every own/any-gated entity route denies an unrelated user.
-   *
-   * Excludes the administer-hivelog-only add routes — see class docblock.
    */
   public function testOutsiderDeniedOwnerAndAdminAllowed(): void {
     $access_manager = \Drupal::service('access_manager');
 
     foreach ($this->hivelogRoutes() as $name => $route) {
-      if (in_array($name, self::ADMIN_ONLY_ENTITY_ROUTES, TRUE)) {
-        continue;
-      }
       $entity_params = $this->entityParameterNames($route);
       if (!$entity_params) {
         continue;
@@ -263,29 +251,52 @@ class RouteEntityAccessTest extends KernelTestBase {
   }
 
   /**
-   * Tests the admin-only add-for-hive/apiary routes admit an admin user.
+   * Tests a hive/apiary owner without `add sensor device` is still denied.
    *
-   * Sanity check only — these routes are administer-hivelog-gated, so
-   * they are not part of the IDOR surface the outsider/owner loop above
-   * probes (see class docblock).
+   * Complements the generic outsider/owner loop above, which only proves
+   * an outsider *with* the permission is denied by the hive/apiary
+   * scoping — this proves the permission itself is still required even
+   * for a user who genuinely owns the target hive/apiary.
    */
-  public function testAdminOnlyAddRoutesAdmitAdmin(): void {
+  public function testHiveOwnerWithoutPermissionDenied(): void {
     $access_manager = \Drupal::service('access_manager');
-    $this->assertTrue($access_manager->checkNamedRoute(
-      'nanoprobe.sensor_device.add_for_hive',
-      ['hive' => $this->fixtures['hive']->id()],
-      $this->admin
-    ));
-    $this->assertTrue($access_manager->checkNamedRoute(
-      'nanoprobe.sensor_device.add_for_apiary',
-      ['apiary' => $this->fixtures['apiary']->id()],
-      $this->admin
-    ));
+
+    $role = Role::create(['id' => 'no_add_permission', 'label' => 'No add permission']);
+    $role->grantPermission('edit own apiary');
+    $role->grantPermission('edit own hive');
+    $role->save();
+
+    $unprivileged_owner = User::create([
+      'name' => 'unprivileged_owner',
+      'mail' => 'unprivileged_owner@example.com',
+    ]);
+    $unprivileged_owner->addRole('no_add_permission');
+    $unprivileged_owner->save();
+
+    $apiary = Apiary::create([
+      'name' => 'Unprivileged Owner Apiary',
+      'uid' => $unprivileged_owner->id(),
+      'visibility' => 'private',
+    ]);
+    $apiary->save();
+    $hive = Hive::create([
+      'name' => 'Unprivileged Owner Hive',
+      'apiary' => $apiary->id(),
+      'status' => 'active',
+      'uid' => $unprivileged_owner->id(),
+    ]);
+    $hive->save();
+
     $this->assertFalse($access_manager->checkNamedRoute(
       'nanoprobe.sensor_device.add_for_hive',
-      ['hive' => $this->fixtures['hive']->id()],
-      $this->owner
-    ), 'Non-admin owner is still denied by the administer-hivelog permission gate.');
+      ['hive' => $hive->id()],
+      $unprivileged_owner
+    ), 'Owning the hive is not enough without the add sensor device permission.');
+    $this->assertFalse($access_manager->checkNamedRoute(
+      'nanoprobe.sensor_device.add_for_apiary',
+      ['apiary' => $apiary->id()],
+      $unprivileged_owner
+    ), 'Owning the apiary is not enough without the add sensor device permission.');
   }
 
 }

@@ -28,6 +28,12 @@ entity.sensor_device.collection:
   requirements:
     _permission: 'view own sensor device+view any sensor device+administer hivelog'
 
+# Deliberately still `administer hivelog` only (task 0135) — no
+# hive/apiary in this URL to scope `add sensor device` against, so
+# opening it up would let a beekeeper attach a device to any apiary at
+# all, not just their own. Mirrors Hive itself having no context-free
+# add route; the two contextual routes below are the intended path for
+# a beekeeper.
 entity.sensor_device.add_form:
   path: '/hivelog/sensor-device/add'
   defaults:
@@ -100,13 +106,17 @@ entity.sensor_device.delete_form:
 # doesn't have to set them by hand, mirroring
 # CalendarActionController::addForm()/QueenController::addForm()'s own
 # established pattern for adding a child entity from its parent's page.
+# `_permission` (task 0135) mirrors hivelog.hive.add's own shape exactly:
+# a coarse role gate here, `_entity_access` doing the actual apiary/hive
+# scoping (only an apiary member with edit access reaches this route at
+# all).
 nanoprobe.sensor_device.add_for_hive:
   path: '/hivelog/hive/{hive}/sensor-device/add'
   defaults:
     _controller: '\Drupal\nanoprobe\Controller\SensorDeviceController::addFormForHive'
     _title: 'Add Sensor Device'
   requirements:
-    _permission: 'administer hivelog'
+    _permission: 'add sensor device+administer hivelog'
     _entity_access: 'hive.update'
     _entity_create_access: 'sensor_device'
   options:
@@ -120,7 +130,7 @@ nanoprobe.sensor_device.add_for_apiary:
     _controller: '\Drupal\nanoprobe\Controller\SensorDeviceController::addFormForApiary'
     _title: 'Add Sensor Device'
   requirements:
-    _permission: 'administer hivelog'
+    _permission: 'add sensor device+administer hivelog'
     _entity_access: 'apiary.update'
     _entity_create_access: 'sensor_device'
   options:

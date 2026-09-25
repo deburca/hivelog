@@ -167,6 +167,11 @@ class AiProviderConfigTest extends KernelTestBase {
 
   /**
    * Tests ownership-based access — no apiary/hive dimension at all.
+   *
+   * Only `view` has an "own" permission (task 0135 removed `edit own`/
+   * `delete own ai provider config` as dead config — see
+   * `AiProviderConfigAccessControlHandler`'s own docblock). Update/delete
+   * are covered separately by {@see testUpdateDeleteRequireAnyPermission}.
    */
   public function testOwnershipBasedAccess(): void {
     // The first user created in a kernel test is uid 1, which bypasses
@@ -177,8 +182,6 @@ class AiProviderConfigTest extends KernelTestBase {
 
     $role = Role::create(['id' => 'config_manager', 'label' => 'Config Manager']);
     $role->grantPermission('view own ai provider config');
-    $role->grantPermission('edit own ai provider config');
-    $role->grantPermission('delete own ai provider config');
     $role->save();
 
     $owner = User::create(['name' => 'owner', 'mail' => 'owner@example.com']);
@@ -197,12 +200,49 @@ class AiProviderConfigTest extends KernelTestBase {
     $config->save();
 
     $this->assertTrue($config->access('view', $owner));
-    $this->assertTrue($config->access('update', $owner));
-    $this->assertTrue($config->access('delete', $owner));
-
     $this->assertFalse($config->access('view', $other));
-    $this->assertFalse($config->access('update', $other));
-    $this->assertFalse($config->access('delete', $other));
+  }
+
+  /**
+   * Tests update/delete are "any"-only — no "own" path exists (task 0135).
+   *
+   * With create staying `administer hivelog`-only, a config's owner is
+   * always an admin already covered by "any", so even the true owner
+   * cannot update/delete without the site-wide `edit any`/`delete any
+   * ai provider config` permission.
+   */
+  public function testUpdateDeleteRequireAnyPermission(): void {
+    User::create(['name' => 'uid1_throwaway', 'mail' => 'uid1@example.com'])->save();
+
+    $role = Role::create(['id' => 'config_manager', 'label' => 'Config Manager']);
+    $role->grantPermission('view own ai provider config');
+    $role->save();
+
+    $owner = User::create(['name' => 'owner', 'mail' => 'owner@example.com']);
+    $owner->addRole('config_manager');
+    $owner->save();
+
+    $config = AiProviderConfig::create([
+      'label' => 'Owned Config',
+      'mode' => 'ai_module',
+      'uid' => $owner->id(),
+    ]);
+    $config->save();
+
+    $this->assertFalse($config->access('update', $owner));
+    $this->assertFalse($config->access('delete', $owner));
+
+    $any_role = Role::create(['id' => 'config_admin', 'label' => 'Config Admin']);
+    $any_role->grantPermission('edit any ai provider config');
+    $any_role->grantPermission('delete any ai provider config');
+    $any_role->save();
+
+    $admin = User::create(['name' => 'admin', 'mail' => 'admin@example.com']);
+    $admin->addRole('config_admin');
+    $admin->save();
+
+    $this->assertTrue($config->access('update', $admin));
+    $this->assertTrue($config->access('delete', $admin));
   }
 
   /**

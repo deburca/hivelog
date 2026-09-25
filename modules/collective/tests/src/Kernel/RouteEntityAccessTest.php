@@ -55,7 +55,7 @@ class RouteEntityAccessTest extends KernelTestBase {
   ];
 
   /**
-   * The client owner.
+   * The client owner — holds only `view own api client` (task 0135).
    */
   protected User $owner;
 
@@ -63,6 +63,11 @@ class RouteEntityAccessTest extends KernelTestBase {
    * A user with the same "own" permissions but no relation to the fixture.
    */
   protected User $outsider;
+
+  /**
+   * A user with every "any" permission but no relation to the fixture.
+   */
+  protected User $anyUser;
 
   /**
    * An `administer hivelog` user.
@@ -89,10 +94,10 @@ class RouteEntityAccessTest extends KernelTestBase {
 
     User::create(['name' => 'uid1_throwaway', 'mail' => 'uid1@example.com'])->save();
 
+    // Only `view` has an "own" permission (task 0135 removed `edit own`/
+    // `delete own api client` as dead config).
     $role = Role::create(['id' => 'own_client', 'label' => 'Own client']);
     $role->grantPermission('view own api client');
-    $role->grantPermission('edit own api client');
-    $role->grantPermission('delete own api client');
     $role->save();
 
     $this->owner = User::create(['name' => 'owner', 'mail' => 'owner@example.com']);
@@ -102,6 +107,16 @@ class RouteEntityAccessTest extends KernelTestBase {
     $this->outsider = User::create(['name' => 'outsider', 'mail' => 'outsider@example.com']);
     $this->outsider->addRole('own_client');
     $this->outsider->save();
+
+    $any_role = Role::create(['id' => 'any_client', 'label' => 'Any client']);
+    $any_role->grantPermission('view any api client');
+    $any_role->grantPermission('edit any api client');
+    $any_role->grantPermission('delete any api client');
+    $any_role->save();
+
+    $this->anyUser = User::create(['name' => 'any_user', 'mail' => 'any_user@example.com']);
+    $this->anyUser->addRole('any_client');
+    $this->anyUser->save();
 
     $admin_role = Role::create(['id' => 'hivelog_admin', 'label' => 'Hivelog Admin']);
     $admin_role->grantPermission('administer hivelog');
@@ -182,9 +197,15 @@ class RouteEntityAccessTest extends KernelTestBase {
   }
 
   /**
-   * Tests every entity route denies an unrelated owner and allows the owner.
+   * Tests every entity route denies an outsider, admin/"any" are allowed.
+   *
+   * The owner fixture only holds `view own api client` (task 0135
+   * removed `edit own`/`delete own api client`), so it's allowed only
+   * on the `view` route and denied everywhere else, exactly like a true
+   * outsider — determined generically from each route's own
+   * `_entity_access` operation rather than hard-coding a route list.
    */
-  public function testOutsiderDeniedOwnerAndAdminAllowed(): void {
+  public function testOutsiderDeniedOwnerViewOnlyAnyAndAdminAllowed(): void {
     $access_manager = \Drupal::service('access_manager');
 
     foreach ($this->hivelogRoutes() as $name => $route) {
@@ -199,13 +220,21 @@ class RouteEntityAccessTest extends KernelTestBase {
         $route_params[$param_name] = $this->fixtures[$param_name]->id();
       }
 
+      $entity_access = $route->getRequirements()['_entity_access'] ?? '';
+      $owner_should_be_allowed = str_ends_with($entity_access, '.view');
+
       $this->assertFalse(
         $access_manager->checkNamedRoute($name, $route_params, $this->outsider),
         "Outsider (not the owner) must be denied on route '$name'."
       );
-      $this->assertTrue(
+      $this->assertSame(
+        $owner_should_be_allowed,
         $access_manager->checkNamedRoute($name, $route_params, $this->owner),
-        "Owner must be allowed on route '$name'."
+        "Owner must be " . ($owner_should_be_allowed ? 'allowed' : 'denied') . " on route '$name'."
+      );
+      $this->assertTrue(
+        $access_manager->checkNamedRoute($name, $route_params, $this->anyUser),
+        "A user with 'any' permissions must be allowed on route '$name'."
       );
       $this->assertTrue(
         $access_manager->checkNamedRoute($name, $route_params, $this->admin),

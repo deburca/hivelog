@@ -20,6 +20,9 @@ collective.api_client.context:
 # controller/forms. add_form is administer-hivelog-only — no "add api
 # client" permission exists at all (task 0089's own deliberate design: a
 # rare, high-trust credential, not something every beekeeper self-serves).
+# edit/delete/regenerate-token dropped their "own" clause (task 0135) —
+# `edit own`/`delete own api client` no longer exist; view keeps its "own"
+# clause since `view own api client` stays (see collective.permissions.yml).
 entity.api_client.collection:
   path: '/hivelog/api-clients'
   defaults:
@@ -55,7 +58,7 @@ entity.api_client.edit_form:
     _entity_form: 'api_client.edit'
     _title: 'Edit API Client'
   requirements:
-    _permission: 'edit own api client+edit any api client+administer hivelog'
+    _permission: 'edit any api client+administer hivelog'
     _entity_access: 'api_client.update'
   options:
     parameters:
@@ -68,7 +71,7 @@ entity.api_client.delete_form:
     _entity_form: 'api_client.delete'
     _title: 'Delete API Client'
   requirements:
-    _permission: 'delete own api client+delete any api client+administer hivelog'
+    _permission: 'delete any api client+administer hivelog'
     _entity_access: 'api_client.delete'
   options:
     parameters:
@@ -81,7 +84,7 @@ collective.api_client.regenerate_token:
     _form: '\Drupal\collective\Form\ApiClientRegenerateTokenForm'
     _title: 'Regenerate Token'
   requirements:
-    _permission: 'edit own api client+edit any api client+administer hivelog'
+    _permission: 'edit any api client+administer hivelog'
     _entity_access: 'api_client.update'
   options:
     parameters:

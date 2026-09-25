@@ -2,16 +2,17 @@
 # high-trust site-level credential, provisioned by an administrator
 # (administer hivelog), not something every beekeeper self-serves. The
 # `hive insight` permissions task 0089 defined here moved to `nexus`
-# alongside the `HiveInsight` entity itself (task 0102).
+# alongside the `HiveInsight` entity itself (task 0102). `edit own`/
+# `delete own api client` removed (task 0135) — with create
+# administrator-only, the entity's owner is always an admin already
+# covered by `any`, so "own" mutate/delete access was reachable by no
+# one; see ApiClientAccessControlHandler's own docblock for why `view
+# own` stays.
 view own api client:
   title: 'View own API clients'
 view any api client:
   title: 'View any API client'
-edit own api client:
-  title: 'Edit own API clients'
 edit any api client:
   title: 'Edit any API client'
-delete own api client:
-  title: 'Delete own API clients'
 delete any api client:
   title: 'Delete any API client'

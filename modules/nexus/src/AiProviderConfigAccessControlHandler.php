@@ -17,10 +17,13 @@ use Drupal\user\EntityOwnerInterface;
  * `AiProviderConfig` has no apiary/hive to resolve to (it's a site-level
  * credential reference, normally exactly one row). Access is a plain
  * ownership check instead, exactly mirroring
- * `\Drupal\collective\ApiClientAccessControlHandler`:
+ * `\Drupal\collective\ApiClientAccessControlHandler` (including its
+ * task 0135 update/delete narrowing — see that class's own docblock for
+ * the full reasoning):
  *
- * - view/update/delete: site-wide "any" OR ("own" permission AND the
- *   current user is the owner).
+ * - view: site-wide "any" OR ("own" permission AND the current user is
+ *   the owner).
+ * - update/delete: site-wide "any" only.
  * - create: `administer hivelog` only — no dedicated "add" permission
  *   exists at all; provisioning this rare, high-trust,
  *   billing-relevant credential reference is an administrator action,
@@ -38,8 +41,8 @@ class AiProviderConfigAccessControlHandler extends EntityAccessControlHandler {
 
     $permission_map = [
       'view' => ['any' => 'view any ai provider config', 'own' => 'view own ai provider config'],
-      'update' => ['any' => 'edit any ai provider config', 'own' => 'edit own ai provider config'],
-      'delete' => ['any' => 'delete any ai provider config', 'own' => 'delete own ai provider config'],
+      'update' => ['any' => 'edit any ai provider config'],
+      'delete' => ['any' => 'delete any ai provider config'],
     ];
     if (!isset($permission_map[$operation])) {
       return AccessResult::neutral();
@@ -51,7 +54,7 @@ class AiProviderConfigAccessControlHandler extends EntityAccessControlHandler {
 
     $is_owner = $entity instanceof EntityOwnerInterface
       && (int) $entity->getOwnerId() === (int) $account->id();
-    if ($is_owner && $account->hasPermission($permission_map[$operation]['own'])) {
+    if ($is_owner && isset($permission_map[$operation]['own']) && $account->hasPermission($permission_map[$operation]['own'])) {
       return AccessResult::allowed()
         ->cachePerPermissions()
         ->cachePerUser()

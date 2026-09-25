@@ -5,6 +5,9 @@
 # permission exists at all (task 0102's own deliberate design: a rare,
 # high-trust, billing-relevant credential reference, not something every
 # beekeeper self-serves).
+# edit/delete dropped their "own" clause (task 0135) — `edit own`/
+# `delete own ai provider config` no longer exist; view keeps its "own"
+# clause since `view own ai provider config` stays.
 entity.ai_provider_config.collection:
   path: '/hivelog/ai-provider-configs'
   defaults:
@@ -40,7 +43,7 @@ entity.ai_provider_config.edit_form:
     _entity_form: 'ai_provider_config.edit'
     _title: 'Edit AI Provider Config'
   requirements:
-    _permission: 'edit own ai provider config+edit any ai provider config+administer hivelog'
+    _permission: 'edit any ai provider config+administer hivelog'
     _entity_access: 'ai_provider_config.update'
   options:
     parameters:
@@ -53,7 +56,7 @@ entity.ai_provider_config.delete_form:
     _entity_form: 'ai_provider_config.delete'
     _title: 'Delete AI Provider Config'
   requirements:
-    _permission: 'delete own ai provider config+delete any ai provider config+administer hivelog'
+    _permission: 'delete any ai provider config+administer hivelog'
     _entity_access: 'ai_provider_config.delete'
   options:
     parameters:

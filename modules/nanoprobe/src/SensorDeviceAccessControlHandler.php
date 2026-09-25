@@ -18,11 +18,18 @@ use Drupal\hivelog\ApiaryAccessTrait;
  * - update: site-wide "any" OR apiary member (owner + beekeepers).
  * - delete: site-wide "any" OR apiary owner only (registered hardware is
  *   foundational apiary structure, mirroring CalendarAction/Hive).
- * - create: `administer hivelog` only, matching `ApiClient`/
- *   `AiProviderConfig`'s own "rare, high-trust, administrator-provisioned"
- *   reasoning — task 0106's resolution of the `add sensor device`
- *   permission that had sat unused since task 0076: rather than wire it
- *   in, it's removed as dead config (see nanoprobe.permissions.yml).
+ * - create: `add sensor device` OR `administer hivelog` — matches
+ *   `HiveAccessControlHandler::checkCreateAccess()`'s own shape exactly
+ *   (task 0135). The apiary/hive scoping this permission alone can't
+ *   express lives at the route level instead, the same way `add hive`'s
+ *   does: `nanoprobe.sensor_device.add_for_hive`/`_apiary` additionally
+ *   require `hive.update`/`apiary.update` on the target entity in the
+ *   URL. Task 0106 had removed this permission as dead config, matching
+ *   `ApiClient`/`AiProviderConfig`'s "rare, high-trust,
+ *   administrator-provisioned" reasoning — 0135 revisited that call for
+ *   hardware specifically, which (unlike an API credential or AI
+ *   provider integration) a beekeeper already manages day-to-day on
+ *   their own hive/apiary.
  */
 class SensorDeviceAccessControlHandler extends EntityAccessControlHandler {
 
@@ -56,7 +63,10 @@ class SensorDeviceAccessControlHandler extends EntityAccessControlHandler {
    * {@inheritdoc}
    */
   protected function checkCreateAccess(AccountInterface $account, array $context, $entity_bundle = NULL) {
-    return AccessResult::allowedIfHasPermission($account, 'administer hivelog');
+    return AccessResult::allowedIfHasPermissions($account, [
+      'administer hivelog',
+      'add sensor device',
+    ], 'OR');
   }
 
 }

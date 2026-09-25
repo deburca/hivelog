@@ -121,6 +121,11 @@ class ApiClientTest extends KernelTestBase {
 
   /**
    * Tests ownership-based access — no apiary/hive dimension at all.
+   *
+   * Only `view` has an "own" permission (task 0135 removed `edit own`/
+   * `delete own api client` as dead config — see
+   * `ApiClientAccessControlHandler`'s own docblock). Update/delete are
+   * covered separately by {@see testUpdateDeleteRequireAnyPermission}.
    */
   public function testOwnershipBasedAccess(): void {
     // The first user created in a kernel test is uid 1, which bypasses
@@ -131,8 +136,6 @@ class ApiClientTest extends KernelTestBase {
 
     $role = Role::create(['id' => 'client_manager', 'label' => 'Client Manager']);
     $role->grantPermission('view own api client');
-    $role->grantPermission('edit own api client');
-    $role->grantPermission('delete own api client');
     $role->save();
 
     $owner = User::create(['name' => 'owner', 'mail' => 'owner@example.com']);
@@ -147,15 +150,49 @@ class ApiClientTest extends KernelTestBase {
     $agent->save();
 
     $this->assertTrue($agent->access('view', $owner));
-    $this->assertTrue($agent->access('update', $owner));
-    $this->assertTrue($agent->access('delete', $owner));
 
-    // A different user with only "own" permissions cannot touch an
+    // A different user with only the "own" permission cannot view an
     // agent they don't own — no apiary-membership escape hatch exists
     // for this entity type, unlike every apiary-scoped one.
     $this->assertFalse($agent->access('view', $other));
-    $this->assertFalse($agent->access('update', $other));
-    $this->assertFalse($agent->access('delete', $other));
+  }
+
+  /**
+   * Tests update/delete are "any"-only — no "own" path exists (task 0135).
+   *
+   * With create staying `administer hivelog`-only, an agent's owner is
+   * always an admin already covered by "any", so even the true owner
+   * cannot update/delete without the site-wide `edit any`/`delete any
+   * api client` permission.
+   */
+  public function testUpdateDeleteRequireAnyPermission(): void {
+    User::create(['name' => 'uid1_throwaway', 'mail' => 'uid1@example.com'])->save();
+
+    $role = Role::create(['id' => 'client_manager', 'label' => 'Client Manager']);
+    $role->grantPermission('view own api client');
+    $role->save();
+
+    $owner = User::create(['name' => 'owner', 'mail' => 'owner@example.com']);
+    $owner->addRole('client_manager');
+    $owner->save();
+
+    $agent = ApiClient::create(['label' => 'Owned Agent', 'uid' => $owner->id()]);
+    $agent->save();
+
+    $this->assertFalse($agent->access('update', $owner));
+    $this->assertFalse($agent->access('delete', $owner));
+
+    $any_role = Role::create(['id' => 'client_admin', 'label' => 'Client Admin']);
+    $any_role->grantPermission('edit any api client');
+    $any_role->grantPermission('delete any api client');
+    $any_role->save();
+
+    $admin = User::create(['name' => 'admin', 'mail' => 'admin@example.com']);
+    $admin->addRole('client_admin');
+    $admin->save();
+
+    $this->assertTrue($agent->access('update', $admin));
+    $this->assertTrue($agent->access('delete', $admin));
   }
 
   /**
@@ -192,8 +229,8 @@ class ApiClientTest extends KernelTestBase {
 
     $role = Role::create(['id' => 'client_manager', 'label' => 'Client Manager']);
     $role->grantPermission('view own api client');
-    $role->grantPermission('edit own api client');
-    $role->grantPermission('delete own api client');
+    $role->grantPermission('edit any api client');
+    $role->grantPermission('delete any api client');
     $role->save();
 
     $user = User::create(['name' => 'user', 'mail' => 'user@example.com']);

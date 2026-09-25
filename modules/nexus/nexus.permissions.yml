@@ -14,16 +14,14 @@ delete any hive insight:
 # rare, high-trust, billing-relevant credential reference, provisioned
 # by an administrator (administer hivelog), not something every
 # beekeeper self-serves. Mirrors collective's `api client` permission
-# set exactly.
+# set exactly, including `edit own`/`delete own ai provider config`
+# having been removed (task 0135) — see ApiClientAccessControlHandler's
+# own docblock for the full reasoning.
 view own ai provider config:
   title: 'View own AI provider configs'
 view any ai provider config:
   title: 'View any AI provider config'
-edit own ai provider config:
-  title: 'Edit own AI provider configs'
 edit any ai provider config:
   title: 'Edit any AI provider config'
-delete own ai provider config:
-  title: 'Delete own AI provider configs'
 delete any ai provider config:
   title: 'Delete any AI provider config'

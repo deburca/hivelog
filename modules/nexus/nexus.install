@@ -5,6 +5,26 @@
  * Install, update and uninstall functions for the Nexus module.
  */
 
+use Drupal\user\Entity\Role;
+
+/**
+ * Revokes `edit own`/`delete own ai provider config` from every role.
+ *
+ * Task 0135 — mirrors `collective_update_10001()` exactly, for the same
+ * reason: with `AiProviderConfig` create access staying
+ * `administer hivelog`-only, the entity's owner is always an admin
+ * already covered by `edit any`/`delete any ai provider config`, so
+ * neither "own" permission was ever reachable through the UI.
+ */
+function nexus_update_10001(&$sandbox) {
+  $permissions = ['edit own ai provider config', 'delete own ai provider config'];
+  foreach (Role::loadMultiple() as $role) {
+    user_role_revoke_permissions($role->id(), $permissions);
+  }
+
+  return t('Revoked the removed edit own/delete own ai provider config permissions from every role.');
+}
+
 /**
  * Implements hook_uninstall().
  *
