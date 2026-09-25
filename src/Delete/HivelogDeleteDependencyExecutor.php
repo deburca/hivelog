@@ -126,15 +126,35 @@ class HivelogDeleteDependencyExecutor {
       if (!$ids) {
         break;
       }
-      foreach ($storage->loadMultiple($ids) as $child) {
-        // Every registered row's child is a hivelog/submodule content
-        // entity, always FieldableEntityInterface — EntityInterface
-        // itself doesn't declare set().
-        // @phpstan-ignore-next-line
-        $child->set($row['field'], NULL);
-        $this->applyDetachSideEffects($child, $row);
-        $child->save();
-      }
+      $this->detachChildren($ids, $row);
+    }
+  }
+
+  /**
+   * Clears `$row['field']` on each of `$ids`, side effects included.
+   *
+   * Extracted so `HivelogOrphanFixer` (task 0145) can apply a DETACH
+   * row's policy to an already-identified batch of orphans — entities
+   * whose reference is dangling because the parent is already gone,
+   * rather than ones found by querying a still-live parent's id — using
+   * the exact same per-child logic `detach()` uses for a live delete.
+   *
+   * @param array<int|string> $ids
+   *   The child entity IDs to detach, in `$row['child']`'s storage.
+   * @param array $row
+   *   The registry row (`HivelogDeleteDependencyRegistry::rows()`'s own
+   *   shape) whose `field`/`child` this batch belongs to.
+   */
+  public function detachChildren(array $ids, array $row): void {
+    $storage = $this->entityTypeManager->getStorage($row['child']);
+    foreach ($storage->loadMultiple($ids) as $child) {
+      // Every registered row's child is a hivelog/submodule content
+      // entity, always FieldableEntityInterface — EntityInterface
+      // itself doesn't declare set().
+      // @phpstan-ignore-next-line
+      $child->set($row['field'], NULL);
+      $this->applyDetachSideEffects($child, $row);
+      $child->save();
     }
   }
 

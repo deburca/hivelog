@@ -1,4 +1,8 @@
 services:
+  logger.channel.hivelog:
+    parent: logger.channel_base
+    arguments: ['hivelog']
+
   hivelog.breadcrumb:
     class: Drupal\hivelog\Breadcrumb\HivelogBreadcrumbBuilder
     arguments: ['@entity_type.manager']
@@ -20,3 +24,11 @@ services:
   hivelog.delete_dependency_executor:
     class: Drupal\hivelog\Delete\HivelogDeleteDependencyExecutor
     arguments: ['@entity_type.manager', '@entity.last_installed_schema.repository']
+
+  hivelog.orphan_finder:
+    class: Drupal\hivelog\Delete\HivelogOrphanFinder
+    arguments: ['@entity_type.manager', '@entity.last_installed_schema.repository']
+
+  hivelog.orphan_fixer:
+    class: Drupal\hivelog\Delete\HivelogOrphanFixer
+    arguments: ['@entity_type.manager', '@hivelog.orphan_finder', '@hivelog.delete_dependency_executor', '@logger.channel.hivelog']

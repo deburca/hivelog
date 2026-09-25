@@ -649,6 +649,32 @@ ddev drush cr
 - Confirm no pending updates remain: `drush updb --no`
 - Run the test suite (see Testing section below).
 
+## Maintenance
+
+### Orphaned references
+
+ADR-0103's BLOCK/CASCADE/DETACH delete policies stop *new* dangling
+references from being created, but a site can already have some from
+before that enforcement existed (or, for the two WARN-treated rows,
+from a site owner deliberately deleting something with history — see
+"Delete behaviour" below). `drush hivelog:orphans` finds and, on
+request, repairs them:
+
+```
+drush hivelog:orphans                # report only
+drush hivelog:orphans --details      # also list the offending entity IDs
+drush hivelog:orphans --fix --dry-run  # show what --fix would do
+drush hivelog:orphans --fix          # apply each row's own policy (asks to confirm)
+```
+
+`--fix` applies the same policy a live delete already would: BLOCK/CASCADE
+rows are deleted (cascading further through their own rows exactly as
+a normal delete does), DETACH rows have the dangling reference cleared,
+and WARN rows are always left untouched — that dangling reference is
+the result of a deliberate choice, not a bug to silently repair. Every
+change is logged to the `hivelog` watchdog channel. Nothing here runs
+automatically in an update hook; running it is the site owner's call.
+
 ## Extending the Module
 
 - **Add new hive types or materials** — Edit the `allowed_values` arrays in
