@@ -4,8 +4,11 @@ namespace Drupal\Tests\hivelog\Unit\Breadcrumb;
 
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\hivelog\Breadcrumb\HivelogBreadcrumbBuilder;
+use Drupal\hivelog\HivelogEntityHierarchy;
 use Drupal\Tests\UnitTestCase;
 use Symfony\Component\HttpFoundation\ParameterBag;
 use Symfony\Component\Routing\Route;
@@ -50,8 +53,57 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $container->set('cache_contexts_manager', $cache_contexts_manager);
     \Drupal::setContainer($container);
 
-    $this->builder = new HivelogBreadcrumbBuilder();
+    $this->builder = new HivelogBreadcrumbBuilder($this->createEntityTypeManagerStub());
     $this->builder->setStringTranslation($this->getStringTranslationStub());
+  }
+
+  /**
+   * An `EntityTypeManagerInterface` stub for `collectionLabels()` (0119).
+   *
+   * `getDefinition()` returns, for every type in
+   * `HivelogEntityHierarchy::COLLECTION_TYPES`, a stub whose
+   * `getCollectionLabel()` matches the same text `leafPageProvider()`
+   * expects — the two are the same source of truth in production
+   * (`label_collection`), so keeping them in sync here is deliberate,
+   * not incidental.
+   */
+  protected function createEntityTypeManagerStub(): EntityTypeManagerInterface {
+    $labels = [
+      'apiary' => 'Apiaries',
+      'hive' => 'Hives',
+      'hive_inspection' => 'Inspections',
+      'queen' => 'Queens',
+      'queen_observation' => 'Queen Observations',
+      'calendar_action' => 'Calendar Actions',
+      'hive_action_log' => 'Hive Action Logs',
+      'apiary_action_log' => 'Apiary Action Logs',
+      'inventory_item' => 'Inventory Items',
+      'inventory_purchase' => 'Inventory Purchases',
+      'product' => 'Products',
+      'sensor_device' => 'Sensor Devices',
+      'ai_provider_config' => 'AI Provider Configs',
+      'api_client' => 'API Clients',
+    ];
+    $this->assertEqualsCanonicalizing(
+      HivelogEntityHierarchy::COLLECTION_TYPES,
+      array_keys($labels),
+      'This stub must cover exactly the types COLLECTION_TYPES lists.'
+    );
+
+    $definitions = [];
+    foreach ($labels as $type_id => $label) {
+      $definition = $this->createMock(EntityTypeInterface::class);
+      $definition->method('getCollectionLabel')->willReturn($label);
+      $definitions[$type_id] = $definition;
+    }
+
+    $entity_type_manager = $this->createMock(EntityTypeManagerInterface::class);
+    $entity_type_manager->method('hasDefinition')
+      ->willReturnCallback(fn(string $type_id) => isset($definitions[$type_id]));
+    $entity_type_manager->method('getDefinition')
+      ->willReturnCallback(fn(string $type_id) => $definitions[$type_id] ?? NULL);
+
+    return $entity_type_manager;
   }
 
   // -------------------------------------------------------------------------

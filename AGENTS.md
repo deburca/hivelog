@@ -517,6 +517,34 @@ uses a catch-all `applies()`. If the hivelog builder does not outrank it,
 instead of the correct entity-hierarchy trails. Do not lower this priority
 below 1004 without confirming `easy_breadcrumb` is not installed.
 
+### In-app navigation (task 0119)
+
+`HivelogAppNavBuilder::getAllItems()` is the single registry for
+`hivelog`'s destinations: core's own 8 built-ins (`builtInItems()`) plus
+every `hook_hivelog_app_nav_items()` contribution (`hivelog.api.php`) —
+each item a `['title' => TranslatableMarkup, 'url' => Url, 'weight' =>
+int]` descriptor. Two surfaces read this one registry instead of each
+keeping its own hand-maintained copy:
+
+- **The in-app nav strip** — `build()` filters `getAllItems()` to what
+  the current user can access (`Url::access()`) and injects the result
+  into `page.content` via `hivelog_preprocess_page()` (task 0105; not a
+  placed block or `hook_page_top()` — see that hook's own docblock in
+  `hivelog.module`).
+- **Main-menu links** — `hivelog.links.menu.yml` declares one deriver
+  base plugin (`hivelog.nav_item`, `deriver:
+  Drupal\hivelog\Plugin\Derivative\HivelogMenuLinks`) that emits one
+  `hivelog.nav_item:<key>` menu link per `getAllItems()` entry, all
+  parented under the single hand-written `hivelog.admin` link. A
+  submodule that wants a main-menu entry implements
+  `hook_hivelog_app_nav_items()` only — it no longer ships its own
+  `<module>.links.menu.yml` (`collective`/`nexus`/`nanoprobe` all did,
+  pre-0119). A static → derived plugin ID is a different string (the
+  derived one always carries `:`), so `hivelog_update_10029` re-keys any
+  per-site menu-UI customisation (weight/enabled/expanded, stored by
+  plugin ID in `core.menu.static_menu_link_overrides`) from the old
+  static IDs onto the new derived ones.
+
 ### Tests
 
 All test classes use the PHP 8 `#[Group('hivelog')]` attribute, so

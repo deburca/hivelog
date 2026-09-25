@@ -74,4 +74,18 @@ class AppNavItemsTest extends KernelTestBase {
     $this->assertArrayHasKey('nanoprobe_sensor_devices', $build);
   }
 
+  /**
+   * Tests the item gets a derived main-menu link (task 0119).
+   *
+   * `nanoprobe` used to ship its own `nanoprobe.links.menu.yml`
+   * (deleted) — this proves `HivelogMenuLinks` picks the item up as a
+   * real main-menu link instead.
+   */
+  public function testSensorDevicesItemGetsDerivedMenuLink(): void {
+    $definitions = \Drupal::service('plugin.manager.menu.link')->getDefinitions();
+    $this->assertArrayHasKey('hivelog.nav_item:nanoprobe_sensor_devices', $definitions);
+    $this->assertEquals('entity.sensor_device.collection', $definitions['hivelog.nav_item:nanoprobe_sensor_devices']['route_name']);
+    $this->assertEquals('hivelog.admin', $definitions['hivelog.nav_item:nanoprobe_sensor_devices']['parent']);
+  }
+
 }

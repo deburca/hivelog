@@ -902,6 +902,57 @@ function hivelog_update_10028(&$sandbox) {
 }
 
 /**
+ * Migrates static-menu-link overrides onto the new derived nav-item IDs.
+ *
+ * Task 0119 replaces the 11 hand-written `hivelog.links.menu.yml` /
+ * `collective.links.menu.yml` / `nexus.links.menu.yml` /
+ * `nanoprobe.links.menu.yml` entries with one deriver
+ * (`Drupal\hivelog\Plugin\Derivative\HivelogMenuLinks`) that emits
+ * `hivelog.nav_item:<key>` derivative IDs instead. A static → derivative
+ * plugin ID is a structurally different string (the deriver's ID always
+ * carries a `:`), so a site that customised one of these links' weight,
+ * enabled, or expanded state via the menu UI (stored per-plugin-ID in
+ * `core.menu.static_menu_link_overrides`, not tied to the module that
+ * defined the link) would otherwise find that customisation silently
+ * orphaned. This re-keys any that exist onto the new ID instead of
+ * losing them.
+ */
+function hivelog_update_10029(&$sandbox) {
+  $overrides = \Drupal::service('menu_link.static.overrides');
+
+  // Old static plugin ID => the HivelogAppNavBuilder item key it now
+  // derives from (see HivelogAppNavBuilder::builtInItems() and each
+  // submodule's own hook_hivelog_app_nav_items() implementation).
+  $renames = [
+    'hivelog.apiaries' => 'apiaries',
+    'hivelog.hives' => 'hives',
+    'hivelog.inspections' => 'inspections',
+    'hivelog.queens' => 'queens',
+    'hivelog.queen_observations' => 'queen_observations',
+    'hivelog.inventory_items' => 'inventory_items',
+    'hivelog.inventory_purchases' => 'inventory_purchases',
+    'hivelog.products' => 'products',
+    'collective.api_clients' => 'collective_api_clients',
+    'nexus.ai_provider_configs' => 'nexus_ai_provider_configs',
+    'nanoprobe.sensor_devices' => 'nanoprobe_sensor_devices',
+  ];
+
+  $migrated = 0;
+  foreach ($renames as $old_id => $item_key) {
+    $override = $overrides->loadOverride($old_id);
+    if ($override) {
+      $overrides->saveOverride('hivelog.nav_item:' . $item_key, $override);
+      $overrides->deleteOverride($old_id);
+      $migrated++;
+    }
+  }
+
+  return $migrated
+    ? t('Migrated @count static-menu-link customisation(s) onto the new derived nav-item menu link IDs.', ['@count' => $migrated])
+    : t('No static-menu-link customisations found on the old nav menu link IDs; nothing to migrate.');
+}
+
+/**
  * Removes all traces of the cbr_number field from Drupal's tracking stores.
  *
  * The normal EntityDefinitionUpdateManager::uninstallFieldStorageDefinition()

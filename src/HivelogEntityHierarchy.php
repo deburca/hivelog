@@ -59,6 +59,35 @@ final class HivelogEntityHierarchy {
   ];
 
   /**
+   * Entity types with their own `entity.<type>.collection` route.
+   *
+   * Not derivable from `PARENT_FIELD` + `COLLECTION_THREADED_TYPES` +
+   * `apiary`: `calendar_action_item_requirement` /
+   * `calendar_action_product_yield` are in `PARENT_FIELD` but have no
+   * collection/add UI of their own (edit/delete only), so this is its
+   * own explicit list (task 0119) — the single source of truth
+   * `HivelogBreadcrumbBuilder` reads each type's own `label_collection`
+   * against, replacing what used to be a hand-maintained route → label
+   * text map.
+   */
+  public const COLLECTION_TYPES = [
+    'apiary',
+    'hive',
+    'hive_inspection',
+    'queen',
+    'queen_observation',
+    'calendar_action',
+    'hive_action_log',
+    'apiary_action_log',
+    'inventory_item',
+    'inventory_purchase',
+    'product',
+    'sensor_device',
+    'ai_provider_config',
+    'api_client',
+  ];
+
+  /**
    * The entity `PARENT_FIELD` names as `$entity`'s parent, or NULL.
    *
    * NULL both when the entity type has no parent field (root types,

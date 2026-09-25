@@ -1,6 +1,0 @@
-collective.api_clients:
-  title: 'API Clients'
-  description: 'Manage credentials for reading hive/apiary context.'
-  route_name: entity.api_client.collection
-  parent: hivelog.admin
-  weight: 8

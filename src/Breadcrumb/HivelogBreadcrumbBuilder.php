@@ -6,6 +6,7 @@ use Drupal\Core\Breadcrumb\Breadcrumb;
 use Drupal\Core\Breadcrumb\BreadcrumbBuilderInterface;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Routing\RouteMatchInterface;
@@ -30,10 +31,22 @@ use Drupal\hivelog\HivelogEntityHierarchy;
  * on those forms, and the route's own title everywhere else (add forms,
  * scoped or site-wide, and any other bolt-on route under `/hivelog`) —
  * see `addGenericTerminalCrumb()`.
+ *
+ * `$entityTypeManager` was dropped entirely in task 0116 (deriving
+ * collection-route labels from it was "considered and rejected" there,
+ * specifically to keep that task a behaviour-preserving pure refactor)
+ * and is reintroduced here for exactly that purpose (task 0119): now
+ * that `HiveInspection::label_collection` reads "Inspections" like
+ * every other surface, `collectionLabels()` can read each type's own
+ * `label_collection` instead of a hand-maintained duplicate.
  */
 class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
 
   use StringTranslationTrait;
+
+  public function __construct(
+    protected EntityTypeManagerInterface $entityTypeManager,
+  ) {}
 
   /**
    * Route parameter names to check for the route's subject entity.
@@ -140,22 +153,7 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
     // builder (task 0067), so each of these needs its own terminal
     // crumb — the page's own name, a self-link the theme renders as
     // plain text — rather than falling through to a menu-derived one.
-    $collections = [
-      'entity.apiary.collection' => $this->t('Apiaries'),
-      'entity.hive.collection' => $this->t('Hives'),
-      'entity.hive_inspection.collection' => $this->t('Inspections'),
-      'entity.queen.collection' => $this->t('Queens'),
-      'entity.queen_observation.collection' => $this->t('Queen Observations'),
-      'entity.calendar_action.collection' => $this->t('Calendar Actions'),
-      'entity.hive_action_log.collection' => $this->t('Hive Action Logs'),
-      'entity.apiary_action_log.collection' => $this->t('Apiary Action Logs'),
-      'entity.inventory_item.collection' => $this->t('Inventory Items'),
-      'entity.inventory_purchase.collection' => $this->t('Inventory Purchases'),
-      'entity.product.collection' => $this->t('Products'),
-      'entity.sensor_device.collection' => $this->t('Sensor Devices'),
-      'entity.ai_provider_config.collection' => $this->t('AI Provider Configs'),
-      'entity.api_client.collection' => $this->t('API Clients'),
-    ];
+    $collections = $this->collectionLabels();
 
     // Collection listings + the combined report: their own name is the
     // terminal crumb (a self-link the theme renders as plain text).
@@ -207,6 +205,29 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
     }
 
     return $breadcrumb;
+  }
+
+  /**
+   * Collection-route labels, keyed by route name (task 0119).
+   *
+   * Read from each entity type's own `label_collection` rather than a
+   * hand-maintained duplicate — `HivelogEntityHierarchy::COLLECTION_TYPES`
+   * is the single list of which types have a collection route at all.
+   * `hasDefinition()` guards a submodule type that isn't installed;
+   * skipping it there is safe because a route for that type couldn't be
+   * the current one either, so no caller ever misses a label it needs.
+   *
+   * @return array<string, \Drupal\Core\StringTranslation\TranslatableMarkup>
+   *   Collection route name => that type's collection label.
+   */
+  protected function collectionLabels(): array {
+    $labels = [];
+    foreach (HivelogEntityHierarchy::COLLECTION_TYPES as $type_id) {
+      if ($this->entityTypeManager->hasDefinition($type_id)) {
+        $labels["entity.$type_id.collection"] = $this->entityTypeManager->getDefinition($type_id)->getCollectionLabel();
+      }
+    }
+    return $labels;
   }
 
   /**

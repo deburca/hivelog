@@ -74,4 +74,18 @@ class AppNavItemsTest extends KernelTestBase {
     $this->assertArrayHasKey('collective_api_clients', $build);
   }
 
+  /**
+   * Tests the item gets a derived main-menu link (task 0119).
+   *
+   * `collective` used to ship its own `collective.links.menu.yml`
+   * (deleted) — this proves `HivelogMenuLinks` picks the item up as a
+   * real main-menu link instead.
+   */
+  public function testApiClientsItemGetsDerivedMenuLink(): void {
+    $definitions = \Drupal::service('plugin.manager.menu.link')->getDefinitions();
+    $this->assertArrayHasKey('hivelog.nav_item:collective_api_clients', $definitions);
+    $this->assertEquals('entity.api_client.collection', $definitions['hivelog.nav_item:collective_api_clients']['route_name']);
+    $this->assertEquals('hivelog.admin', $definitions['hivelog.nav_item:collective_api_clients']['parent']);
+  }
+
 }

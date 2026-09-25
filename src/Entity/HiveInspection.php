@@ -26,7 +26,7 @@ use Drupal\user\EntityOwnerTrait;
 #[ContentEntityType(
   id: 'hive_inspection',
   label: new TranslatableMarkup('Hive Inspection'),
-  label_collection: new TranslatableMarkup('Hive Inspections'),
+  label_collection: new TranslatableMarkup('Inspections'),
   label_singular: new TranslatableMarkup('hive inspection'),
   label_plural: new TranslatableMarkup('hive inspections'),
   handlers: [

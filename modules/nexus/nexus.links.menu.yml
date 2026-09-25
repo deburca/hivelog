@@ -1,6 +1,0 @@
-nexus.ai_provider_configs:
-  title: 'AI Provider Configs'
-  description: 'Configure how nexus reaches an AI provider for insight generation.'
-  route_name: entity.ai_provider_config.collection
-  parent: hivelog.admin
-  weight: 9

@@ -73,4 +73,18 @@ class AppNavItemsTest extends KernelTestBase {
     $this->assertArrayHasKey('nexus_ai_provider_configs', $build);
   }
 
+  /**
+   * Tests the item gets a derived main-menu link (task 0119).
+   *
+   * `nexus` used to ship its own `nexus.links.menu.yml` (deleted) —
+   * this proves `HivelogMenuLinks` picks the item up as a real
+   * main-menu link instead.
+   */
+  public function testAiProviderConfigsItemGetsDerivedMenuLink(): void {
+    $definitions = \Drupal::service('plugin.manager.menu.link')->getDefinitions();
+    $this->assertArrayHasKey('hivelog.nav_item:nexus_ai_provider_configs', $definitions);
+    $this->assertEquals('entity.ai_provider_config.collection', $definitions['hivelog.nav_item:nexus_ai_provider_configs']['route_name']);
+    $this->assertEquals('hivelog.admin', $definitions['hivelog.nav_item:nexus_ai_provider_configs']['parent']);
+  }
+
 }

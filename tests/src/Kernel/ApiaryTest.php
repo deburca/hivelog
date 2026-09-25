@@ -261,19 +261,24 @@ class ApiaryTest extends KernelTestBase {
     $this->assertEquals('view own queen+view any queen+administer hivelog', $queen_route->getRequirement('_permission'));
     $this->assertEquals('view own queen observation+view any queen observation+administer hivelog', $observation_route->getRequirement('_permission'));
 
+    // Menu link plugin IDs are `hivelog.nav_item:<key>` since task 0119
+    // (derived from HivelogAppNavBuilder::getAllItems(), not the
+    // hand-written `hivelog.hives` / `hivelog.inspections` / … IDs
+    // hivelog.links.menu.yml used before) — see HivelogMenuLinksTest for
+    // the exhaustive one-to-one check against every nav item.
     $menu_links = \Drupal::service('plugin.manager.menu.link')->getDefinitions();
-    $this->assertArrayHasKey('hivelog.hives', $menu_links);
-    $this->assertArrayHasKey('hivelog.inspections', $menu_links);
-    $this->assertArrayHasKey('hivelog.queens', $menu_links);
-    $this->assertArrayHasKey('hivelog.queen_observations', $menu_links);
-    $this->assertEquals('entity.hive.collection', $menu_links['hivelog.hives']['route_name']);
-    $this->assertEquals('entity.hive_inspection.collection', $menu_links['hivelog.inspections']['route_name']);
-    $this->assertEquals('entity.queen.collection', $menu_links['hivelog.queens']['route_name']);
-    $this->assertEquals('entity.queen_observation.collection', $menu_links['hivelog.queen_observations']['route_name']);
-    $this->assertEquals('hivelog.admin', $menu_links['hivelog.hives']['parent']);
-    $this->assertEquals('hivelog.admin', $menu_links['hivelog.inspections']['parent']);
-    $this->assertEquals('hivelog.admin', $menu_links['hivelog.queens']['parent']);
-    $this->assertEquals('hivelog.admin', $menu_links['hivelog.queen_observations']['parent']);
+    $this->assertArrayHasKey('hivelog.nav_item:hives', $menu_links);
+    $this->assertArrayHasKey('hivelog.nav_item:inspections', $menu_links);
+    $this->assertArrayHasKey('hivelog.nav_item:queens', $menu_links);
+    $this->assertArrayHasKey('hivelog.nav_item:queen_observations', $menu_links);
+    $this->assertEquals('entity.hive.collection', $menu_links['hivelog.nav_item:hives']['route_name']);
+    $this->assertEquals('entity.hive_inspection.collection', $menu_links['hivelog.nav_item:inspections']['route_name']);
+    $this->assertEquals('entity.queen.collection', $menu_links['hivelog.nav_item:queens']['route_name']);
+    $this->assertEquals('entity.queen_observation.collection', $menu_links['hivelog.nav_item:queen_observations']['route_name']);
+    $this->assertEquals('hivelog.admin', $menu_links['hivelog.nav_item:hives']['parent']);
+    $this->assertEquals('hivelog.admin', $menu_links['hivelog.nav_item:inspections']['parent']);
+    $this->assertEquals('hivelog.admin', $menu_links['hivelog.nav_item:queens']['parent']);
+    $this->assertEquals('hivelog.admin', $menu_links['hivelog.nav_item:queen_observations']['parent']);
   }
 
 }

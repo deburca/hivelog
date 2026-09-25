@@ -193,15 +193,23 @@ function hook_hivelog_dashboard_sections(array $apiaries, CacheableMetadata $cac
  * access checking for what's always just a link to one of their own
  * collection pages.
  *
+ * Task 0119: this is also the single source `hivelog.links.menu.yml`'s
+ * menu-link deriver reads (`Drupal\hivelog\Plugin\Derivative\HivelogMenuLinks`),
+ * so implementing this hook is enough to get a main-menu entry too — a
+ * submodule no longer needs its own `<module>.links.menu.yml`. The
+ * `url` must be route-based (`Url::fromRoute()`, as in the example
+ * below): the deriver reads the item's route name/parameters back off
+ * it, and an external URI (`Url::fromUri()`) has no route to derive a
+ * menu link from, so it's silently skipped there.
+ *
  * @return array
  *   A list of nav item descriptors, each `['title' =>
  *   \Drupal\Core\StringTranslation\TranslatableMarkup, 'url' =>
  *   \Drupal\Core\Url, 'weight' => int]`, keyed by a unique,
  *   module-prefixed key to avoid colliding with another
  *   implementation's item. `hivelog` core's own built-in items use
- *   weights 0–7 (matching `hivelog.links.menu.yml`'s own weights);
- *   start contributed items at 8 or above unless deliberately
- *   interleaving with a specific core item.
+ *   weights 0–7; start contributed items at 8 or above unless
+ *   deliberately interleaving with a specific core item.
  */
 function hook_hivelog_app_nav_items() {
   return [

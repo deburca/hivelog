@@ -1,6 +1,0 @@
-nanoprobe.sensor_devices:
-  title: 'Sensor Devices'
-  description: 'Register and manage sensor hardware.'
-  route_name: entity.sensor_device.collection
-  parent: hivelog.admin
-  weight: 10

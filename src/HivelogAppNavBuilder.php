@@ -15,10 +15,15 @@ use Drupal\Core\Url;
  * Rendered via `hook_preprocess_page()` (task 0105), not a placed
  * block or `hook_page_top()` — see that hook's own docblock in
  * `hivelog.module` for why. Combines `hivelog` core's own 8 built-in
- * destinations (the same set `hivelog.links.menu.yml` already lists)
- * with every `hook_hivelog_app_nav_items()` contribution (see
- * `hivelog.api.php`), so `nanoprobe`/`collective`/`nexus` can add their
- * own admin pages without `hivelog` depending on them.
+ * destinations with every `hook_hivelog_app_nav_items()` contribution
+ * (see `hivelog.api.php`), so `nanoprobe`/`collective`/`nexus` can add
+ * their own admin pages without `hivelog` depending on them.
+ *
+ * Task 0119: this item set is now the single source of truth
+ * `hivelog.links.menu.yml`'s menu-link deriver
+ * (`Drupal\hivelog\Plugin\Derivative\HivelogMenuLinks`) also reads, via
+ * `getAllItems()` — the main-menu links are a second rendering of the
+ * exact same registry, not a hand-maintained duplicate list.
  */
 class HivelogAppNavBuilder {
 
@@ -40,12 +45,7 @@ class HivelogAppNavBuilder {
    *   current user (e.g. an anonymous visitor).
    */
   public function build(): array {
-    $items = $this->builtInItems();
-    foreach ($this->moduleHandler->invokeAll('hivelog_app_nav_items') as $key => $item) {
-      $items[$key] = $item;
-    }
-
-    $accessible = array_filter($items, fn(array $item) => $item['url']->access());
+    $accessible = array_filter($this->getAllItems(), fn(array $item) => $item['url']->access());
     if (!$accessible) {
       return [];
     }
@@ -83,12 +83,31 @@ class HivelogAppNavBuilder {
   }
 
   /**
+   * The full nav item registry: core built-ins plus every hook contribution.
+   *
+   * Unfiltered by the current user's access — `build()` filters for the
+   * nav strip; the menu-link deriver (task 0119) wants every item
+   * regardless of who's currently logged in, since a menu link's own
+   * route requirements do that access check when the menu is rendered.
+   *
+   * @return array[]
+   *   `['title' => TranslatableMarkup, 'url' => Url, 'weight' => int]`
+   *   descriptors, keyed uniquely.
+   */
+  public function getAllItems(): array {
+    $items = $this->builtInItems();
+    foreach ($this->moduleHandler->invokeAll('hivelog_app_nav_items') as $key => $item) {
+      $items[$key] = $item;
+    }
+    return $items;
+  }
+
+  /**
    * Hivelog core's own built-in nav items.
    *
-   * Same 8 destinations, same weights, as `hivelog.links.menu.yml` —
-   * kept in sync deliberately, not derived from it, since the menu
-   * links stay as a separate, best-effort integration rather than
-   * this nav's data source (see task 0105's own notes).
+   * Same 8 destinations, same weights, as `hivelog.links.menu.yml`'s old
+   * hand-written entries — now the *source* the menu-link deriver reads,
+   * not a second copy kept in sync by hand (task 0119).
    *
    * @return array[]
    *   `['title' => TranslatableMarkup, 'url' => Url, 'weight' => int]`
