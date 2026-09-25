@@ -9,7 +9,6 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\hivelog\Delete\HivelogDeleteDependencyRegistry;
 
 /**
  * Implements hook_preprocess_HOOK() for html.html.twig.
@@ -148,26 +147,10 @@ function hivelog_form_alter(array &$form, FormStateInterface $form_state, string
  * (`HivelogDeleteDependencyRegistry`, task 0134): whatever the delete
  * path — the form, a list button, the API, drush — every entity delete
  * runs through here first, so a row's treatment holds regardless of how
- * the parent was deleted.
- *
- * This is deliberately a dispatch shell, not an implementation: CASCADE
- * deletion and DETACH reference-clearing are real, potentially large
- * (sensor readings) or irreversible mutations, populated by
- * [[0142-delete-cascade-owned-records]] and
- * [[0143-delete-detach-optional-references]] respectively, not written
- * sight-unseen alongside the registry that merely describes which rows
- * need them.
+ * the parent was deleted. The actual dispatch lives on
+ * `HivelogDeleteDependencyExecutor` (task 0142), not here — this hook is
+ * a one-line entry point into it.
  */
 function hivelog_entity_predelete(EntityInterface $entity): void {
-  foreach (HivelogDeleteDependencyRegistry::rowsForParent($entity->getEntityTypeId()) as $row) {
-    switch ($row['treatment']) {
-      case HivelogDeleteDependencyRegistry::CASCADE:
-        // Populated by task 0142.
-        break;
-
-      case HivelogDeleteDependencyRegistry::DETACH:
-        // Populated by task 0143.
-        break;
-    }
-  }
+  \Drupal::service('hivelog.delete_dependency_executor')->execute($entity);
 }
