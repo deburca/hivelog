@@ -19,7 +19,11 @@ fixed dates. Last refreshed **2026-07-03**.
 Release note: [[1.4.0]]
 - [[mobile-ux-improvements]] — active; `0004`–`0008` done, [[0009-mobile-qa-and-tap-targets]] remains.
 - [[action-button-consistency]] — planning; [[0010-define-button-tokens-and-source-of-truth]] is queued (todo).
-- [[breadcrumb-consistency]] — planning; [[0013-breadcrumb-route-audit]] is queued (todo).
+- [[breadcrumb-consistency]] — active; `0013`–`0015`, `0112`, `0116`–`0120`
+  and [[0123-refresh-navigation-reference-docs]] (this refresh) done;
+  [[0121-reachability-of-orphaned-collection-pages]] and
+  [[0122-top-level-entity-breadcrumb-threading]] remain, each pending a
+  decision.
 
 ### 📋 Unassigned release
 - [[queen-observation-enhancements]] — [[0001-queen-observation-csv-export]] remains `in-progress`; [[0002-breadcrumb-queen-canonical]] is already satisfied in code and has been closed in the vault.

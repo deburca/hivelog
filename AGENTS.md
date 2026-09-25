@@ -505,24 +505,43 @@ routes such as `layout_builder.overrides.<entity>.*`), minus an explicit
 `/hivelog/...` are covered automatically; only add a `$non_page_routes` entry
 for a route that must NOT get a breadcrumb.
 
-`build()` shape:
+`build()` shape (task 0116's declarative refactor, extracted further into
+`HivelogEntityHierarchy` in tasks 0127/0120):
 - **Collections + the combined report** end with their own name as a terminal
-  crumb (`$leaf_pages` map): `Home › HiveLog › <Plural>`.
+  crumb: `Home › HiveLog › <Plural>`. The label is read from each type's own
+  `label_collection` (`collectionLabels()`, task 0119) — no hand-maintained
+  route → label map.
 - **Site-wide `entity.<type>.add_form`** (no parent in the path) hang off their
   collection: `Home › HiveLog › <Plural>`.
-- **Canonical / edit / delete / Layout Builder** pages thread the entity's
-  ancestor chain to the apiary, ending with the entity's own label:
-  `Home › HiveLog › <Apiary> [› <Hive> …] › <Entity>`. A missing ancestor
-  (deleted apiary, unassigned queen) just shortens the trail.
-- **Per-apiary report / full-calendar** add a named terminal after the apiary
-  link (`$apiary_page_crumbs` map).
+- **Canonical / edit / delete / Layout Builder / any other page** thread the
+  route's "subject" entity's ancestor chain to the root, ending with a
+  terminal crumb naming the current page (ADR-0102, task 0117): the entity's
+  own label on a canonical page, "Edit" / "Delete" on those forms, and the
+  route's own title everywhere else. The subject and the ancestor chain both
+  come from `HivelogEntityHierarchy`: `resolveSubject()` picks the one
+  upcast route parameter the trail is built from, and `PARENT_FIELD` (entity
+  type ID → the reference field naming its parent) is walked from there up
+  to the root. A missing reference (deleted apiary, unassigned queen) just
+  stops the walk, shortening the trail. `COLLECTION_THREADED_TYPES`
+  (SensorDevice, ApiClient, AiProviderConfig) thread through their own
+  collection link instead of an apiary/hive ancestor.
+- **Named sub-pages that aren't a canonical page** (per-apiary report,
+  full-calendar, Hive Insights, sensor readings/config download, token
+  regeneration) get their own literal-`t()` terminal label via
+  `TERMINAL_CRUMB_PARAM` + `terminalCrumbLabel()`, appended after the
+  subject's own ancestor trail.
 - **Calendar-action requirement / yield** edit-delete pages thread
   `Apiary → Calendar action → <sub-entity>` with a non-linked (`<nolink>`)
-  terminal (these have no canonical page).
+  terminal (these have no canonical page) — the same generic mechanism above,
+  since neither type has a `canonical` link template.
 
-Adding a new hivelog entity type: give it a `build()` block that resolves its
-`apiary` (directly or via its parent) and adds its `entity.<type>.canonical`
-crumb — mirror the `product` / `inventory_item` / `inventory_purchase` loop.
+Adding a new hivelog entity type: add one entry to
+`HivelogEntityHierarchy::PARENT_FIELD` (or `COLLECTION_THREADED_TYPES` if it
+has no apiary/hive ancestor) and, if it has a collection route, one entry to
+`COLLECTION_TYPES`. The breadcrumb trail and the nav strip's active-section
+resolution both read these same maps — no per-type `build()` block to write.
+(The delete-dependency framework, `src/Delete/`, is a related but separate
+registry of its own — see "Services" above.)
 
 The priority of 1004 is intentional — it must exceed the `easy_breadcrumb`
 module's priority of 1003, which is commonly installed on Drupal sites and
@@ -531,33 +550,45 @@ uses a catch-all `applies()`. If the hivelog builder does not outrank it,
 instead of the correct entity-hierarchy trails. Do not lower this priority
 below 1004 without confirming `easy_breadcrumb` is not installed.
 
-### In-app navigation (task 0119)
+### In-app navigation (tasks 0119/0120)
 
 `HivelogAppNavBuilder::getAllItems()` is the single registry for
 `hivelog`'s destinations: core's own 8 built-ins (`builtInItems()`) plus
 every `hook_hivelog_app_nav_items()` contribution (`hivelog.api.php`) —
 each item a `['title' => TranslatableMarkup, 'url' => Url, 'weight' =>
-int]` descriptor. Two surfaces read this one registry instead of each
-keeping its own hand-maintained copy:
+int, 'group' => string, 'section' => string (optional)]` descriptor.
+`group` places the item among the nav strip's visual groups (`records` /
+`inventory` / `setup`, in that order, separated by a decorative divider);
+`section` is the entity type ID the item's collection is "about", read by
+the active-state check below. Two surfaces read this one registry instead
+of each keeping its own hand-maintained copy:
 
 - **The in-app nav strip** — `build()` filters `getAllItems()` to what
-  the current user can access (`Url::access()`) and injects the result
-  into `page.content` via `hivelog_preprocess_page()` (task 0105; not a
-  placed block or `hook_page_top()` — see that hook's own docblock in
-  `hivelog.module`).
+  the current user can access (`Url::access()`), prepends a strip-only
+  Dashboard entry (deliberately *not* a `getAllItems()` member — see
+  `HivelogAppNavBuilder`'s own class docblock for why), marks the
+  current page's item active (`is-active` / `aria-current="page"` for an
+  exact route match, `"true"` for a same-section page — resolved via
+  `HivelogEntityHierarchy::resolveSubject()`, the same one the
+  breadcrumb trail uses), and injects the result into `page.content` via
+  `hivelog_preprocess_page()` (task 0105; not a placed block or
+  `hook_page_top()` — see that hook's own docblock in `hivelog.module`).
 - **Main-menu links** — `hivelog.links.menu.yml` declares one deriver
   base plugin (`hivelog.nav_item`, `deriver:
   Drupal\hivelog\Plugin\Derivative\HivelogMenuLinks`) that emits one
   `hivelog.nav_item:<key>` menu link per `getAllItems()` entry, all
-  parented under the single hand-written `hivelog.admin` link. A
-  submodule that wants a main-menu entry implements
-  `hook_hivelog_app_nav_items()` only — it no longer ships its own
-  `<module>.links.menu.yml` (`collective`/`nexus`/`nanoprobe` all did,
-  pre-0119). A static → derived plugin ID is a different string (the
-  derived one always carries `:`), so `hivelog_update_10029` re-keys any
-  per-site menu-UI customisation (weight/enabled/expanded, stored by
-  plugin ID in `core.menu.static_menu_link_overrides`) from the old
-  static IDs onto the new derived ones.
+  parented under the single hand-written `hivelog.admin` link. The
+  Dashboard entry is deliberately excluded here too (see above) —
+  `hivelog.admin` already points at the same route, so a menu child
+  pointing there as well would be redundant. A submodule that wants a
+  main-menu entry
+  implements `hook_hivelog_app_nav_items()` only — it no longer ships
+  its own `<module>.links.menu.yml` (`collective`/`nexus`/`nanoprobe`
+  all did, pre-0119). A static → derived plugin ID is a different
+  string (the derived one always carries `:`), so `hivelog_update_10029`
+  re-keys any per-site menu-UI customisation (weight/enabled/expanded,
+  stored by plugin ID in `core.menu.static_menu_link_overrides`) from
+  the old static IDs onto the new derived ones.
 
 ### Tests
 
