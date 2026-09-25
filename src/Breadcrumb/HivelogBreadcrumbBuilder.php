@@ -101,7 +101,22 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
    */
   public function build(RouteMatchInterface $route_match): Breadcrumb {
     $breadcrumb = new Breadcrumb();
-    $breadcrumb->addCacheContexts(['route']);
+    // 'url.path.parent' / 'url.path.is_front' alongside 'route': core's
+    // own fallback (\Drupal\system\PathBasedBreadcrumbBuilder, priority
+    // 0) declares exactly those two on every breadcrumb it builds — a
+    // shared block instance (e.g. system_breadcrumb_block) that renders
+    // on both a hivelog route and a non-hivelog route in the same
+    // session needs the two builders' declared context sets to share at
+    // least one context, or Drupal\Core\Cache\VariationCache::set()
+    // throws "Trying to overwrite a cache redirect... with one that has
+    // nothing in common" the moment the second builder's result is
+    // cached — reproduced by DashboardTest, which places that exact
+    // block and visits both a hivelog and a non-hivelog (login) route
+    // in the same test. Keeping 'route' too, not replacing it with the
+    // other two: this builder's trail genuinely can vary between two
+    // routes sharing the same path shape (e.g. Layout Builder override
+    // routes), which 'url.path.parent' alone wouldn't distinguish.
+    $breadcrumb->addCacheContexts(['route', 'url.path.parent', 'url.path.is_front']);
     $route_name = $route_match->getRouteName();
 
     // Home > HiveLog. "HiveLog" links to the dashboard landing page

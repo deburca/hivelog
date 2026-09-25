@@ -72,16 +72,23 @@ class DashboardTest extends BrowserTestBase {
 
   /**
    * The breadcrumb "HiveLog" crumb links to the dashboard on both pages.
+   *
+   * `nav[aria-labelledby="system-breadcrumb"]`, not `nav.breadcrumb` —
+   * the `.breadcrumb` class is added by several themes'
+   * `breadcrumb.html.twig` overrides (olivero, claro, gin, umami), but
+   * core's own bare template (what `stark`, this test's own
+   * `$defaultTheme`, actually uses) emits no class at all, only the
+   * `aria-labelledby` attribute every theme's override keeps.
    */
   public function testBreadcrumbRootIsTheDashboard(): void {
     $this->drupalGet('/hivelog/apiaries');
-    $this->assertSession()->elementExists('css', 'nav.breadcrumb a[href="/hivelog"]');
-    $this->assertSession()->elementTextContains('css', 'nav.breadcrumb', 'HiveLog');
-    $this->assertSession()->elementTextContains('css', 'nav.breadcrumb', 'Apiaries');
+    $this->assertSession()->elementExists('css', 'nav[aria-labelledby="system-breadcrumb"] a[href="/hivelog"]');
+    $this->assertSession()->elementTextContains('css', 'nav[aria-labelledby="system-breadcrumb"]', 'HiveLog');
+    $this->assertSession()->elementTextContains('css', 'nav[aria-labelledby="system-breadcrumb"]', 'Apiaries');
 
     $this->drupalGet('/hivelog');
-    $this->assertSession()->elementExists('css', 'nav.breadcrumb');
-    $this->assertSession()->elementTextContains('css', 'nav.breadcrumb', 'HiveLog');
+    $this->assertSession()->elementExists('css', 'nav[aria-labelledby="system-breadcrumb"]');
+    $this->assertSession()->elementTextContains('css', 'nav[aria-labelledby="system-breadcrumb"]', 'HiveLog');
   }
 
 }
