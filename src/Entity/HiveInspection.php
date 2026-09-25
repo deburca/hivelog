@@ -51,6 +51,7 @@ use Drupal\user\EntityOwnerTrait;
     'canonical' => '/hivelog/inspection/{hive_inspection}',
     'edit-form' => '/hivelog/inspection/{hive_inspection}/edit',
     'delete-form' => '/hivelog/inspection/{hive_inspection}/delete',
+    'collection' => '/hivelog/inspections',
   ],
 )]
 class HiveInspection extends ContentEntityBase implements EntityChangedInterface, EntityOwnerInterface {

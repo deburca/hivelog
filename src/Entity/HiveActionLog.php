@@ -63,6 +63,7 @@ use Drupal\user\EntityOwnerTrait;
     'canonical' => '/hivelog/hive-action-log/{hive_action_log}',
     'edit-form' => '/hivelog/hive-action-log/{hive_action_log}/edit',
     'delete-form' => '/hivelog/hive-action-log/{hive_action_log}/delete',
+    'collection' => '/hivelog/hive-action-logs',
   ],
 )]
 class HiveActionLog extends ContentEntityBase implements EntityChangedInterface, EntityOwnerInterface {

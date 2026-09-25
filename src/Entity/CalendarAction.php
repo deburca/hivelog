@@ -61,6 +61,7 @@ use Drupal\user\EntityOwnerTrait;
     'canonical' => '/hivelog/calendar-action/{calendar_action}',
     'edit-form' => '/hivelog/calendar-action/{calendar_action}/edit',
     'delete-form' => '/hivelog/calendar-action/{calendar_action}/delete',
+    'collection' => '/hivelog/calendar-actions',
   ],
 )]
 class CalendarAction extends ContentEntityBase implements EntityChangedInterface, EntityOwnerInterface {

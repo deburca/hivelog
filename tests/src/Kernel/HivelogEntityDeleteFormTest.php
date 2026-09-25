@@ -201,13 +201,13 @@ class HivelogEntityDeleteFormTest extends KernelTestBase {
         'has_canonical' => TRUE,
         'parent_field' => 'apiary',
         'parent_type' => 'apiary',
-        'own_collection' => NULL,
+        'own_collection' => 'entity.hive.collection',
       ],
       'hive_inspection' => [
         'has_canonical' => TRUE,
         'parent_field' => 'hive',
         'parent_type' => 'hive',
-        'own_collection' => NULL,
+        'own_collection' => 'entity.hive_inspection.collection',
       ],
       'queen' => [
         'has_canonical' => TRUE,
@@ -225,7 +225,7 @@ class HivelogEntityDeleteFormTest extends KernelTestBase {
         'has_canonical' => TRUE,
         'parent_field' => 'apiary',
         'parent_type' => 'apiary',
-        'own_collection' => NULL,
+        'own_collection' => 'entity.calendar_action.collection',
       ],
       'calendar_action_item_requirement' => [
         'has_canonical' => FALSE,
@@ -243,13 +243,13 @@ class HivelogEntityDeleteFormTest extends KernelTestBase {
         'has_canonical' => TRUE,
         'parent_field' => 'hive',
         'parent_type' => 'hive',
-        'own_collection' => NULL,
+        'own_collection' => 'entity.hive_action_log.collection',
       ],
       'apiary_action_log' => [
         'has_canonical' => TRUE,
         'parent_field' => 'apiary',
         'parent_type' => 'apiary',
-        'own_collection' => NULL,
+        'own_collection' => 'entity.apiary_action_log.collection',
       ],
       'inventory_item' => [
         'has_canonical' => TRUE,

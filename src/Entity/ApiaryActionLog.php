@@ -68,6 +68,7 @@ use Drupal\user\EntityOwnerTrait;
     'canonical' => '/hivelog/apiary-action-log/{apiary_action_log}',
     'edit-form' => '/hivelog/apiary-action-log/{apiary_action_log}/edit',
     'delete-form' => '/hivelog/apiary-action-log/{apiary_action_log}/delete',
+    'collection' => '/hivelog/apiary-action-logs',
   ],
 )]
 class ApiaryActionLog extends ContentEntityBase implements EntityChangedInterface, EntityOwnerInterface {
