@@ -243,6 +243,68 @@ class ApiaryTest extends KernelTestBase {
   }
 
   /**
+   * Tests the page-owned Edit/Delete button group appears with access.
+   *
+   * Task 0118 — Apiary previously had no page-owned actions at all,
+   * relying entirely on the Navigation module's top bar. Mirrors
+   * `ApiClientControllerTest::testViewRendersForAuthorizedUser()`'s own
+   * "renders for an authorized user" pattern.
+   */
+  public function testActionsAppearWithUpdateAndDeleteAccess(): void {
+    $admin_role = Role::create(['id' => 'hivelog_admin', 'label' => 'Hivelog Admin']);
+    $admin_role->grantPermission('administer hivelog');
+    $admin_role->save();
+    $admin = User::create(['name' => 'admin', 'mail' => 'admin@example.com']);
+    $admin->addRole('hivelog_admin');
+    $admin->save();
+    \Drupal::currentUser()->setAccount($admin);
+
+    $apiary = Apiary::create(['name' => 'Actions Test Apiary']);
+    $apiary->save();
+
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(ApiaryController::class);
+    $build = $controller->view($apiary);
+
+    $this->assertEquals('hivelog:button-group', $build['actions']['#component']);
+    $labels = array_column($build['actions']['#props']['buttons'], 'label');
+    $this->assertContains('Edit', $labels);
+    $this->assertContains('Delete', $labels);
+  }
+
+  /**
+   * Tests the page-owned Edit/Delete button group is absent without access.
+   *
+   * Mirrors `ApiClientControllerTest::testRegenerateActionHiddenWithoutUpdateAccess()`.
+   */
+  public function testActionsAbsentWithoutUpdateOrDeleteAccess(): void {
+    // The first user created in a kernel test becomes uid 1, which
+    // bypasses every permission check entirely (Drupal core
+    // behaviour) — a throwaway user here ensures $viewer's "cannot"
+    // assertion below actually exercises the access check.
+    User::create(['name' => 'uid1_throwaway', 'mail' => 'uid1@example.com'])->save();
+
+    $apiary = Apiary::create(['name' => 'View Only Apiary']);
+    $apiary->save();
+
+    $viewer = User::create(['name' => 'view-only', 'mail' => 'view-only@example.com']);
+    $viewer->save();
+    $role = Role::create(['id' => 'apiary_view_only_2', 'label' => 'Apiary view only']);
+    $role->grantPermission('view any apiary');
+    $role->save();
+    $viewer->addRole('apiary_view_only_2');
+    $viewer->save();
+
+    \Drupal::currentUser()->setAccount($viewer);
+
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(ApiaryController::class);
+    $build = $controller->view($apiary);
+
+    $this->assertSame([], $build['actions']);
+  }
+
+  /**
    * Tests global hive and inspection collection routes are registered.
    */
   public function testGlobalCollectionRoutesAndMenuLinksExist(): void {

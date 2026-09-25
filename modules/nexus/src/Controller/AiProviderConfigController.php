@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\nexus\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\hivelog\HivelogEntityActionsTrait;
 use Drupal\nexus\Entity\AiProviderConfig;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
@@ -19,9 +20,14 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
  * wrong, not silently inert." A real, live check performed on every
  * page view, not a cached assumption from whenever the config was last
  * saved — the AI module's own installed/configured state can change
- * independently of this entity at any time.
+ * independently of this entity at any time. Page-owned Edit/Delete
+ * added in task 0118, same as every other canonical page — this page
+ * previously had no page-owned buttons AND no local task tabs; it was
+ * only editable from the collection row.
  */
 class AiProviderConfigController extends ControllerBase {
+
+  use HivelogEntityActionsTrait;
 
   /**
    * Builds the AI Provider Config canonical page.
@@ -63,6 +69,8 @@ class AiProviderConfigController extends ControllerBase {
     else {
       $rows[] = [$this->t('Last run'), $this->t('Never')];
     }
+
+    $build['actions'] = $this->buildActions($ai_provider_config);
 
     $build['summary'] = [
       '#type' => 'table',

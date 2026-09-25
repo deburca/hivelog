@@ -152,6 +152,46 @@ class ApiClientControllerTest extends KernelTestBase {
   }
 
   /**
+   * Tests the page-owned Edit/Delete button group appears with access.
+   *
+   * Task 0118 — this page previously had no page-owned actions and no
+   * local task tabs; it was only editable from the collection row.
+   * Needs its own role, since `$this->owner` only holds `edit any api
+   * client` (enough for the existing regenerate-button test) — this
+   * one wants both `edit any` and `delete any`.
+   */
+  public function testActionsAppearWithUpdateAndDeleteAccess(): void {
+    $role = Role::create(['id' => 'client_full_access', 'label' => 'Client full access']);
+    $role->grantPermission('view any api client');
+    $role->grantPermission('edit any api client');
+    $role->grantPermission('delete any api client');
+    $role->save();
+    $full_access = User::create(['name' => 'full_access', 'mail' => 'full_access@example.com']);
+    $full_access->addRole('client_full_access');
+    $full_access->save();
+
+    $this->setCurrentUser($full_access);
+    $controller = new ApiClientController();
+    $build = $controller->view($this->client);
+
+    $this->assertEquals('hivelog:button-group', $build['actions']['#component']);
+    $labels = array_column($build['actions']['#props']['buttons'], 'label');
+    $this->assertContains('Edit', $labels);
+    $this->assertContains('Delete', $labels);
+  }
+
+  /**
+   * Tests the page-owned Edit/Delete button group is absent without access.
+   */
+  public function testActionsAbsentWithoutUpdateOrDeleteAccess(): void {
+    $this->setCurrentUser($this->viewOnlyMember);
+    $controller = new ApiClientController();
+    $build = $controller->view($this->client);
+
+    $this->assertSame([], $build['actions']);
+  }
+
+  /**
    * Tests a non-owner without "any" access cannot view the page at all.
    */
   public function testViewDeniedForOutsider(): void {

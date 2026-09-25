@@ -12,7 +12,11 @@ use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * Functional coverage for the HiveLog permission matrix and tab visibility.
+ * Functional coverage for the HiveLog permission matrix and action visibility.
+ *
+ * "Tab visibility" until task 0118, which retired `hivelog.links.task.yml`
+ * — every canonical page's Edit/Delete now comes from the page's own
+ * `buildActions()` button group instead of a local task tab.
  */
 #[Group('hivelog')]
 #[RunTestsInSeparateProcesses]
@@ -26,7 +30,7 @@ class PermissionMatrixTest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['block', 'hivelog'];
+  protected static $modules = ['hivelog'];
 
   /**
    * An apiary used as canonical route fixture.
@@ -48,9 +52,6 @@ class PermissionMatrixTest extends BrowserTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
-
-    // Render local task tabs so tab visibility can be asserted.
-    $this->drupalPlaceBlock('local_tasks_block');
 
     $this->apiary = Apiary::create(['name' => 'Matrix Apiary']);
     $this->apiary->save();
@@ -174,10 +175,19 @@ class PermissionMatrixTest extends BrowserTestBase {
       $this->assertSession()->statusCodeEquals(200);
     }
 
-    // Canonical apiary page exposes Edit and Delete tabs for admins.
+    // Canonical apiary page exposes the Edit button for admins. Not
+    // Delete: `$this->apiary` has a BLOCK-treatment hive child, and
+    // `HivelogEntityActionsTrait::buildActions()` deliberately checks
+    // the plain `delete` operation (which includes the BLOCK check,
+    // ADR-0103/task 0141) — an admin is not exempt from that data-
+    // integrity rule, only from ordinary permission checks, which is
+    // this test's own actual subject. See
+    // `HivelogDeleteBlockRelationshipsTest` for BLOCK behaviour itself;
+    // the loop above already confirms the delete-form *route* stays
+    // reachable (200, not 403) via `delete_route`.
     $this->drupalGet('/hivelog/apiary/' . $this->apiary->id());
     $this->assertSession()->linkByHrefExists('/hivelog/apiary/' . $this->apiary->id() . '/edit');
-    $this->assertSession()->linkByHrefExists('/hivelog/apiary/' . $this->apiary->id() . '/delete');
+    $this->assertSession()->linkByHrefNotExists('/hivelog/apiary/' . $this->apiary->id() . '/delete');
   }
 
   /**

@@ -165,6 +165,58 @@ class SensorDeviceControllerTest extends KernelTestBase {
   }
 
   /**
+   * Tests the page-owned Edit/Delete button group appears with access.
+   *
+   * Task 0118 — this page previously had no page-owned actions and no
+   * local task tabs; it was only editable from the collection row.
+   * `checkApiaryOwnerDeleteAccess()` requires the apiary owner AND the
+   * `delete own sensor device` permission — `$this->owner`'s
+   * `beekeeper` role grants `edit own` but not `delete own`, so this
+   * needs its own device owned by a user with both.
+   */
+  public function testActionsAppearWithUpdateAndDeleteAccess(): void {
+    $role = Role::create(['id' => 'beekeeper_full', 'label' => 'Beekeeper (full)']);
+    $role->grantPermission('view own apiary');
+    $role->grantPermission('view own sensor device');
+    $role->grantPermission('edit own sensor device');
+    $role->grantPermission('delete own sensor device');
+    $role->save();
+
+    $full_owner = User::create(['name' => 'full_owner', 'mail' => 'full_owner@example.com']);
+    $full_owner->addRole('beekeeper_full');
+    $full_owner->save();
+
+    $apiary = Apiary::create(['name' => 'Full Access Apiary', 'uid' => $full_owner->id(), 'visibility' => 'private']);
+    $apiary->save();
+    $device = SensorDevice::create([
+      'label' => 'Full Access Device',
+      'apiary' => $apiary->id(),
+      'scope' => 'apiary',
+    ]);
+    $device->save();
+
+    $this->setCurrentUser($full_owner);
+    $controller = new SensorDeviceController();
+    $build = $controller->view($device);
+
+    $this->assertEquals('hivelog:button-group', $build['actions']['#component']);
+    $labels = array_column($build['actions']['#props']['buttons'], 'label');
+    $this->assertContains('Edit', $labels);
+    $this->assertContains('Delete', $labels);
+  }
+
+  /**
+   * Tests the page-owned Edit/Delete button group is absent without access.
+   */
+  public function testActionsAbsentWithoutUpdateOrDeleteAccess(): void {
+    $this->setCurrentUser($this->viewOnlyMember);
+    $controller = new SensorDeviceController();
+    $build = $controller->view($this->device);
+
+    $this->assertSame([], $build['actions']);
+  }
+
+  /**
    * Tests an outsider cannot view the page at all.
    */
   public function testViewDeniedForOutsider(): void {

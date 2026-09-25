@@ -16,6 +16,7 @@ use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Form\HivelogCalendarFilterForm;
 use Drupal\hivelog\Form\HivelogFullCalendarFilterForm;
 use Drupal\hivelog\Form\HivelogHiveFilterForm;
+use Drupal\hivelog\HivelogEntityActionsTrait;
 use Drupal\hivelog\HivelogStatTileBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -24,6 +25,8 @@ use Symfony\Component\HttpFoundation\RequestStack;
  * Controller for Apiary pages.
  */
 class ApiaryController extends ControllerBase {
+
+  use HivelogEntityActionsTrait;
 
   /**
    * Default number of hives shown per page in the embedded list.
@@ -130,6 +133,12 @@ class ApiaryController extends ControllerBase {
    */
   public function view(Apiary $apiary) {
     $build = [];
+
+    // Page-owned Edit/Delete (task 0118) — the module's own convention
+    // (ADR-0012, AGENTS.md "Routing, controllers and forms"); Apiary/Hive
+    // were the two canonical pages that had no page-owned button group at
+    // all, relying entirely on the Navigation module's top bar.
+    $build['actions'] = $this->buildActions($apiary);
 
     // "At a glance" stat tiles — optional submodules only; hivelog core
     // contributes none of its own here. See hivelog.api.php's

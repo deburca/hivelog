@@ -7,6 +7,7 @@ namespace Drupal\collective\Controller;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Url;
 use Drupal\collective\Entity\ApiClient;
+use Drupal\hivelog\HivelogEntityActionsTrait;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 /**
@@ -17,9 +18,14 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
  * place", now down to one endpoint since the write-back route was
  * retired in task 0101) and the "Regenerate Token" action. Follows
  * ADR-0004 (custom controllers over view builders), matching every other
- * hivelog entity's canonical page.
+ * hivelog entity's canonical page. Page-owned Edit/Delete added in task
+ * 0118, same as every other canonical page — this page previously had
+ * no page-owned buttons AND no local task tabs; it was only editable
+ * from the collection row.
  */
 class ApiClientController extends ControllerBase {
+
+  use HivelogEntityActionsTrait;
 
   /**
    * Builds the API Client canonical page.
@@ -48,6 +54,8 @@ class ApiClientController extends ControllerBase {
     else {
       $rows[] = [$this->t('Last run'), $this->t('Never')];
     }
+
+    $build['actions'] = $this->buildActions($api_client);
 
     $build['summary'] = [
       '#type' => 'table',

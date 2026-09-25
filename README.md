@@ -405,8 +405,6 @@ hivelog/
 ├── hivelog.services.yml          # Service definitions
 ├── hivelog.links.menu.yml        # Admin menu link
 ├── hivelog.libraries.yml         # CSS library definitions
-├── hivelog.links.action.yml      # Action links (Add buttons)
-├── hivelog.links.task.yml        # Local task tabs (View/Edit/Delete)
 ├── README.md
 ├── css/
 │   ├── hivelog.responsive.css    # Breakpoint tokens and shared CSS custom properties

@@ -8,6 +8,7 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Url;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\Hive;
+use Drupal\hivelog\HivelogEntityActionsTrait;
 use Drupal\nanoprobe\Entity\SensorDevice;
 use Drupal\nanoprobe\Entity\SensorReading;
 use Drupal\nanoprobe\Form\SensorReadingFilterForm;
@@ -20,8 +21,14 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
  * Configuration" action this module's task (0078) actually needs, not a
  * full management UI. Follows ADR-0004 (custom controllers over view
  * builders), matching every other hivelog entity's canonical page.
+ * Page-owned Edit/Delete added in task 0118, same as every other
+ * canonical page — SensorDevice/ApiClient/AiProviderConfig previously
+ * had no page-owned buttons AND no local task tabs; they were only
+ * editable from the collection row.
  */
 class SensorDeviceController extends ControllerBase {
+
+  use HivelogEntityActionsTrait;
 
   /**
    * Builds the Sensor Device canonical page.
@@ -69,6 +76,8 @@ class SensorDeviceController extends ControllerBase {
     else {
       $rows[] = [$this->t('Last seen'), $this->t('Never')];
     }
+
+    $build['actions'] = $this->buildActions($sensor_device);
 
     $build['summary'] = [
       '#type' => 'table',

@@ -326,11 +326,25 @@ front end may not place that block, or its menu block may not render more
 than one level deep. `ApiaryListBuilder` and `QueenListBuilder` (the two
 collections with a context-free add route — `entity.apiary.add_form` and
 `entity.queen.add_form`) therefore build their own "Add" heading directly
-in `render()` instead of relying on `hivelog.links.action.yml`. Hive,
-HiveInspection and QueenObservation have no context-free add route at all
-(they always require a parent — apiary/hive/queen — pre-selected via a
-scoped add route above), so their collection pages have no add button by
-design, with or without menu chrome.
+in `render()`. Hive, HiveInspection and QueenObservation have no
+context-free add route at all (they always require a parent —
+apiary/hive/queen — pre-selected via a scoped add route above), so their
+collection pages have no add button by design, with or without menu
+chrome.
+
+**Every canonical page owns its Edit/Delete; there are no local tasks or
+actions at all (task 0118).** `hivelog.links.task.yml` (per-type
+View/Edit/Delete tabs) and `hivelog.links.action.yml` (Add Apiary/Add
+Queen) were both deleted — the same "not guaranteed to be visible"
+problem the paragraph above describes for menus applies to local
+tasks/actions too: they render only via the core Local Tasks block or
+(on `cms2`) the Navigation module's top bar, neither of which every
+theme/toolbar places. Every canonical page instead builds its own
+Edit/Delete button group in the controller via `buildActions()`
+(`HivelogEntityActionsTrait`, or transitively through
+`HivelogDetailPageTrait`, which `use`s it — see "CSS and components"
+below for the button styling itself). Do not reintroduce either YAML
+file; add a page-owned button instead.
 
 Every list builder, core and submodule alike, extends `HivelogListBuilder`
 (task 0068), whose `buildOperations()` renders the row Operations column as a

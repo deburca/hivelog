@@ -14,6 +14,7 @@ use Drupal\hivelog\Entity\HiveInspection;
 use Drupal\hivelog\Entity\Queen;
 use Drupal\hivelog\Entity\QueenObservation;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
@@ -834,6 +835,76 @@ class HiveTest extends KernelTestBase {
 
     $this->assertStringContainsString('View Full Calendar', $html);
     $this->assertStringContainsString('/hivelog/apiary/' . $this->apiary->id() . '/calendar', $html);
+  }
+
+  /**
+   * Tests the page-owned Edit/Delete button group appears with access.
+   *
+   * Task 0118 — Hive previously had no page-owned actions at all,
+   * relying entirely on the Navigation module's top bar. Mirrors
+   * `ApiClientControllerTest::testViewRendersForAuthorizedUser()`'s own
+   * "renders for an authorized user" pattern.
+   */
+  public function testActionsAppearWithUpdateAndDeleteAccess(): void {
+    $admin_role = Role::create(['id' => 'hivelog_admin', 'label' => 'Hivelog Admin']);
+    $admin_role->grantPermission('administer hivelog');
+    $admin_role->save();
+    $admin = User::create(['name' => 'admin', 'mail' => 'admin@example.com']);
+    $admin->addRole('hivelog_admin');
+    $admin->save();
+    \Drupal::currentUser()->setAccount($admin);
+
+    $hive = Hive::create([
+      'name' => 'Actions Test Hive',
+      'apiary' => $this->apiary->id(),
+      'status' => 'active',
+    ]);
+    $hive->save();
+
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(HiveController::class);
+    $build = $controller->view($hive);
+
+    $this->assertEquals('hivelog:button-group', $build['actions']['#component']);
+    $labels = array_column($build['actions']['#props']['buttons'], 'label');
+    $this->assertContains('Edit', $labels);
+    $this->assertContains('Delete', $labels);
+  }
+
+  /**
+   * Tests the page-owned Edit/Delete button group is absent without access.
+   *
+   * Mirrors `ApiClientControllerTest::testRegenerateActionHiddenWithoutUpdateAccess()`.
+   */
+  public function testActionsAbsentWithoutUpdateOrDeleteAccess(): void {
+    // The first user created in a kernel test becomes uid 1, which
+    // bypasses every permission check entirely (Drupal core
+    // behaviour) — a throwaway user here ensures $viewer's "cannot"
+    // assertion below actually exercises the access check.
+    User::create(['name' => 'uid1_throwaway', 'mail' => 'uid1@example.com'])->save();
+
+    $hive = Hive::create([
+      'name' => 'View Only Hive',
+      'apiary' => $this->apiary->id(),
+      'status' => 'active',
+    ]);
+    $hive->save();
+
+    $viewer = User::create(['name' => 'view-only', 'mail' => 'view-only@example.com']);
+    $viewer->save();
+    $role = Role::create(['id' => 'hive_view_only', 'label' => 'Hive view only']);
+    $role->grantPermission('view any hive');
+    $role->save();
+    $viewer->addRole('hive_view_only');
+    $viewer->save();
+
+    \Drupal::currentUser()->setAccount($viewer);
+
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(HiveController::class);
+    $build = $controller->view($hive);
+
+    $this->assertSame([], $build['actions']);
   }
 
 }

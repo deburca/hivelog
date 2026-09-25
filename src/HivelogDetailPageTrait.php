@@ -24,34 +24,19 @@ use Drupal\Core\Field\FieldItemListInterface;
  * submodule controllers (SensorDevice, ApiClient, AiProviderConfig — see
  * [[0118-page-owned-edit-delete-then-retire-local-tasks]]) can use it too
  * without depending on a `hivelog`-specific controller hierarchy.
+ *
+ * `buildActions()` itself moved out to `HivelogEntityActionsTrait` in task
+ * 0118: it needs none of `formatFieldValue()`'s abstract-method contract,
+ * so a controller that only wants page-owned Edit/Delete buttons — Apiary,
+ * Hive, and the three submodule "minimal" canonical pages — can use that
+ * smaller trait directly rather than being forced to implement
+ * `formatFieldValue()` just to satisfy this one. The nine controllers that
+ * already used this trait for its other methods keep `buildActions()`
+ * unchanged, via the `use` below.
  */
 trait HivelogDetailPageTrait {
 
-  /**
-   * Builds Edit and Delete action links for a detail page.
-   */
-  protected function buildActions(FieldableEntityInterface $entity): array {
-    $buttons = [];
-    if ($entity->access('update')) {
-      $buttons[] = ['label' => (string) $this->t('Edit'), 'url' => $entity->toUrl('edit-form')->toString()];
-    }
-    if ($entity->access('delete')) {
-      $buttons[] = [
-        'label' => (string) $this->t('Delete'),
-        'url' => $entity->toUrl('delete-form')->toString(),
-        'variant' => 'danger',
-      ];
-    }
-    if (empty($buttons)) {
-      return [];
-    }
-    return [
-      '#type' => 'component',
-      '#component' => 'hivelog:button-group',
-      '#props' => ['buttons' => $buttons],
-      '#weight' => -10,
-    ];
-  }
+  use HivelogEntityActionsTrait;
 
   /**
    * Builds a consistently formatted detail-page section.

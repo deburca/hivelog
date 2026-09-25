@@ -18,6 +18,7 @@ use Drupal\hivelog\Entity\Queen;
 use Drupal\hivelog\Form\HivelogCalendarFilterForm;
 use Drupal\hivelog\Form\HivelogInspectionFilterForm;
 use Drupal\hivelog\Form\HivelogQueenObservationFilterForm;
+use Drupal\hivelog\HivelogEntityActionsTrait;
 use Drupal\hivelog\HivelogStatTileBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -26,6 +27,8 @@ use Symfony\Component\HttpFoundation\RequestStack;
  * Controller for Hive pages.
  */
 class HiveController extends ControllerBase {
+
+  use HivelogEntityActionsTrait;
 
   /**
    * Default number of inspections shown per page in the embedded list.
@@ -124,6 +127,12 @@ class HiveController extends ControllerBase {
    */
   public function view(Hive $hive) {
     $build = [];
+
+    // Page-owned Edit/Delete (task 0118) — the module's own convention
+    // (ADR-0012, AGENTS.md "Routing, controllers and forms"); Apiary/Hive
+    // were the two canonical pages that had no page-owned button group at
+    // all, relying entirely on the Navigation module's top bar.
+    $build['actions'] = $this->buildActions($hive);
 
     // "At a glance" stat tiles — optional submodules only (e.g. nexus's
     // AI Insight, nanoprobe's per-sensor vitals); hivelog core
