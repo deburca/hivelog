@@ -469,6 +469,11 @@ class InventoryItemTest extends KernelTestBase {
 
   /**
    * Tests that the delete form warns when purchases reference this item.
+   *
+   * Task 0144: the warning is no longer part of `getDescription()` — it's
+   * the WARN dependency section, listing the specific purchase by name
+   * and link, with the "Unknown item" consequence spelled out once in
+   * `warnDescription()`.
    */
   public function testDeleteWarningPresentWhenPurchasesExist(): void {
     $item = InventoryItem::create([
@@ -478,20 +483,27 @@ class InventoryItemTest extends KernelTestBase {
       'item_type' => 'consumable',
     ]);
     $item->save();
-    InventoryPurchase::create([
+    $purchase = InventoryPurchase::create([
       'apiary' => $this->apiary->id(),
       'item' => $item->id(),
       'purchase_date' => '2026-03-01',
       'quantity' => 10,
       'unit_price' => 1.5,
-    ])->save();
+    ]);
+    $purchase->save();
 
-    $form_object = \Drupal::entityTypeManager()->getFormObject('inventory_item', 'delete');
-    $form_object->setEntity($item);
-    $description = (string) $form_object->getDescription();
+    $build = \Drupal::service('entity.form_builder')->getForm($item, 'delete');
+    $this->assertArrayHasKey('warn', $build['hivelog_delete_dependencies']);
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build['hivelog_delete_dependencies']['warn']);
 
-    $this->assertStringContainsString('1 historical purchase/usage record', $description);
-    $this->assertStringContainsString('Unknown item', $description);
+    // Compare against a freshly reloaded purchase's own label, not the
+    // in-memory `$purchase` object's — the decimal `quantity` field
+    // formats with full stored precision ("10.000 kg") once reloaded
+    // from storage, which is exactly what the delete form itself does.
+    $reloaded = InventoryPurchase::load($purchase->id());
+    $this->assertStringContainsString((string) $reloaded->label(), $html);
+    $this->assertStringContainsString('/hivelog/inventory-purchase/' . $purchase->id(), $html);
+    $this->assertStringContainsString('Unknown item', $html);
   }
 
   /**

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\hivelog\Form;
 
+use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\ContentEntityDeleteForm;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -55,9 +56,23 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class HivelogEntityDeleteForm extends ContentEntityDeleteForm {
 
   /**
+   * The maximum number of individual items a WARN section lists by name.
+   *
+   * Past this, the remaining rows collapse into one "and N more" line
+   * (task 0144) — bounds the page for a catalog item/product with a
+   * long purchase/usage history instead of listing every one.
+   */
+  protected const WARN_DETAIL_LIMIT = 10;
+
+  /**
    * The delete-dependency counter (task 0134).
    */
   protected HivelogDeleteDependencyCounter $dependencyCounter;
+
+  /**
+   * The date formatter (task 0144's action-log "reported on" dates).
+   */
+  protected DateFormatterInterface $dateFormatter;
 
   /**
    * {@inheritdoc}
@@ -65,6 +80,7 @@ class HivelogEntityDeleteForm extends ContentEntityDeleteForm {
   public static function create(ContainerInterface $container) {
     $form = parent::create($container);
     $form->dependencyCounter = $container->get('hivelog.delete_dependency_counter');
+    $form->dateFormatter = $container->get('date.formatter');
     return $form;
   }
 
@@ -134,6 +150,7 @@ class HivelogEntityDeleteForm extends ContentEntityDeleteForm {
         $this->t('Before you delete'),
         $by_treatment[HivelogDeleteDependencyRegistry::WARN],
         'warning',
+        $this->warnDescription(),
       );
     }
     if (!empty($by_treatment[HivelogDeleteDependencyRegistry::CASCADE])) {
@@ -164,13 +181,17 @@ class HivelogEntityDeleteForm extends ContentEntityDeleteForm {
    * @param string $variant
    *   Either `critical` or `warning` — which `.hivelog-notice--*` class
    *   and token pair to use.
+   * @param \Drupal\Core\StringTranslation\TranslatableMarkup|null $description
+   *   An optional explanatory paragraph rendered between the heading
+   *   and the item list (task 0144's WARN sections use this; BLOCK/
+   *   CASCADE/DETACH's own headings are already self-explanatory).
    */
-  protected function buildTreatmentSection($heading, array $rows, string $variant): array {
+  protected function buildTreatmentSection($heading, array $rows, string $variant, ?TranslatableMarkup $description = NULL): array {
     $items = [];
     foreach ($rows as $row) {
-      $items[] = $this->buildRowItem($row);
+      array_push($items, ...$this->buildRowItems($row));
     }
-    return [
+    $section = [
       '#type' => 'container',
       '#attributes' => ['class' => ["hivelog-notice--$variant"]],
       'heading' => [
@@ -180,11 +201,47 @@ class HivelogEntityDeleteForm extends ContentEntityDeleteForm {
         '#tag' => 'h2',
         '#value' => $heading,
       ],
-      'items' => [
-        '#theme' => 'item_list',
-        '#items' => $items,
-      ],
     ];
+    if ($description) {
+      $section['description'] = [
+        '#type' => 'html_tag',
+        '#tag' => 'p',
+        '#value' => $description,
+      ];
+    }
+    $section['items'] = [
+      '#theme' => 'item_list',
+      '#items' => $items,
+    ];
+    return $section;
+  }
+
+  /**
+   * The explanatory paragraph a WARN section shows before its item list.
+   *
+   * NULL by default (no extra text); `InventoryItemDeleteForm` and
+   * `ProductDeleteForm` override this for their own WARN rows (task
+   * 0144), where the consequence of proceeding anyway ("Unknown item",
+   * still counted in past cost reports) needs spelling out once, above
+   * the per-row detail list.
+   */
+  protected function warnDescription(): ?TranslatableMarkup {
+    return NULL;
+  }
+
+  /**
+   * The render item(s) for one counted row (plural — task 0144).
+   *
+   * Defaults to `buildRowItem()`'s single bare-count-plus-link item.
+   * `InventoryItemDeleteForm`/`ProductDeleteForm` override this for
+   * their own WARN rows to list each affected purchase/action-log
+   * individually instead of a bare total — see `truncatedItems()`.
+   *
+   * @return array[]
+   *   One or more render items for `#theme: item_list`.
+   */
+  protected function buildRowItems(array $row): array {
+    return [$this->buildRowItem($row)];
   }
 
   /**
@@ -241,6 +298,82 @@ class HivelogEntityDeleteForm extends ContentEntityDeleteForm {
       '12' => $this->t('it will become apiary-scoped'),
       default => NULL,
     };
+  }
+
+  /**
+   * Caps a WARN row's detail list at `WARN_DETAIL_LIMIT` items (0144).
+   *
+   * Beyond the limit, the remaining items collapse into one "and N
+   * more" line, linked to `$more_url` when given and accessible.
+   *
+   * @param array[] $items
+   *   Render items, one per affected record (already built).
+   * @param \Drupal\Core\Url|null $more_url
+   *   Where "and N more" should link, if anywhere — e.g. the apiary's
+   *   full calendar, or a collection page.
+   *
+   * @return array[]
+   *   `$items`, unchanged if within the limit, otherwise truncated with
+   *   a trailing summary item appended.
+   */
+  protected function truncatedItems(array $items, ?Url $more_url = NULL): array {
+    $total = count($items);
+    if ($total <= self::WARN_DETAIL_LIMIT) {
+      return $items;
+    }
+    $shown = array_slice($items, 0, self::WARN_DETAIL_LIMIT);
+    $remaining = $total - self::WARN_DETAIL_LIMIT;
+    $more_text = $this->formatPlural($remaining, 'and 1 more', 'and @count more');
+    $shown[] = ($more_url && $more_url->access())
+      ? ['#markup' => Link::fromTextAndUrl($more_text, $more_url)->toString()]
+      : ['#markup' => (string) $more_text];
+    return $shown;
+  }
+
+  /**
+   * The hive/apiary action log `$entity` was recorded against, if any.
+   *
+   * Shared by `InventoryUsage` (task 0144's WARN row #23) and
+   * `HarvestYield` (row #26) — both reference `hive_action_log` /
+   * `apiary_action_log` with the identical "exactly one is set"
+   * invariant (see either entity's own `preSave()`), so one resolver
+   * serves both `InventoryItemDeleteForm` and `ProductDeleteForm`.
+   *
+   * Takes and returns the general `EntityInterface`, not
+   * `FieldableEntityInterface` — matches the loop shape
+   * `HivelogDeleteDependencyExecutor::detach()` already uses for the
+   * same `$storage->loadMultiple($ids)` result (typed `EntityInterface`
+   * by the generic storage interface) and
+   * `HivelogEntityHierarchy::resolveParent()`'s own return type, for the
+   * identical reason: that's genuinely all a plain `->entity` property
+   * access is typed as.
+   */
+  protected function resolveActionLog(EntityInterface $entity): ?EntityInterface {
+    // @phpstan-ignore-next-line
+    $log = $entity->get('hive_action_log')->entity;
+    // @phpstan-ignore-next-line
+    return $log ?? $entity->get('apiary_action_log')->entity;
+  }
+
+  /**
+   * One detail-list item for an action log referenced by a WARN child.
+   *
+   * The log's own label (already names the action, hive/apiary and
+   * year) plus the date it was reported — its own `created` timestamp,
+   * since a log row only exists once "done"/"ignored" has actually
+   * been reported (see `HiveActionLog`/`ApiaryActionLog`'s own class
+   * docblocks: "starts unreported: absence of a row… means not yet
+   * reported") — linked to its edit form, where the offending line can
+   * actually be removed.
+   */
+  protected function buildActionLogItem(EntityInterface $log): array {
+    // @phpstan-ignore-next-line
+    $date = $this->dateFormatter->format((int) $log->get('created')->value, 'custom', 'Y-m-d');
+    $text = $this->t('@label (reported @date)', ['@label' => $log->label(), '@date' => $date]);
+    if ($log->hasLinkTemplate('edit-form')) {
+      return ['#markup' => Link::fromTextAndUrl($text, $log->toUrl('edit-form'))->toString()];
+    }
+    return ['#markup' => (string) $text];
   }
 
   /**

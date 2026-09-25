@@ -292,6 +292,147 @@ class InventoryCostReportTest extends KernelTestBase {
   }
 
   /**
+   * A deleted item's historical usage still counts toward the total (0144).
+   *
+   * ADR-0103 #23 is a WARN row, not BLOCK: deleting an `InventoryItem`
+   * with historical `InventoryUsage` against it is allowed, leaving those
+   * rows' `item` reference dangling (entity reference fields just go
+   * empty on load). Before this task, `consumableCostBreakdown()` simply
+   * dropped any row whose item had gone missing — silently understating
+   * every past cost report. It must now still be counted, shown as
+   * "Unknown item".
+   */
+  public function testDeletedItemStillCountsInCostReportAsUnknown(): void {
+    $role = Role::create(['id' => 'admin', 'label' => 'Admin']);
+    $role->grantPermission('administer hivelog');
+    $role->save();
+    $user = User::create(['name' => 'admin', 'mail' => 'admin@example.com']);
+    $user->addRole('admin');
+    $user->save();
+    \Drupal::currentUser()->setAccount($user);
+
+    $hive = Hive::create(['name' => 'Report Hive', 'apiary' => $this->apiary->id(), 'status' => 'active']);
+    $hive->save();
+
+    $item = InventoryItem::create([
+      'apiary' => $this->apiary->id(),
+      'name' => 'Soon Deleted Syrup',
+      'unit' => 'litre',
+      'item_type' => 'consumable',
+    ]);
+    $item->save();
+    InventoryPurchase::create([
+      'apiary' => $this->apiary->id(),
+      'item' => $item->id(),
+      'purchase_date' => '2026-01-01',
+      'quantity' => 10,
+      'unit_price' => 2,
+    ])->save();
+
+    $calendar_action = CalendarAction::create([
+      'apiary' => $this->apiary->id(),
+      'title' => 'Feeding',
+      'description' => 'Desc.',
+      'week_start' => 10,
+    ]);
+    $calendar_action->save();
+    CalendarActionItemRequirement::create([
+      'calendar_action' => $calendar_action->id(),
+      'item' => $item->id(),
+      'quantity' => 3,
+    ])->save();
+
+    // 5 units at a 2.0 snapshot unit cost = 10.0.
+    $log = HiveActionLog::create([
+      'hive' => $hive->id(),
+      'calendar_action' => $calendar_action->id(),
+      'status' => 'done',
+    ]);
+    $form_object = \Drupal::entityTypeManager()->getFormObject('hive_action_log', 'add');
+    $form_object->setEntity($log);
+    $form_state = (new FormState())->setValue('inventory_usage_' . $item->id(), 5);
+    $form_object->save([], $form_state);
+
+    // Raw entity-API delete — ADR-0103 #23's WARN treatment allows this;
+    // the InventoryUsage row survives with a now-dangling `item` reference.
+    $item->delete();
+
+    $current_year = (int) date('Y');
+    $this->pushRequestWithQuery(['year' => $current_year]);
+    $controller = \Drupal::service('class_resolver')->getInstanceFromDefinition(InventoryReportController::class);
+    $build = $controller->costReport($this->apiary);
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+
+    $this->assertStringNotContainsString('Soon Deleted Syrup', $html);
+    $this->assertStringContainsString('Unknown item', $html);
+    // The cost is still counted, not silently dropped.
+    $this->assertStringContainsString('10.00', $html);
+  }
+
+  /**
+   * A deleted product's historical yield still counts toward the total (0144).
+   *
+   * Mirrors testDeletedItemStillCountsInCostReportAsUnknown() for
+   * ADR-0103 #26 (Product → HarvestYield, also WARN).
+   */
+  public function testDeletedProductStillCountsInCostReportAsUnknown(): void {
+    $role = Role::create(['id' => 'admin', 'label' => 'Admin']);
+    $role->grantPermission('administer hivelog');
+    $role->save();
+    $user = User::create(['name' => 'admin', 'mail' => 'admin@example.com']);
+    $user->addRole('admin');
+    $user->save();
+    \Drupal::currentUser()->setAccount($user);
+
+    $hive = Hive::create(['name' => 'Report Hive', 'apiary' => $this->apiary->id(), 'status' => 'active']);
+    $hive->save();
+
+    $product = Product::create([
+      'apiary' => $this->apiary->id(),
+      'name' => 'Soon Deleted Honey',
+      'unit' => 'kg',
+      'expected_unit_price' => 12,
+    ]);
+    $product->save();
+
+    $calendar_action = CalendarAction::create([
+      'apiary' => $this->apiary->id(),
+      'title' => 'Harvest Summer Honey',
+      'description' => 'Desc.',
+      'week_start' => 28,
+    ]);
+    $calendar_action->save();
+    CalendarActionProductYield::create([
+      'calendar_action' => $calendar_action->id(),
+      'product' => $product->id(),
+      'quantity' => 20,
+    ])->save();
+
+    // 15 kg at a 12.0 snapshot unit price = 180.0.
+    $log = HiveActionLog::create([
+      'hive' => $hive->id(),
+      'calendar_action' => $calendar_action->id(),
+      'status' => 'done',
+    ]);
+    $form_object = \Drupal::entityTypeManager()->getFormObject('hive_action_log', 'add');
+    $form_object->setEntity($log);
+    $form_state = (new FormState())->setValue('harvest_yield_' . $product->id(), 15);
+    $form_object->save([], $form_state);
+
+    $product->delete();
+
+    $current_year = (int) date('Y');
+    $this->pushRequestWithQuery(['year' => $current_year]);
+    $controller = \Drupal::service('class_resolver')->getInstanceFromDefinition(InventoryReportController::class);
+    $build = $controller->costReport($this->apiary);
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+
+    $this->assertStringNotContainsString('Soon Deleted Honey', $html);
+    $this->assertStringContainsString('Unknown product', $html);
+    $this->assertStringContainsString('180.00', $html);
+  }
+
+  /**
    * Tests the report's durable-item depreciation breakdown.
    */
   public function testReportIncludesDurableItemDepreciation(): void {

@@ -246,6 +246,11 @@ class ProductTest extends KernelTestBase {
 
   /**
    * Tests that the delete form warns when harvest yields reference this product.
+   *
+   * Task 0144: the warning is no longer part of `getDescription()` — it's
+   * the WARN dependency section, listing the specific action log the
+   * yield was recorded against, with the "Unknown product" consequence
+   * spelled out once in `warnDescription()`.
    */
   public function testDeleteWarningPresentWhenHarvestYieldsExist(): void {
     $product = Product::create([
@@ -276,12 +281,12 @@ class ProductTest extends KernelTestBase {
       'apiary_action_log' => $log->id(),
     ])->save();
 
-    $form_object = \Drupal::entityTypeManager()->getFormObject('product', 'delete');
-    $form_object->setEntity($product);
-    $description = (string) $form_object->getDescription();
+    $build = \Drupal::service('entity.form_builder')->getForm($product, 'delete');
+    $this->assertArrayHasKey('warn', $build['hivelog_delete_dependencies']);
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build['hivelog_delete_dependencies']['warn']);
 
-    $this->assertStringContainsString('1 historical yield record', $description);
-    $this->assertStringContainsString('Unknown product', $description);
+    $this->assertStringContainsString((string) $log->label(), $html);
+    $this->assertStringContainsString('Unknown product', $html);
   }
 
   /**

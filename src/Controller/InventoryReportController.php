@@ -103,9 +103,9 @@ class InventoryReportController extends ControllerBase {
     $breakdown_rows = [];
     foreach ($consumables as $row) {
       $breakdown_rows[] = [
-        $row['item']->toLink()->toString(),
+        $row['item'] ? $row['item']->toLink()->toString() : $this->t('Unknown item'),
         $this->t('Consumable'),
-        rtrim(rtrim(number_format($row['quantity'], 3, '.', ''), '0'), '.') . ' ' . $row['item']->get('unit')->value,
+        rtrim(rtrim(number_format($row['quantity'], 3, '.', ''), '0'), '.') . ' ' . $row['unit'],
         number_format($row['cost'], 2),
       ];
     }
@@ -119,9 +119,9 @@ class InventoryReportController extends ControllerBase {
     }
     foreach ($yields as $row) {
       $breakdown_rows[] = [
-        $row['product']->toLink()->toString(),
+        $row['product'] ? $row['product']->toLink()->toString() : $this->t('Unknown product'),
         $this->t('Yield'),
-        rtrim(rtrim(number_format($row['quantity'], 3, '.', ''), '0'), '.') . ' ' . $row['product']->get('unit')->value,
+        rtrim(rtrim(number_format($row['quantity'], 3, '.', ''), '0'), '.') . ' ' . $row['unit'],
         number_format($row['income'], 2),
       ];
     }
@@ -153,13 +153,17 @@ class InventoryReportController extends ControllerBase {
       ->addCacheTags($this->entityTypeManager->getDefinition('inventory_usage')->getListCacheTags())
       ->addCacheTags($this->entityTypeManager->getDefinition('harvest_yield')->getListCacheTags());
     foreach ($consumables as $row) {
-      $cache->addCacheableDependency($row['item']);
+      if ($row['item']) {
+        $cache->addCacheableDependency($row['item']);
+      }
     }
     foreach ($depreciation as $row) {
       $cache->addCacheableDependency($row['item']);
     }
     foreach ($yields as $row) {
-      $cache->addCacheableDependency($row['product']);
+      if ($row['product']) {
+        $cache->addCacheableDependency($row['product']);
+      }
     }
 
     [$trend_rows, $trend_cache_dependencies] = $this->buildTrendRows($apiary);
@@ -402,13 +406,17 @@ class InventoryReportController extends ControllerBase {
         number_format($totals['net'], 2),
       ];
       foreach ($totals['consumables'] as $row) {
-        $cache_dependencies[] = $row['item'];
+        if ($row['item']) {
+          $cache_dependencies[] = $row['item'];
+        }
       }
       foreach ($totals['depreciation'] as $row) {
         $cache_dependencies[] = $row['item'];
       }
       foreach ($totals['yields'] as $row) {
-        $cache_dependencies[] = $row['product'];
+        if ($row['product']) {
+          $cache_dependencies[] = $row['product'];
+        }
       }
     }
 
@@ -477,6 +485,12 @@ class InventoryReportController extends ControllerBase {
     foreach (['consumables', 'depreciation', 'yields'] as $group) {
       $key = $group === 'yields' ? 'product' : 'item';
       foreach ($totals[$group] as $row) {
+        // `consumables`/`yields` rows can carry a NULL item/product (an
+        // orphaned InventoryUsage/HarvestYield, task 0144) — `depreciation`
+        // rows never can, since they're loaded directly from InventoryItem.
+        if (!$row[$key]) {
+          continue;
+        }
         if ($collector instanceof CacheableMetadata) {
           $collector->addCacheableDependency($row[$key]);
         }
@@ -626,10 +640,16 @@ class InventoryReportController extends ControllerBase {
    * Builds the consumable cost breakdown for an apiary/year, keyed by item id.
    *
    * Sums `InventoryUsage` rows whose owning log (hive- or apiary-scoped)
-   * belongs to this apiary and matches `$year`.
+   * belongs to this apiary and matches `$year`. A usage row whose `item`
+   * has since been deleted (the item's reference field just goes empty
+   * — task 0144's WARN treatment, ADR-0103 #23) still counts: it's
+   * bucketed under key `0` with `item: NULL`, rather than dropped, so
+   * its cost still reaches the apiary/year totals; the caller renders
+   * that bucket as "Unknown item".
    *
-   * @return array<int, array{item: \Drupal\hivelog\Entity\InventoryItem, quantity: float, cost: float}>
-   *   Breakdown rows keyed by inventory item id.
+   * @return array<int, array{item: ?\Drupal\hivelog\Entity\InventoryItem, unit: string, quantity: float, cost: float}>
+   *   Breakdown rows keyed by inventory item id (or `0` for the deleted-item
+   *   bucket).
    */
   protected function consumableCostBreakdown(Apiary $apiary, int $year): array {
     ['apiary_log_ids' => $apiary_log_ids, 'hive_log_ids' => $hive_log_ids] = $this->apiaryYearLogIds($apiary, $year);
@@ -655,12 +675,14 @@ class InventoryReportController extends ControllerBase {
     $breakdown = [];
     foreach ($usage_storage->loadMultiple($usage_ids) as $usage) {
       $item = $usage->get('item')->entity;
-      if (!$item) {
-        continue;
-      }
-      $item_id = (int) $item->id();
+      $item_id = $item ? (int) $item->id() : 0;
       if (!isset($breakdown[$item_id])) {
-        $breakdown[$item_id] = ['item' => $item, 'quantity' => 0.0, 'cost' => 0.0];
+        $breakdown[$item_id] = [
+          'item' => $item,
+          'unit' => $item ? $item->get('unit')->value : '',
+          'quantity' => 0.0,
+          'cost' => 0.0,
+        ];
       }
       $quantity = (float) $usage->get('quantity')->value;
       $unit_cost = (float) $usage->get('unit_cost_snapshot')->value;
@@ -713,10 +735,16 @@ class InventoryReportController extends ControllerBase {
    * `consumableCostBreakdown()`'s exact join shape via
    * `apiaryYearLogIds()` — the only differences are the entity type
    * (`harvest_yield` vs. `inventory_usage`) and the snapshot field
-   * (`unit_price_snapshot` vs. `unit_cost_snapshot`).
+   * (`unit_price_snapshot` vs. `unit_cost_snapshot`). Also mirrors its
+   * deleted-reference handling (task 0144, ADR-0103 #26): a yield row
+   * whose `product` has since been deleted is bucketed under key `0`
+   * with `product: NULL` rather than dropped, so its income still
+   * reaches the apiary/year totals; the caller renders that bucket as
+   * "Unknown product".
    *
-   * @return array<int, array{product: \Drupal\hivelog\Entity\Product, quantity: float, income: float}>
-   *   Breakdown rows keyed by product id.
+   * @return array<int, array{product: ?\Drupal\hivelog\Entity\Product, unit: string, quantity: float, income: float}>
+   *   Breakdown rows keyed by product id (or `0` for the deleted-product
+   *   bucket).
    */
   protected function yieldBreakdown(Apiary $apiary, int $year): array {
     ['apiary_log_ids' => $apiary_log_ids, 'hive_log_ids' => $hive_log_ids] = $this->apiaryYearLogIds($apiary, $year);
@@ -742,12 +770,14 @@ class InventoryReportController extends ControllerBase {
     $breakdown = [];
     foreach ($yield_storage->loadMultiple($yield_ids) as $yield) {
       $product = $yield->get('product')->entity;
-      if (!$product) {
-        continue;
-      }
-      $product_id = (int) $product->id();
+      $product_id = $product ? (int) $product->id() : 0;
       if (!isset($breakdown[$product_id])) {
-        $breakdown[$product_id] = ['product' => $product, 'quantity' => 0.0, 'income' => 0.0];
+        $breakdown[$product_id] = [
+          'product' => $product,
+          'unit' => $product ? $product->get('unit')->value : '',
+          'quantity' => 0.0,
+          'income' => 0.0,
+        ];
       }
       $quantity = (float) $yield->get('quantity')->value;
       $unit_price = (float) $yield->get('unit_price_snapshot')->value;
