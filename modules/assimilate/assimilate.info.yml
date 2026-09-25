@@ -3,7 +3,7 @@ type: module
 description: 'DEVELOPMENT/DEMO ONLY — fabricates a demo apiary, hive and sensor devices, then keeps generating plausible mock SensorReading data on cron so the Sensors panel, dashboard, and nexus insight generation have something real to show before you own actual hardware. Refuses to install on a site with real AI-insights-enabled data. Never enable on a beekeeper''s production site.'
 core_version_requirement: ^11
 package: 'Custom (Development)'
-version: '1.0.0'
+version: '1.8.9'
 dependencies:
   - hivelog:hivelog
   - hivelog:nanoprobe

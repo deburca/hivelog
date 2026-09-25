@@ -3,6 +3,6 @@ type: module
 description: 'Sensor device registration and data ingestion for HiveLog — the senses. Optional; enable only if you have sensor hardware.'
 core_version_requirement: ^11
 package: Custom
-version: '1.0.0'
+version: '1.8.9'
 dependencies:
   - hivelog:hivelog

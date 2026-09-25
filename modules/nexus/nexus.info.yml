@@ -3,8 +3,8 @@ type: module
 description: 'In-process AI synthesis for HiveLog — reads structured hive/apiary context from collective and calls a configured AI provider to write HiveInsight recommendations directly. Optional; requires collective.'
 core_version_requirement: ^11
 package: Custom
-version: '1.0.0'
+version: '1.8.9'
 dependencies:
   - hivelog:hivelog
-  - collective:collective
+  - hivelog:collective
   - key:key

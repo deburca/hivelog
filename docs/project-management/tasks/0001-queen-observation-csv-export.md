@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: backlog
+status: dropped
 priority: high
 project: "[[queen-observation-enhancements]]"
 area: routing

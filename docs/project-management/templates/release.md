@@ -25,6 +25,8 @@ WHERE status = "done" AND contains(string(release), "X.Y.Z")
 - [ ] All target tasks `done`
 - [ ] `--group hivelog` PHPUnit suite green
 - [ ] `ddev drush updb -y && ddev drush cr` clean on a copy of prod data
-- [ ] `hivelog.info.yml` version bumped
+- [ ] `hivelog.info.yml` **and** every submodule's own `.info.yml`
+      (`modules/assimilate`, `modules/collective`, `modules/nanoprobe`,
+      `modules/nexus`) version bumped to match
 - [ ] `README.md` / `AGENTS.md` updated if behaviour changed
 - [ ] Tag created: `git tag X.Y.Z`

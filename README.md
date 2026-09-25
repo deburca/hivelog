@@ -71,6 +71,19 @@ Apiary → Calendar Action ─┬─→ Hive Action Log ──→ (optional) Hiv
 - [Geofield](https://www.drupal.org/project/geofield) module — provides the geofield field type for storing geospatial data
 - [Leaflet](https://www.drupal.org/project/leaflet) module — provides Leaflet/OpenStreetMap map display and interactive map widget
 
+Core has no other dependencies — the four optional submodules under
+`modules/` (`assimilate`, `collective`, `nanoprobe`, `nexus`) are never
+required to enable HiveLog itself. One of them, `nexus`, additionally
+needs the [Key](https://www.drupal.org/project/key) module for resolving
+AI provider credentials; it's listed under `suggest` in `composer.json`
+rather than `require`, so it isn't pulled in unless you actually want
+`nexus`:
+
+```
+composer require drupal/key
+drush en nexus -y
+```
+
 ## Installation
 
 Enable the module with Drush:
