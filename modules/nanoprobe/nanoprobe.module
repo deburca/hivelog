@@ -73,10 +73,9 @@ function nanoprobe_hivelog_needs_attention_alerts(array $apiaries, CacheableMeta
 /**
  * Implements hook_hivelog_app_nav_items().
  *
- * See hivelog.api.php and [[0105-submodule-navigation-menu-links]] — the
- * `nanoprobe.links.menu.yml` entry alongside this one is a best-effort
- * secondary integration for themes that do render menu-link children;
- * this hook is the one hivelog core's own in-app nav actually uses.
+ * See hivelog.api.php and [[0105-submodule-navigation-menu-links]].
+ * `group: setup` (task 0120) — registered hardware setup, not a
+ * day-to-day record-keeping or inventory destination.
  */
 function nanoprobe_hivelog_app_nav_items() {
   return [
@@ -84,6 +83,8 @@ function nanoprobe_hivelog_app_nav_items() {
       'title' => t('Sensor Devices'),
       'url' => Url::fromRoute('entity.sensor_device.collection'),
       'weight' => 10,
+      'group' => 'setup',
+      'section' => 'sensor_device',
     ],
   ];
 }

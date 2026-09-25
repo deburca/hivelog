@@ -59,8 +59,8 @@ function collective_form_alter(array &$form, FormStateInterface $form_state, $fo
  *
  * See hivelog.api.php and
  * docs/project-management/decisions/0099-submodule-canonical-page-panel-hook.md.
- * Same weight (8) `collective.links.menu.yml` already uses for this
- * destination.
+ * `group: setup` (task 0120) — a one-off, admin-provisioned credential,
+ * not a day-to-day record-keeping or inventory destination.
  */
 function collective_hivelog_app_nav_items() {
   return [
@@ -68,6 +68,8 @@ function collective_hivelog_app_nav_items() {
       'title' => t('API Clients'),
       'url' => Url::fromRoute('entity.api_client.collection'),
       'weight' => 8,
+      'group' => 'setup',
+      'section' => 'api_client',
     ],
   ];
 }

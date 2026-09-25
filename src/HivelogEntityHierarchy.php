@@ -6,6 +6,7 @@ namespace Drupal\hivelog;
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Url;
 
 /**
@@ -86,6 +87,71 @@ final class HivelogEntityHierarchy {
     'ai_provider_config',
     'api_client',
   ];
+
+  /**
+   * Route parameter names to check for a route's "subject" entity.
+   *
+   * Extracted from `HivelogBreadcrumbBuilder` in task 0120 so the nav
+   * strip's active-section resolution and the breadcrumb's ancestry
+   * trail read one definition of "what is this page about" instead of
+   * two that can disagree. Order does not affect the result for any
+   * current route — at most one of these ever upcasts to an object on a
+   * given route, except the two action-log "add" routes named in
+   * `CALENDAR_ACTION_NOT_SUBJECT_ROUTES`, resolved explicitly first.
+   */
+  public const SUBJECT_PARAMS = [
+    'apiary',
+    'hive',
+    'hive_inspection',
+    'queen',
+    'queen_observation',
+    'calendar_action',
+    'hive_action_log',
+    'apiary_action_log',
+    'inventory_item',
+    'inventory_purchase',
+    'product',
+    'sensor_device',
+    'ai_provider_config',
+    'api_client',
+    'calendar_action_item_requirement',
+    'calendar_action_product_yield',
+  ];
+
+  /**
+   * Routes where {calendar_action} is present but is not the subject.
+   *
+   * `hivelog.hive_action_log.add` and `hivelog.apiary_action_log.add`
+   * carry `{calendar_action}` only to say which action is being logged;
+   * the subject is `{hive}` / `{apiary}` instead.
+   */
+  public const CALENDAR_ACTION_NOT_SUBJECT_ROUTES = [
+    'hivelog.hive_action_log.add',
+    'hivelog.apiary_action_log.add',
+  ];
+
+  /**
+   * The route's "subject" entity — the one the page is fundamentally about.
+   *
+   * At most one of `SUBJECT_PARAMS` ever upcasts to an object on a given
+   * route, except the two routes in `CALENDAR_ACTION_NOT_SUBJECT_ROUTES`,
+   * which also carry `{calendar_action}` — excluded there explicitly
+   * rather than by checking which other params are present, so the rule
+   * stays anchored to specific routes instead of a coincidence of
+   * parameter names.
+   */
+  public static function resolveSubject(RouteMatchInterface $route_match, string $route_name): ?FieldableEntityInterface {
+    foreach (self::SUBJECT_PARAMS as $param) {
+      if ($param === 'calendar_action' && in_array($route_name, self::CALENDAR_ACTION_NOT_SUBJECT_ROUTES, TRUE)) {
+        continue;
+      }
+      $value = $route_match->getParameter($param);
+      if ($value instanceof FieldableEntityInterface) {
+        return $value;
+      }
+    }
+    return NULL;
+  }
 
   /**
    * The entity `PARENT_FIELD` names as `$entity`'s parent, or NULL.

@@ -7,6 +7,11 @@
  * `SensorPanelBuilder`'s docblock precedent: functional over decorated).
  * Reuses `hivelog.responsive.css`'s existing custom-property tokens; no
  * new token set for one small nav strip.
+ *
+ * Task 0120 adds the active-state (`.is-active`) and group-separator
+ * (`.hivelog-app-nav__separator`) rules, plus a phone-width behaviour
+ * change: horizontal scroll instead of wrapping to 3+ lines once the
+ * strip carries 11 pills across 3 groups.
  */
 
 .hivelog-app-nav {
@@ -35,4 +40,44 @@
 .hivelog-app-nav__link:focus {
   background: var(--hivelog-ground);
   border-color: var(--hivelog-ink-muted);
+}
+
+/*
+ * Active section (task 0120) — the "primary" button tokens (ADR-0012),
+ * reused rather than a new colour, since "where you currently are" is
+ * the same visual weight of emphasis as a primary call-to-action.
+ */
+.hivelog-app-nav__link.is-active {
+  background: var(--hivelog-btn-primary-bg);
+  border-color: var(--hivelog-btn-primary-border);
+  color: var(--hivelog-btn-primary-fg);
+}
+
+.hivelog-app-nav__link.is-active:hover,
+.hivelog-app-nav__link.is-active:focus {
+  background: var(--hivelog-btn-primary-bg-hover);
+  border-color: var(--hivelog-btn-primary-border-hover);
+}
+
+/* A decorative divider between item groups — see the __separator note
+ * in HivelogAppNavBuilder::build() for why it's `aria-hidden`. */
+.hivelog-app-nav__separator {
+  width: 1px;
+  align-self: stretch;
+  background: var(--hivelog-hairline);
+}
+
+@media (max-width: 480px) {
+  /* 11 pills across 3 groups wraps to 3+ lines at phone width — scroll
+   * horizontally instead, keeping the strip to one line. */
+  .hivelog-app-nav {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .hivelog-app-nav__link,
+  .hivelog-app-nav__separator {
+    flex-shrink: 0;
+  }
 }

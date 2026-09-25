@@ -202,14 +202,27 @@ function hook_hivelog_dashboard_sections(array $apiaries, CacheableMetadata $cac
  * it, and an external URI (`Url::fromUri()`) has no route to derive a
  * menu link from, so it's silently skipped there.
  *
+ * Task 0120: `group` places the item among the nav strip's visual
+ * groups (`records` / `inventory` / `setup`, in that display order;
+ * an item with no `group` falls into a safe `default` position and a
+ * group `hivelog` core doesn't already know about sorts last) — every
+ * existing submodule implementation is `setup`. `section` (optional)
+ * is the entity type ID the item's collection is "about", so the item
+ * gets marked active on every page for that type, not just its own
+ * collection route — canonical, edit, delete, add, and any named
+ * sub-page (mirrors the breadcrumb's own
+ * `HivelogEntityHierarchy::resolveSubject()`). Omit `section` for an
+ * item with no single entity type it represents.
+ *
  * @return array
  *   A list of nav item descriptors, each `['title' =>
  *   \Drupal\Core\StringTranslation\TranslatableMarkup, 'url' =>
- *   \Drupal\Core\Url, 'weight' => int]`, keyed by a unique,
- *   module-prefixed key to avoid colliding with another
- *   implementation's item. `hivelog` core's own built-in items use
- *   weights 0–7; start contributed items at 8 or above unless
- *   deliberately interleaving with a specific core item.
+ *   \Drupal\Core\Url, 'weight' => int, 'group' => string, 'section' =>
+ *   string (optional)]`, keyed by a unique, module-prefixed key to
+ *   avoid colliding with another implementation's item. `hivelog`
+ *   core's own built-in items use weights 0–7; start contributed items
+ *   at 8 or above unless deliberately interleaving with a specific
+ *   core item.
  */
 function hook_hivelog_app_nav_items() {
   return [
@@ -217,6 +230,8 @@ function hook_hivelog_app_nav_items() {
       'title' => t('My Things'),
       'url' => Url::fromRoute('entity.my_thing.collection'),
       'weight' => 20,
+      'group' => 'setup',
+      'section' => 'my_thing',
     ],
   ];
 }

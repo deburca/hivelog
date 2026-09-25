@@ -7,7 +7,7 @@ services:
 
   hivelog.app_nav_builder:
     class: Drupal\hivelog\HivelogAppNavBuilder
-    arguments: ['@module_handler', '@string_translation']
+    arguments: ['@module_handler', '@current_route_match', '@string_translation']
 
   hivelog.stat_tile_builder:
     class: Drupal\hivelog\HivelogStatTileBuilder

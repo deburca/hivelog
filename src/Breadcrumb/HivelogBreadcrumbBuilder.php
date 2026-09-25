@@ -20,11 +20,13 @@ use Drupal\hivelog\HivelogEntityHierarchy;
  * `HivelogEntityHierarchy` in task 0127): entity type ID → the reference
  * field that names its parent. `build()` picks the route's "subject"
  * entity (the one upcast route parameter the trail is built from — see
- * `resolveSubject()`), then `addAncestryLinks()` walks the map from the
- * subject up to the root, adding one crumb per ancestor in root-to-leaf
- * order. A missing reference (a deleted apiary, an unassigned queen)
- * just stops the walk there, shortening the trail — the same behaviour
- * the previous per-type blocks had.
+ * `HivelogEntityHierarchy::resolveSubject()`, itself extracted there in
+ * task 0120 so the nav strip's active-section resolution reads the same
+ * definition of "what is this page about"), then `addAncestryLinks()`
+ * walks the map from the subject up to the root, adding one crumb per
+ * ancestor in root-to-leaf order. A missing reference (a deleted apiary,
+ * an unassigned queen) just stops the walk there, shortening the trail
+ * — the same behaviour the previous per-type blocks had.
  *
  * Every trail ends with a crumb naming the current page (ADR-0102, task
  * 0117): the entity's own label on a canonical page, "Edit" / "Delete"
@@ -47,44 +49,6 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
   public function __construct(
     protected EntityTypeManagerInterface $entityTypeManager,
   ) {}
-
-  /**
-   * Route parameter names to check for the route's subject entity.
-   *
-   * Order does not affect the result for any current route — at most one
-   * of these ever upcasts to an object on a given route, except the two
-   * action-log "add" routes below, which are resolved explicitly first.
-   */
-  protected const SUBJECT_PARAMS = [
-    'apiary',
-    'hive',
-    'hive_inspection',
-    'queen',
-    'queen_observation',
-    'calendar_action',
-    'hive_action_log',
-    'apiary_action_log',
-    'inventory_item',
-    'inventory_purchase',
-    'product',
-    'sensor_device',
-    'ai_provider_config',
-    'api_client',
-    'calendar_action_item_requirement',
-    'calendar_action_product_yield',
-  ];
-
-  /**
-   * Routes where {calendar_action} is present but is not the subject.
-   *
-   * `hivelog.hive_action_log.add` and `hivelog.apiary_action_log.add`
-   * carry `{calendar_action}` only to say which action is being logged;
-   * the trail threads via `{hive}` / `{apiary}` instead.
-   */
-  protected const CALENDAR_ACTION_NOT_SUBJECT_ROUTES = [
-    'hivelog.hive_action_log.add',
-    'hivelog.apiary_action_log.add',
-  ];
 
   /**
    * Route → the route parameter its terminal crumb link is built with.
@@ -178,7 +142,7 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
       return $breadcrumb;
     }
 
-    $subject = $this->resolveSubject($route_match, $route_name);
+    $subject = HivelogEntityHierarchy::resolveSubject($route_match, $route_name);
     if (!$subject) {
       return $breadcrumb;
     }
@@ -301,29 +265,6 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
       $title_resolver = \Drupal::service('title_resolver');
       $title = $title_resolver->getTitle(\Drupal::request(), $route);
       return $title === NULL ? NULL : (string) $title;
-    }
-    return NULL;
-  }
-
-  /**
-   * Picks the route's subject entity — the one the trail is built from.
-   *
-   * At most one of `SUBJECT_PARAMS` ever upcasts to an object on a given
-   * route, except the two routes in
-   * `CALENDAR_ACTION_NOT_SUBJECT_ROUTES`, which also carry
-   * `{calendar_action}` — excluded there explicitly rather than by
-   * checking which other params are present, so the rule stays anchored
-   * to specific routes instead of a coincidence of parameter names.
-   */
-  protected function resolveSubject(RouteMatchInterface $route_match, string $route_name): ?FieldableEntityInterface {
-    foreach (self::SUBJECT_PARAMS as $param) {
-      if ($param === 'calendar_action' && in_array($route_name, self::CALENDAR_ACTION_NOT_SUBJECT_ROUTES, TRUE)) {
-        continue;
-      }
-      $value = $route_match->getParameter($param);
-      if ($value instanceof FieldableEntityInterface) {
-        return $value;
-      }
     }
     return NULL;
   }

@@ -97,8 +97,8 @@ function nexus_hivelog_dashboard_sections(array $apiaries, CacheableMetadata $ca
  *
  * See hivelog.api.php and
  * docs/project-management/decisions/0099-submodule-canonical-page-panel-hook.md.
- * Same weight (9) `nexus.links.menu.yml` already uses for this
- * destination.
+ * `group: setup` (task 0120) — a one-off, admin-provisioned integration,
+ * not a day-to-day record-keeping or inventory destination.
  */
 function nexus_hivelog_app_nav_items() {
   return [
@@ -106,6 +106,8 @@ function nexus_hivelog_app_nav_items() {
       'title' => t('AI Provider Configs'),
       'url' => Url::fromRoute('entity.ai_provider_config.collection'),
       'weight' => 9,
+      'group' => 'setup',
+      'section' => 'ai_provider_config',
     ],
   ];
 }
