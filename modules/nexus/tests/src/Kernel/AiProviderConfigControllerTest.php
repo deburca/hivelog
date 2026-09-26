@@ -69,6 +69,25 @@ class AiProviderConfigControllerTest extends KernelTestBase {
   }
 
   /**
+   * Tests the summary table carries the generic detail-table class.
+   *
+   * Task 0131: the generic class is kept alongside the per-entity class.
+   */
+  public function testSummaryTableHasGenericDetailClass(): void {
+    // Uid 1 (the first user created in a kernel test) bypasses every
+    // permission check, matching AiProviderConfigController::view()'s own
+    // access('view') gate.
+    User::create(['name' => 'root', 'mail' => 'root@example.com'])->save();
+    \Drupal::currentUser()->setAccount(User::load(1));
+
+    $controller = new AiProviderConfigController();
+    $build = $controller->view($this->config);
+
+    $this->assertContains('hivelog-detail-table', $build['summary']['#attributes']['class']);
+    $this->assertContains('hivelog-ai-provider-config-table', $build['summary']['#attributes']['class']);
+  }
+
+  /**
    * Tests the page-owned Edit/Delete button group appears with access.
    *
    * This page previously had no page-owned actions and no local task

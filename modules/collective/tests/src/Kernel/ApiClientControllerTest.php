@@ -129,6 +129,10 @@ class ApiClientControllerTest extends KernelTestBase {
     $build = $controller->view($this->client);
 
     $this->assertArrayHasKey('summary', $build);
+    // Task 0131: the generic detail-table class is kept alongside the
+    // per-entity class.
+    $this->assertContains('hivelog-detail-table', $build['summary']['#attributes']['class']);
+    $this->assertContains('hivelog-api-client-table', $build['summary']['#attributes']['class']);
     $this->assertArrayHasKey('endpoints', $build);
     $this->assertArrayHasKey('regenerate', $build);
     $this->assertEquals('hivelog:button', $build['regenerate']['button']['#component']);

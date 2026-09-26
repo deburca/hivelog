@@ -550,7 +550,10 @@ class HiveController extends ControllerBase {
       $section['details'] = [
         '#type' => 'table',
         '#header' => [$this->t('Field'), $this->t('Value')],
-        '#attributes' => ['class' => ['hivelog-queen-table']],
+        // hivelog-detail-table is the generic class every detail-page
+        // label/value table shares (task 0131); hivelog-queen-table is
+        // kept alongside it per AGENTS.md "Theming HiveLog".
+        '#attributes' => ['class' => ['hivelog-detail-table', 'hivelog-queen-table']],
         '#attached' => ['library' => ['hivelog/tables']],
         '#rows' => [
           [$this->t('Queen ID'), $queen->toLink()->toString()],

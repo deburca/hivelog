@@ -2,11 +2,17 @@
  * @file
  * Table styling for HiveLog detail-section tables.
  *
- * Covers inspection, queen, observation, inventory detail view, inventory
- * report, product detail view, calendar action detail view, hive/apiary
- * action log detail view, sensor device, API client, and AI provider
- * config tables. Entity list tables use the hivelog:entity-table SDC
- * component instead.
+ * `.hivelog-detail-table` is the one generic class every detail-page
+ * label/value table carries, alongside its own per-entity class kept for
+ * theming-API backwards compatibility (task 0131 — see AGENTS.md "Theming
+ * HiveLog"). Previously this file repeated a 12-way per-entity selector
+ * list (inspection, queen, observation, calendar action, hive/apiary
+ * action log, inventory item/purchase, product, sensor device, API
+ * client, AI provider config) in every rule; a new entity type now needs
+ * no selector-list edit at all. `.hivelog-inventory-report-table` is a
+ * genuinely distinct report-table style and keeps its own separate rules
+ * below, not merged into the generic class. Entity list tables use the
+ * hivelog:entity-table SDC component instead.
  */
 
 /* Explanatory footnote below a list page's table (e.g. Calendar Actions,
@@ -17,85 +23,47 @@
   color: var(--hivelog-ink-muted);
 }
 
-/* Full-width tables. */
-.hivelog-inspection-table,
-.hivelog-queen-table,
-.hivelog-queen-observation-table,
-.hivelog-inventory-item-table,
-.hivelog-inventory-purchase-table,
-.hivelog-inventory-report-table,
-.hivelog-product-table,
-.hivelog-calendar-action-table,
-.hivelog-hive-action-log-table,
-.hivelog-apiary-action-log-table,
-.hivelog-sensor-device-table,
-.hivelog-api-client-table,
-.hivelog-ai-provider-config-table {
+/* Detail-page label/value tables (task 0131). */
+.hivelog-detail-table {
   width: 100%;
   border-collapse: collapse;
 }
 
 /* Horizontal dividers between rows. */
-.hivelog-inspection-table th,
-.hivelog-inspection-table td,
-.hivelog-queen-table th,
-.hivelog-queen-table td,
-.hivelog-queen-observation-table th,
-.hivelog-queen-observation-table td,
-.hivelog-inventory-item-table th,
-.hivelog-inventory-item-table td,
-.hivelog-inventory-purchase-table th,
-.hivelog-inventory-purchase-table td,
-.hivelog-inventory-report-table th,
-.hivelog-inventory-report-table td,
-.hivelog-product-table th,
-.hivelog-product-table td,
-.hivelog-calendar-action-table th,
-.hivelog-calendar-action-table td,
-.hivelog-hive-action-log-table th,
-.hivelog-hive-action-log-table td,
-.hivelog-apiary-action-log-table th,
-.hivelog-apiary-action-log-table td,
-.hivelog-sensor-device-table th,
-.hivelog-sensor-device-table td,
-.hivelog-api-client-table th,
-.hivelog-api-client-table td,
-.hivelog-ai-provider-config-table th,
-.hivelog-ai-provider-config-table td {
+.hivelog-detail-table th,
+.hivelog-detail-table td {
   border-bottom: 1px solid var(--hivelog-hairline);
   padding: 0.5rem 0.75rem;
 }
 
 /* Header bottom border slightly heavier; left-align titles. */
-.hivelog-inspection-table thead th,
-.hivelog-queen-table thead th,
-.hivelog-queen-observation-table thead th,
-.hivelog-inventory-item-table thead th,
-.hivelog-inventory-purchase-table thead th,
-.hivelog-inventory-report-table thead th,
-.hivelog-product-table thead th,
-.hivelog-calendar-action-table thead th,
-.hivelog-hive-action-log-table thead th,
-.hivelog-apiary-action-log-table thead th,
-.hivelog-sensor-device-table thead th,
-.hivelog-api-client-table thead th,
-.hivelog-ai-provider-config-table thead th {
+.hivelog-detail-table thead th {
   border-bottom: 2px solid var(--hivelog-rule);
   text-align: left;
 }
 
 /* ------------------------------------------------------------------
-   Financial report tables (per-apiary + combined). Amounts are
-   right-aligned with tabular numerals so the figures line up down each
-   column; the leading text column (apiary name / year) stays left.
-   Selectors include `thead th` where needed to outrank the generic
-   "left-align titles" rule above.
+   Inventory report tables (per-apiary + combined). A genuinely distinct
+   style from the detail tables above, kept separate rather than merged
+   into `.hivelog-detail-table` (task 0131). Amounts are right-aligned
+   with tabular numerals so the figures line up down each column; the
+   leading text column (apiary name / year) stays left.
 ------------------------------------------------------------------ */
+.hivelog-inventory-report-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
 .hivelog-inventory-report-table th,
-.hivelog-inventory-report-table td,
-.hivelog-inventory-report-table thead th {
+.hivelog-inventory-report-table td {
+  border-bottom: 1px solid var(--hivelog-hairline);
+  padding: 0.5rem 0.75rem;
   text-align: right;
   font-variant-numeric: tabular-nums;
+}
+
+.hivelog-inventory-report-table thead th {
+  border-bottom: 2px solid var(--hivelog-rule);
 }
 
 /* `--labelled` summary (apiary name in column 1) and the trend tables
@@ -141,78 +109,25 @@
    column keeps usable width, and long values (notes, entity links) wrap rather
    than forcing horizontal scroll. Desktop (>768px) is unaffected. */
 @media (max-width: 768px) {
-  .hivelog-inspection-table,
-  .hivelog-queen-table,
-  .hivelog-queen-observation-table,
-  .hivelog-inventory-item-table,
-  .hivelog-inventory-purchase-table,
-  .hivelog-inventory-report-table,
-  .hivelog-product-table,
-  .hivelog-calendar-action-table,
-  .hivelog-hive-action-log-table,
-  .hivelog-apiary-action-log-table,
-  .hivelog-sensor-device-table,
-  .hivelog-api-client-table,
-  .hivelog-ai-provider-config-table {
+  .hivelog-detail-table,
+  .hivelog-inventory-report-table {
     table-layout: fixed;
   }
 
-  .hivelog-inspection-table th,
-  .hivelog-inspection-table td,
-  .hivelog-queen-table th,
-  .hivelog-queen-table td,
-  .hivelog-queen-observation-table th,
-  .hivelog-queen-observation-table td,
-  .hivelog-inventory-item-table th,
-  .hivelog-inventory-item-table td,
-  .hivelog-inventory-purchase-table th,
-  .hivelog-inventory-purchase-table td,
+  .hivelog-detail-table th,
+  .hivelog-detail-table td,
   .hivelog-inventory-report-table th,
-  .hivelog-inventory-report-table td,
-  .hivelog-product-table th,
-  .hivelog-product-table td,
-  .hivelog-calendar-action-table th,
-  .hivelog-calendar-action-table td,
-  .hivelog-hive-action-log-table th,
-  .hivelog-hive-action-log-table td,
-  .hivelog-apiary-action-log-table th,
-  .hivelog-apiary-action-log-table td,
-  .hivelog-sensor-device-table th,
-  .hivelog-sensor-device-table td,
-  .hivelog-api-client-table th,
-  .hivelog-api-client-table td,
-  .hivelog-ai-provider-config-table th,
-  .hivelog-ai-provider-config-table td {
+  .hivelog-inventory-report-table td {
     padding: 0.4rem 0.5rem;
     vertical-align: top;
     overflow-wrap: anywhere;
   }
 
-  /* Cap the Field (label) column so the Value column keeps room. */
-  .hivelog-inspection-table th:first-child,
-  .hivelog-inspection-table td:first-child,
-  .hivelog-queen-table th:first-child,
-  .hivelog-queen-table td:first-child,
-  .hivelog-queen-observation-table th:first-child,
-  .hivelog-queen-observation-table td:first-child,
-  .hivelog-inventory-item-table th:first-child,
-  .hivelog-inventory-item-table td:first-child,
-  .hivelog-inventory-purchase-table th:first-child,
-  .hivelog-inventory-purchase-table td:first-child,
-  .hivelog-product-table th:first-child,
-  .hivelog-product-table td:first-child,
-  .hivelog-calendar-action-table th:first-child,
-  .hivelog-calendar-action-table td:first-child,
-  .hivelog-hive-action-log-table th:first-child,
-  .hivelog-hive-action-log-table td:first-child,
-  .hivelog-apiary-action-log-table th:first-child,
-  .hivelog-apiary-action-log-table td:first-child,
-  .hivelog-sensor-device-table th:first-child,
-  .hivelog-sensor-device-table td:first-child,
-  .hivelog-api-client-table th:first-child,
-  .hivelog-api-client-table td:first-child,
-  .hivelog-ai-provider-config-table th:first-child,
-  .hivelog-ai-provider-config-table td:first-child {
+  /* Cap the Field (label) column so the Value column keeps room. Not
+     applied to the report table — its columns are numeric, not a
+     label/value pair. */
+  .hivelog-detail-table th:first-child,
+  .hivelog-detail-table td:first-child {
     width: 40%;
     font-weight: 600;
   }
