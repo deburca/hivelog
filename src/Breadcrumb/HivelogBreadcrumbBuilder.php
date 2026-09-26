@@ -294,6 +294,27 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
    * the walk there — a missing parent shortens the trail rather than
    * breaking it).
    *
+   * Three ancestor types get an extra crumb threaded in front of them,
+   * wherever they appear in the chain — not only when they're the
+   * route's own subject, so e.g. an observation of an unassigned queen
+   * gets the same "Queens" fallback the queen's own canonical page
+   * would (task 0122):
+   * - `apiary` — the root of every hivelog trail. Since it has no
+   *   `PARENT_FIELD` entry of its own, it's always the first element
+   *   once reached, so this reads the same as "always" rather than a
+   *   fallback.
+   * - `calendar_action` — its own apiary-scoped Calendar page
+   *   (`hivelog.apiary.calendar_action.collection`), where a beekeeper
+   *   actually opens one from, rather than jumping straight from the
+   *   apiary. Applies equally to `CalendarActionItemRequirement` /
+   *   `CalendarActionProductYield` trails, which already thread through
+   *   `calendar_action` as an ancestor — for consistency, not because
+   *   the task named those two explicitly.
+   * - A `COLLECTION_FALLBACK_TYPES` type (`queen`) whose *own* walk
+   *   comes up completely empty (no hive set) gets its own collection
+   *   crumb as a fallback, exactly like an assigned queen gets a real
+   *   Apiary › Hive ancestry.
+   *
    * @param \Drupal\Core\Breadcrumb\Breadcrumb $breadcrumb
    *   The breadcrumb being built.
    * @param \Drupal\Core\Entity\FieldableEntityInterface $entity
@@ -319,6 +340,24 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
     }
 
     foreach (array_reverse($chain) as $ancestor) {
+      $ancestor_type = $ancestor->getEntityTypeId();
+      if ($ancestor_type === 'apiary') {
+        $breadcrumb->addLink(Link::createFromRoute($collections['entity.apiary.collection'], 'entity.apiary.collection'));
+      }
+      elseif ($ancestor_type === 'calendar_action') {
+        $calendar_apiary = HivelogEntityHierarchy::resolveParent($ancestor);
+        if ($calendar_apiary) {
+          $breadcrumb->addLink(Link::createFromRoute(
+            $this->t('Calendar'),
+            'hivelog.apiary.calendar_action.collection',
+            ['apiary' => $calendar_apiary->id()],
+          ));
+        }
+      }
+      elseif (in_array($ancestor_type, HivelogEntityHierarchy::COLLECTION_FALLBACK_TYPES, TRUE)
+        && !HivelogEntityHierarchy::resolveParent($ancestor)) {
+        $breadcrumb->addLink(Link::createFromRoute($collections["entity.$ancestor_type.collection"], "entity.$ancestor_type.collection"));
+      }
       $this->addEntityLink($breadcrumb, $ancestor);
     }
   }

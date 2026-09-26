@@ -521,19 +521,29 @@ for a route that must NOT get a breadcrumb.
   come from `HivelogEntityHierarchy`: `resolveSubject()` picks the one
   upcast route parameter the trail is built from, and `PARENT_FIELD` (entity
   type ID → the reference field naming its parent) is walked from there up
-  to the root. A missing reference (deleted apiary, unassigned queen) just
-  stops the walk, shortening the trail. `COLLECTION_THREADED_TYPES`
-  (SensorDevice, ApiClient, AiProviderConfig) thread through their own
-  collection link instead of an apiary/hive ancestor.
+  to the root. A missing reference (deleted apiary) just stops the walk,
+  shortening the trail — except an unassigned queen (`COLLECTION_FALLBACK_TYPES`),
+  whose walk resolving to nothing instead gets its own collection crumb
+  (`Home › HiveLog › Queens › <Queen>`, task 0122) as a fallback.
+  `COLLECTION_THREADED_TYPES` (SensorDevice, ApiClient, AiProviderConfig)
+  thread through their own collection link instead of an apiary/hive
+  ancestor entirely (they have none). Two ancestors get an extra crumb
+  threaded in front of them wherever they appear in a chain (task 0122):
+  `apiary` always gets `Home › HiveLog › Apiaries › <Apiary>` (it's the
+  root of every trail), and `calendar_action` always threads its own
+  apiary-scoped Calendar page (`Apiary › Calendar › <Action>`) — the
+  page a beekeeper actually opens one from.
 - **Named sub-pages that aren't a canonical page** (per-apiary report,
   full-calendar, Hive Insights, sensor readings/config download, token
   regeneration) get their own literal-`t()` terminal label via
   `TERMINAL_CRUMB_PARAM` + `terminalCrumbLabel()`, appended after the
   subject's own ancestor trail.
 - **Calendar-action requirement / yield** edit-delete pages thread
-  `Apiary → Calendar action → <sub-entity>` with a non-linked (`<nolink>`)
-  terminal (these have no canonical page) — the same generic mechanism above,
-  since neither type has a `canonical` link template.
+  `Apiary › Calendar › Calendar action › <sub-entity>` with a non-linked
+  (`<nolink>`) terminal (these have no canonical page) — the same
+  generic mechanism above, since neither type has a `canonical` link
+  template, and picking up the same `calendar_action` threading every
+  other calendar-action trail gets.
 
 Adding a new hivelog entity type: add one entry to
 `HivelogEntityHierarchy::PARENT_FIELD` (or `COLLECTION_THREADED_TYPES` if it

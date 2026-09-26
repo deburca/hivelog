@@ -60,6 +60,26 @@ final class HivelogEntityHierarchy {
   ];
 
   /**
+   * Entity types that fall back to their own collection crumb when unlinked.
+   *
+   * Unlike `COLLECTION_THREADED_TYPES` (never has a real ancestor to walk
+   * to at all), these types usually resolve a real ancestor via
+   * `PARENT_FIELD` — the fallback crumb is added only where one of
+   * these types appears in a chain with its own reference empty
+   * (task 0122, checked by `HivelogBreadcrumbBuilder::addAncestryLinks()`
+   * per ancestor, not only for the route's own subject): an unassigned
+   * `queen` (no `hive` set) gets "Home › HiveLog › Queens › <Queen>"
+   * instead of skipping straight to the queen, and a `QueenObservation`
+   * of that same unassigned queen gets "… › Queens › <Queen> ›
+   * <Observation>" for the identical reason — while an assigned
+   * queen, or an observation of one, still threads its real
+   * Apiary › Hive › Queen ancestry untouched.
+   */
+  public const COLLECTION_FALLBACK_TYPES = [
+    'queen',
+  ];
+
+  /**
    * Entity types with their own `entity.<type>.collection` route.
    *
    * Not derivable from `PARENT_FIELD` + `COLLECTION_THREADED_TYPES` +
