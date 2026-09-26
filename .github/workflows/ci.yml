@@ -178,6 +178,13 @@ jobs:
           composer require --dev "drupal/core-dev:^11" \
             --update-with-all-dependencies \
             --no-interaction --no-progress --prefer-dist
+          # drupal/key is only a `suggest` in the module's own composer.json
+          # (task 0139) since only the optional `nexus` submodule uses it —
+          # install it explicitly here, matching README.md's own documented
+          # `composer require drupal/key` step, so nexus's kernel tests
+          # (AiProviderConfig*) don't fail with "Unavailable module: 'key'".
+          composer require --dev drupal/key \
+            --no-interaction --no-progress --prefer-dist
 
       - name: Install Drupal site
         working-directory: drupal-project
