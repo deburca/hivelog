@@ -343,4 +343,56 @@ class ApiaryTest extends KernelTestBase {
     $this->assertEquals('hivelog.admin', $menu_links['hivelog.nav_item:queen_observations']['parent']);
   }
 
+  /**
+   * Tests the Seasonal Calendar heading's "View all Logs" link (task 0121).
+   *
+   * `entity.apiary_action_log.collection` otherwise has no inbound link
+   * anywhere in the UI. Visible only to a user who can actually reach
+   * it, per the task's own "link visible to users with the route's
+   * permission and hidden otherwise" requirement.
+   */
+  public function testApiaryViewCalendarHeadingLinksToLogsWithAccess(): void {
+    $this->installConfig(['system']);
+
+    $role = Role::create(['id' => 'apiary_log_viewer', 'label' => 'Apiary Log Viewer']);
+    $role->grantPermission('view any apiary action log');
+    $role->save();
+    $user = User::create(['name' => 'apiary-log-viewer', 'mail' => 'apiary-log-viewer@example.com']);
+    $user->addRole('apiary_log_viewer');
+    $user->save();
+    \Drupal::currentUser()->setAccount($user);
+
+    $apiary = Apiary::create(['name' => 'Log Link Apiary']);
+    $apiary->save();
+
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(ApiaryController::class);
+    $build = $controller->view($apiary);
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+
+    $this->assertStringContainsString('View all Logs', $html);
+    $this->assertStringContainsString('/hivelog/apiary-action-logs', $html);
+  }
+
+  /**
+   * Tests the "View all Logs" link is hidden without access (task 0121).
+   */
+  public function testApiaryViewCalendarHeadingHidesLogsLinkWithoutAccess(): void {
+    $this->installConfig(['system']);
+
+    $user = User::create(['name' => 'no-apiary-log-access', 'mail' => 'no-apiary-log-access@example.com']);
+    $user->save();
+    \Drupal::currentUser()->setAccount($user);
+
+    $apiary = Apiary::create(['name' => 'No Log Access Apiary']);
+    $apiary->save();
+
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(ApiaryController::class);
+    $build = $controller->view($apiary);
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+
+    $this->assertStringNotContainsString('View all Logs', $html);
+  }
+
 }

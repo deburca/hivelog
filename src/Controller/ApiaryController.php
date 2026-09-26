@@ -293,11 +293,15 @@ class ApiaryController extends ControllerBase {
     // mirroring HiveController's checklist exactly — see ADR-0025 addendum
     // on "current week" visibility (task 0026).
     //
-    // Both actions (View Full Calendar, Add Calendar Action) share the
-    // heading's second flex child — a plain container carrying the
-    // `hivelog-list-heading__action` class — so the row still has exactly
-    // the two children `.hivelog-list-heading` is styled for, with both
-    // buttons right-aligned together rather than one per row.
+    // All three actions (View Full Calendar, View all Logs, Add Calendar
+    // Action) share the heading's second flex child — a plain container
+    // carrying the `hivelog-list-heading__action` class — so the row
+    // still has exactly the two children `.hivelog-list-heading` is
+    // styled for, with every button right-aligned together rather than
+    // one per row. "View all Logs" is task 0121's fix for
+    // `entity.apiary_action_log.collection` otherwise having no inbound
+    // link anywhere in the UI — an audit trail, not a daily
+    // destination, so it belongs here rather than the nav strip.
     $current_week = (int) date('W');
     $current_year = (int) date('Y');
     $build['calendar_heading'] = [
@@ -333,6 +337,17 @@ class ApiaryController extends ControllerBase {
         ],
       ],
     ];
+    $apiary_action_log_collection = Url::fromRoute('entity.apiary_action_log.collection');
+    if ($apiary_action_log_collection->access()) {
+      $build['calendar_heading']['actions']['view_logs'] = [
+        '#type' => 'component',
+        '#component' => 'hivelog:button',
+        '#props' => [
+          'label' => (string) $this->t('View all Logs'),
+          'url' => $apiary_action_log_collection->toString(),
+        ],
+      ];
+    }
 
     $build['calendar_filter'] = $this->formBuilder->getForm(
       HivelogCalendarFilterForm::class,

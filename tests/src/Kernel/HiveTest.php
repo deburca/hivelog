@@ -838,6 +838,71 @@ class HiveTest extends KernelTestBase {
   }
 
   /**
+   * Tests the Seasonal Calendar heading's "View all Logs" link (task 0121).
+   *
+   * `entity.hive_action_log.collection` otherwise has no inbound link
+   * anywhere in the UI. Visible only to a user who can actually reach
+   * it — mirrors the AC's own "link visible to users with the route's
+   * permission and hidden otherwise" requirement, unlike the always-shown
+   * "View Full Calendar" button above.
+   */
+  public function testHiveViewCalendarHeadingLinksToLogsWithAccess(): void {
+    $this->installConfig(['system']);
+
+    // Uid 1 is an implicit superuser in Drupal core regardless of its
+    // roles/permissions — create and discard a throwaway user first so
+    // this test genuinely exercises the granted role/permission below,
+    // not an accidental superuser bypass.
+    User::create(['name' => 'uid-1-placeholder', 'mail' => 'uid-1-placeholder@example.com'])->save();
+
+    $role = Role::create(['id' => 'log_viewer', 'label' => 'Log Viewer']);
+    $role->grantPermission('view any hive action log');
+    $role->save();
+    $user = User::create(['name' => 'log-viewer', 'mail' => 'log-viewer@example.com']);
+    $user->addRole('log_viewer');
+    $user->save();
+    \Drupal::currentUser()->setAccount($user);
+
+    $hive = Hive::create(['name' => 'Log Link Hive', 'apiary' => $this->apiary->id(), 'status' => 'active']);
+    $hive->save();
+
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(HiveController::class);
+    $build = $controller->view($hive);
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+
+    $this->assertStringContainsString('View all Logs', $html);
+    $this->assertStringContainsString('/hivelog/hive-action-logs', $html);
+  }
+
+  /**
+   * Tests the "View all Logs" link is hidden without access (task 0121).
+   */
+  public function testHiveViewCalendarHeadingHidesLogsLinkWithoutAccess(): void {
+    $this->installConfig(['system']);
+
+    // Uid 1 is an implicit superuser in Drupal core regardless of its
+    // roles/permissions — create and discard a throwaway user first so
+    // the actual test user isn't the very first user created and
+    // genuinely has zero permissions to check against.
+    User::create(['name' => 'uid-1-placeholder', 'mail' => 'uid-1-placeholder@example.com'])->save();
+
+    $user = User::create(['name' => 'no-log-access', 'mail' => 'no-log-access@example.com']);
+    $user->save();
+    \Drupal::currentUser()->setAccount($user);
+
+    $hive = Hive::create(['name' => 'No Log Access Hive', 'apiary' => $this->apiary->id(), 'status' => 'active']);
+    $hive->save();
+
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(HiveController::class);
+    $build = $controller->view($hive);
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+
+    $this->assertStringNotContainsString('View all Logs', $html);
+  }
+
+  /**
    * Tests the page-owned Edit/Delete button group appears with access.
    *
    * Task 0118 — Hive previously had no page-owned actions at all,

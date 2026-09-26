@@ -225,6 +225,17 @@ class HiveController extends ControllerBase {
     $current_year = (int) date('Y');
     // 'calendar' is the anchor task 0141's delete-blocked page links to
     // (ADR-0103 row #10, hive → hive_action_log, BLOCK).
+    //
+    // Both actions (View Full Calendar, View all Logs) share the
+    // heading's second flex child — a plain container carrying the
+    // `hivelog-list-heading__action` class — matching
+    // ApiaryController::view()'s own calendar heading exactly:
+    // `.hivelog-list-heading` is styled for exactly two children via
+    // `justify-content: space-between`, so a third top-level child
+    // would break that layout. "View all Logs" is task 0121's fix for
+    // `entity.hive_action_log.collection` otherwise having no inbound
+    // link anywhere in the UI — an audit trail, not a daily
+    // destination, so it belongs here rather than the nav strip.
     $build['calendar_heading'] = [
       '#type' => 'container',
       '#attributes' => ['class' => ['hivelog-list-heading'], 'id' => 'calendar'],
@@ -236,16 +247,30 @@ class HiveController extends ControllerBase {
         '#value' => $this->t('Seasonal Calendar (current week: @week)', ['@week' => $current_week]),
         '#attributes' => ['class' => ['hivelog-list-heading__title']],
       ],
-      'view' => [
-        '#type' => 'component',
-        '#component' => 'hivelog:button',
-        '#props' => [
-          'label' => (string) $this->t('View Full Calendar'),
-          'url' => Url::fromRoute('hivelog.apiary.calendar_action.collection', ['apiary' => $hive->get('apiary')->target_id])->toString(),
-          'extra_classes' => 'hivelog-list-heading__action',
+      'actions' => [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['hivelog-list-heading__action']],
+        'view' => [
+          '#type' => 'component',
+          '#component' => 'hivelog:button',
+          '#props' => [
+            'label' => (string) $this->t('View Full Calendar'),
+            'url' => Url::fromRoute('hivelog.apiary.calendar_action.collection', ['apiary' => $hive->get('apiary')->target_id])->toString(),
+          ],
         ],
       ],
     ];
+    $hive_action_log_collection = Url::fromRoute('entity.hive_action_log.collection');
+    if ($hive_action_log_collection->access()) {
+      $build['calendar_heading']['actions']['view_logs'] = [
+        '#type' => 'component',
+        '#component' => 'hivelog:button',
+        '#props' => [
+          'label' => (string) $this->t('View all Logs'),
+          'url' => $hive_action_log_collection->toString(),
+        ],
+      ];
+    }
 
     $build['calendar_filter'] = $this->formBuilder->getForm(
       HivelogCalendarFilterForm::class,
