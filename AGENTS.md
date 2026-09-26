@@ -452,8 +452,11 @@ the module stays palette-free). The supported surface:
 - **Stable class names** — the `.hivelog-*` BEM classes on the dashboard
   (`__masthead`, `__attention`, `__stat-tiles`, `__split`, …), the
   `hivelog-inventory-report-table` / `-breakdown` / `-trend` report
-  tables, `.hivelog-filter-form`, `.hivelog-list-heading` and the SDC
-  roots (`.hivelog-entity-table`, `.hivelog-stat-tile`,
+  tables, `.hivelog-filter-form`, `.hivelog-list-heading`, the generic
+  `.hivelog-detail-table` / `.hivelog-detail-section` every detail-page
+  label/value table and its section wrapper carry alongside their
+  per-entity class (task 0131), and the SDC roots
+  (`.hivelog-entity-table`, `.hivelog-stat-tile`,
   `.hivelog-button-group`). Treat these as API; renames go through a task.
 - **`hivelog-page` body class** — `hivelog_preprocess_html()` adds it on
   every route whose path is under `/hivelog` (path match, because the

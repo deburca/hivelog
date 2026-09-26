@@ -202,4 +202,29 @@ class HivelogDetailPageTraitTest extends KernelTestBase {
     $this->assertEquals([], $build);
   }
 
+  /**
+   * Tests buildSection() carries the generic class alongside the per-type one.
+   *
+   * Task 0131: every detail-page section wrapper and table gets a
+   * `hivelog-detail-*` class in addition to its existing
+   * `hivelog-<type>-*` class, so `css/hivelog.tables.css` needs one
+   * selector instead of a per-entity list. Exercised via QueenController,
+   * one of the nine controllers built on the trait.
+   */
+  public function testBuildSectionEmitsGenericAndPerEntityClasses(): void {
+    // Invoked directly via reflection (matching buildActions() above)
+    // rather than through the full view(), which also queries
+    // queen_observation storage that this test's own setUp() doesn't
+    // install a schema for.
+    $controller = \Drupal::service('class_resolver')->getInstanceFromDefinition(QueenController::class);
+    $method = new \ReflectionMethod(QueenController::class, 'buildSection');
+    $method->setAccessible(TRUE);
+    $section = $method->invoke($controller, 'Overview', $this->queen, ['name']);
+
+    $this->assertContains('hivelog-detail-section', $section['#attributes']['class']);
+    $this->assertContains('hivelog-queen-section', $section['#attributes']['class']);
+    $this->assertContains('hivelog-detail-table', $section['table']['#attributes']['class']);
+    $this->assertContains('hivelog-queen-table', $section['table']['#attributes']['class']);
+  }
+
 }

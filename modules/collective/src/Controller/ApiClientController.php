@@ -60,7 +60,10 @@ class ApiClientController extends ControllerBase {
     $build['summary'] = [
       '#type' => 'table',
       '#header' => [$this->t('Field'), $this->t('Value')],
-      '#attributes' => ['class' => ['hivelog-api-client-table']],
+      // hivelog-detail-table is the generic class every detail-page
+      // label/value table shares (task 0131); hivelog-api-client-table
+      // is kept alongside it per AGENTS.md "Theming HiveLog".
+      '#attributes' => ['class' => ['hivelog-detail-table', 'hivelog-api-client-table']],
       '#attached' => ['library' => ['hivelog/tables']],
       '#rows' => $rows,
     ];

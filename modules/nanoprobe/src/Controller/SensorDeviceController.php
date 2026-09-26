@@ -82,7 +82,10 @@ class SensorDeviceController extends ControllerBase {
     $build['summary'] = [
       '#type' => 'table',
       '#header' => [$this->t('Field'), $this->t('Value')],
-      '#attributes' => ['class' => ['hivelog-sensor-device-table']],
+      // hivelog-detail-table is the generic class every detail-page
+      // label/value table shares (task 0131); hivelog-sensor-device-table
+      // is kept alongside it per AGENTS.md "Theming HiveLog".
+      '#attributes' => ['class' => ['hivelog-detail-table', 'hivelog-sensor-device-table']],
       '#attached' => ['library' => ['hivelog/tables']],
       '#rows' => $rows,
     ];

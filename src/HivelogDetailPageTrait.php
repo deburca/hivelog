@@ -45,13 +45,20 @@ trait HivelogDetailPageTrait {
    * structure below its H1 page title is a flat run of these sections
    * (Overview, Identity, …), so each one is a top-level section, never
    * nested inside another.
+   *
+   * The wrapper and table each carry a generic `hivelog-detail-*` class
+   * alongside their existing per-entity class (task 0131), so
+   * `css/hivelog.tables.css` only needs one selector instead of a
+   * per-entity list. The per-entity class is kept alongside it —
+   * AGENTS.md ("Theming HiveLog") treats `.hivelog-*` class names as
+   * theming API, so it stays for at least one more minor release.
    */
   protected function buildSection($title, FieldableEntityInterface $entity, array $fields): array {
     $prefix = $this->detailPageClassPrefix($entity);
     return [
       '#type' => 'container',
       '#attributes' => [
-        'class' => ["hivelog-{$prefix}-section"],
+        'class' => ['hivelog-detail-section', "hivelog-{$prefix}-section"],
       ],
       'heading' => [
         '#type' => 'html_tag',
@@ -66,7 +73,7 @@ trait HivelogDetailPageTrait {
         ],
         '#rows' => $this->buildRows($entity, $fields),
         '#attributes' => [
-          'class' => ["hivelog-{$prefix}-table"],
+          'class' => ['hivelog-detail-table', "hivelog-{$prefix}-table"],
         ],
         '#attached' => ['library' => ['hivelog/tables']],
       ],
@@ -173,7 +180,7 @@ trait HivelogDetailPageTrait {
     return [
       '#type' => 'container',
       '#attributes' => [
-        'class' => ["hivelog-{$prefix}-section", "hivelog-{$prefix}-photos"],
+        'class' => ['hivelog-detail-section', "hivelog-{$prefix}-section", "hivelog-{$prefix}-photos"],
       ],
       '#attached' => [
         'library' => ['hivelog/images'],

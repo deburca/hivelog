@@ -448,6 +448,14 @@ class HiveInspectionTest extends KernelTestBase {
     $this->assertStringContainsString('28.75 kg', $html);
     $this->assertStringContainsString('Added a super.', $html);
     $this->assertStringContainsString('Colony developing well.', $html);
+
+    // Task 0131: every section wrapper and table also carries the generic
+    // hivelog-detail-* class alongside its existing hivelog-inspection-*
+    // class.
+    $this->assertStringContainsString('hivelog-detail-section', $html);
+    $this->assertStringContainsString('hivelog-inspection-section', $html);
+    $this->assertStringContainsString('hivelog-detail-table', $html);
+    $this->assertStringContainsString('hivelog-inspection-table', $html);
   }
 
   /**
@@ -535,6 +543,9 @@ class HiveInspectionTest extends KernelTestBase {
     $this->assertStringContainsString('alt="Photo two"', $html);
     // Photos section heading should appear.
     $this->assertStringContainsString('>Photos<', $html);
+    // Task 0131: the photos section wrapper also carries the generic
+    // hivelog-detail-section class alongside hivelog-inspection-section.
+    $this->assertStringContainsString('hivelog-detail-section', $html);
   }
 
   /**

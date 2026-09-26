@@ -442,6 +442,40 @@ class HiveTest extends KernelTestBase {
   }
 
   /**
+   * Tests the hive page's queen table carries the generic detail class.
+   *
+   * Task 0131: `HiveController::buildQueenSection()` builds its own table
+   * directly (not via `HivelogDetailPageTrait::buildSection()`), so it
+   * needs its own `hivelog-detail-table` addition alongside the existing
+   * `hivelog-queen-table` class.
+   */
+  public function testHiveViewQueenTableHasGenericDetailClass(): void {
+    $this->installConfig(['system']);
+
+    $hive = Hive::create([
+      'name' => 'Queen Table Hive',
+      'apiary' => $this->apiary->id(),
+      'status' => 'active',
+    ]);
+    $hive->save();
+
+    Queen::create([
+      'name' => 'Q-detail-class',
+      'hive' => $hive->id(),
+      'queen_year' => 2025,
+      'status' => 'active',
+    ])->save();
+
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(HiveController::class);
+    $build = $controller->view($hive);
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+
+    $this->assertStringContainsString('hivelog-detail-table', $html);
+    $this->assertStringContainsString('hivelog-queen-table', $html);
+  }
+
+  /**
    * Tests that no histogram is rendered when no inspections have weights.
    */
   public function testHiveViewWeightHistogramAbsentWhenNoData(): void {

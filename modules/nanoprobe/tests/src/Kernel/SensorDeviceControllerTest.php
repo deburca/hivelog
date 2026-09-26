@@ -144,6 +144,10 @@ class SensorDeviceControllerTest extends KernelTestBase {
     $build = $controller->view($this->device);
 
     $this->assertArrayHasKey('summary', $build);
+    // Task 0131: the generic detail-table class is kept alongside the
+    // per-entity class.
+    $this->assertContains('hivelog-detail-table', $build['summary']['#attributes']['class']);
+    $this->assertContains('hivelog-sensor-device-table', $build['summary']['#attributes']['class']);
     $this->assertArrayHasKey('config', $build);
     $this->assertEquals('hivelog:button', $build['config']['download']['#component']);
     $this->assertEquals('danger', $build['config']['download']['#props']['variant']);
