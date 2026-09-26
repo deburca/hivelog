@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: backlog
+status: review
 priority: low
 project: "[[page-structure-consistency]]"
 area: tests
@@ -37,25 +37,67 @@ Several tasks in this project restructure exactly this code
 against today's behaviour first make those refactors safe.
 
 ## Acceptance criteria
-- [ ] Kernel tests for the three untested controllers: view renders
+- [x] Kernel tests for the three untested controllers: view renders
       for an authorised user, access is denied for an outsider (via the
       route, per [[0133-route-level-entity-access]]), and Edit / Delete
       appear only with the matching access.
-- [ ] Filter forms: one data-provider kernel test per form. Each query
+- [x] Filter forms: one data-provider kernel test per form. Each query
       key narrows the result set, and Reset targets the right URL.
       Write these **before** [[0132-filters-on-hive-inspection-observation-lists]]
       moves the filter logic, so that move is test-guarded.
-- [ ] Entity forms: at least a build + validate + save round trip per
+- [x] Entity forms: at least a build + validate + save round trip per
       form, including the scoped-add parent pre-population and the
       post-save redirect target.
-- [ ] Delete forms: covered by [[0127-shared-delete-form-base]]'s
+- [x] Delete forms: covered by [[0127-shared-delete-form-base]]'s
       per-type test. Don't duplicate; link here once done.
-- [ ] kernel + unit suite green against `cms2`.
+- [x] kernel + unit suite green against `cms2`.
 
 ## Implementation notes
-- Sequence: filter-form tests before 0132, detail-controller tests
-  before 0125. Order these subtasks by whichever refactor is scheduled
-  first rather than finishing this whole task up front.
+By the time this task was picked up, tasks 0125–0132 had already landed,
+so a fresh audit (grepping `tests/` and `modules/*/tests/` for each
+controller/form's class name and for `entity.form_builder`/
+`getFormObject`/`FormState` usage) replaced the original "do this before
+that refactor" sequencing — most of the 28 forms flagged in the 2026-09-23
+gap analysis turned out to already have solid coverage added by those
+intervening tasks. Only genuine remaining gaps got new tests:
+
+- **Controllers** — added `InventoryItemTest::testItemViewRendersGroupedSections()`
+  et al., `InventoryPurchaseTest`, and `ProductTest` kernel coverage for
+  `InventoryItemController`, `InventoryPurchaseController` and
+  `ProductController`: view rendering, per-[[0133-route-level-entity-access]]
+  outsider denial, and Edit/Delete button-group presence gated on access.
+- **Filter forms** — audit found `HivelogHiveFilterForm`,
+  `HivelogInspectionFilterForm`, `HivelogQueenObservationFilterForm`,
+  `HivelogCalendarFilterForm`, `HivelogFullCalendarFilterForm` and
+  `HivelogCalendarActionsFilterForm` already had thorough query-narrowing
+  coverage (`FullListFilterTest`, `EmbeddedTableFilterPaginationTest`,
+  `ApiaryCalendarChecklistTest`, `HiveCalendarChecklistTest`,
+  `CalendarActionCollectionTest`) and `SensorReadingFilterForm` was
+  covered by `SensorDeviceReadingsTest`. The one universal gap was the
+  **Reset button's target URL** — added one assertion per form to each of
+  those five files plus `SensorDeviceReadingsTest`, and a missing
+  `temperament` query-key test to `EmbeddedTableFilterPaginationTest`.
+- **Entity forms** — `ApiaryForm`, `HiveForm`, `HiveInspectionForm`
+  (functional `EntityCrudJourneyTest`), `ApiaryActionLogForm`/
+  `HiveActionLogForm` (`InventoryUsageReportingIntegrationTest`,
+  `HarvestYieldReportingIntegrationTest`, `HiveActionLogInspectionLinkTest`),
+  `ApiClientForm` and `SensorDeviceForm` (their submodules'
+  `*ManagementUiTest` classes) were all already covered end to end.
+  Genuine gaps — `QueenForm`, `ProductForm`, `InventoryItemForm`,
+  `InventoryPurchaseForm`, `CalendarActionForm`,
+  `CalendarActionItemRequirementForm` and `CalendarActionProductYieldForm`
+  — got new build+validate+save round-trip tests in two new files,
+  `ScopedEntityFormRoundTripTest` and `CalendarActionFormRoundTripTest`,
+  each covering the scoped-add controller's parent pre-population, the
+  form's custom `validateForm()` check (where one exists), and the
+  post-save redirect target.
+- **Delete forms** — `HivelogEntityDeleteFormTest` (task 0127) already
+  data-provider-covers apiary/hive/queen/calendar_action/inventory_item/
+  product delete forms including parent-relationship scenarios; not
+  duplicated here.
+- Full `hivelog` kernel+unit+functional suite (787 tests), `phpcs` and
+  `phpstan` all green against `cms2`, covering core and every submodule
+  (nanoprobe/collective/nexus/assimilate).
 
 ## Related
 - Project:: [[page-structure-consistency]]

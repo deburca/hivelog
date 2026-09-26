@@ -712,4 +712,37 @@ class EmbeddedTableFilterPaginationTest extends KernelTestBase {
     $this->assertArrayNotHasKey('hives_toolbar', $build);
   }
 
+  /**
+   * Tests the hive temperament filter on the apiary page.
+   *
+   * Task 0140: the `temperament` query key had no dedicated coverage
+   * anywhere — status, breed and name were already covered above.
+   */
+  public function testApiaryHiveTableTemperamentFilter(): void {
+    $apiary = Apiary::create(['name' => 'Temperament Filter Apiary']);
+    $apiary->save();
+
+    Hive::create([
+      'name' => 'Calm Hive',
+      'apiary' => $apiary->id(),
+      'status' => 'active',
+      'temperament' => 'calm',
+    ])->save();
+    Hive::create([
+      'name' => 'Aggressive Hive',
+      'apiary' => $apiary->id(),
+      'status' => 'active',
+      'temperament' => 'aggressive',
+    ])->save();
+
+    $this->pushRequestWithQuery(['temperament' => 'aggressive']);
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(ApiaryController::class);
+    $build = $controller->view($apiary);
+
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+    $this->assertStringContainsString('Aggressive Hive', $html);
+    $this->assertStringNotContainsString('Calm Hive', $html);
+  }
+
 }

@@ -227,4 +227,22 @@ class CalendarActionCollectionTest extends KernelTestBase {
     );
   }
 
+  /**
+   * Tests the filter form's Reset button targets the bare collection route.
+   *
+   * Task 0140: HivelogCalendarActionsFilterForm's Reset button had no
+   * dedicated assertion anywhere — only week_from/week_to narrowing was
+   * covered (testWeekRangeFilterNarrowsResults()/
+   * testReversedWeekRangeIsSwapped()).
+   */
+  public function testFilterResetUrlTargetsCollection(): void {
+    $this->pushRequestWithQuery(['week_from' => '10', 'week_to' => '20']);
+    $build = $this->controller()->collection();
+    $reset_url = $build['filter']['filter_actions']['reset']['#props']['url'] ?? NULL;
+    $this->assertNotNull($reset_url, 'Reset button was not rendered.');
+    $this->assertStringContainsString('/hivelog/calendar-actions', $reset_url);
+    $this->assertStringNotContainsString('week_from', $reset_url);
+    $this->assertStringNotContainsString('week_to', $reset_url);
+  }
+
 }

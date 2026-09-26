@@ -346,6 +346,25 @@ class HiveCalendarChecklistTest extends KernelTestBase {
   }
 
   /**
+   * Tests the calendar filter form's Reset button targets the hive page.
+   *
+   * Task 0140: HivelogCalendarFilterForm's Reset button had no dedicated
+   * assertion anywhere — only the status/year narrowing was covered.
+   */
+  public function testCalendarFilterResetUrlTargetsHivePage(): void {
+    $this->pushRequestWithQuery(['status' => 'done', 'year' => (string) ((int) date('Y') + 1)]);
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(HiveController::class);
+    $build = $controller->view($this->hive);
+
+    $reset_url = $build['calendar_filter']['filter_actions']['reset']['#props']['url'] ?? NULL;
+    $this->assertNotNull($reset_url, 'Reset button was not rendered.');
+    $this->assertStringContainsString('/hivelog/hive/' . $this->hive->id(), $reset_url);
+    $this->assertStringNotContainsString('status', $reset_url);
+    $this->assertStringNotContainsString('year', $reset_url);
+  }
+
+  /**
    * Tests that description bullet rendering is properly escaped.
    *
    * `description` lines starting with "- "/"* " render as <li> items inside

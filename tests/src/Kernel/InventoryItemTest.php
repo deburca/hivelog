@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Drupal\Tests\hivelog\Kernel;
 
 use Drupal\hivelog\Controller\ApiaryController;
+use Drupal\hivelog\Controller\InventoryItemController;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\InventoryItem;
 use Drupal\hivelog\Entity\InventoryPurchase;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
@@ -444,6 +446,117 @@ class InventoryItemTest extends KernelTestBase {
     $this->assertStringContainsString('hivelog-entity-table', $html);
     $this->assertStringContainsString('Add Inventory Item', $html);
     $this->assertStringContainsString('View Purchases', $html);
+  }
+
+  /**
+   * Tests that the canonical view groups fields into Overview / Type sections.
+   *
+   * Task 0140: `InventoryItemController` had no dedicated kernel test at
+   * all before this. A durable item is used here specifically because
+   * its Stock on Hand section must NOT appear (that section only ever
+   * renders for consumables) — see
+   * testItemViewShowsStockOnHandForConsumable() for the consumable case.
+   */
+  public function testItemViewRendersGroupedSections(): void {
+    $item = InventoryItem::create([
+      'apiary' => $this->apiary->id(),
+      'name' => 'Frames',
+      'category' => 'equipment',
+      'unit' => 'frame',
+      'item_type' => 'durable',
+      'useful_life_years' => 5,
+    ]);
+    $item->save();
+
+    $controller = \Drupal::service('class_resolver')->getInstanceFromDefinition(InventoryItemController::class);
+    $build = $controller->view($item);
+
+    $this->assertArrayHasKey('overview', $build);
+    $this->assertArrayHasKey('type', $build);
+    $this->assertArrayNotHasKey('stock', $build);
+
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+    $this->assertStringContainsString('Frames', $html);
+    $this->assertStringContainsString('Test Apiary', $html);
+    $this->assertStringContainsString('5', $html);
+  }
+
+  /**
+   * Tests that Stock on Hand renders for a consumable item, with real data.
+   */
+  public function testItemViewShowsStockOnHandForConsumable(): void {
+    $item = InventoryItem::create([
+      'apiary' => $this->apiary->id(),
+      'name' => 'Sugar',
+      'unit' => 'kg',
+      'item_type' => 'consumable',
+    ]);
+    $item->save();
+    InventoryPurchase::create([
+      'apiary' => $this->apiary->id(),
+      'item' => $item->id(),
+      'purchase_date' => '2026-03-01',
+      'quantity' => 25,
+      'unit_price' => 1.5,
+    ])->save();
+
+    $controller = \Drupal::service('class_resolver')->getInstanceFromDefinition(InventoryItemController::class);
+    $build = $controller->view(InventoryItem::load($item->id()));
+
+    $this->assertArrayHasKey('stock', $build);
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+    $this->assertStringContainsString('Stock on Hand', $html);
+    $this->assertStringContainsString('25', $html);
+  }
+
+  /**
+   * Tests the page-owned Edit/Delete button group appears with full access.
+   *
+   * SetUp() already made the current user uid 1 (Drupal's hardcoded
+   * all-permissions bypass), so no extra user is needed here.
+   */
+  public function testItemViewHasEditAndDeleteActionsWithFullAccess(): void {
+    $item = InventoryItem::create([
+      'apiary' => $this->apiary->id(),
+      'name' => 'Full Access Item',
+      'unit' => 'kg',
+      'item_type' => 'consumable',
+    ]);
+    $item->save();
+
+    $controller = \Drupal::service('class_resolver')->getInstanceFromDefinition(InventoryItemController::class);
+    $build = $controller->view($item);
+
+    $this->assertEquals('hivelog:button-group', $build['actions']['#component']);
+    $labels = array_column($build['actions']['#props']['buttons'], 'label');
+    $this->assertContains('Edit', $labels);
+    $this->assertContains('Delete', $labels);
+  }
+
+  /**
+   * Tests the page-owned Edit/Delete button group is absent without access.
+   */
+  public function testItemViewActionsAbsentWithoutAccess(): void {
+    $item = InventoryItem::create([
+      'apiary' => $this->apiary->id(),
+      'name' => 'Restricted Item',
+      'unit' => 'kg',
+      'item_type' => 'consumable',
+    ]);
+    $item->save();
+
+    $role = Role::create(['id' => 'item_view_only', 'label' => 'Item view only']);
+    $role->grantPermission('view any inventory item');
+    $role->save();
+    $viewer = User::create(['name' => 'viewer', 'mail' => 'viewer@example.com']);
+    $viewer->addRole('item_view_only');
+    $viewer->save();
+    \Drupal::currentUser()->setAccount($viewer);
+
+    $controller = \Drupal::service('class_resolver')->getInstanceFromDefinition(InventoryItemController::class);
+    $build = $controller->view($item);
+
+    $this->assertSame([], $build['actions']);
   }
 
   /**

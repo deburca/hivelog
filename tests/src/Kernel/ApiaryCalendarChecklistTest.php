@@ -493,4 +493,45 @@ class ApiaryCalendarChecklistTest extends KernelTestBase {
     $this->assertDoesNotMatchRegularExpression('#/hivelog/hive/\d+/calendar-action/#', $html);
   }
 
+  /**
+   * Tests the calendar filter form's Reset button targets the apiary page.
+   *
+   * Task 0140: HivelogCalendarFilterForm's Reset button had no dedicated
+   * assertion anywhere — only the status/year narrowing was covered.
+   */
+  public function testCalendarFilterResetUrlTargetsApiaryPage(): void {
+    $this->pushRequestWithQuery(['status' => 'done', 'year' => (string) ((int) date('Y') + 1)]);
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(ApiaryController::class);
+    $build = $controller->view($this->apiary);
+
+    $reset_url = $build['calendar_filter']['filter_actions']['reset']['#props']['url'] ?? NULL;
+    $this->assertNotNull($reset_url, 'Reset button was not rendered.');
+    $this->assertStringContainsString('/hivelog/apiary/' . $this->apiary->id(), $reset_url);
+    $this->assertStringNotContainsString('status', $reset_url);
+    $this->assertStringNotContainsString('year', $reset_url);
+  }
+
+  /**
+   * Tests the Full Calendar filter form's Reset button clears every filter.
+   *
+   * Task 0140: HivelogFullCalendarFilterForm's Reset button had no
+   * dedicated assertion anywhere — only scope/category/title/enabled
+   * narrowing was covered (testFullCalendarFiltersNarrowResults()).
+   */
+  public function testFullCalendarFilterResetUrlClearsFilters(): void {
+    $path = '/hivelog/apiary/' . $this->apiary->id() . '/calendar';
+    $this->pushRequestWithQuery(['scope' => 'hive', 'category' => 'feeding', 'title' => 'foo'], $path);
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(ApiaryController::class);
+    $build = $controller->fullCalendar($this->apiary);
+
+    $reset_url = $build['filter']['filter_actions']['reset']['#props']['url'] ?? NULL;
+    $this->assertNotNull($reset_url, 'Reset button was not rendered.');
+    $this->assertStringContainsString($path, $reset_url);
+    $this->assertStringNotContainsString('scope', $reset_url);
+    $this->assertStringNotContainsString('category', $reset_url);
+    $this->assertStringNotContainsString('title', $reset_url);
+  }
+
 }

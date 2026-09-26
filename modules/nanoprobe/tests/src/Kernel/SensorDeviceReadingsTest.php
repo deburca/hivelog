@@ -236,6 +236,27 @@ class SensorDeviceReadingsTest extends KernelTestBase {
   }
 
   /**
+   * Tests the filter form's Reset button targets the bare readings page.
+   *
+   * Task 0140: SensorReadingFilterForm's Reset button had no dedicated
+   * assertion anywhere — metric/date_from/date_to narrowing was already
+   * well covered above.
+   */
+  public function testFilterResetUrlTargetsReadingsPage(): void {
+    \Drupal::request()->query->set('metric', 'weight_kg');
+    \Drupal::request()->query->set('date_from', '2026-01-01');
+
+    $controller = new SensorDeviceController();
+    $build = $controller->readings($this->device);
+
+    $reset_url = $build['filter']['filter_actions']['reset']['#props']['url'] ?? NULL;
+    $this->assertNotNull($reset_url, 'Reset button was not rendered.');
+    $this->assertStringContainsString('/hivelog/sensor-device/' . $this->device->id() . '/readings', $reset_url);
+    $this->assertStringNotContainsString('metric', $reset_url);
+    $this->assertStringNotContainsString('date_from', $reset_url);
+  }
+
+  /**
    * Tests an outsider cannot view the page at all.
    */
   public function testReadingsDeniedForOutsider(): void {

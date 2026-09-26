@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\hivelog\Kernel;
 
+use Drupal\hivelog\Controller\InventoryPurchaseController;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\InventoryItem;
 use Drupal\hivelog\Entity\InventoryPurchase;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
@@ -199,6 +201,118 @@ class InventoryPurchaseTest extends KernelTestBase {
     ]);
     $this->expectException(\Exception::class);
     $purchase->save();
+  }
+
+  /**
+   * Tests that the canonical view groups fields into Overview/Cost/Notes.
+   *
+   * Task 0140: `InventoryPurchaseController` had no dedicated kernel test
+   * at all before this. No disposal date is set here, so the Disposal
+   * section must be absent — see
+   * testPurchaseViewRendersDisposalSectionWhenPresent() for the case
+   * where one is.
+   */
+  public function testPurchaseViewRendersGroupedSections(): void {
+    $purchase = InventoryPurchase::create([
+      'apiary' => $this->apiary->id(),
+      'item' => $this->item->id(),
+      'purchase_date' => '2026-03-01',
+      'quantity' => 25,
+      'unit_price' => 1.5,
+      'supplier' => 'Local Feed Store',
+      'notes' => 'Bought in bulk for the season.',
+    ]);
+    $purchase->save();
+
+    $controller = \Drupal::service('class_resolver')->getInstanceFromDefinition(InventoryPurchaseController::class);
+    $build = $controller->view($purchase);
+
+    $this->assertArrayHasKey('overview', $build);
+    $this->assertArrayHasKey('cost', $build);
+    $this->assertArrayHasKey('notes', $build);
+    $this->assertArrayNotHasKey('disposal', $build);
+
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+    $this->assertStringContainsString('Granulated Sugar', $html);
+    $this->assertStringContainsString('Local Feed Store', $html);
+    $this->assertStringContainsString('Bought in bulk for the season.', $html);
+    $this->assertStringContainsString('37.50', $html);
+  }
+
+  /**
+   * Tests that the Disposal section renders once a disposal date is set.
+   */
+  public function testPurchaseViewRendersDisposalSectionWhenPresent(): void {
+    $purchase = InventoryPurchase::create([
+      'apiary' => $this->apiary->id(),
+      'item' => $this->durableItem->id(),
+      'purchase_date' => '2024-01-01',
+      'quantity' => 1,
+      'unit_price' => 500,
+      'disposal_date' => '2025-06-01',
+      'disposal_reason' => 'Frame broke beyond repair.',
+    ]);
+    $purchase->save();
+
+    $controller = \Drupal::service('class_resolver')->getInstanceFromDefinition(InventoryPurchaseController::class);
+    $build = $controller->view($purchase);
+
+    $this->assertArrayHasKey('disposal', $build);
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+    $this->assertStringContainsString('2025-06-01', $html);
+    $this->assertStringContainsString('Frame broke beyond repair.', $html);
+  }
+
+  /**
+   * Tests the page-owned Edit/Delete button group appears with full access.
+   *
+   * SetUp() already made the current user uid 1 (Drupal's hardcoded
+   * all-permissions bypass), so no extra user is needed here.
+   */
+  public function testPurchaseViewHasEditAndDeleteActionsWithFullAccess(): void {
+    $purchase = InventoryPurchase::create([
+      'apiary' => $this->apiary->id(),
+      'item' => $this->item->id(),
+      'purchase_date' => '2026-03-01',
+      'quantity' => 10,
+      'unit_price' => 2,
+    ]);
+    $purchase->save();
+
+    $controller = \Drupal::service('class_resolver')->getInstanceFromDefinition(InventoryPurchaseController::class);
+    $build = $controller->view($purchase);
+
+    $this->assertEquals('hivelog:button-group', $build['actions']['#component']);
+    $labels = array_column($build['actions']['#props']['buttons'], 'label');
+    $this->assertContains('Edit', $labels);
+    $this->assertContains('Delete', $labels);
+  }
+
+  /**
+   * Tests the page-owned Edit/Delete button group is absent without access.
+   */
+  public function testPurchaseViewActionsAbsentWithoutAccess(): void {
+    $purchase = InventoryPurchase::create([
+      'apiary' => $this->apiary->id(),
+      'item' => $this->item->id(),
+      'purchase_date' => '2026-03-01',
+      'quantity' => 10,
+      'unit_price' => 2,
+    ]);
+    $purchase->save();
+
+    $role = Role::create(['id' => 'purchase_view_only', 'label' => 'Purchase view only']);
+    $role->grantPermission('view any inventory purchase');
+    $role->save();
+    $viewer = User::create(['name' => 'viewer', 'mail' => 'viewer@example.com']);
+    $viewer->addRole('purchase_view_only');
+    $viewer->save();
+    \Drupal::currentUser()->setAccount($viewer);
+
+    $controller = \Drupal::service('class_resolver')->getInstanceFromDefinition(InventoryPurchaseController::class);
+    $build = $controller->view($purchase);
+
+    $this->assertSame([], $build['actions']);
   }
 
   /**

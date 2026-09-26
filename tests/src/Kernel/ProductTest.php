@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Drupal\Tests\hivelog\Kernel;
 
 use Drupal\hivelog\Controller\ApiaryController;
+use Drupal\hivelog\Controller\ProductController;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\ApiaryActionLog;
 use Drupal\hivelog\Entity\CalendarAction;
 use Drupal\hivelog\Entity\HarvestYield;
 use Drupal\hivelog\Entity\Product;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
@@ -221,6 +223,84 @@ class ProductTest extends KernelTestBase {
     $this->assertStringContainsString('Propolis Tincture', $html);
     $this->assertStringContainsString('8.00', $html);
     $this->assertStringContainsString('Add Product', $html);
+  }
+
+  /**
+   * Tests that the canonical view renders the Overview section with real data.
+   *
+   * Task 0140: `ProductController` had no dedicated kernel test at all
+   * before this.
+   */
+  public function testProductViewRendersOverviewSection(): void {
+    $product = Product::create([
+      'apiary' => $this->apiary->id(),
+      'name' => 'Beeswax Bar',
+      'unit' => 'bar',
+      'expected_unit_price' => 6.5,
+      'status' => 'active',
+    ]);
+    $product->save();
+
+    $controller = \Drupal::service('class_resolver')->getInstanceFromDefinition(ProductController::class);
+    $build = $controller->view($product);
+
+    $this->assertArrayHasKey('overview', $build);
+
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+    $this->assertStringContainsString('Beeswax Bar', $html);
+    $this->assertStringContainsString('Test Apiary', $html);
+    $this->assertStringContainsString('bar', $html);
+    $this->assertStringContainsString('6.50', $html);
+  }
+
+  /**
+   * Tests the page-owned Edit/Delete button group appears with full access.
+   *
+   * SetUp() already made the current user uid 1 (Drupal's hardcoded
+   * all-permissions bypass), so no extra user is needed here.
+   */
+  public function testProductViewHasEditAndDeleteActionsWithFullAccess(): void {
+    $product = Product::create([
+      'apiary' => $this->apiary->id(),
+      'name' => 'Full Access Product',
+      'unit' => 'kg',
+      'expected_unit_price' => 10,
+    ]);
+    $product->save();
+
+    $controller = \Drupal::service('class_resolver')->getInstanceFromDefinition(ProductController::class);
+    $build = $controller->view($product);
+
+    $this->assertEquals('hivelog:button-group', $build['actions']['#component']);
+    $labels = array_column($build['actions']['#props']['buttons'], 'label');
+    $this->assertContains('Edit', $labels);
+    $this->assertContains('Delete', $labels);
+  }
+
+  /**
+   * Tests the page-owned Edit/Delete button group is absent without access.
+   */
+  public function testProductViewActionsAbsentWithoutAccess(): void {
+    $product = Product::create([
+      'apiary' => $this->apiary->id(),
+      'name' => 'Restricted Product',
+      'unit' => 'kg',
+      'expected_unit_price' => 10,
+    ]);
+    $product->save();
+
+    $role = Role::create(['id' => 'product_view_only', 'label' => 'Product view only']);
+    $role->grantPermission('view any product');
+    $role->save();
+    $viewer = User::create(['name' => 'viewer', 'mail' => 'viewer@example.com']);
+    $viewer->addRole('product_view_only');
+    $viewer->save();
+    \Drupal::currentUser()->setAccount($viewer);
+
+    $controller = \Drupal::service('class_resolver')->getInstanceFromDefinition(ProductController::class);
+    $build = $controller->view($product);
+
+    $this->assertSame([], $build['actions']);
   }
 
   /**
