@@ -55,11 +55,25 @@ Everything that was code-complete is now released: **2.0.0** shipped
   [[0135-submodule-create-permissions]] removes the dead `edit own`/
   `delete own` permissions on `api_client`/`ai_provider_config`, which is
   why 2.0.0 is a major rather than minor bump per
-  [[0010-semantic-versioning-and-releases]]. **beeswax**
-  (`deburca/beeswax`) may still need a paired release for
-  [[0131-single-detail-table-css-class]]'s renamed theming-API class names
-  and [[0118-page-owned-edit-delete-then-retire-local-tasks]]'s deleted
-  `hivelog.links.task.yml` / `hivelog.links.action.yml` — not yet checked.
+  [[0010-semantic-versioning-and-releases]].
+
+**beeswax paired release: 1.0.3** (github.com/deburca/beeswax, no PM
+vault of its own to link to), shipped 2026-09-26.
+Checked against all three tasks that flagged a beeswax follow-up in their
+own notes: [[0131-single-detail-table-css-class]] needed **no change** —
+correcting an earlier assumption here, it does not rename any class; the
+13 per-entity classes are kept alongside the new generic
+`hivelog-detail-table`/`hivelog-detail-section` per that task's own
+acceptance criteria, and beeswax's existing `[class^="hivelog-"]
+[class$="-table"]` wildcard selectors already matched the new class
+automatically. [[0128-page-heading-hierarchy]]'s h3→h2 change on the
+Financial Report headings did leave one beeswax selector dead, but with
+no visual regression (a generic `h2` rule already produced identical
+styling) — removed for cleanliness.
+[[0118-page-owned-edit-delete-then-retire-local-tasks]]'s deleted
+`hivelog.links.task.yml` / `hivelog.links.action.yml` left one more dead
+selector (`.action-links`, never reachable once no page renders local
+actions) — also removed.
 ## Active projects
 - **[[sensor-data-collection]]** — 13 tasks done. The software chain ships;
   what's left is physical. [[0079-pilot-weight-sensor-hardware-build]] is
@@ -113,21 +127,19 @@ Two backlog tasks belong to no project: [[0003-apiary-map-marker-clustering]]
 (a future map-UX initiative) and
 [[0055-embed-required-items-and-expected-yield-in-calendar-action-edit-form]].
 ## Recommended sequence
-1. Check whether **beeswax** needs a paired release for 2.0.0's renamed
-   theming classes and deleted local-task YAML files.
-2. Finish [[0079-pilot-weight-sensor-hardware-build]] — unblocked now that its
+1. Finish [[0079-pilot-weight-sensor-hardware-build]] — unblocked now that its
    stale `blocked-by` is cleared — the last step in
    [[sensor-data-collection]]'s original chain.
-3. Decide the fate of the idling [[0026-post-testing-refinements]] umbrella
+2. Decide the fate of the idling [[0026-post-testing-refinements]] umbrella
    task — add another item or close it.
-4. Re-status [[0083-ai-assisted-apiary-insights]], then run
+3. Re-status [[0083-ai-assisted-apiary-insights]], then run
    [[0094-ai-insights-prelaunch-validation]] before any real-world AI rollout.
-5. Pick up [[inventory-and-yield-improvements]]' backlog only when a real need
+4. Pick up [[inventory-and-yield-improvements]]' backlog only when a real need
    surfaces — every item there is `low` and speculative.
 ## Current state
 ```mermaid
 flowchart LR
-  Rel(["2.0.0 released<br/>2026-09-26"]) --> Bees{{"beeswax paired<br/>release needed?"}}
+  Rel(["2.0.0 released<br/>2026-09-26"]) --> Bees(["beeswax 1.0.3<br/>released 2026-09-26"])
   T79["0079 pilot hardware<br/>in-progress, unblocked"] --> Sensors(["sensor-data-collection<br/>chain complete"])
   T26["0026 refinements<br/>idle"] --> Decide{{"add items<br/>or close"}}
 ```

@@ -207,9 +207,13 @@ on `cms2` (deleted afterwards); the orphan counts came from SQL there.
   [[0132-filters-on-hive-inspection-observation-lists]].
 - ~~[[0131-single-detail-table-css-class]] renames theming-API class names
   (AGENTS.md "Theming HiveLog"). Keep the old names as aliases for one
-  minor release, or break them in a major?~~ **Resolved**: broken cleanly
-  in a major (2.0.0) — no aliases were added, consistent with
-  [[0010-semantic-versioning-and-releases]].
+  minor release, or break them in a major?~~ **Resolved — question was
+  moot**: 0131's own acceptance criteria never called for a rename. The
+  13 per-entity classes are kept alongside the new generic
+  `hivelog-detail-table`/`hivelog-detail-section` (both emitted together
+  on the element), so there is no old-vs-new alias decision to make.
+  (This corrects an earlier, wrong resolution recorded here that assumed
+  a breaking rename had happened.)
 - No entity type has Views integration (`views_data` handler), so every
   list, report and export is custom controller code. Deliberate
   (ADR-0004's custom-controller approach), or wanted for site builders?
