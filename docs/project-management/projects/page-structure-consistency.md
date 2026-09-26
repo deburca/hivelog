@@ -1,7 +1,7 @@
 ---
 type: project
 tags: [hivelog/project]
-status: planning
+status: done
 target:
 created: 2026-09-23
 ---
@@ -34,7 +34,9 @@ FROM #hivelog/task
 WHERE contains(string(project), this.file.name)
 SORT priority asc, file.name asc
 ```
-Static index (in suggested execution order):
+Static index (in suggested execution order). **All 22 tasks are `done` as of
+2026-09-26**, the last being [[0140-controller-and-form-test-gaps]]; none of
+them has shipped in a tagged release yet (latest tag is 1.8.9):
 - [[0124-list-page-row-access-filter]] — **security**: list pages
   show other users' records (high, do first)
 - [[0125-shared-detail-page-builder]] — one helper for the detail-page

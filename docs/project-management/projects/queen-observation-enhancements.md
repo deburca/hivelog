@@ -1,7 +1,7 @@
 ---
 type: project
 tags: [hivelog/project]
-status: active
+status: dropped
 target:
 created: 2026-06-16
 ---
@@ -26,12 +26,19 @@ SORT status asc, priority asc
 _(Set each task's `project:` to `[[queen-observation-enhancements]]`.)_
 
 Currently:
-- [[0001-queen-observation-csv-export]] — in-progress
+- [[0001-queen-observation-csv-export]] — dropped 2026-09-26 (never
+  started; on review the export was judged unnecessary)
 - [[0002-breadcrumb-queen-canonical]] — done (already present in code/tests; closed during vault reconciliation)
 
+**Dropped, 2026-09-26.** The project's only undelivered goal (CSV export)
+was dropped as unnecessary, and its other task was already satisfied by
+existing code. Nothing remains to pursue here.
+
 ## Open questions
-- Should export be CSV only, or also JSON for re-import later? (CSV first.)
-- Which release should carry the export once it is implemented? (Not assigned yet.)
+- ~~Should export be CSV only, or also JSON for re-import later?~~ Moot —
+  the export itself was dropped.
+- ~~Which release should carry the export once it is implemented?~~ Moot —
+  the export itself was dropped.
 
 ## Related decisions
 - [[0002-no-geocoder-dependency]] (use core facilities; no CSV library)

@@ -1,7 +1,7 @@
 ---
 type: project
 tags: [hivelog/project]
-status: active
+status: done
 target: 1.4.0
 created: 2026-06-17
 ---
@@ -126,10 +126,17 @@ breadcrumb builder, with trails checked live on `cms2` (`quick_silver`):
   services) and [[0123-refresh-navigation-reference-docs]].
 
 ## Open questions
-- Does the current implementation fully match [[0013-breadcrumb-policy]] on
-  excluding non-page `hivelog.*` routes once such routes exist?
-- Beyond the already-closed queen canonical case, are there any real route gaps
-  left after the audit matrix is completed?
+- ~~Does the current implementation fully match [[0013-breadcrumb-policy]] on
+  excluding non-page `hivelog.*` routes once such routes exist?~~ **Resolved**:
+  `applies()` matches by path and carries an explicit `$non_page_routes`
+  exclusion list for the file-download endpoints, the only non-page routes that
+  have since appeared.
+- ~~Beyond the already-closed queen canonical case, are there any real route gaps
+  left after the audit matrix is completed?~~ **Resolved**: the submodule gap
+  ([[0112-breadcrumb-gaps-for-collective-nexus-nanoprobe-entities]]) and the
+  form-page gap ([[0117-breadcrumb-terminal-crumb-on-form-pages]]) were the two
+  real ones; both are fixed, and per-type `build()` blocks no longer exist to
+  drift — `HivelogEntityHierarchy`'s maps drive every trail.
 
 ## Related projects
 - [[page-structure-consistency]] (sibling review, 2026-09-23; shares
@@ -139,5 +146,6 @@ breadcrumb builder, with trails checked live on `cms2` (`quick_silver`):
 - [[0013-breadcrumb-policy]]
 - [[0020-access-parity-custom-routes]]
 - [[0057-dashboard-information-architecture]] (amends 0013's root crumb)
-- [[0102-breadcrumb-terminal-crumb-on-non-canonical-pages]] (proposed;
-  amends 0013 rule 2)
+- [[0102-breadcrumb-terminal-crumb-on-non-canonical-pages]] (accepted;
+  amends 0013 rule 2, implemented by
+  [[0117-breadcrumb-terminal-crumb-on-form-pages]])

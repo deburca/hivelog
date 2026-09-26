@@ -17,6 +17,11 @@ Beekeepers want a portable record of a queen's history. The
 `temperament`, `active`, and `notes`; we just need to stream them out as CSV.
 Part of [[queen-observation-enhancements]].
 
+**Dropped, 2026-09-26.** Never started. On review, the user concluded the
+export is not actually needed and closed the task rather than let it sit
+indefinitely in the backlog. See [[queen-observation-enhancements]] for the
+project-level consequence.
+
 ## Acceptance criteria
 - [ ] New route `hivelog.queen.observations_csv` at
       `/hivelog/queen/{queen}/observations.csv`.

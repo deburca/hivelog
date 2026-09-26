@@ -2,7 +2,7 @@
 title: Hivelog Dashboard
 type: dashboard
 tags: [hivelog/dashboard]
-updated: 2026-06-22
+updated: 2026-09-26
 ---
 # 🐝 Hivelog — Dashboard
 
@@ -61,7 +61,9 @@ LIMIT 10
 ## Quick links
 - New work? Copy a template from `templates/` → [[templates/task|task]], [[templates/project|project]],
   [[templates/decision|decision]], [[templates/release|release]].
-- Roadmap: [[roadmap]] — release timeline, decision gate, and critical path
-- Current focus project: [[mobile-ux-improvements]]
+- Roadmap: [[roadmap]] — release timeline, decision gate, and current state
+- Current focus: cutting a release for the 37 unreleased commits on `main`
+  (see [[roadmap]]); the only active build task is
+  [[0079-pilot-weight-sensor-hardware-build]] in [[sensor-data-collection]]
 - Module overview lives in the repo's `README.md` and `AGENTS.md` at the repo
   root.

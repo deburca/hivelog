@@ -1,7 +1,7 @@
 ---
 type: project
 tags: [hivelog/project]
-status: active
+status: done
 target: 1.4.0
 created: 2026-06-17
 ---
@@ -14,14 +14,13 @@ module currently ships **no responsive CSS at all** — a repo-wide search for
 desktop-only. This project introduces a deliberate responsive strategy and
 applies it across tables, forms, the apiary map, and image grids.
 
-## Progress (updated 2026-06-18)
-Foundation + all build tasks are **done** and merged: `0004` (PR #81) and
-`0005`–`0008` (PR #82), verified on the test site (stacked list tables,
-shrink-and-wrap detail tables, stacked filter form/heading, 2-column photo grid,
-taller `40vh` apiary map). The only remaining task is the
-[[0009-mobile-qa-and-tap-targets]] QA gate, which is gated on
-[[0011-unify-button-group-sizing]] (tap-target sizing) in
-[[action-button-consistency]].
+## Progress (updated 2026-09-26)
+**Complete.** Foundation + all build tasks are done and merged: `0004`
+(PR #81) and `0005`–`0008` (PR #82), verified on the test site (stacked list
+tables, shrink-and-wrap detail tables, stacked filter form/heading, 2-column
+photo grid, taller `40vh` apiary map). The [[0009-mobile-qa-and-tap-targets]]
+QA gate closed too, once its dependency [[0011-unify-button-group-sizing]]
+(tap-target sizing) landed in [[action-button-consistency]].
 
 ## Scope
 - In scope: a shared breakpoint/responsive strategy; responsive treatment for

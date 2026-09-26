@@ -9,7 +9,7 @@ created: 2026-09-20
 branch: feature/0079-pilot-weight-sensor-hardware-build
 release:
 depends-on: ["[[0077-sensor-ingestion-endpoint-and-device-auth]]", "[[0078-sensor-device-configuration-descriptor]]", "[[0097-hardware-infrastructure-and-component-catalog]]"]
-blocked-by: ["[[0078-sensor-device-configuration-descriptor]]"]
+blocked-by:
 ---
 # Task: Pilot weight-sensor hardware build + end-to-end smoke test
 

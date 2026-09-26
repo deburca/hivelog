@@ -1,6 +1,7 @@
 ---
 type: decision
 tags: [hivelog/decision]
+status: accepted
 date: 2026-09-07
 supersedes:
 ---

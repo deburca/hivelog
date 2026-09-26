@@ -1,7 +1,7 @@
 ---
 type: project
 tags: [hivelog/project]
-status: planning
+status: done
 target: 1.4.0
 created: 2026-06-17
 ---
@@ -52,13 +52,16 @@ Static index (in suggested execution order):
   eighth context wrapper in all `:is()` rule blocks so grouped buttons receive
   correct token-based colour styling.
 
-### Still outstanding (for task 0012)
+### Carried into task 0012's audit (now closed)
 - **Variant usage is inconsistent**: in `src/Controller/HiveController.php`,
   "Add Inspection" and "Add Queen" use `variant: primary`, but "Edit Queen" and
   "Add Observation" use the default variant — so not all "Add" actions look
-  alike.
+  alike. Reconciled by [[0012-audit-action-buttons-across-pages]].
 - Action links from `hivelog.links.action.yml` (Add Apiary, Add Queen) render
   via Drupal's local-action theming, not the SDC — another surface to reconcile.
+  Overtaken by [[0118-page-owned-edit-delete-then-retire-local-tasks]], which
+  deleted `hivelog.links.action.yml` outright: every page now owns its own
+  buttons, so there is no second theming path left to reconcile.
 
 ## Key findings (2026-09-23)
 - The `:is()` context-wrapper allow-list in `hivelog.buttons.css` is an
