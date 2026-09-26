@@ -145,4 +145,4 @@ selector lists. That is the same silent-failure trap as the
 - Decisions:: [[0060-visual-identity-in-site-theme]]
 - Tasks:: [[0125-shared-detail-page-builder]],
   [[0113-destructive-action-styling-sensor-device-api-client]]
-- Commits::
+- Commits:: [PR #141](https://github.com/deburca/hivelog/pull/141)
