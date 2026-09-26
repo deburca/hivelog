@@ -16,6 +16,7 @@ use Drupal\Core\Url;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\CalendarAction;
 use Drupal\hivelog\Entity\Hive;
+use Drupal\hivelog\HivelogCalendarChecklistBuilder;
 use Drupal\user\UserInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -45,6 +46,11 @@ class DashboardController extends ControllerBase {
   protected DateFormatterInterface $dateFormatter;
 
   /**
+   * The calendar checklist builder (task 0130).
+   */
+  protected HivelogCalendarChecklistBuilder $calendarChecklistBuilder;
+
+  /**
    * Constructs a DashboardController.
    */
   public function __construct(
@@ -52,6 +58,7 @@ class DashboardController extends ControllerBase {
     AccountInterface $current_user,
     ClassResolverInterface $class_resolver,
     DateFormatterInterface $date_formatter,
+    HivelogCalendarChecklistBuilder $calendar_checklist_builder,
   ) {
     // $entityTypeManager / $currentUser are untyped properties inherited
     // from ControllerBase; assign them rather than redeclaring them.
@@ -59,6 +66,7 @@ class DashboardController extends ControllerBase {
     $this->currentUser = $current_user;
     $this->classResolver = $class_resolver;
     $this->dateFormatter = $date_formatter;
+    $this->calendarChecklistBuilder = $calendar_checklist_builder;
   }
 
   /**
@@ -70,6 +78,7 @@ class DashboardController extends ControllerBase {
       $container->get('current_user'),
       $container->get('class_resolver'),
       $container->get('date.formatter'),
+      $container->get('hivelog.calendar_checklist_builder'),
     );
   }
 
@@ -111,7 +120,7 @@ class DashboardController extends ControllerBase {
       'header' => $this->buildHeader($cache) + ['#weight' => -10],
     ];
 
-    $apiaries = $this->viewableApiaries();
+    $apiaries = $this->calendarChecklistBuilder->viewableApiaries($this->currentUser);
     $cache->addCacheTags($this->entityTypeManager->getDefinition('apiary')->getListCacheTags());
 
     if (!$apiaries) {
@@ -161,26 +170,10 @@ class DashboardController extends ControllerBase {
     //   sooner of the next ISO-week boundary and the next midnight.
     $cache
       ->addCacheContexts(['user'])
-      ->setCacheMaxAge(min($this->secondsUntilNextIsoWeek(), $this->secondsUntilTomorrow()));
+      ->setCacheMaxAge(min($this->calendarChecklistBuilder->secondsUntilNextIsoWeek(), $this->secondsUntilTomorrow()));
     $cache->applyTo($build);
 
     return $build;
-  }
-
-  /**
-   * Loads every apiary the current user may view, keyed by id.
-   *
-   * @return \Drupal\hivelog\Entity\Apiary[]
-   *   Viewable apiaries keyed by entity id.
-   */
-  protected function viewableApiaries(): array {
-    $storage = $this->entityTypeManager->getStorage('apiary');
-    $ids = $storage->getQuery()->accessCheck(TRUE)->execute();
-    $apiaries = $ids ? $storage->loadMultiple($ids) : [];
-    return array_filter(
-      $apiaries,
-      fn($apiary) => $apiary->access('view', $this->currentUser)
-    );
   }
 
   /**
@@ -822,22 +815,6 @@ class DashboardController extends ControllerBase {
       return '';
     }
     return trim((string) $user->get('cbr_number')->value);
-  }
-
-  /**
-   * Seconds remaining until the ISO week changes (next Monday, midnight).
-   *
-   * Bounds the cache max-age for the header's current-week badge so a
-   * cached render never shows a stale week after the boundary passes.
-   * Mirrors ApiaryController / HiveController.
-   *
-   * @return int
-   *   Seconds until the next ISO week boundary.
-   */
-  protected function secondsUntilNextIsoWeek(): int {
-    $now = new \DateTimeImmutable('now');
-    $next_boundary = new \DateTimeImmutable('next monday midnight');
-    return max(0, $next_boundary->getTimestamp() - $now->getTimestamp());
   }
 
   /**

@@ -10,7 +10,6 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\File\FileUrlGeneratorInterface;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Render\RendererInterface;
-use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\Hive;
@@ -18,6 +17,7 @@ use Drupal\hivelog\Entity\Queen;
 use Drupal\hivelog\Form\HivelogCalendarFilterForm;
 use Drupal\hivelog\Form\HivelogInspectionFilterForm;
 use Drupal\hivelog\Form\HivelogQueenObservationFilterForm;
+use Drupal\hivelog\HivelogCalendarChecklistBuilder;
 use Drupal\hivelog\HivelogEntityActionsTrait;
 use Drupal\hivelog\HivelogStatTileBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -74,6 +74,11 @@ class HiveController extends ControllerBase {
   protected HivelogStatTileBuilder $statTileBuilder;
 
   /**
+   * The calendar checklist builder (task 0130).
+   */
+  protected HivelogCalendarChecklistBuilder $calendarChecklistBuilder;
+
+  /**
    * Constructs a HiveController.
    */
   public function __construct(
@@ -84,6 +89,7 @@ class HiveController extends ControllerBase {
     RequestStack $request_stack,
     RendererInterface $renderer,
     HivelogStatTileBuilder $stat_tile_builder,
+    HivelogCalendarChecklistBuilder $calendar_checklist_builder,
   ) {
     // $entityTypeManager / $entityFormBuilder / $formBuilder are untyped
     // properties inherited from ControllerBase; assign them rather than
@@ -95,6 +101,7 @@ class HiveController extends ControllerBase {
     $this->requestStack = $request_stack;
     $this->renderer = $renderer;
     $this->statTileBuilder = $stat_tile_builder;
+    $this->calendarChecklistBuilder = $calendar_checklist_builder;
   }
 
   /**
@@ -109,6 +116,7 @@ class HiveController extends ControllerBase {
       $container->get('request_stack'),
       $container->get('renderer'),
       $container->get('hivelog.stat_tile_builder'),
+      $container->get('hivelog.calendar_checklist_builder'),
     );
   }
 
@@ -278,8 +286,8 @@ class HiveController extends ControllerBase {
     );
     $build['calendar_filter']['#weight'] = 26;
 
-    $calendar_filters = $this->extractCalendarFilters();
-    $checklist = $this->buildCalendarChecklist($hive, $calendar_filters['year'], $calendar_filters['status']);
+    $calendar_filters = $this->calendarChecklistBuilder->extractCalendarFilters();
+    $checklist = $this->calendarChecklistBuilder->buildForHive($hive, $calendar_filters['year'], $calendar_filters['status']);
     $show_timing = ($calendar_filters['year'] === $current_year);
 
     $checklist_header = [
@@ -317,7 +325,7 @@ class HiveController extends ControllerBase {
 
       $status_display = (string) ($status_labels[$status] ?? $status);
       if ($status === 'pending' && $show_timing) {
-        $timing = $this->pendingActionTimingLabel((int) $week_start, $week_end, $current_week);
+        $timing = $this->calendarChecklistBuilder->pendingActionTimingLabel((int) $week_start, $week_end, $current_week);
         $status_display = (string) $this->t('@status (@timing)', ['@status' => $status_display, '@timing' => $timing]);
       }
 
@@ -393,7 +401,7 @@ class HiveController extends ControllerBase {
       '#props' => [
         'headers' => array_map('strval', $checklist_header),
         'rows' => $checklist_rows,
-        'empty_message' => (string) $this->calendarChecklistEmptyMessage($checklist['total_enabled'], $calendar_filters['status']),
+        'empty_message' => (string) $this->calendarChecklistBuilder->emptyMessage('hive', $checklist['total_enabled'], $calendar_filters['status']),
       ],
       '#weight' => 27,
     ];
@@ -426,7 +434,7 @@ class HiveController extends ControllerBase {
       ->addCacheTags($this->entityTypeManager->getDefinition('queen_observation')->getListCacheTags())
       ->addCacheTags($this->entityTypeManager->getDefinition('calendar_action')->getListCacheTags())
       ->addCacheTags($this->entityTypeManager->getDefinition('hive_action_log')->getListCacheTags())
-      ->setCacheMaxAge($this->secondsUntilNextIsoWeek());
+      ->setCacheMaxAge($this->calendarChecklistBuilder->secondsUntilNextIsoWeek());
     if ($active_queen) {
       $cache->addCacheableDependency($active_queen);
     }
@@ -836,219 +844,6 @@ class HiveController extends ControllerBase {
     ];
 
     return [$build, $observations];
-  }
-
-  /**
-   * Builds the seasonal calendar checklist rows for a hive.
-   *
-   * Cross-references every `enabled` `CalendarAction` belonging to the
-   * hive's apiary against the hive's own `HiveActionLog` rows for the
-   * given year — no rows are ever pre-materialised (see ADR-0025). Absence
-   * of a log, or one with `status = pending`, means "unreported". When
-   * multiple logs exist for the same `(hive, calendar_action, year)` (this
-   * is allowed by design), the most recently changed one wins for display
-   * purposes.
-   *
-   * This task hard-codes the `$status_filter` caller argument to `pending`
-   * and `$year` to the current year; task 0021 adds a real filter form
-   * that overrides both from the query string, and "all" as a
-   * `$status_filter` value to show every row regardless of status.
-   *
-   * @param \Drupal\hivelog\Entity\Hive $hive
-   *   The hive to build a checklist for.
-   * @param int $year
-   *   Which annual occurrence of each calendar action to check against.
-   * @param string $status_filter
-   *   One of `pending`, `done`, `ignored`, or `all`.
-   *
-   * @return array
-   *   An array with two keys: `total_enabled` is the count of enabled,
-   *   hive-scoped calendar actions on the hive's apiary *before* the status
-   *   filter is applied — used to tell "nothing pending" apart from "no
-   *   calendar actions exist at all" for the empty-state message. `rows` is
-   *   an array keyed by calendar action id, each entry an associative array
-   *   with `calendar_action` (the \Drupal\hivelog\Entity\CalendarAction),
-   *   `log` (the matching \Drupal\hivelog\Entity\HiveActionLog, or NULL if
-   *   unreported), and `status` (the effective status string used for
-   *   filtering/display). Apiary-scoped calendar actions (task 0027) are
-   *   excluded entirely — they never appear on any hive's checklist.
-   */
-  protected function buildCalendarChecklist(Hive $hive, int $year, string $status_filter): array {
-    $apiary_id = $hive->get('apiary')->target_id;
-    if (!$apiary_id) {
-      return ['total_enabled' => 0, 'rows' => []];
-    }
-
-    $calendar_action_ids = $this->entityTypeManager
-      ->getStorage('calendar_action')
-      ->getQuery()
-      ->accessCheck(TRUE)
-      ->condition('apiary', $apiary_id)
-      ->condition('enabled', TRUE)
-      ->condition('scope', 'hive')
-      ->sort('week_start', 'ASC')
-      ->execute();
-
-    if (!$calendar_action_ids) {
-      return ['total_enabled' => 0, 'rows' => []];
-    }
-
-    $calendar_actions = $this->entityTypeManager
-      ->getStorage('calendar_action')
-      ->loadMultiple($calendar_action_ids);
-    $calendar_actions = array_filter(
-      $calendar_actions,
-      fn($calendar_action) => $calendar_action->access('view')
-    );
-    $total_enabled = count($calendar_actions);
-    if (!$calendar_actions) {
-      return ['total_enabled' => $total_enabled, 'rows' => []];
-    }
-
-    // Load every log for this hive + year against these calendar actions in
-    // one query, then index by calendar_action id — last-changed wins if
-    // more than one log exists for the same calendar action.
-    $log_ids = $this->entityTypeManager
-      ->getStorage('hive_action_log')
-      ->getQuery()
-      ->accessCheck(TRUE)
-      ->condition('hive', $hive->id())
-      ->condition('calendar_action', array_keys($calendar_actions), 'IN')
-      ->condition('year', $year)
-      ->sort('changed', 'ASC')
-      ->execute();
-
-    $logs_by_action = [];
-    if ($log_ids) {
-      foreach ($this->entityTypeManager->getStorage('hive_action_log')->loadMultiple($log_ids) as $log) {
-        // Later iterations (sorted ascending by `changed`) overwrite
-        // earlier ones, so the most recently changed log wins.
-        $logs_by_action[$log->get('calendar_action')->target_id] = $log;
-      }
-    }
-
-    $rows = [];
-    foreach ($calendar_actions as $calendar_action) {
-      $log = $logs_by_action[$calendar_action->id()] ?? NULL;
-      $effective_status = $log ? $log->get('status')->value : 'pending';
-      if ($status_filter !== 'all' && $effective_status !== $status_filter) {
-        continue;
-      }
-      $rows[$calendar_action->id()] = [
-        'calendar_action' => $calendar_action,
-        'log' => $log,
-        'status' => $effective_status,
-      ];
-    }
-
-    return ['total_enabled' => $total_enabled, 'rows' => $rows];
-  }
-
-  /**
-   * Extracts and validates the calendar checklist's status/year filters.
-   *
-   * Defaults to the "unreported, current year" view when the query string
-   * is absent or holds an invalid value — this is what makes that the
-   * checklist's default view rather than an optional refinement, per
-   * ADR-0025. Unlike `extractInspectionFilters()`, this always returns an
-   * effective value for both keys (there is no "no filter applied" state
-   * to fall back to).
-   *
-   * @return array{status: string, year: int}
-   *   `status` is one of `pending`/`done`/`ignored`/`all`; `year` is one of
-   *   the current year, the previous year, or the next year.
-   */
-  protected function extractCalendarFilters(): array {
-    $request = $this->requestStack->getCurrentRequest();
-    $query = $request ? $request->query : NULL;
-    $current_year = (int) date('Y');
-
-    $status = $query ? (string) $query->get('status', 'pending') : 'pending';
-    if (!in_array($status, ['pending', 'done', 'ignored', 'all'], TRUE)) {
-      $status = 'pending';
-    }
-
-    $year = $query ? (int) $query->get('year', (string) $current_year) : $current_year;
-    if (!in_array($year, [$current_year - 1, $current_year, $current_year + 1], TRUE)) {
-      $year = $current_year;
-    }
-
-    return ['status' => $status, 'year' => $year];
-  }
-
-  /**
-   * Builds the empty-state message for the calendar checklist table.
-   *
-   * Distinguishes "no calendar actions exist at all" from "none match the
-   * current status filter", per the task's explicit requirement to tell
-   * the two apart.
-   *
-   * @param int $total_enabled
-   *   Count of enabled calendar actions on the hive's apiary, before the
-   *   status filter is applied (from `buildCalendarChecklist()`).
-   * @param string $status_filter
-   *   The active status filter (`pending`/`done`/`ignored`/`all`).
-   */
-  protected function calendarChecklistEmptyMessage(int $total_enabled, string $status_filter): TranslatableMarkup {
-    if ($total_enabled === 0) {
-      return $this->t('This apiary has no calendar actions set up yet.');
-    }
-
-    $messages = [
-      'pending' => $this->t('No pending seasonal actions for this hive.'),
-      'done' => $this->t('No actions have been reported as done for this hive.'),
-      'ignored' => $this->t('No actions have been reported as ignored for this hive.'),
-    ];
-
-    return $messages[$status_filter] ?? $this->t('No calendar actions match the current filters.');
-  }
-
-  /**
-   * Describes an unreported calendar action's timing versus the current week.
-   *
-   * `CalendarAction` never wraps across the year boundary (`week_end` must
-   * be `>= week_start`, enforced by `CalendarAction::preSave()`), so plain
-   * integer comparison is sufficient — no modulo/wraparound arithmetic is
-   * needed. Only called for `pending` (unreported) rows, so "Overdue" is
-   * always actionable — it can never apply to something already done or
-   * ignored.
-   *
-   * @param int $week_start
-   *   The calendar action's start week.
-   * @param int|string|null $week_end
-   *   The calendar action's end week, or NULL/empty for a single week.
-   * @param int $current_week
-   *   The current ISO week number to compare against.
-   *
-   * @return \Drupal\Core\StringTranslation\TranslatableMarkup
-   *   "Upcoming", "Due now", or "Overdue".
-   */
-  protected function pendingActionTimingLabel(int $week_start, $week_end, int $current_week): TranslatableMarkup {
-    $effective_end = ($week_end !== NULL && $week_end !== '') ? (int) $week_end : $week_start;
-
-    if ($current_week < $week_start) {
-      return $this->t('Upcoming');
-    }
-    if ($current_week > $effective_end) {
-      return $this->t('Overdue');
-    }
-    return $this->t('Due now');
-  }
-
-  /**
-   * Seconds remaining until the ISO week changes (next Monday, midnight).
-   *
-   * Used to bound the cache max-age for any render that surfaces the
-   * current week or a week-relative timing label, so a cached page never
-   * shows a stale week after the boundary passes.
-   *
-   * @return int
-   *   Seconds until the next ISO week boundary.
-   */
-  protected function secondsUntilNextIsoWeek(): int {
-    $now = new \DateTimeImmutable('now');
-    $next_boundary = new \DateTimeImmutable('next monday midnight');
-    return max(0, $next_boundary->getTimestamp() - $now->getTimestamp());
   }
 
   /**

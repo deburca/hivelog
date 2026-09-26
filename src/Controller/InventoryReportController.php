@@ -10,6 +10,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
 use Drupal\hivelog\Entity\Apiary;
+use Drupal\hivelog\HivelogCalendarChecklistBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -34,13 +35,23 @@ class InventoryReportController extends ControllerBase {
   protected RequestStack $requestStack;
 
   /**
+   * The calendar checklist builder (task 0130).
+   */
+  protected HivelogCalendarChecklistBuilder $calendarChecklistBuilder;
+
+  /**
    * Constructs an InventoryReportController.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, RequestStack $request_stack) {
+  public function __construct(
+    EntityTypeManagerInterface $entity_type_manager,
+    RequestStack $request_stack,
+    HivelogCalendarChecklistBuilder $calendar_checklist_builder,
+  ) {
     // $entityTypeManager is an untyped property inherited from
     // ControllerBase; assign rather than redeclare it.
     $this->entityTypeManager = $entity_type_manager;
     $this->requestStack = $request_stack;
+    $this->calendarChecklistBuilder = $calendar_checklist_builder;
   }
 
   /**
@@ -50,6 +61,7 @@ class InventoryReportController extends ControllerBase {
     return new static(
       $container->get('entity_type.manager'),
       $container->get('request_stack'),
+      $container->get('hivelog.calendar_checklist_builder'),
     );
   }
 
@@ -225,7 +237,7 @@ class InventoryReportController extends ControllerBase {
    */
   public function combinedReport(): array {
     $year = $this->extractReportYear();
-    $apiaries = $this->viewableApiaries();
+    $apiaries = $this->calendarChecklistBuilder->viewableApiaries($this->currentUser());
 
     $cache = (new CacheableMetadata())
       ->addCacheContexts(['url.query_args:year', 'user.permissions'])
@@ -502,31 +514,11 @@ class InventoryReportController extends ControllerBase {
   }
 
   /**
-   * Loads every apiary the current user may view, keyed by id.
-   *
-   * Mirrors DashboardController::viewableApiaries() — an access-checked
-   * query plus a per-entity `access('view')` filter — so the combined
-   * report and the "Net YTD" tile that links to it always cover the same
-   * set.
-   *
-   * @return \Drupal\hivelog\Entity\Apiary[]
-   *   Viewable apiaries keyed by entity id.
-   */
-  protected function viewableApiaries(): array {
-    $storage = $this->entityTypeManager->getStorage('apiary');
-    $ids = $storage->getQuery()->accessCheck(TRUE)->execute();
-    $apiaries = $ids ? $storage->loadMultiple($ids) : [];
-    return array_filter(
-      $apiaries,
-      fn($apiary) => $apiary->access('view', $this->currentUser()),
-    );
-  }
-
-  /**
    * Extracts the selected report year from the request, clamped to ±1.
    *
-   * Matches HiveController::extractCalendarFilters()'s year-clamping
-   * logic exactly, rather than inventing a new pattern: defaults to the
+   * Matches HivelogCalendarChecklistBuilder::extractCalendarFilters()'s
+   * year-clamping logic exactly, rather than inventing a new pattern:
+   * defaults to the
    * current year, and any out-of-range value (including a tampered query
    * string) falls back to the current year too.
    */
