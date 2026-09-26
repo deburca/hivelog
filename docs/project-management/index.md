@@ -62,8 +62,8 @@ LIMIT 10
 - New work? Copy a template from `templates/` → [[templates/task|task]], [[templates/project|project]],
   [[templates/decision|decision]], [[templates/release|release]].
 - Roadmap: [[roadmap]] — release timeline, decision gate, and current state
-- Current focus: cutting a release for the 37 unreleased commits on `main`
-  (see [[roadmap]]); the only active build task is
-  [[0079-pilot-weight-sensor-hardware-build]] in [[sensor-data-collection]]
+- Current focus: **2.0.0** shipped 2026-09-26 (see [[roadmap]]); the only
+  active build task is [[0079-pilot-weight-sensor-hardware-build]] in
+  [[sensor-data-collection]]
 - Module overview lives in the repo's `README.md` and `AGENTS.md` at the repo
   root.

@@ -2,7 +2,7 @@
 title: Navigation Structure & Page Layout
 type: review
 tags: [hivelog/review]
-updated: 2026-09-25
+updated: 2026-09-26
 ---
 # HiveLog — Navigation Structure & Page Layout
 
@@ -82,17 +82,19 @@ theme-independent fallback in the first place.
 
 | Page | Route | Linked from |
 |---|---|---|
-| `/hivelog/hive-action-logs` | `entity.hive_action_log.collection` | **nowhere** |
-| `/hivelog/apiary-action-logs` | `entity.apiary_action_log.collection` | **nowhere** |
+| `/hivelog/hive-action-logs` | `entity.hive_action_log.collection` | "View all Logs" button on the hive page's calendar heading (task 0121; access-gated) |
+| `/hivelog/apiary-action-logs` | `entity.apiary_action_log.collection` | "View all Logs" button on the apiary page's calendar heading (task 0121; access-gated) |
 | `/hivelog/calendar-actions` | `entity.calendar_action.collection` | dashboard stat tile; its own filter form |
 | `/hivelog/apiaries/financial-report` | `hivelog.apiaries.financial_report` | dashboard stat tile (0 or 2+ apiaries); the per-apiary report |
 | `hivelog.apiary.calendar_action.collection` | `/hivelog/apiary/{apiary}/calendar` | "View Full Calendar" button on apiary & hive pages |
 | `hivelog.apiary.inventory_cost_report` | `/hivelog/apiary/{apiary}/inventory/cost-report` | "View Financial Report" button on apiary page |
 
-This is a known, tracked gap, not an oversight — see
-[[0121-reachability-of-orphaned-collection-pages]] (`backlog`, needs a
-product decision per page: add to the nav strip, link from a more natural
-parent page, or drop the route).
+**Resolved 2026-09-26** by [[0121-reachability-of-orphaned-collection-pages]]
+(`done`): the two truly-unreachable pages each gained a "View all Logs"
+button next to the existing calendar buttons, gated on route access like
+every other conditional link on these pages. The other four rows were
+already reachable by design and were never part of the gap — 0121's own
+acceptance criteria explicitly recorded that and left them unchanged.
 
 ---
 
@@ -308,11 +310,13 @@ heading row for their context-free Add route:
 | `/hivelog/products` | Add Product |
 
 `/hivelog/hives`, `/hivelog/inspections`, `/hivelog/queen-observations`,
-`/hivelog/sensor-devices` and the three orphaned `*-action-log`/
-`calendar-actions` collections have **no Add button by design** — those
-entities always require a parent chosen via a scoped-add route (or, for
-ApiClient/AiProviderConfig, are admin-provisioned via the site-wide add
-form only), so there is nowhere context-free to add them from.
+`/hivelog/sensor-devices` and the three `*-action-log`/`calendar-actions`
+collections have **no Add button by design** — those entities always
+require a parent chosen via a scoped-add route (or, for ApiClient/
+AiProviderConfig, are admin-provisioned via the site-wide add form only),
+so there is nowhere context-free to add them from. (The two action-log
+collections gained an inbound *link* via task 0121 — see §1 — that's
+separate from having their own Add button, which they still don't.)
 
 ---
 
@@ -393,10 +397,21 @@ walk, shortening the trail rather than breaking it. Three types with no
 apiary/hive ancestor (`HivelogEntityHierarchy::COLLECTION_THREADED_TYPES`
 — Sensor Device, API Client, AI Provider Config) thread through their own
 collection link instead: `Home › HiveLog › {Collection} › {Entity}`.
-Apiary itself, and a Queen with no hive, skip straight to
-`Home › HiveLog › {Entity}` with no collection crumb — a known
-inconsistency with the collection-threaded types above, not yet resolved
-(see [[0122-top-level-entity-breadcrumb-threading]]).
+
+**Resolved 2026-09-26** by
+[[0122-top-level-entity-breadcrumb-threading]] (`done`): Apiary and a
+hive-less Queen no longer skip straight to `Home › HiveLog › {Entity}`.
+Apiary now always threads `Home › HiveLog › Apiaries › {Apiary}` (it's
+the root of nearly every trail), and `calendar_action` always threads its
+own apiary-scoped Calendar page (`{Apiary} › Calendar › {Action}`) ahead
+of itself, wherever either appears in a chain — including
+`CalendarActionItemRequirement`/`CalendarActionProductYield` trails,
+which already threaded `calendar_action` as an ancestor. An unassigned
+queen (and a `QueenObservation` of one — checked per-ancestor, not just
+the route's own subject, since the observation's own chain is length 2)
+threads `Home › HiveLog › Queens › {Queen}` via a new
+`HivelogEntityHierarchy::COLLECTION_FALLBACK_TYPES`, used only when that
+ancestor's own parent reference comes up empty.
 
 Every trail ends with a crumb naming the current page (ADR-0102, task
 0117): the entity's own label on a canonical page, "Edit" / "Delete" on
@@ -477,9 +492,11 @@ with no way back to a specific apiary context.
 
 Reconciled 2026-09-25 against the code as it stands after
 [[0116-breadcrumb-builder-parent-map-refactor]] through
-[[0120-app-nav-active-state-and-grouping]]. Resolved items are removed
-rather than kept as dead history — see git history / the tasks named
-below for the record of what changed.
+[[0120-app-nav-active-state-and-grouping]]; items 2 and 3 below (numbering
+preserved from that pass) were resolved 2026-09-26 and moved to the
+resolved list at the end. Resolved items are removed rather than kept as
+dead history — see git history / the tasks named below for the record of
+what changed.
 
 1. **The apiary page is overloaded.** Six stacked sections (actions,
    hives, calendar, inventory, products, plus the entity fields and a
@@ -487,24 +504,13 @@ below for the record of what changed.
    controller. Any redesign should consider splitting inventory/products/
    calendar onto their own per-apiary tabs. Unaddressed.
 
-2. **Four collection/report pages have no way in from the nav strip or
-   menu.** `/hivelog/calendar-actions`, `/hivelog/hive-action-logs`,
-   `/hivelog/apiary-action-logs`, `/hivelog/apiaries/financial-report`
-   (§1). Tracked, pending a per-page decision:
-   [[0121-reachability-of-orphaned-collection-pages]].
-
-3. **Top-level entities thread their breadcrumb inconsistently.** Sensor
-   Device/API Client/AI Provider Config go through their own collection
-   crumb; Apiary and a hive-less Queen don't (§5). Tracked, pending a
-   decision: [[0122-top-level-entity-breadcrumb-threading]].
-
-4. **Global catalogs are dead-ends.** The Inventory Items / Purchases /
+2. **Global catalogs are dead-ends.** The Inventory Items / Purchases /
    Products pages are cross-apiary and have no apiary column linking
    back, and no filter by apiary. From there the only way to an apiary
    context is the browser back button or the nav strip/menu.
    Unaddressed.
 
-5. **Menu lives in the front-end `main` menu.** This is why list builders
+3. **Menu lives in the front-end `main` menu.** This is why list builders
    reimplement heading/add chrome and why core Local Actions can't be
    relied on (§1, §4) — the nav strip is the module's own answer to that,
    not a full fix. A future redesign could still decide deliberately
@@ -512,11 +518,11 @@ below for the record of what changed.
    menu; it would affect breadcrumbs and block placement again.
    Unaddressed.
 
-6. **"View Full Calendar" is the same target from two pages** (apiary and
+4. **"View Full Calendar" is the same target from two pages** (apiary and
    hive) but the surrounding context differs (apiary page also has "Add
    Calendar Action"; hive page doesn't). Minor, unaddressed.
 
-7. **`entity-table` SDC is the only table primitive** and it has no
+5. **`entity-table` SDC is the only table primitive** and it has no
    built-in sort, column-hide, or responsive card mode beyond what
    `css/hivelog.tables.css` provides. A denser page may need the
    component extended rather than worked around. Unaddressed.
@@ -530,3 +536,13 @@ entirely in favour of uniform page-owned buttons); the breadcrumb
 `applies()` note about a route-name-prefix rule (it was already
 path-based by the time this refresh was written — corrected in §5, not a
 code change).
+
+Resolved 2026-09-26 (both shipped in release 2.0.0): the four
+unreachable collection/report pages this document's previous version
+numbered item 2 — two of the four (`/hivelog/hive-action-logs`,
+`/hivelog/apiary-action-logs`) gained an inbound link; the other two
+were already reachable by design and were never really part of the gap
+(see §1's now-updated table) — by
+[[0121-reachability-of-orphaned-collection-pages]]; and the inconsistent
+top-level breadcrumb threading previously numbered item 3, by
+[[0122-top-level-entity-breadcrumb-threading]] (see §5).

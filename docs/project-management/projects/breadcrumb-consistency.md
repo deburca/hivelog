@@ -51,9 +51,14 @@ Navigation review follow-ups (2026-09-23), in suggested order:
   menu links derived from it
 - [[0120-app-nav-active-state-and-grouping]] — active section, grouping,
   dashboard link
-- [[0121-reachability-of-orphaned-collection-pages]] — needs a decision
-- [[0122-top-level-entity-breadcrumb-threading]] — needs a decision
-- [[0123-refresh-navigation-reference-docs]] — last, once the code has settled
+- [[0121-reachability-of-orphaned-collection-pages]] — resolved: added an
+  inbound link for the two truly-unreachable pages
+- [[0122-top-level-entity-breadcrumb-threading]] — resolved: Apiary and
+  unassigned Queen now thread through their own collection like every
+  other top-level type
+- [[0123-refresh-navigation-reference-docs]] — last, once the code has
+  settled (note: 0121/0122 actually landed after this one —
+  `navigation-and-page-layout.md` needed a follow-up correction, 2026-09-26)
 
 ## Key findings (from code scan, 2026-06-17; reconciled 2026-06-22)
 - `src/Breadcrumb/HivelogBreadcrumbBuilder.php` already builds trails for

@@ -34,9 +34,9 @@ FROM #hivelog/task
 WHERE contains(string(project), this.file.name)
 SORT priority asc, file.name asc
 ```
-Static index (in suggested execution order). **All 22 tasks are `done` as of
-2026-09-26**, the last being [[0140-controller-and-form-test-gaps]]; none of
-them has shipped in a tagged release yet (latest tag is 1.8.9):
+Static index (in suggested execution order). **All 22 tasks are `done`**,
+the last being [[0140-controller-and-form-test-gaps]] (2026-09-26), and all
+shipped in release **2.0.0** (2026-09-26):
 - [[0124-list-page-row-access-filter]] — **security**: list pages
   show other users' records (high, do first)
 - [[0125-shared-detail-page-builder]] — one helper for the detail-page
@@ -81,8 +81,11 @@ the queue**:
   no submodules
 - [[0140-controller-and-form-test-gaps]] — write before the refactors
   they guard
-- [[0135-submodule-create-permissions]] — needs a decision
-- [[0139-submodule-packaging-hygiene]] — needs small decisions
+- [[0135-submodule-create-permissions]] — resolved: re-added `add sensor
+  device` (scoped like `add hive`); removed the dead `edit own`/
+  `delete own` permissions on `api_client`/`ai_provider_config`
+- [[0139-submodule-packaging-hygiene]] — resolved: `nexus` now depends on
+  `hivelog:collective`; all four submodules track core's own version
 
 ## Key findings (2026-09-23 page-structure review)
 Read all 21 page controllers, 15 list builders and 32 forms, and fetched
@@ -202,21 +205,24 @@ on `cms2` (deleted afterwards); the orphan counts came from SQL there.
   Hive pages already have?~~ **Resolved 2026-09-23: yes**, the same
   filters (no new cross-apiary ones) →
   [[0132-filters-on-hive-inspection-observation-lists]].
-- [[0131-single-detail-table-css-class]] renames theming-API class names
+- ~~[[0131-single-detail-table-css-class]] renames theming-API class names
   (AGENTS.md "Theming HiveLog"). Keep the old names as aliases for one
-  minor release, or break them in a major?
+  minor release, or break them in a major?~~ **Resolved**: broken cleanly
+  in a major (2.0.0) — no aliases were added, consistent with
+  [[0010-semantic-versioning-and-releases]].
 - No entity type has Views integration (`views_data` handler), so every
   list, report and export is custom controller code. Deliberate
   (ADR-0004's custom-controller approach), or wanted for site builders?
   No task created until decided.
-- [[0103-delete-policy-for-records-with-children]]'s own open questions
+- ~~[[0103-delete-policy-for-records-with-children]]'s own open questions
   gate [[0134-delete-dependency-framework]]: confirm the CASCADE and
   DETACH treatments (recommended where neither block nor warn works),
   what to do when a user can't delete the blocking children, and user
-  accounts.
+  accounts.~~ **Resolved 2026-09-24** (all three confirmed as
+  recommended — see the ADR's own "Open questions" section).
 
 ## Related decisions
-- [[0103-delete-policy-for-records-with-children]] (proposed)
+- [[0103-delete-policy-for-records-with-children]] (accepted)
 - [[0020-access-parity-custom-routes]]
 - [[0004-custom-controllers-over-view-builders]]
 - [[0012-action-button-design-system]]
