@@ -82,6 +82,85 @@ class HivelogAppNavBuilderTest extends KernelTestBase {
     foreach ($expected_keys as $key) {
       $this->assertArrayHasKey($key, $build);
     }
+
+    // `setup` is deliberately absent here even for an administrator:
+    // its own accessibility (`SetupPageAccessCheck`) requires at least
+    // one `parent: 'setup'` item, and this bare environment (no
+    // submodule installed) has none — see
+    // `testSetupItemBecomesAccessibleOnceAChildExists()`.
+    $this->assertArrayNotHasKey('setup', $build);
+  }
+
+  /**
+   * Tests every built-in item's `parent` key (task 0147, ADR-0104).
+   *
+   * "Apiaries" and the new "Setup" item are primary (no `parent`);
+   * every other built-in nests under "Apiaries".
+   */
+  public function testBuiltInItemsCarryTheExpectedParent(): void {
+    $items = \Drupal::service('hivelog.app_nav_builder')->getAllItems();
+
+    $this->assertArrayNotHasKey('parent', $items['apiaries']);
+    $this->assertArrayNotHasKey('parent', $items['setup']);
+    $apiaries_children = [
+      'hives', 'inspections', 'queens', 'queen_observations',
+      'inventory_items', 'inventory_purchases', 'products',
+    ];
+    foreach ($apiaries_children as $key) {
+      $this->assertEquals('apiaries', $items[$key]['parent'], "'$key' must declare parent: 'apiaries'.");
+    }
+  }
+
+  /**
+   * Tests the new "Setup" built-in resolves to the real route (task 0146).
+   */
+  public function testSetupItemResolvesTheSetupRoute(): void {
+    $items = \Drupal::service('hivelog.app_nav_builder')->getAllItems();
+
+    $this->assertEquals('hivelog.setup', $items['setup']['url']->getRouteName());
+    $this->assertEquals('setup', $items['setup']['group']);
+  }
+
+  /**
+   * Tests "Setup" becomes accessible once a `parent: 'setup'` item exists.
+   *
+   * Complements `testAllBuiltInItemsAppearForAdministrator()`'s
+   * negative case above — same admin account, only difference is
+   * `hivelog_app_nav_test` (task 0146) being installed.
+   */
+  public function testSetupItemAccessibleOnceChildItemRegistered(): void {
+    $this->enableModules(['hivelog_app_nav_test']);
+    $this->loginAdmin();
+
+    $build = \Drupal::service('hivelog.app_nav_builder')->build();
+
+    $this->assertArrayHasKey('setup', $build);
+  }
+
+  /**
+   * Tests `getAccessibleChildren()` orders its results by weight.
+   *
+   * Caught live on `cms2` while verifying this task: with all three
+   * real `setup`-group items installed, `SetupController`'s page
+   * listed them in module-invocation order, not weight order, because
+   * `getAccessibleChildren()` never sorted its result — invisible in
+   * task 0146, where only one test-only item ever existed at once.
+   */
+  public function testGetAccessibleChildrenOrderedByWeight(): void {
+    $this->enableModules(['key', 'collective', 'nanoprobe', 'nexus']);
+    $this->installEntitySchema('api_client');
+    $this->installEntitySchema('ai_provider_config');
+    $this->installEntitySchema('sensor_device');
+    \Drupal::service('router.builder')->rebuild();
+    $this->loginAdmin();
+
+    $children = \Drupal::service('hivelog.app_nav_builder')->getAccessibleChildren('setup');
+
+    // Weights 9, 10, 11 (task 0147) — collective, nexus, nanoprobe.
+    $this->assertSame(
+      ['collective_api_clients', 'nexus_ai_provider_configs', 'nanoprobe_sensor_devices'],
+      array_keys($children),
+    );
   }
 
   /**

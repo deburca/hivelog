@@ -60,16 +60,20 @@ function collective_form_alter(array &$form, FormStateInterface $form_state, $fo
  * See hivelog.api.php and
  * docs/project-management/decisions/0099-submodule-canonical-page-panel-hook.md.
  * `group: setup` (task 0120) — a one-off, admin-provisioned credential,
- * not a day-to-day record-keeping or inventory destination.
+ * not a day-to-day record-keeping or inventory destination. `parent:
+ * 'setup'` (task 0147, ADR-0104) nests it under core's own "Setup"
+ * primary item; weight bumped from 8 to 9 so it no longer collides
+ * with that same core item's own weight.
  */
 function collective_hivelog_app_nav_items() {
   return [
     'collective_api_clients' => [
       'title' => t('API Clients'),
       'url' => Url::fromRoute('entity.api_client.collection'),
-      'weight' => 8,
+      'weight' => 9,
       'group' => 'setup',
       'section' => 'api_client',
+      'parent' => 'setup',
     ],
   ];
 }

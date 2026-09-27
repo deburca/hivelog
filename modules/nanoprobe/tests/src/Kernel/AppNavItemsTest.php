@@ -64,6 +64,14 @@ class AppNavItemsTest extends KernelTestBase {
   }
 
   /**
+   * Tests the item nests under core's "Setup" primary item (task 0147).
+   */
+  public function testSensorDevicesItemParentsUnderSetup(): void {
+    $items = nanoprobe_hivelog_app_nav_items();
+    $this->assertEquals('setup', $items['nanoprobe_sensor_devices']['parent']);
+  }
+
+  /**
    * Tests the item appears in HivelogAppNavBuilder's real merged output.
    *
    * Mirrors `SensorAlertCollectorTest::testSensorAlertAppearsInMergedDashboardQueue()`'s

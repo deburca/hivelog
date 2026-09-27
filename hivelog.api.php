@@ -214,15 +214,23 @@ function hook_hivelog_dashboard_sections(array $apiaries, CacheableMetadata $cac
  * `HivelogEntityHierarchy::resolveSubject()`). Omit `section` for an
  * item with no single entity type it represents.
  *
+ * Task 0146/0147, ADR-0104: `parent` (optional) names another item
+ * this one nests under in the two-tier nav strip and main menu — the
+ * key of a `hivelog` core built-in (e.g. `'setup'`) or another
+ * module's own item. Omit it for a top-level (primary) item, exactly
+ * like every existing implementation before this task. Every current
+ * submodule contribution nests under core's own `'setup'` built-in
+ * item, which points at the `hivelog.setup` landing page (task 0146).
+ *
  * @return array
  *   A list of nav item descriptors, each `['title' =>
  *   \Drupal\Core\StringTranslation\TranslatableMarkup, 'url' =>
  *   \Drupal\Core\Url, 'weight' => int, 'group' => string, 'section' =>
- *   string (optional)]`, keyed by a unique, module-prefixed key to
- *   avoid colliding with another implementation's item. `hivelog`
- *   core's own built-in items use weights 0–7; start contributed items
- *   at 8 or above unless deliberately interleaving with a specific
- *   core item.
+ *   string (optional), 'parent' => string (optional)]`, keyed by a
+ *   unique, module-prefixed key to avoid colliding with another
+ *   implementation's item. `hivelog` core's own built-in items use
+ *   weights 0–8; start contributed items at 9 or above unless
+ *   deliberately interleaving with a specific core item.
  */
 function hook_hivelog_app_nav_items() {
   return [
@@ -232,6 +240,7 @@ function hook_hivelog_app_nav_items() {
       'weight' => 20,
       'group' => 'setup',
       'section' => 'my_thing',
+      'parent' => 'setup',
     ],
   ];
 }

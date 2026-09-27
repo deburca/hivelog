@@ -16,7 +16,7 @@ use Drupal\Core\Url;
  *
  * Rendered via `hook_preprocess_page()` (task 0105), not a placed
  * block or `hook_page_top()` — see that hook's own docblock in
- * `hivelog.module` for why. Combines `hivelog` core's own 8 built-in
+ * `hivelog.module` for why. Combines `hivelog` core's own 9 built-in
  * destinations with every `hook_hivelog_app_nav_items()` contribution
  * (see `hivelog.api.php`), so `nanoprobe`/`collective`/`nexus` can add
  * their own admin pages without `hivelog` depending on them.
@@ -35,6 +35,12 @@ use Drupal\Core\Url;
  * useful strip shortcut) and active-state marking (`is-active` /
  * `aria-current`, resolved from the current route — meaningless for a
  * menu link, whose active state the menu system already marks itself).
+ *
+ * Task 0146/0147, ADR-0104: an item's optional `parent` key names
+ * another item (built-in or contributed) it nests under in the
+ * eventual two-tier strip/menu — read by neither `build()` nor
+ * `HivelogMenuLinks` yet (tasks 0148/0150), only by
+ * `getAccessibleChildren()` so far.
  */
 class HivelogAppNavBuilder {
 
@@ -61,11 +67,20 @@ class HivelogAppNavBuilder {
    *
    * `dashboard` and `default` are never declared by a real item's
    * `group` key today (the Dashboard entry is handled outside
-   * `getAllItems()` entirely; every current built-in/hook item declares
-   * `records`, `inventory` or `setup` explicitly) — both exist purely
-   * as safe fallback positions: `default` for a future item that omits
-   * `group`, `dashboard` reserved for symmetry with the Dashboard
-   * entry's own synthetic group key in `build()`.
+   * `getAllItems()` entirely) — both exist purely as safe fallback
+   * positions: `default` for a future item that omits `group`,
+   * `dashboard` reserved for symmetry with the Dashboard entry's own
+   * synthetic group key in `build()`.
+   *
+   * Task 0147, ADR-0104: `inventory` no longer has any *primary-tier*
+   * member — its only current members (`inventory_items`,
+   * `inventory_purchases`, `products`) all carry `parent: 'apiaries'`
+   * now, so at the top level only `records` (the "Apiaries" item
+   * itself) and `setup` (the new "Setup" item) are actually reachable.
+   * `inventory` stays in this list because `build()` doesn't yet
+   * partition by `parent` (task 0148 does) — until then, an
+   * `inventory`-group item still sorts as a flat top-level entry, same
+   * as before this task.
    */
   protected const GROUP_ORDER = ['dashboard', 'records', 'inventory', 'default', 'setup'];
 
@@ -92,10 +107,7 @@ class HivelogAppNavBuilder {
       return [];
     }
 
-    uasort($accessible, function (array $a, array $b) {
-      $group_position = $this->groupPosition($a['group'] ?? 'default') <=> $this->groupPosition($b['group'] ?? 'default');
-      return $group_position !== 0 ? $group_position : ($a['weight'] ?? 0) <=> ($b['weight'] ?? 0);
-    });
+    $this->sortByGroupThenWeight($accessible);
 
     [$active_key, $aria_current] = $this->resolveActiveItem($accessible);
 
@@ -171,6 +183,25 @@ class HivelogAppNavBuilder {
   protected function groupPosition(string $group): int {
     $position = array_search($group, self::GROUP_ORDER, TRUE);
     return $position === FALSE ? count(self::GROUP_ORDER) : $position;
+  }
+
+  /**
+   * Sorts item descriptors in place: by `GROUP_ORDER` position, then weight.
+   *
+   * Extracted from `build()` (task 0147) so `getAccessibleChildren()`
+   * orders a hub's children the same way — every current `setup`-group
+   * item shares one group, so this reduces to a plain weight sort for
+   * them today, but stays correct if a future `parent: 'setup'`
+   * contribution ever used a different `group`.
+   *
+   * @param array[] $items
+   *   Item descriptors, keyed. Modified in place.
+   */
+  protected function sortByGroupThenWeight(array &$items): void {
+    uasort($items, function (array $a, array $b) {
+      $group_position = $this->groupPosition($a['group'] ?? 'default') <=> $this->groupPosition($b['group'] ?? 'default');
+      return $group_position !== 0 ? $group_position : ($a['weight'] ?? 0) <=> ($b['weight'] ?? 0);
+    });
   }
 
   /**
@@ -273,15 +304,18 @@ class HivelogAppNavBuilder {
    *   would answer the wrong question.
    *
    * @return array[]
-   *   The matching item descriptors that account can access, same shape
-   *   as `getAllItems()`.
+   *   The matching item descriptors that account can access, sorted the
+   *   same way `build()` sorts the top level (`GROUP_ORDER` position,
+   *   then weight) — same shape as `getAllItems()`.
    */
   public function getAccessibleChildren(string $parent_key, ?AccountInterface $account = NULL): array {
     $children = array_filter(
       $this->getAllItems(),
       fn(array $item) => ($item['parent'] ?? NULL) === $parent_key,
     );
-    return array_filter($children, fn(array $item) => $item['url']->access($account));
+    $accessible = array_filter($children, fn(array $item) => $item['url']->access($account));
+    $this->sortByGroupThenWeight($accessible);
+    return $accessible;
   }
 
   /**
@@ -294,8 +328,8 @@ class HivelogAppNavBuilder {
    *
    * @return array[]
    *   `['title' => TranslatableMarkup, 'url' => Url, 'weight' => int,
-   *   'group' => string, 'section' => string (optional)]` descriptors,
-   *   keyed uniquely.
+   *   'group' => string, 'section' => string (optional), 'parent' =>
+   *   string (optional)]` descriptors, keyed uniquely.
    */
   public function getAllItems(): array {
     $items = $this->builtInItems();
@@ -308,17 +342,28 @@ class HivelogAppNavBuilder {
   /**
    * Hivelog core's own built-in nav items.
    *
-   * Same 8 destinations, same weights, as `hivelog.links.menu.yml`'s old
-   * hand-written entries — now the *source* the menu-link deriver reads,
-   * not a second copy kept in sync by hand (task 0119). `group` splits
-   * day-to-day record-keeping from the inventory/sales side (task
-   * 0120); `section` names the entity type each item's collection is
-   * "about", for `resolveActiveItem()`.
+   * Same 8 record/inventory destinations, same weights, as
+   * `hivelog.links.menu.yml`'s old hand-written entries — now the
+   * *source* the menu-link deriver reads, not a second copy kept in
+   * sync by hand (task 0119). `group` splits day-to-day record-keeping
+   * from the inventory/sales side (task 0120); `section` names the
+   * entity type each item's collection is "about", for
+   * `resolveActiveItem()`.
+   *
+   * Task 0147, ADR-0104: every one of those 8 now also carries
+   * `parent: 'apiaries'` — each is a child of `Apiary` in the domain
+   * model (directly, or transitively via `Hive`/`Queen`), and
+   * "Apiaries" is the only one of them with an existing page to nest
+   * the rest under. Also adds a 9th built-in, `setup`: the new primary
+   * item (no `parent` of its own) every `setup`-group submodule
+   * contribution now nests under — see `hivelog.setup`
+   * (`SetupController`, task 0146). `parent` is read by nothing yet
+   * (task 0148/0150 do); this task only wires the data.
    *
    * @return array[]
    *   `['title' => TranslatableMarkup, 'url' => Url, 'weight' => int,
-   *   'group' => string, 'section' => string]` descriptors, keyed
-   *   uniquely.
+   *   'group' => string, 'section' => string (optional), 'parent' =>
+   *   string (optional)]` descriptors, keyed uniquely.
    */
   protected function builtInItems(): array {
     return [
@@ -335,6 +380,7 @@ class HivelogAppNavBuilder {
         'weight' => 1,
         'group' => 'records',
         'section' => 'hive',
+        'parent' => 'apiaries',
       ],
       'inspections' => [
         'title' => $this->t('Inspections'),
@@ -342,6 +388,7 @@ class HivelogAppNavBuilder {
         'weight' => 2,
         'group' => 'records',
         'section' => 'hive_inspection',
+        'parent' => 'apiaries',
       ],
       'queens' => [
         'title' => $this->t('Queens'),
@@ -349,6 +396,7 @@ class HivelogAppNavBuilder {
         'weight' => 3,
         'group' => 'records',
         'section' => 'queen',
+        'parent' => 'apiaries',
       ],
       'queen_observations' => [
         'title' => $this->t('Queen Observations'),
@@ -356,6 +404,7 @@ class HivelogAppNavBuilder {
         'weight' => 4,
         'group' => 'records',
         'section' => 'queen_observation',
+        'parent' => 'apiaries',
       ],
       'inventory_items' => [
         'title' => $this->t('Inventory Items'),
@@ -363,6 +412,7 @@ class HivelogAppNavBuilder {
         'weight' => 5,
         'group' => 'inventory',
         'section' => 'inventory_item',
+        'parent' => 'apiaries',
       ],
       'inventory_purchases' => [
         'title' => $this->t('Inventory Purchases'),
@@ -370,6 +420,7 @@ class HivelogAppNavBuilder {
         'weight' => 6,
         'group' => 'inventory',
         'section' => 'inventory_purchase',
+        'parent' => 'apiaries',
       ],
       'products' => [
         'title' => $this->t('Products'),
@@ -377,6 +428,13 @@ class HivelogAppNavBuilder {
         'weight' => 7,
         'group' => 'inventory',
         'section' => 'product',
+        'parent' => 'apiaries',
+      ],
+      'setup' => [
+        'title' => $this->t('Setup'),
+        'url' => Url::fromRoute('hivelog.setup'),
+        'weight' => 8,
+        'group' => 'setup',
       ],
     ];
   }
