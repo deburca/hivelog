@@ -376,7 +376,7 @@ class ListBuilderAccessFilterTest extends KernelTestBase {
     $build = \Drupal::entityTypeManager()->getListBuilder('apiary')->render();
     $rows = $build['table']['#props']['rows'] ?? [];
     $this->assertCount(1, $rows);
-    $this->assertStringContainsString('Owner Apiary', (string) $rows[0]['cells'][1]);
+    $this->assertStringContainsString('Owner Apiary', (string) $rows[0]['cells'][0]);
   }
 
   /**

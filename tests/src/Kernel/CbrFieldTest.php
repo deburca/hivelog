@@ -84,7 +84,7 @@ class CbrFieldTest extends KernelTestBase {
   }
 
   /**
-   * The list builder header is CBR, Name, Location, Owner — in that order.
+   * The list builder header is Name, CBR, Location, Owner — in that order.
    */
   public function testListBuilderHeaderOrder(): void {
     $list_builder = \Drupal::entityTypeManager()->getListBuilder('apiary');
@@ -92,7 +92,7 @@ class CbrFieldTest extends KernelTestBase {
     $keys = array_keys($header);
     // Drop trailing 'operations' (or other parent::buildHeader() keys).
     $leading = array_slice($keys, 0, 4);
-    $this->assertSame(['cbr', 'name', 'location', 'owner'], $leading);
+    $this->assertSame(['name', 'cbr', 'location', 'owner'], $leading);
   }
 
   /**

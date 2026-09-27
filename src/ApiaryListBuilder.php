@@ -25,8 +25,8 @@ class ApiaryListBuilder extends HivelogListBuilder {
    * {@inheritdoc}
    */
   public function buildHeader() {
-    $header['cbr'] = $this->t('CBR');
     $header['name'] = $this->t('Name');
+    $header['cbr'] = $this->t('CBR');
     $header['location'] = $this->t('Location');
     $header['owner'] = $this->t('Owner');
     return $header;
@@ -37,8 +37,8 @@ class ApiaryListBuilder extends HivelogListBuilder {
    */
   public function buildRow(EntityInterface $entity) {
     $owner = $entity->getOwner();
-    $row['cbr'] = $this->extractCbr($owner) ?: '—';
     $row['name'] = $entity->toLink()->toString();
+    $row['cbr'] = $this->extractCbr($owner) ?: '—';
     $row['location'] = $entity->get('location')->value
       ? mb_strimwidth($entity->get('location')->value, 0, 60, '...')
       : '';
