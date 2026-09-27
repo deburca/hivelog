@@ -8,10 +8,28 @@
  * Reuses `hivelog.responsive.css`'s existing custom-property tokens; no
  * new token set for one small nav strip.
  *
- * Task 0120 adds the active-state (`.is-active`) and group-separator
- * (`.hivelog-app-nav__separator`) rules, plus a phone-width behaviour
- * change: horizontal scroll instead of wrapping to 3+ lines once the
- * strip carries 11 pills across 3 groups.
+ * Task 0148/0149, ADR-0104: two tiers now, not a flat row.
+ * `HivelogAppNavBuilder::build()` emits one `.hivelog-app-nav__item`
+ * wrapper per primary item (Dashboard, Apiaries, Setup), each
+ * containing its own `.hivelog-app-nav__link` plus, if it has ≥1
+ * accessible child, a `.hivelog-app-nav__submenu` of the hub's own
+ * children. No JavaScript — `hivelog` ships none, deliberately (see the
+ * ADR) — so disclosure is CSS-only `:hover`/`:focus-within` on the
+ * `.hivelog-app-nav__item` wrapper. Child links stay in the DOM and
+ * focusable at all times; hidden state uses `opacity`/`pointer-events`,
+ * never `display`/`visibility`, both of which would remove a closed
+ * submenu's links from the tab order entirely — a keyboard user tabbing
+ * past a primary item must still be able to tab into its children.
+ *
+ * Mobile (≤ 768px) drops the hover-gated dropdown entirely: every
+ * accessible child renders always-visible, indented under its primary
+ * parent — tapping a real `<a href>` navigates immediately with no
+ * "reveal children" gesture, and `:hover`/`:focus-within` never fire
+ * from a tap, so there's no way to open a closed dropdown by touch.
+ * Task 0120's phone-width horizontal-scroll rule is retired here, not
+ * carried forward: it existed for 11 pills flattened into one row; the
+ * top level is 2–3 items now, and an always-open submenu wraps far
+ * more naturally at pill width than it scrolls.
  */
 
 .hivelog-app-nav {
@@ -22,6 +40,13 @@
   padding: var(--hivelog-gap-tight) 0;
   margin-bottom: var(--hivelog-gap);
   border-bottom: 1px solid var(--hivelog-hairline);
+}
+
+/* Task 0148/0149: wraps one primary item's link plus its optional
+ * submenu. `position: relative` anchors the submenu's `position:
+ * absolute` (desktop/tablet only — see the mobile override below). */
+.hivelog-app-nav__item {
+  position: relative;
 }
 
 .hivelog-app-nav__link {
@@ -59,25 +84,114 @@
   border-color: var(--hivelog-btn-primary-border-hover);
 }
 
-/* A decorative divider between item groups — see the __separator note
- * in HivelogAppNavBuilder::build() for why it's `aria-hidden`. */
+/*
+ * Task 0149: a hub whose *child* is the active section, not the hub's
+ * own link — an outline in the same primary colour, not a solid fill,
+ * so it reads as "you're in here" rather than "you're on this exact
+ * page" (that's `.is-active`, above).
+ */
+.hivelog-app-nav__item.has-active-child > .hivelog-app-nav__link {
+  border-color: var(--hivelog-btn-primary-border);
+  color: var(--hivelog-btn-primary-bg);
+}
+
+/* A decorative divider, not a nav item of its own — see the
+ * __separator note in HivelogAppNavBuilder::buildSubmenu() for why
+ * it's `aria-hidden`. Only ever appears inside a submenu (task 0148
+ * moved it off the top level), so it's a horizontal rule between
+ * stacked children by default; the mobile override below restores the
+ * vertical-bar shape for the wrapped-row layout used there. */
 .hivelog-app-nav__separator {
-  width: 1px;
-  align-self: stretch;
+  width: 100%;
+  height: 1px;
   background: var(--hivelog-hairline);
 }
 
-@media (max-width: 480px) {
-  /* 11 pills across 3 groups wraps to 3+ lines at phone width — scroll
-   * horizontally instead, keeping the strip to one line. */
+/*
+ * Task 0149: the dropdown panel. Hidden via `opacity`/`pointer-events`
+ * (never `display`/`visibility`) so its links stay focusable while
+ * closed — a keyboard user tabbing through the strip must still reach
+ * every child in source order.
+ */
+.hivelog-app-nav__submenu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 100%;
+  margin-top: 2px;
+  padding: var(--hivelog-gap-tight);
+  background: var(--hivelog-surface);
+  border: 1px solid var(--hivelog-border);
+  border-radius: 8px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-4px);
+  transition: opacity 0.15s ease-in-out, transform 0.15s ease-in-out;
+}
+
+.hivelog-app-nav__item:hover > .hivelog-app-nav__submenu,
+.hivelog-app-nav__item:focus-within > .hivelog-app-nav__submenu,
+.hivelog-app-nav__item.has-active-child > .hivelog-app-nav__submenu {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+/* Inside the dropdown, a child link fills the panel's width and
+ * left-aligns instead of staying a centred pill — standard dropdown-
+ * menu shape. The mobile override below reverts this to the pill look,
+ * since mobile drops the dropdown panel entirely. */
+.hivelog-app-nav__submenu .hivelog-app-nav__link {
+  display: block;
+  width: 100%;
+  text-align: left;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  /* No hover/focus to gate on at touch width — stack primary items and
+   * render every submenu always-open, indented under its parent,
+   * instead of a hidden dropdown. */
   .hivelog-app-nav {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    flex-direction: column;
+    align-items: stretch;
   }
 
-  .hivelog-app-nav__link,
+  .hivelog-app-nav__item {
+    position: static;
+  }
+
+  .hivelog-app-nav__submenu {
+    position: static;
+    z-index: auto;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: var(--hivelog-gap-tight);
+    min-width: 0;
+    margin: 0.25rem 0 0 1rem;
+    padding: 0;
+    background: none;
+    border: 0;
+    border-radius: 0;
+    opacity: 1;
+    pointer-events: auto;
+    transform: none;
+  }
+
+  .hivelog-app-nav__submenu .hivelog-app-nav__link {
+    display: inline-block;
+    width: auto;
+    text-align: center;
+  }
+
   .hivelog-app-nav__separator {
-    flex-shrink: 0;
+    width: 1px;
+    height: auto;
+    align-self: stretch;
   }
 }
