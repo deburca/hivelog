@@ -2,12 +2,13 @@
 
 /**
  * @file
- * Registers the test-only `parent: 'setup'` nav item task 0146 tests use.
+ * Registers the test-only nav items tasks 0146/0150's kernel tests use.
  *
  * Not part of the distributed module — see hivelog_app_nav_test.info.yml.
- * Points at a real existing route (the apiary collection) rather than
- * defining a route of its own, so the tests can control accessibility
- * with ordinary permission grants instead of test-only plumbing.
+ * Both point at a real existing route (the apiary/hive collection)
+ * rather than defining a route of their own, so the tests can control
+ * accessibility with ordinary permission grants instead of test-only
+ * plumbing.
  */
 
 use Drupal\Core\Url;
@@ -23,6 +24,18 @@ function hivelog_app_nav_test_hivelog_app_nav_items() {
       'weight' => 50,
       'group' => 'setup',
       'parent' => 'setup',
+    ],
+    // A `parent` naming nothing that exists at all (task 0150) — the
+    // "typo" half of the fallback-to-top-level case; the other half
+    // (a parent that exists but isn't itself accessible/derivable) is
+    // already covered by the real registry whenever a submodule isn't
+    // installed.
+    'hivelog_app_nav_test_orphan' => [
+      'title' => t('Test Orphan'),
+      'url' => Url::fromRoute('entity.hive.collection'),
+      'weight' => 51,
+      'group' => 'setup',
+      'parent' => 'nonexistent_hub',
     ],
   ];
 }

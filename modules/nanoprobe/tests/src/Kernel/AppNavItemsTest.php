@@ -95,7 +95,9 @@ class AppNavItemsTest extends KernelTestBase {
     $definitions = \Drupal::service('plugin.manager.menu.link')->getDefinitions();
     $this->assertArrayHasKey('hivelog.nav_item:nanoprobe_sensor_devices', $definitions);
     $this->assertEquals('entity.sensor_device.collection', $definitions['hivelog.nav_item:nanoprobe_sensor_devices']['route_name']);
-    $this->assertEquals('hivelog.admin', $definitions['hivelog.nav_item:nanoprobe_sensor_devices']['parent']);
+    // Nests under core's "Setup" derived link since task 0150 —
+    // it declares `parent: 'setup'` (task 0147).
+    $this->assertEquals('hivelog.nav_item:setup', $definitions['hivelog.nav_item:nanoprobe_sensor_devices']['parent']);
   }
 
 }

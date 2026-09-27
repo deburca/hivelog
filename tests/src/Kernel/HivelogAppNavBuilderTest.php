@@ -168,6 +168,24 @@ class HivelogAppNavBuilderTest extends KernelTestBase {
   }
 
   /**
+   * Tests an unresolvable `parent` falls back to the top level.
+   *
+   * Gap in task 0148's own coverage, closed here: its acceptance
+   * criteria named this case explicitly, but no fixture existed yet to
+   * exercise it — `hivelog_app_nav_test`'s `parent: 'nonexistent_hub'`
+   * item (added for task 0150's own fallback test) covers it now too.
+   */
+  public function testUnresolvableParentFallsBackToTopLevel(): void {
+    $this->enableModules(['hivelog_app_nav_test']);
+    $this->loginAdmin();
+
+    $build = \Drupal::service('hivelog.app_nav_builder')->build();
+
+    $this->assertArrayHasKey('hivelog_app_nav_test_orphan', $build);
+    $this->assertArrayNotHasKey('nonexistent_hub', $build);
+  }
+
+  /**
    * Tests a user with no relevant permissions sees an empty nav.
    *
    * Not the anonymous account itself (which would also bypass this via

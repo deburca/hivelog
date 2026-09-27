@@ -6,12 +6,18 @@ hivelog.admin:
   weight: 10
 
 # One child link per HivelogAppNavBuilder::getAllItems() entry — core's
-# own 8 built-ins plus every hook_hivelog_app_nav_items() contribution
+# own 9 built-ins plus every hook_hivelog_app_nav_items() contribution
 # (task 0119). Replaces 8 hand-written entries here plus one each in
 # collective.links.menu.yml / nexus.links.menu.yml /
 # nanoprobe.links.menu.yml (deleted) — a submodule that wants a
 # main-menu entry implements the nav hook only now. See
 # Drupal\hivelog\Plugin\Derivative\HivelogMenuLinks.
+#
+# `parent: hivelog.admin` below is the DEFAULT every derived link gets
+# unless the deriver overrides it (task 0150, ADR-0104): an item
+# declaring `parent` (e.g. 'apiaries') in the registry gets
+# `hivelog.nav_item:apiaries` instead, nesting it under that hub's own
+# derived link rather than flatly under this one.
 hivelog.nav_item:
   deriver: 'Drupal\hivelog\Plugin\Derivative\HivelogMenuLinks'
   menu_name: main

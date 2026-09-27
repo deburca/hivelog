@@ -89,6 +89,11 @@ class HivelogMenuLinksTest extends KernelTestBase {
 
   /**
    * Tests each derived link's title, route and weight match its nav item.
+   *
+   * `parent` is checked separately by
+   * `testTopLevelItemParentsUnderHivelogAdmin()` /
+   * `testChildItemParentsUnderItsHubsDerivedLink()` (task 0150) — it's
+   * no longer `hivelog.admin` for every item unconditionally.
    */
   public function testDerivedLinksMatchNavItemFields(): void {
     $nav_items = \Drupal::service('hivelog.app_nav_builder')->getAllItems();
@@ -100,9 +105,51 @@ class HivelogMenuLinksTest extends KernelTestBase {
       $this->assertEquals($item['url']->getRouteName(), $links[$key]['route_name']);
       $this->assertEquals($item['url']->getRouteParameters(), $links[$key]['route_parameters']);
       $this->assertEquals($item['weight'], $links[$key]['weight']);
-      $this->assertEquals('hivelog.admin', $links[$key]['parent']);
       $this->assertEquals('main', $links[$key]['menu_name']);
     }
+  }
+
+  /**
+   * Tests a top-level item's derived link parents under `hivelog.admin`.
+   *
+   * A top-level item (no `parent`) is unaffected by task 0150.
+   */
+  public function testTopLevelItemParentsUnderHivelogAdmin(): void {
+    $links = $this->derivedNavItemLinks();
+
+    $this->assertEquals('hivelog.admin', $links['apiaries']['parent']);
+    $this->assertEquals('hivelog.admin', $links['setup']['parent']);
+  }
+
+  /**
+   * Tests a `parent: 'apiaries'` item's derived link nests under Apiaries'.
+   *
+   * Not `hivelog.admin` directly (task 0150, ADR-0104).
+   */
+  public function testChildItemParentsUnderItsHubsDerivedLink(): void {
+    $links = $this->derivedNavItemLinks();
+
+    $apiaries_children = [
+      'hives', 'inspections', 'queens', 'queen_observations',
+      'inventory_items', 'inventory_purchases', 'products',
+    ];
+    foreach ($apiaries_children as $key) {
+      $this->assertEquals('hivelog.nav_item:apiaries', $links[$key]['parent'], "'$key' must parent under Apiaries' own derived link.");
+    }
+  }
+
+  /**
+   * Tests an unresolvable `parent` falls back to `hivelog.admin`.
+   *
+   * Rather than a menu link parented on a plugin ID that doesn't
+   * exist (task 0150).
+   */
+  public function testUnresolvableParentFallsBackToHivelogAdmin(): void {
+    $this->enableModules(['hivelog_app_nav_test']);
+
+    $links = $this->derivedNavItemLinks();
+
+    $this->assertEquals('hivelog.admin', $links['hivelog_app_nav_test_orphan']['parent']);
   }
 
 }

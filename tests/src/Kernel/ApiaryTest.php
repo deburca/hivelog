@@ -337,10 +337,13 @@ class ApiaryTest extends KernelTestBase {
     $this->assertEquals('entity.hive_inspection.collection', $menu_links['hivelog.nav_item:inspections']['route_name']);
     $this->assertEquals('entity.queen.collection', $menu_links['hivelog.nav_item:queens']['route_name']);
     $this->assertEquals('entity.queen_observation.collection', $menu_links['hivelog.nav_item:queen_observations']['route_name']);
-    $this->assertEquals('hivelog.admin', $menu_links['hivelog.nav_item:hives']['parent']);
-    $this->assertEquals('hivelog.admin', $menu_links['hivelog.nav_item:inspections']['parent']);
-    $this->assertEquals('hivelog.admin', $menu_links['hivelog.nav_item:queens']['parent']);
-    $this->assertEquals('hivelog.admin', $menu_links['hivelog.nav_item:queen_observations']['parent']);
+    // Nest under Apiaries' own derived link since task 0150
+    // (ADR-0104's two-tier main menu), not `hivelog.admin` directly —
+    // see HivelogMenuLinksTest for the exhaustive parent-nesting check.
+    $this->assertEquals('hivelog.nav_item:apiaries', $menu_links['hivelog.nav_item:hives']['parent']);
+    $this->assertEquals('hivelog.nav_item:apiaries', $menu_links['hivelog.nav_item:inspections']['parent']);
+    $this->assertEquals('hivelog.nav_item:apiaries', $menu_links['hivelog.nav_item:queens']['parent']);
+    $this->assertEquals('hivelog.nav_item:apiaries', $menu_links['hivelog.nav_item:queen_observations']['parent']);
   }
 
   /**

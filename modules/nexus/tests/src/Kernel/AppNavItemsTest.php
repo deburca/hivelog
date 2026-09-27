@@ -94,7 +94,9 @@ class AppNavItemsTest extends KernelTestBase {
     $definitions = \Drupal::service('plugin.manager.menu.link')->getDefinitions();
     $this->assertArrayHasKey('hivelog.nav_item:nexus_ai_provider_configs', $definitions);
     $this->assertEquals('entity.ai_provider_config.collection', $definitions['hivelog.nav_item:nexus_ai_provider_configs']['route_name']);
-    $this->assertEquals('hivelog.admin', $definitions['hivelog.nav_item:nexus_ai_provider_configs']['parent']);
+    // Nests under core's "Setup" derived link since task 0150 —
+    // it declares `parent: 'setup'` (task 0147).
+    $this->assertEquals('hivelog.nav_item:setup', $definitions['hivelog.nav_item:nexus_ai_provider_configs']['parent']);
   }
 
 }
