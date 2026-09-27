@@ -154,6 +154,57 @@ class HivelogAppNavBuilderTest extends KernelTestBase {
   }
 
   /**
+   * Tests `getAccessibleChildren()` returns nothing with no `parent` match.
+   *
+   * Task 0146: no built-in item declares `parent` yet at this point in
+   * the sequence (task 0147 wires it onto the real `setup`-group
+   * items), so this only confirms the filter itself, via the test-only
+   * `hivelog_app_nav_test` module's `parent: 'setup'` item.
+   */
+  public function testGetAccessibleChildrenEmptyWithNoMatchingParent(): void {
+    $this->loginAdmin();
+    $builder = \Drupal::service('hivelog.app_nav_builder');
+
+    $this->assertSame([], $builder->getAccessibleChildren('setup'));
+  }
+
+  /**
+   * Tests `getAccessibleChildren()` finds an installed test module's item.
+   */
+  public function testGetAccessibleChildrenFindsRegisteredItem(): void {
+    $this->enableModules(['hivelog_app_nav_test']);
+    $this->loginAdmin();
+    $builder = \Drupal::service('hivelog.app_nav_builder');
+
+    $children = $builder->getAccessibleChildren('setup');
+
+    $this->assertArrayHasKey('hivelog_app_nav_test_widget', $children);
+  }
+
+  /**
+   * Tests `getAccessibleChildren()` respects the account it's given.
+   *
+   * The exact bug this task's own review caught: silently falling back
+   * to the current user instead of the account a caller (e.g.
+   * `SetupPageAccessCheck`, which `AccessManager::checkNamedRoute()` may
+   * hand a specific account without switching who's logged in) actually
+   * asked about would answer the wrong question.
+   */
+  public function testGetAccessibleChildrenRespectsExplicitAccountOverCurrentUser(): void {
+    $this->enableModules(['hivelog_app_nav_test']);
+    $this->loginAdmin();
+    $builder = \Drupal::service('hivelog.app_nav_builder');
+
+    $no_permissions = User::create(['name' => 'no-permissions', 'mail' => 'np@example.com']);
+    $no_permissions->save();
+
+    // Current user (set by loginAdmin() above) can access it:
+    $this->assertNotEmpty($builder->getAccessibleChildren('setup'));
+    // But the explicitly-passed account, with no permissions, cannot:
+    $this->assertSame([], $builder->getAccessibleChildren('setup', $no_permissions));
+  }
+
+  /**
    * Sets up the current request as if routed to `$route_name`.
    *
    * Mirrors `testNavInjectedOnHivelogPath()`'s own established pattern

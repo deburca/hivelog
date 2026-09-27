@@ -6,6 +6,7 @@ namespace Drupal\hivelog;
 
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Routing\CurrentRouteMatch;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\Core\Url;
@@ -246,6 +247,41 @@ class HivelogAppNavBuilder {
     }
 
     return [NULL, NULL];
+  }
+
+  /**
+   * The accessible items declaring the given key as their `parent`.
+   *
+   * Task 0146: reused by `SetupController`/`SetupPageAccessCheck` so the
+   * "Setup" landing page's access check and its own rendered list read
+   * exactly the same data — no separate query to keep in sync. `parent`
+   * is not yet a registry-wide convention as of this task (task 0147
+   * wires it onto every real `setup`-group item); until then this
+   * returns whatever a contribution has chosen to declare, which may be
+   * nothing at all.
+   *
+   * @param string $parent_key
+   *   The `parent` value to match (e.g. `'setup'`).
+   * @param \Drupal\Core\Session\AccountInterface|null $account
+   *   The account to check access for, or NULL for the current user.
+   *   Explicit, not defaulted to the current user internally — a
+   *   `_custom_access` callback (`SetupPageAccessCheck`) is handed a
+   *   specific account by Drupal's access-checking framework, which is
+   *   not always the current user (`AccessManager::checkNamedRoute()`
+   *   can check access as any account without switching who's actually
+   *   logged in), and silently substituting the current user instead
+   *   would answer the wrong question.
+   *
+   * @return array[]
+   *   The matching item descriptors that account can access, same shape
+   *   as `getAllItems()`.
+   */
+  public function getAccessibleChildren(string $parent_key, ?AccountInterface $account = NULL): array {
+    $children = array_filter(
+      $this->getAllItems(),
+      fn(array $item) => ($item['parent'] ?? NULL) === $parent_key,
+    );
+    return array_filter($children, fn(array $item) => $item['url']->access($account));
   }
 
   /**

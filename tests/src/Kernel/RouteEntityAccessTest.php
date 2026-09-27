@@ -70,6 +70,7 @@ class RouteEntityAccessTest extends KernelTestBase {
    */
   protected const EXEMPT_ROUTES = [
     'hivelog.dashboard' => 'aggregates every apiary the current user can already view',
+    'hivelog.setup' => 'no entity of its own; SetupPageAccessCheck derives access from the nav registry (task 0146)',
     'entity.apiary.collection' => 'collection page; row filtering is HivelogListBuilder::load() (task 0124)',
     'entity.apiary.add_form' => 'site-wide add, no parent context to check',
     'entity.hive.collection' => 'collection page; row filtering is task 0124',

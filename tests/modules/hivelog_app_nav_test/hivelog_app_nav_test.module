@@ -1,0 +1,28 @@
+<?php
+
+/**
+ * @file
+ * Registers the test-only `parent: 'setup'` nav item task 0146 tests use.
+ *
+ * Not part of the distributed module — see hivelog_app_nav_test.info.yml.
+ * Points at a real existing route (the apiary collection) rather than
+ * defining a route of its own, so the tests can control accessibility
+ * with ordinary permission grants instead of test-only plumbing.
+ */
+
+use Drupal\Core\Url;
+
+/**
+ * Implements hook_hivelog_app_nav_items().
+ */
+function hivelog_app_nav_test_hivelog_app_nav_items() {
+  return [
+    'hivelog_app_nav_test_widget' => [
+      'title' => t('Test Widgets'),
+      'url' => Url::fromRoute('entity.apiary.collection'),
+      'weight' => 50,
+      'group' => 'setup',
+      'parent' => 'setup',
+    ],
+  ];
+}

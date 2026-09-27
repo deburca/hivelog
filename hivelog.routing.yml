@@ -9,6 +9,19 @@ hivelog.dashboard:
   requirements:
     _permission: 'view own apiary+view any apiary+administer hivelog'
 
+# "Setup" landing page (task 0146, ADR-0104) — the parent hub for the
+# site-configuration nav items (`parent: 'setup'`) contributed by
+# collective/nanoprobe/nexus. No `_permission`: access is derived from
+# the same nav registry via SetupPageAccessCheck, since hard-coding any
+# one submodule's permission here would make hivelog core depend on it.
+hivelog.setup:
+  path: '/hivelog/setup'
+  defaults:
+    _controller: '\Drupal\hivelog\Controller\SetupController::view'
+    _title_callback: '\Drupal\hivelog\Controller\SetupController::title'
+  requirements:
+    _custom_access: '\Drupal\hivelog\Access\SetupPageAccessCheck::access'
+
 # Apiary routes.
 entity.apiary.collection:
   path: '/hivelog/apiaries'
