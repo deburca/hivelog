@@ -86,25 +86,25 @@ class HivelogAppNavBuilderTest extends KernelTestBase {
       $this->assertArrayNotHasKey($key, $build, "'$key' must not also appear at the top level.");
     }
 
-    // `setup` is deliberately absent here even for an administrator:
-    // its own accessibility (`SetupPageAccessCheck`) requires at least
-    // one `parent: 'setup'` item, and this bare environment (no
-    // submodule installed) has none — see
-    // `testSetupItemAccessibleOnceChildItemRegistered()`.
-    $this->assertArrayNotHasKey('setup', $build);
+    // `insights` is deliberately absent here even for an administrator:
+    // its own accessibility (`InsightsPageAccessCheck`) requires at
+    // least one `parent: 'insights'` item, and this bare environment
+    // (no submodule installed) has none — see
+    // `testInsightsItemAccessibleOnceChildItemRegistered()`.
+    $this->assertArrayNotHasKey('insights', $build);
   }
 
   /**
    * Tests every built-in item's `parent` key (task 0147, ADR-0104).
    *
-   * "Apiaries" and the new "Setup" item are primary (no `parent`);
-   * every other built-in nests under "Apiaries".
+   * "Apiaries" and the "Insights" item are primary (no `parent`); every
+   * other built-in nests under "Apiaries".
    */
   public function testBuiltInItemsCarryTheExpectedParent(): void {
     $items = \Drupal::service('hivelog.app_nav_builder')->getAllItems();
 
     $this->assertArrayNotHasKey('parent', $items['apiaries']);
-    $this->assertArrayNotHasKey('parent', $items['setup']);
+    $this->assertArrayNotHasKey('parent', $items['insights']);
     $apiaries_children = [
       'hives', 'inspections', 'queens', 'queen_observations',
       'inventory_items', 'inventory_purchases', 'products',
@@ -115,37 +115,37 @@ class HivelogAppNavBuilderTest extends KernelTestBase {
   }
 
   /**
-   * Tests the new "Setup" built-in resolves to the real route (task 0146).
+   * Tests the "Insights" built-in resolves to the real route (task 0146).
    */
-  public function testSetupItemResolvesTheSetupRoute(): void {
+  public function testInsightsItemResolvesTheInsightsRoute(): void {
     $items = \Drupal::service('hivelog.app_nav_builder')->getAllItems();
 
-    $this->assertEquals('hivelog.setup', $items['setup']['url']->getRouteName());
-    $this->assertEquals('setup', $items['setup']['group']);
+    $this->assertEquals('hivelog.insights', $items['insights']['url']->getRouteName());
+    $this->assertEquals('insights', $items['insights']['group']);
   }
 
   /**
-   * Tests "Setup" becomes accessible once a `parent: 'setup'` item exists.
+   * Tests "Insights" becomes accessible once a `parent: 'insights'` item exists.
    *
    * Complements `testAllBuiltInItemsAppearForAdministrator()`'s
    * negative case above — same admin account, only difference is
    * `hivelog_app_nav_test` (task 0146) being installed.
    */
-  public function testSetupItemAccessibleOnceChildItemRegistered(): void {
+  public function testInsightsItemAccessibleOnceChildItemRegistered(): void {
     $this->enableModules(['hivelog_app_nav_test']);
     $this->loginAdmin();
 
     $build = \Drupal::service('hivelog.app_nav_builder')->build();
 
-    $this->assertArrayHasKey('setup', $build);
-    $this->assertArrayHasKey('hivelog_app_nav_test_widget', $build['setup']['submenu']);
+    $this->assertArrayHasKey('insights', $build);
+    $this->assertArrayHasKey('hivelog_app_nav_test_widget', $build['insights']['submenu']);
   }
 
   /**
    * Tests `getAccessibleChildren()` orders its results by weight.
    *
    * Caught live on `cms2` while verifying this task: with all three
-   * real `setup`-group items installed, `SetupController`'s page
+   * real `insights`-group items installed, `InsightsController`'s page
    * listed them in module-invocation order, not weight order, because
    * `getAccessibleChildren()` never sorted its result — invisible in
    * task 0146, where only one test-only item ever existed at once.
@@ -158,7 +158,7 @@ class HivelogAppNavBuilderTest extends KernelTestBase {
     \Drupal::service('router.builder')->rebuild();
     $this->loginAdmin();
 
-    $children = \Drupal::service('hivelog.app_nav_builder')->getAccessibleChildren('setup');
+    $children = \Drupal::service('hivelog.app_nav_builder')->getAccessibleChildren('insights');
 
     // Weights 9, 10, 11 (task 0147) — collective, nexus, nanoprobe.
     $this->assertSame(
@@ -255,16 +255,15 @@ class HivelogAppNavBuilderTest extends KernelTestBase {
   /**
    * Tests `getAccessibleChildren()` returns nothing with no `parent` match.
    *
-   * Task 0146: no built-in item declares `parent` yet at this point in
-   * the sequence (task 0147 wires it onto the real `setup`-group
-   * items), so this only confirms the filter itself, via the test-only
-   * `hivelog_app_nav_test` module's `parent: 'setup'` item.
+   * No submodule installed here declares `parent: 'insights'` — this
+   * confirms the filter itself finds nothing, distinct from
+   * `testGetAccessibleChildrenFindsRegisteredItem()`'s positive case.
    */
   public function testGetAccessibleChildrenEmptyWithNoMatchingParent(): void {
     $this->loginAdmin();
     $builder = \Drupal::service('hivelog.app_nav_builder');
 
-    $this->assertSame([], $builder->getAccessibleChildren('setup'));
+    $this->assertSame([], $builder->getAccessibleChildren('insights'));
   }
 
   /**
@@ -275,7 +274,7 @@ class HivelogAppNavBuilderTest extends KernelTestBase {
     $this->loginAdmin();
     $builder = \Drupal::service('hivelog.app_nav_builder');
 
-    $children = $builder->getAccessibleChildren('setup');
+    $children = $builder->getAccessibleChildren('insights');
 
     $this->assertArrayHasKey('hivelog_app_nav_test_widget', $children);
   }
@@ -285,9 +284,9 @@ class HivelogAppNavBuilderTest extends KernelTestBase {
    *
    * The exact bug this task's own review caught: silently falling back
    * to the current user instead of the account a caller (e.g.
-   * `SetupPageAccessCheck`, which `AccessManager::checkNamedRoute()` may
-   * hand a specific account without switching who's logged in) actually
-   * asked about would answer the wrong question.
+   * `InsightsPageAccessCheck`, which `AccessManager::checkNamedRoute()`
+   * may hand a specific account without switching who's logged in)
+   * actually asked about would answer the wrong question.
    */
   public function testGetAccessibleChildrenRespectsExplicitAccountOverCurrentUser(): void {
     $this->enableModules(['hivelog_app_nav_test']);
@@ -298,9 +297,9 @@ class HivelogAppNavBuilderTest extends KernelTestBase {
     $no_permissions->save();
 
     // Current user (set by loginAdmin() above) can access it:
-    $this->assertNotEmpty($builder->getAccessibleChildren('setup'));
+    $this->assertNotEmpty($builder->getAccessibleChildren('insights'));
     // But the explicitly-passed account, with no permissions, cannot:
-    $this->assertSame([], $builder->getAccessibleChildren('setup', $no_permissions));
+    $this->assertSame([], $builder->getAccessibleChildren('insights', $no_permissions));
   }
 
   /**

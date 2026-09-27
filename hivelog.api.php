@@ -183,7 +183,7 @@ function hook_hivelog_dashboard_sections(array $apiaries, CacheableMetadata $cac
  * The same optional-submodule-extends-core-without-a-dependency problem
  * as the other hooks in this file, applied here to `hivelog`'s own
  * theme-independent nav strip (task 0105) — `HivelogAppNavBuilder`
- * builds this from `hivelog` core's own 8 built-in destinations plus
+ * builds this from `hivelog` core's own 9 built-in destinations plus
  * every implementation of this hook. Unlike the panel/needs-attention/
  * dashboard-section hooks, an implementation returns plain link
  * *descriptors*, not a render array — `hivelog` itself builds the
@@ -203,10 +203,10 @@ function hook_hivelog_dashboard_sections(array $apiaries, CacheableMetadata $cac
  * menu link from, so it's silently skipped there.
  *
  * Task 0120: `group` places the item among the nav strip's visual
- * groups (`records` / `inventory` / `setup`, in that display order;
+ * groups (`records` / `inventory` / `insights`, in that display order;
  * an item with no `group` falls into a safe `default` position and a
  * group `hivelog` core doesn't already know about sorts last) — every
- * existing submodule implementation is `setup`. `section` (optional)
+ * existing submodule implementation is `insights`. `section` (optional)
  * is the entity type ID the item's collection is "about", so the item
  * gets marked active on every page for that type, not just its own
  * collection route — canonical, edit, delete, add, and any named
@@ -216,11 +216,12 @@ function hook_hivelog_dashboard_sections(array $apiaries, CacheableMetadata $cac
  *
  * Task 0146/0147, ADR-0104: `parent` (optional) names another item
  * this one nests under in the two-tier nav strip and main menu — the
- * key of a `hivelog` core built-in (e.g. `'setup'`) or another
+ * key of a `hivelog` core built-in (e.g. `'insights'`) or another
  * module's own item. Omit it for a top-level (primary) item, exactly
  * like every existing implementation before this task. Every current
- * submodule contribution nests under core's own `'setup'` built-in
- * item, which points at the `hivelog.setup` landing page (task 0146).
+ * submodule contribution nests under core's own `'insights'` built-in
+ * item (task 0152 renamed it from `'setup'`), which points at the
+ * `hivelog.insights` landing page (task 0146).
  *
  * @return array
  *   A list of nav item descriptors, each `['title' =>
@@ -238,9 +239,9 @@ function hook_hivelog_app_nav_items() {
       'title' => t('My Things'),
       'url' => Url::fromRoute('entity.my_thing.collection'),
       'weight' => 20,
-      'group' => 'setup',
+      'group' => 'insights',
       'section' => 'my_thing',
-      'parent' => 'setup',
+      'parent' => 'insights',
     ],
   ];
 }

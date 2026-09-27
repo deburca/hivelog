@@ -10,18 +10,18 @@ use Drupal\hivelog\HivelogAppNavBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * The "Setup" landing page — the parent hub for site-configuration items.
+ * The "Insights" landing page — the parent hub for site-configuration items.
  *
- * Task 0146 / ADR-0104: "Setup" is a new primary nav item with no
- * existing entity page of its own to point at, unlike "Apiaries" —
- * unassigned this route would leave the nav strip's future Setup hub
- * with nothing to link to. Lists whichever `parent: 'setup'` nav items
- * (`HivelogAppNavBuilder::getAccessibleChildren()`) the current user can
- * access; the route's own access is gated by `SetupPageAccessCheck` on
- * the same query, so this never renders an empty page for a user who
- * was let in.
+ * Task 0146 / ADR-0104 (as "Setup"), renamed by task 0152 / ADR-0105: a
+ * primary nav item with no existing entity page of its own to point
+ * at, unlike "Apiaries" — unassigned this route would leave the nav
+ * strip's Insights hub with nothing to link to. Lists whichever
+ * `parent: 'insights'` nav items (`HivelogAppNavBuilder::getAccessibleChildren()`)
+ * the current user can access; the route's own access is gated by
+ * `InsightsPageAccessCheck` on the same query, so this never renders
+ * an empty page for a user who was let in.
  */
-class SetupController extends ControllerBase {
+class InsightsController extends ControllerBase {
 
   public function __construct(
     protected HivelogAppNavBuilder $appNavBuilder,
@@ -40,7 +40,7 @@ class SetupController extends ControllerBase {
    * Page title.
    */
   public function title(): TranslatableMarkup {
-    return $this->t('Setup');
+    return $this->t('Insights');
   }
 
   /**
@@ -50,13 +50,13 @@ class SetupController extends ControllerBase {
    *   A render array.
    */
   public function view(): array {
-    $children = $this->appNavBuilder->getAccessibleChildren('setup');
+    $children = $this->appNavBuilder->getAccessibleChildren('insights');
     if (!$children) {
-      // Defensive only — `SetupPageAccessCheck` already denies access
-      // to the route itself once this list is empty, so a real request
-      // should never reach this branch.
+      // Defensive only — `InsightsPageAccessCheck` already denies
+      // access to the route itself once this list is empty, so a real
+      // request should never reach this branch.
       return [
-        '#markup' => $this->t('There is nothing to set up yet.'),
+        '#markup' => $this->t('There is nothing here yet.'),
         '#cache' => ['contexts' => ['user.permissions']],
       ];
     }
@@ -67,7 +67,7 @@ class SetupController extends ControllerBase {
         '#type' => 'link',
         '#title' => $item['title'],
         '#url' => $item['url'],
-        '#attributes' => ['class' => ['hivelog-setup-page__link']],
+        '#attributes' => ['class' => ['hivelog-insights-page__link']],
       ];
     }
 
@@ -75,7 +75,7 @@ class SetupController extends ControllerBase {
       '#theme' => 'item_list',
       '#list_type' => 'ul',
       '#items' => $items,
-      '#attributes' => ['class' => ['hivelog-setup-page__list']],
+      '#attributes' => ['class' => ['hivelog-insights-page__list']],
       '#cache' => ['contexts' => ['user.permissions']],
     ];
   }

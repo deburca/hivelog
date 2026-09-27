@@ -74,12 +74,12 @@ function nanoprobe_hivelog_needs_attention_alerts(array $apiaries, CacheableMeta
  * Implements hook_hivelog_app_nav_items().
  *
  * See hivelog.api.php and [[0105-submodule-navigation-menu-links]].
- * `group: setup` (task 0120) — registered hardware setup, not a
- * day-to-day record-keeping or inventory destination. `parent:
- * 'setup'` (task 0147, ADR-0104) nests it under core's own "Setup"
- * primary item; weight bumped from 10 to 11 to keep every
- * `setup`-group item's weight unique once that core item claims
- * weight 8.
+ * `group: insights` (task 0120, renamed from `setup` by task 0152) —
+ * registered hardware setup, not a day-to-day record-keeping or
+ * inventory destination. `parent: 'insights'` (task 0147, ADR-0104/0105)
+ * nests it under core's own "Insights" primary item; weight bumped
+ * from 10 to 11 to keep every `insights`-group item's weight unique
+ * once that core item claims weight 8.
  */
 function nanoprobe_hivelog_app_nav_items() {
   return [
@@ -87,9 +87,9 @@ function nanoprobe_hivelog_app_nav_items() {
       'title' => t('Sensor Devices'),
       'url' => Url::fromRoute('entity.sensor_device.collection'),
       'weight' => 11,
-      'group' => 'setup',
+      'group' => 'insights',
       'section' => 'sensor_device',
-      'parent' => 'setup',
+      'parent' => 'insights',
     ],
   ];
 }

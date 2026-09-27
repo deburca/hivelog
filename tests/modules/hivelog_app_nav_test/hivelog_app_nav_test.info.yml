@@ -1,6 +1,6 @@
 name: 'HiveLog App Nav Test'
 type: module
-description: 'Test-only hook_hivelog_app_nav_items() parent:setup row for SetupController/SetupPageAccessCheck kernel tests (task 0146). Not part of the distributed module.'
+description: 'Test-only hook_hivelog_app_nav_items() parent:insights row for InsightsController/InsightsPageAccessCheck kernel tests (task 0146). Not part of the distributed module.'
 package: Testing
 core_version_requirement: ^11
 dependencies:

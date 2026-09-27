@@ -80,13 +80,13 @@ class HivelogAppNavBuilder {
    * member — its only current members (`inventory_items`,
    * `inventory_purchases`, `products`) all carry `parent: 'apiaries'`
    * now, so at the top level only `records` (the "Apiaries" item
-   * itself) and `setup` (the new "Setup" item) are actually reachable.
-   * `inventory` stays in this list because `build()` doesn't yet
-   * partition by `parent` (task 0148 does) — until then, an
-   * `inventory`-group item still sorts as a flat top-level entry, same
-   * as before this task.
+   * itself) and `insights` (task 0152's rename of "Setup") are
+   * actually reachable. `inventory` stays in this list purely to order
+   * Apiaries' own `inventory`-group *children* relative to its
+   * `records`-group ones (task 0148's `sortByGroupThenWeight()`, reused
+   * per hub) — it hasn't named a primary-tier item since task 0147.
    */
-  protected const GROUP_ORDER = ['dashboard', 'records', 'inventory', 'default', 'setup'];
+  protected const GROUP_ORDER = ['dashboard', 'records', 'inventory', 'default', 'insights'];
 
   public function __construct(
     protected ModuleHandlerInterface $moduleHandler,
@@ -312,9 +312,9 @@ class HivelogAppNavBuilder {
    * Sorts item descriptors in place: by `GROUP_ORDER` position, then weight.
    *
    * Extracted from `build()` (task 0147) so `getAccessibleChildren()`
-   * orders a hub's children the same way — every current `setup`-group
+   * orders a hub's children the same way — every current `insights`-group
    * item shares one group, so this reduces to a plain weight sort for
-   * them today, but stays correct if a future `parent: 'setup'`
+   * them today, but stays correct if a future `parent: 'insights'`
    * contribution ever used a different `group`.
    *
    * @param array[] $items
@@ -406,20 +406,18 @@ class HivelogAppNavBuilder {
   /**
    * The accessible items declaring the given key as their `parent`.
    *
-   * Task 0146: reused by `SetupController`/`SetupPageAccessCheck` so the
-   * "Setup" landing page's access check and its own rendered list read
-   * exactly the same data — no separate query to keep in sync. `parent`
-   * is not yet a registry-wide convention as of this task (task 0147
-   * wires it onto every real `setup`-group item); until then this
-   * returns whatever a contribution has chosen to declare, which may be
-   * nothing at all.
+   * Task 0146: reused by `InsightsController`/`InsightsPageAccessCheck`
+   * (named `SetupController`/`SetupPageAccessCheck` before task 0152's
+   * rename) so the "Insights" landing page's access check and its own
+   * rendered list read exactly the same data — no separate query to
+   * keep in sync.
    *
    * @param string $parent_key
-   *   The `parent` value to match (e.g. `'setup'`).
+   *   The `parent` value to match (e.g. `'insights'`).
    * @param \Drupal\Core\Session\AccountInterface|null $account
    *   The account to check access for, or NULL for the current user.
    *   Explicit, not defaulted to the current user internally — a
-   *   `_custom_access` callback (`SetupPageAccessCheck`) is handed a
+   *   `_custom_access` callback (`InsightsPageAccessCheck`) is handed a
    *   specific account by Drupal's access-checking framework, which is
    *   not always the current user (`AccessManager::checkNamedRoute()`
    *   can check access as any account without switching who's actually
@@ -477,11 +475,10 @@ class HivelogAppNavBuilder {
    * `parent: 'apiaries'` — each is a child of `Apiary` in the domain
    * model (directly, or transitively via `Hive`/`Queen`), and
    * "Apiaries" is the only one of them with an existing page to nest
-   * the rest under. Also adds a 9th built-in, `setup`: the new primary
-   * item (no `parent` of its own) every `setup`-group submodule
-   * contribution now nests under — see `hivelog.setup`
-   * (`SetupController`, task 0146). `parent` is read by nothing yet
-   * (task 0148/0150 do); this task only wires the data.
+   * the rest under. Also adds a 9th built-in, `insights` (named
+   * `setup` before task 0152's rename): the primary item (no `parent`
+   * of its own) every `insights`-group submodule contribution nests
+   * under — see `hivelog.insights` (`InsightsController`, task 0146).
    *
    * @return array[]
    *   `['title' => TranslatableMarkup, 'url' => Url, 'weight' => int,
@@ -553,11 +550,11 @@ class HivelogAppNavBuilder {
         'section' => 'product',
         'parent' => 'apiaries',
       ],
-      'setup' => [
-        'title' => $this->t('Setup'),
-        'url' => Url::fromRoute('hivelog.setup'),
+      'insights' => [
+        'title' => $this->t('Insights'),
+        'url' => Url::fromRoute('hivelog.insights'),
         'weight' => 8,
-        'group' => 'setup',
+        'group' => 'insights',
       ],
     ];
   }

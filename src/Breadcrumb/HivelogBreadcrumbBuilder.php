@@ -134,15 +134,16 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
     // plain text — rather than falling through to a menu-derived one.
     $collections = $this->collectionLabels();
 
-    // Collection listings + the combined report + Setup: their own name
-    // is the terminal crumb (a self-link the theme renders as plain
-    // text). `hivelog.setup` (task 0146) belongs here rather than in
+    // Collection listings + the combined report + Insights: their own
+    // name is the terminal crumb (a self-link the theme renders as
+    // plain text). `hivelog.insights` (task 0146, named `hivelog.setup`
+    // before task 0152's rename) belongs here rather than in
     // `TERMINAL_CRUMB_PARAM` below: that map threads a *subject entity's*
-    // ancestor chain in front of a literal terminal label, and Setup, like
-    // the combined report, resolves no subject at all.
+    // ancestor chain in front of a literal terminal label, and Insights,
+    // like the combined report, resolves no subject at all.
     $leaf_pages = $collections + [
       'hivelog.apiaries.financial_report' => $this->t('Financial Report: All Apiaries'),
-      'hivelog.setup' => $this->t('Setup'),
+      'hivelog.insights' => $this->t('Insights'),
     ];
     if (isset($leaf_pages[$route_name])) {
       $breadcrumb->addLink(Link::createFromRoute($leaf_pages[$route_name], $route_name));

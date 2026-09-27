@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Drupal\Tests\hivelog\Kernel;
 
 use Drupal\Core\Session\AnonymousUserSession;
-use Drupal\hivelog\Controller\SetupController;
+use Drupal\hivelog\Controller\InsightsController;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
@@ -13,20 +13,21 @@ use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * Tests the "Setup" landing page (task 0146, ADR-0104).
+ * Tests the "Insights" landing page.
  *
+ * Task 0146, ADR-0104; renamed from "Setup" by task 0152, ADR-0105.
  * `hivelog_app_nav_test` (a test-only module implementing
- * `hook_hivelog_app_nav_items()` with a `parent: 'setup'` item pointing
- * at the real `entity.apiary.collection` route) is enabled per-test via
- * `enableModules()`, not the class's static `$modules` — several tests
- * deliberately want it absent, to cover "no submodule contributes a
- * `setup` item at all" per ADR-0104's own reasoning for why
- * `SetupPageAccessCheck` derives access from the registry rather than a
- * hard-coded permission.
+ * `hook_hivelog_app_nav_items()` with a `parent: 'insights'` item
+ * pointing at the real `entity.apiary.collection` route) is enabled
+ * per-test via `enableModules()`, not the class's static `$modules` —
+ * several tests deliberately want it absent, to cover "no submodule
+ * contributes an `insights` item at all" per ADR-0104's own reasoning
+ * for why `InsightsPageAccessCheck` derives access from the registry
+ * rather than a hard-coded permission.
  */
 #[Group('hivelog')]
 #[RunTestsInSeparateProcesses]
-class SetupTest extends KernelTestBase {
+class InsightsTest extends KernelTestBase {
 
   /**
    * {@inheritdoc}
@@ -58,11 +59,11 @@ class SetupTest extends KernelTestBase {
   }
 
   /**
-   * Resolves the Setup controller from the container.
+   * Resolves the Insights controller from the container.
    */
-  private function controller(): SetupController {
+  private function controller(): InsightsController {
     return \Drupal::service('class_resolver')
-      ->getInstanceFromDefinition(SetupController::class);
+      ->getInstanceFromDefinition(InsightsController::class);
   }
 
   /**
@@ -85,26 +86,26 @@ class SetupTest extends KernelTestBase {
   }
 
   /**
-   * No module declares a `parent: 'setup'` item — denied even for admin.
+   * No module declares a `parent: 'insights'` item — denied even for admin.
    */
-  public function testAccessDeniedWhenNoSetupItemExistsAtAll(): void {
+  public function testAccessDeniedWhenNoInsightsItemExistsAtAll(): void {
     $admin = $this->createUserWithPermissions(['administer hivelog']);
 
     $this->assertFalse(
-      \Drupal::service('access_manager')->checkNamedRoute('hivelog.setup', [], $admin),
-      'administer hivelog must still be denied when the registry has no setup-parented item at all.'
+      \Drupal::service('access_manager')->checkNamedRoute('hivelog.insights', [], $admin),
+      'administer hivelog must still be denied when the registry has no insights-parented item at all.'
     );
   }
 
   /**
-   * Allowed once the account can reach at least one setup-parented item.
+   * Allowed once the account can reach at least one insights-parented item.
    */
   public function testAccessAllowedWhenAccountCanReachTheChild(): void {
     $this->enableModules(['hivelog_app_nav_test']);
     $allowed = $this->createUserWithPermissions(['view own apiary']);
 
     $this->assertTrue(
-      \Drupal::service('access_manager')->checkNamedRoute('hivelog.setup', [], $allowed),
+      \Drupal::service('access_manager')->checkNamedRoute('hivelog.insights', [], $allowed),
     );
   }
 
@@ -118,23 +119,23 @@ class SetupTest extends KernelTestBase {
     $denied = $this->createUserWithPermissions(['view own hive']);
 
     $this->assertFalse(
-      \Drupal::service('access_manager')->checkNamedRoute('hivelog.setup', [], $denied),
+      \Drupal::service('access_manager')->checkNamedRoute('hivelog.insights', [], $denied),
     );
   }
 
   /**
-   * Anonymous is denied even when a setup-parented item is registered.
+   * Anonymous is denied even when an insights-parented item is registered.
    */
   public function testAnonymousDenied(): void {
     $this->enableModules(['hivelog_app_nav_test']);
 
     $this->assertFalse(
-      \Drupal::service('access_manager')->checkNamedRoute('hivelog.setup', [], new AnonymousUserSession()),
+      \Drupal::service('access_manager')->checkNamedRoute('hivelog.insights', [], new AnonymousUserSession()),
     );
   }
 
   /**
-   * The page lists exactly the accessible setup-parented items.
+   * The page lists exactly the accessible insights-parented items.
    */
   public function testViewListsExactlyTheAccessibleChildren(): void {
     $this->enableModules(['hivelog_app_nav_test']);
@@ -149,8 +150,8 @@ class SetupTest extends KernelTestBase {
   /**
    * The defensive empty-state branch renders when nothing is accessible.
    *
-   * Real requests never reach this — `SetupPageAccessCheck` denies the
-   * route first — but the controller is still tested directly here.
+   * Real requests never reach this — `InsightsPageAccessCheck` denies
+   * the route first — but the controller is still tested directly here.
    */
   public function testViewShowsEmptyStateWhenNothingAccessible(): void {
     $user = $this->createUserWithPermissions(['administer hivelog']);
@@ -158,14 +159,14 @@ class SetupTest extends KernelTestBase {
 
     $html = (string) \Drupal::service('renderer')->renderInIsolation($this->controller()->view());
 
-    $this->assertStringContainsString('nothing to set up', $html);
+    $this->assertStringContainsString('nothing here yet', $html);
   }
 
   /**
-   * The page title is the literal "Setup".
+   * The page title is the literal "Insights".
    */
-  public function testTitleIsSetup(): void {
-    $this->assertEquals('Setup', (string) $this->controller()->title());
+  public function testTitleIsInsights(): void {
+    $this->assertEquals('Insights', (string) $this->controller()->title());
   }
 
 }

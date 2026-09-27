@@ -66,11 +66,11 @@ class AppNavItemsTest extends KernelTestBase {
   }
 
   /**
-   * Tests the item nests under core's "Setup" primary item (task 0147).
+   * Tests the item nests under core's "Insights" primary item (task 0147).
    */
-  public function testAiProviderConfigsItemParentsUnderSetup(): void {
+  public function testAiProviderConfigsItemParentsUnderInsights(): void {
     $items = nexus_hivelog_app_nav_items();
-    $this->assertEquals('setup', $items['nexus_ai_provider_configs']['parent']);
+    $this->assertEquals('insights', $items['nexus_ai_provider_configs']['parent']);
   }
 
   /**
@@ -78,9 +78,9 @@ class AppNavItemsTest extends KernelTestBase {
    */
   public function testAiProviderConfigsItemAppearsInRealAppNav(): void {
     $build = \Drupal::service('hivelog.app_nav_builder')->build();
-    // Nests under the "Setup" primary item's submenu since task 0148
-    // — it declares `parent: 'setup'` (task 0147).
-    $this->assertArrayHasKey('nexus_ai_provider_configs', $build['setup']['submenu']);
+    // Nests under the "Insights" primary item's submenu since task
+    // 0148 — it declares `parent: 'insights'` (task 0147).
+    $this->assertArrayHasKey('nexus_ai_provider_configs', $build['insights']['submenu']);
   }
 
   /**
@@ -94,9 +94,9 @@ class AppNavItemsTest extends KernelTestBase {
     $definitions = \Drupal::service('plugin.manager.menu.link')->getDefinitions();
     $this->assertArrayHasKey('hivelog.nav_item:nexus_ai_provider_configs', $definitions);
     $this->assertEquals('entity.ai_provider_config.collection', $definitions['hivelog.nav_item:nexus_ai_provider_configs']['route_name']);
-    // Nests under core's "Setup" derived link since task 0150 —
-    // it declares `parent: 'setup'` (task 0147).
-    $this->assertEquals('hivelog.nav_item:setup', $definitions['hivelog.nav_item:nexus_ai_provider_configs']['parent']);
+    // Nests under core's "Insights" derived link since task 0150 —
+    // it declares `parent: 'insights'` (task 0147).
+    $this->assertEquals('hivelog.nav_item:insights', $definitions['hivelog.nav_item:nexus_ai_provider_configs']['parent']);
   }
 
 }

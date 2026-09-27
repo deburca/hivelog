@@ -22,8 +22,8 @@ function hivelog_app_nav_test_hivelog_app_nav_items() {
       'title' => t('Test Widgets'),
       'url' => Url::fromRoute('entity.apiary.collection'),
       'weight' => 50,
-      'group' => 'setup',
-      'parent' => 'setup',
+      'group' => 'insights',
+      'parent' => 'insights',
     ],
     // A `parent` naming nothing that exists at all (task 0150) — the
     // "typo" half of the fallback-to-top-level case; the other half
@@ -34,7 +34,7 @@ function hivelog_app_nav_test_hivelog_app_nav_items() {
       'title' => t('Test Orphan'),
       'url' => Url::fromRoute('entity.hive.collection'),
       'weight' => 51,
-      'group' => 'setup',
+      'group' => 'insights',
       'parent' => 'nonexistent_hub',
     ],
   ];

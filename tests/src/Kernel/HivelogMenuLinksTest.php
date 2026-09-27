@@ -118,7 +118,7 @@ class HivelogMenuLinksTest extends KernelTestBase {
     $links = $this->derivedNavItemLinks();
 
     $this->assertEquals('hivelog.admin', $links['apiaries']['parent']);
-    $this->assertEquals('hivelog.admin', $links['setup']['parent']);
+    $this->assertEquals('hivelog.admin', $links['insights']['parent']);
   }
 
   /**

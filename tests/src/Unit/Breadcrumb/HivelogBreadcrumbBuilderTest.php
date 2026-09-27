@@ -421,7 +421,7 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
       'ai provider configs' => ['entity.ai_provider_config.collection', 'AI Provider Configs'],
       'api clients' => ['entity.api_client.collection', 'API Clients'],
       'combined financial report' => ['hivelog.apiaries.financial_report', 'Financial Report: All Apiaries'],
-      'setup' => ['hivelog.setup', 'Setup'],
+      'insights' => ['hivelog.insights', 'Insights'],
     ];
   }
 

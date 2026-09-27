@@ -97,10 +97,11 @@ function nexus_hivelog_dashboard_sections(array $apiaries, CacheableMetadata $ca
  *
  * See hivelog.api.php and
  * docs/project-management/decisions/0099-submodule-canonical-page-panel-hook.md.
- * `group: setup` (task 0120) — a one-off, admin-provisioned integration,
- * not a day-to-day record-keeping or inventory destination. `parent:
- * 'setup'` (task 0147, ADR-0104) nests it under core's own "Setup"
- * primary item; weight bumped from 9 to 10 to keep every `setup`-group
+ * `group: insights` (task 0120, renamed from `setup` by task 0152) —
+ * a one-off, admin-provisioned integration, not a day-to-day
+ * record-keeping or inventory destination. `parent: 'insights'` (task
+ * 0147, ADR-0104/0105) nests it under core's own "Insights" primary
+ * item; weight bumped from 9 to 10 to keep every `insights`-group
  * item's weight unique once that core item claims weight 8.
  */
 function nexus_hivelog_app_nav_items() {
@@ -109,9 +110,9 @@ function nexus_hivelog_app_nav_items() {
       'title' => t('AI Provider Configs'),
       'url' => Url::fromRoute('entity.ai_provider_config.collection'),
       'weight' => 10,
-      'group' => 'setup',
+      'group' => 'insights',
       'section' => 'ai_provider_config',
-      'parent' => 'setup',
+      'parent' => 'insights',
     ],
   ];
 }

@@ -563,45 +563,91 @@ uses a catch-all `applies()`. If the hivelog builder does not outrank it,
 instead of the correct entity-hierarchy trails. Do not lower this priority
 below 1004 without confirming `easy_breadcrumb` is not installed.
 
-### In-app navigation (tasks 0119/0120)
+### In-app navigation (tasks 0119/0120, two-tier since 0146–0150, ADR-0104)
 
 `HivelogAppNavBuilder::getAllItems()` is the single registry for
-`hivelog`'s destinations: core's own 8 built-ins (`builtInItems()`) plus
+`hivelog`'s destinations: core's own 9 built-ins (`builtInItems()`) plus
 every `hook_hivelog_app_nav_items()` contribution (`hivelog.api.php`) —
 each item a `['title' => TranslatableMarkup, 'url' => Url, 'weight' =>
-int, 'group' => string, 'section' => string (optional)]` descriptor.
-`group` places the item among the nav strip's visual groups (`records` /
-`inventory` / `setup`, in that order, separated by a decorative divider);
-`section` is the entity type ID the item's collection is "about", read by
-the active-state check below. Two surfaces read this one registry instead
-of each keeping its own hand-maintained copy:
+int, 'group' => string, 'section' => string (optional), 'parent' =>
+string (optional)]` descriptor. `group` places an item among its own
+tier's visual groups (`records` / `inventory` / `insights`, in that order,
+separated by a decorative divider); `section` is the entity type ID the
+item's collection is "about", read by the active-state check below.
+`parent` (task 0147) names another item this one nests under — omit it
+for a primary (top-level) item. Two surfaces read this one registry
+instead of each keeping its own hand-maintained copy:
 
-- **The in-app nav strip** — `build()` filters `getAllItems()` to what
-  the current user can access (`Url::access()`), prepends a strip-only
-  Dashboard entry (deliberately *not* a `getAllItems()` member — see
-  `HivelogAppNavBuilder`'s own class docblock for why), marks the
-  current page's item active (`is-active` / `aria-current="page"` for an
-  exact route match, `"true"` for a same-section page — resolved via
-  `HivelogEntityHierarchy::resolveSubject()`, the same one the
-  breadcrumb trail uses), and injects the result into `page.content` via
-  `hivelog_preprocess_page()` (task 0105; not a placed block or
-  `hook_page_top()` — see that hook's own docblock in `hivelog.module`).
+**Primary vs. secondary.** Only three built-ins have no `parent`, and are
+therefore primary: **Dashboard** (synthetic — see below), **Apiaries**,
+and **Insights** (`hivelog.insights`, `InsightsController`, task 0146,
+named "Setup" before task 0152's rename — a small landing page whose
+sole job is to exist for `insights`-group items to nest under; it has
+no content of its own beyond listing its accessible children). Every
+other built-in (Hives, Inspections, Queens, Queen Observations,
+Inventory Items, Inventory Purchases, Products) declares
+`parent: 'apiaries'` — each is a descendant of `Apiary` in the domain
+model. Every current submodule contribution (`collective`'s API
+Clients, `nexus`'s AI Provider Configs, `nanoprobe`'s Sensor Devices)
+declares `parent: 'insights'`. `GROUP_ORDER`'s `inventory` position is
+only ever reached *inside* Apiaries' own children now — no primary
+item uses it — but the constant still lists it, since children are
+sorted by the same group-then-weight comparator
+(`sortByGroupThenWeight()`) the primary tier is.
+
+An item's `parent` only takes effect if that key names another item
+that is itself present and accessible — an unresolvable `parent` (a
+typo, or naming an item this user can't access) falls back to
+rendering that item at the top level instead of hiding it silently.
+`HivelogAppNavBuilder::getAccessibleChildren(string $parent_key,
+?AccountInterface $account = NULL)` is the one place this "which
+children can this account reach" query lives — read by
+`InsightsPageAccessCheck` (`hivelog.insights`'s own `_custom_access`,
+derived from the registry rather than a hard-coded submodule
+permission), `InsightsController::view()`, and `build()` below, so
+none of the three can silently drift from what the others consider
+accessible.
+
+- **The in-app nav strip** — `build()` filters `getAllItems()` (plus the
+  synthetic Dashboard entry) to what the current user can access
+  (`Url::access()`), partitions the result into primary items and each
+  hub's accessible children, and renders one `.hivelog-app-nav__item`
+  wrapper per primary item — its own link, plus (if it has ≥1 accessible
+  child) a `.hivelog-app-nav__submenu` of them. Active-state marking is
+  unchanged in *which* item matches (`is-active` / `aria-current="page"`
+  for an exact route match, `"true"` for a same-section page — resolved
+  via `HivelogEntityHierarchy::resolveSubject()`, the same one the
+  breadcrumb trail uses) but now cascades: a hub whose *child* is active
+  gets `has-active-child` on its own wrapper too. `css/hivelog.app-nav.css`
+  makes this a CSS-only (no JavaScript) dropdown on desktop/tablet
+  (`:hover`/`:focus-within`, opened unconditionally when
+  `has-active-child`) and an always-open, indented accordion on mobile
+  (≤ 768px) — tapping a real link navigates immediately, with no
+  hover/focus gesture to reveal a closed dropdown. Injected into
+  `page.content` via `hivelog_preprocess_page()` (task 0105; not a
+  placed block or `hook_page_top()` — see that hook's own docblock in
+  `hivelog.module`).
 - **Main-menu links** — `hivelog.links.menu.yml` declares one deriver
   base plugin (`hivelog.nav_item`, `deriver:
   Drupal\hivelog\Plugin\Derivative\HivelogMenuLinks`) that emits one
-  `hivelog.nav_item:<key>` menu link per `getAllItems()` entry, all
-  parented under the single hand-written `hivelog.admin` link. The
-  Dashboard entry is deliberately excluded here too (see above) —
-  `hivelog.admin` already points at the same route, so a menu child
-  pointing there as well would be redundant. A submodule that wants a
-  main-menu entry
-  implements `hook_hivelog_app_nav_items()` only — it no longer ships
-  its own `<module>.links.menu.yml` (`collective`/`nexus`/`nanoprobe`
-  all did, pre-0119). A static → derived plugin ID is a different
-  string (the derived one always carries `:`), so `hivelog_update_10029`
-  re-keys any per-site menu-UI customisation (weight/enabled/expanded,
-  stored by plugin ID in `core.menu.static_menu_link_overrides`) from
-  the old static IDs onto the new derived ones.
+  `hivelog.nav_item:<key>` menu link per `getAllItems()` entry. Since
+  task 0150, a link whose item declares a `parent` that names another
+  *derivable* item parents under that item's own derived link
+  (`hivelog.nav_item:<parent_key>`) instead of the single hand-written
+  `hivelog.admin` link the YAML's own default still is — same
+  unresolvable-parent fallback as the nav strip. The Dashboard entry is
+  excluded here too (see above) — `hivelog.admin` already points at the
+  same route, so a menu child pointing there as well would be
+  redundant. A submodule that wants a main-menu entry implements
+  `hook_hivelog_app_nav_items()` only — it no longer ships its own
+  `<module>.links.menu.yml` (`collective`/`nexus`/`nanoprobe` all did,
+  pre-0119). A static → derived plugin ID is a different string (the
+  derived one always carries `:`), so `hivelog_update_10029` re-keys
+  any per-site menu-UI customisation (weight/enabled/expanded, stored
+  by plugin ID in `core.menu.static_menu_link_overrides`) from the old
+  static IDs onto the new derived ones — task 0150 needed no equivalent
+  update hook, since a derived plugin ID's *shape* never changed, only
+  the `parent` value inside its unchanged definition.
 
 ### Tests
 

@@ -64,11 +64,11 @@ class AppNavItemsTest extends KernelTestBase {
   }
 
   /**
-   * Tests the item nests under core's "Setup" primary item (task 0147).
+   * Tests the item nests under core's "Insights" primary item (task 0147).
    */
-  public function testApiClientsItemParentsUnderSetup(): void {
+  public function testApiClientsItemParentsUnderInsights(): void {
     $items = collective_hivelog_app_nav_items();
-    $this->assertEquals('setup', $items['collective_api_clients']['parent']);
+    $this->assertEquals('insights', $items['collective_api_clients']['parent']);
   }
 
   /**
@@ -79,9 +79,9 @@ class AppNavItemsTest extends KernelTestBase {
    */
   public function testApiClientsItemAppearsInRealAppNav(): void {
     $build = \Drupal::service('hivelog.app_nav_builder')->build();
-    // Nests under the "Setup" primary item's submenu since task 0148
-    // — it declares `parent: 'setup'` (task 0147).
-    $this->assertArrayHasKey('collective_api_clients', $build['setup']['submenu']);
+    // Nests under the "Insights" primary item's submenu since task
+    // 0148 — it declares `parent: 'insights'` (task 0147).
+    $this->assertArrayHasKey('collective_api_clients', $build['insights']['submenu']);
   }
 
   /**
@@ -95,9 +95,9 @@ class AppNavItemsTest extends KernelTestBase {
     $definitions = \Drupal::service('plugin.manager.menu.link')->getDefinitions();
     $this->assertArrayHasKey('hivelog.nav_item:collective_api_clients', $definitions);
     $this->assertEquals('entity.api_client.collection', $definitions['hivelog.nav_item:collective_api_clients']['route_name']);
-    // Nests under core's "Setup" derived link since task 0150 —
-    // it declares `parent: 'setup'` (task 0147).
-    $this->assertEquals('hivelog.nav_item:setup', $definitions['hivelog.nav_item:collective_api_clients']['parent']);
+    // Nests under core's "Insights" derived link since task 0150 —
+    // it declares `parent: 'insights'` (task 0147).
+    $this->assertEquals('hivelog.nav_item:insights', $definitions['hivelog.nav_item:collective_api_clients']['parent']);
   }
 
 }
