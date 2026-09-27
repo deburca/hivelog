@@ -79,7 +79,9 @@ class AppNavItemsTest extends KernelTestBase {
    */
   public function testSensorDevicesItemAppearsInRealAppNav(): void {
     $build = \Drupal::service('hivelog.app_nav_builder')->build();
-    $this->assertArrayHasKey('nanoprobe_sensor_devices', $build);
+    // Nests under the "Setup" primary item's submenu since task 0148
+    // — it declares `parent: 'setup'` (task 0147).
+    $this->assertArrayHasKey('nanoprobe_sensor_devices', $build['setup']['submenu']);
   }
 
   /**

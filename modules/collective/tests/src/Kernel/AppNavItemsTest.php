@@ -79,7 +79,9 @@ class AppNavItemsTest extends KernelTestBase {
    */
   public function testApiClientsItemAppearsInRealAppNav(): void {
     $build = \Drupal::service('hivelog.app_nav_builder')->build();
-    $this->assertArrayHasKey('collective_api_clients', $build);
+    // Nests under the "Setup" primary item's submenu since task 0148
+    // — it declares `parent: 'setup'` (task 0147).
+    $this->assertArrayHasKey('collective_api_clients', $build['setup']['submenu']);
   }
 
   /**

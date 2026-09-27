@@ -62,32 +62,35 @@ class HivelogAppNavBuilderTest extends KernelTestBase {
   }
 
   /**
-   * Tests every built-in item appears for an administrator.
+   * Tests every built-in item appears for an administrator (task 0148).
+   *
+   * `hives`/`inspections`/`queens`/`queen_observations`/
+   * `inventory_items`/`inventory_purchases`/`products` all nest under
+   * `apiaries` now — only `dashboard` and `apiaries` themselves are
+   * top-level keys in this bare (no submodule) environment.
    */
   public function testAllBuiltInItemsAppearForAdministrator(): void {
-    $admin_role = Role::create(['id' => 'hivelog_admin', 'label' => 'Hivelog Admin']);
-    $admin_role->grantPermission('administer hivelog');
-    $admin_role->save();
-    $admin = User::create(['name' => 'admin', 'mail' => 'admin@example.com']);
-    $admin->addRole('hivelog_admin');
-    $admin->save();
-    $this->setCurrentUser($admin);
+    $this->loginAdmin();
 
     $build = \Drupal::service('hivelog.app_nav_builder')->build();
 
-    $expected_keys = [
-      'dashboard', 'apiaries', 'hives', 'inspections', 'queens', 'queen_observations',
+    $this->assertArrayHasKey('dashboard', $build);
+    $this->assertArrayHasKey('apiaries', $build);
+
+    $apiaries_children = [
+      'hives', 'inspections', 'queens', 'queen_observations',
       'inventory_items', 'inventory_purchases', 'products',
     ];
-    foreach ($expected_keys as $key) {
-      $this->assertArrayHasKey($key, $build);
+    foreach ($apiaries_children as $key) {
+      $this->assertArrayHasKey($key, $build['apiaries']['submenu'], "'$key' must appear in the Apiaries submenu.");
+      $this->assertArrayNotHasKey($key, $build, "'$key' must not also appear at the top level.");
     }
 
     // `setup` is deliberately absent here even for an administrator:
     // its own accessibility (`SetupPageAccessCheck`) requires at least
     // one `parent: 'setup'` item, and this bare environment (no
     // submodule installed) has none — see
-    // `testSetupItemBecomesAccessibleOnceAChildExists()`.
+    // `testSetupItemAccessibleOnceChildItemRegistered()`.
     $this->assertArrayNotHasKey('setup', $build);
   }
 
@@ -135,6 +138,7 @@ class HivelogAppNavBuilderTest extends KernelTestBase {
     $build = \Drupal::service('hivelog.app_nav_builder')->build();
 
     $this->assertArrayHasKey('setup', $build);
+    $this->assertArrayHasKey('hivelog_app_nav_test_widget', $build['setup']['submenu']);
   }
 
   /**
@@ -188,33 +192,31 @@ class HivelogAppNavBuilderTest extends KernelTestBase {
   }
 
   /**
-   * Tests items are sorted by group then weight (task 0120).
+   * Tests items are sorted by group then weight (task 0120/0148).
    *
-   * `dashboard` is its own leading group; `records` and `inventory`
-   * each get a separator before their first item, since the group
-   * changes from the one before — no submodule is installed here, so
-   * there's no `setup` group to separate into.
+   * The top level has no separator at all since task 0148 — with only
+   * `dashboard` and `apiaries` accessible here, there's nothing for one
+   * to usefully divide. Apiaries' own submenu still gets one between
+   * its `records`- and `inventory`-sourced children.
    */
   public function testItemsAreSortedByGroupThenWeight(): void {
-    $admin_role = Role::create(['id' => 'hivelog_admin', 'label' => 'Hivelog Admin']);
-    $admin_role->grantPermission('administer hivelog');
-    $admin_role->save();
-    $admin = User::create(['name' => 'admin', 'mail' => 'admin@example.com']);
-    $admin->addRole('hivelog_admin');
-    $admin->save();
-    $this->setCurrentUser($admin);
+    $this->loginAdmin();
 
     $build = \Drupal::service('hivelog.app_nav_builder')->build();
-    $keys = array_keys(array_filter($build, fn($k) => is_string($k) && !str_starts_with((string) $k, '#'), ARRAY_FILTER_USE_KEY));
+    $top_level_keys = array_keys(array_filter($build, fn($k) => is_string($k) && !str_starts_with((string) $k, '#'), ARRAY_FILTER_USE_KEY));
 
-    $expected_keys = [
-      'dashboard',
+    // The separator between `records` and `inventory` moved into
+    // Apiaries' own submenu (task 0148) — the top level has no
+    // separator at all with only two primary items here.
+    $this->assertSame(['dashboard', 'apiaries'], $top_level_keys);
+
+    $submenu_keys = array_keys(array_filter($build['apiaries']['submenu'], fn($k) => is_string($k) && !str_starts_with((string) $k, '#'), ARRAY_FILTER_USE_KEY));
+    $expected_submenu_keys = [
+      'hives', 'inspections', 'queens', 'queen_observations',
       'hivelog_app_nav_separator_0',
-      'apiaries', 'hives', 'inspections', 'queens', 'queen_observations',
-      'hivelog_app_nav_separator_1',
       'inventory_items', 'inventory_purchases', 'products',
     ];
-    $this->assertSame($expected_keys, $keys);
+    $this->assertSame($expected_submenu_keys, $submenu_keys);
   }
 
   /**
@@ -326,9 +328,15 @@ class HivelogAppNavBuilderTest extends KernelTestBase {
 
     $build = \Drupal::service('hivelog.app_nav_builder')->build();
 
-    $this->assertContains('is-active', $build['hives']['#attributes']['class']);
-    $this->assertEquals('page', $build['hives']['#attributes']['aria-current']);
-    $this->assertArrayNotHasKey('aria-current', $build['apiaries']['#attributes']);
+    $hives_link = $build['apiaries']['submenu']['hives']['#attributes'];
+    $this->assertContains('is-active', $hives_link['class']);
+    $this->assertEquals('page', $hives_link['aria-current']);
+
+    // The child is active, not Apiaries' own link — but Apiaries' own
+    // wrapper carries `has-active-child` since one of its children is
+    // (task 0148).
+    $this->assertArrayNotHasKey('aria-current', $build['apiaries']['link']['#attributes']);
+    $this->assertContains('has-active-child', $build['apiaries']['#attributes']['class']);
   }
 
   /**
@@ -347,8 +355,10 @@ class HivelogAppNavBuilderTest extends KernelTestBase {
 
     $build = \Drupal::service('hivelog.app_nav_builder')->build();
 
-    $this->assertContains('is-active', $build['hives']['#attributes']['class']);
-    $this->assertEquals('true', $build['hives']['#attributes']['aria-current']);
+    $hives_link = $build['apiaries']['submenu']['hives']['#attributes'];
+    $this->assertContains('is-active', $hives_link['class']);
+    $this->assertEquals('true', $hives_link['aria-current']);
+    $this->assertContains('has-active-child', $build['apiaries']['#attributes']['class']);
   }
 
   /**
@@ -366,8 +376,9 @@ class HivelogAppNavBuilderTest extends KernelTestBase {
 
     $build = \Drupal::service('hivelog.app_nav_builder')->build();
 
-    $this->assertContains('is-active', $build['hives']['#attributes']['class']);
-    $this->assertEquals('true', $build['hives']['#attributes']['aria-current']);
+    $hives_link = $build['apiaries']['submenu']['hives']['#attributes'];
+    $this->assertContains('is-active', $hives_link['class']);
+    $this->assertEquals('true', $hives_link['aria-current']);
   }
 
   /**
@@ -386,11 +397,19 @@ class HivelogAppNavBuilderTest extends KernelTestBase {
 
     $build = \Drupal::service('hivelog.app_nav_builder')->build();
 
-    foreach ($build as $key => $element) {
-      if (!is_string($key) || str_starts_with($key, '#') || str_starts_with($key, 'hivelog_app_nav_separator_')) {
+    foreach ($build as $key => $wrapper) {
+      if (!is_string($key) || str_starts_with($key, '#')) {
         continue;
       }
-      $this->assertArrayNotHasKey('aria-current', $element['#attributes'], "Item '$key' must not be marked active.");
+      $this->assertArrayNotHasKey('aria-current', $wrapper['link']['#attributes'], "Item '$key' must not be marked active.");
+      $this->assertNotContains('has-active-child', $wrapper['#attributes']['class'], "Item '$key' must not have an active child.");
+
+      foreach ($wrapper['submenu'] ?? [] as $child_key => $child) {
+        if (!is_string($child_key) || str_starts_with($child_key, '#') || str_starts_with($child_key, 'hivelog_app_nav_separator_')) {
+          continue;
+        }
+        $this->assertArrayNotHasKey('aria-current', $child['#attributes'], "Child '$child_key' of '$key' must not be marked active.");
+      }
     }
   }
 

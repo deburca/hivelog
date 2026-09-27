@@ -37,10 +37,14 @@ use Drupal\Core\Url;
  * menu link, whose active state the menu system already marks itself).
  *
  * Task 0146/0147, ADR-0104: an item's optional `parent` key names
- * another item (built-in or contributed) it nests under in the
- * eventual two-tier strip/menu — read by neither `build()` nor
- * `HivelogMenuLinks` yet (tasks 0148/0150), only by
- * `getAccessibleChildren()` so far.
+ * another item (built-in or contributed) it nests under. `build()`
+ * (task 0148) is the first place that actually renders the two tiers
+ * this produces — a wrapper per primary item (`.hivelog-app-nav__item`,
+ * `.has-active-child` when the active section is one of its children),
+ * each with its own `.hivelog-app-nav__submenu` of child links if it
+ * has any accessible ones. `HivelogMenuLinks` still treats every item
+ * as flat (task 0150 changes that); `getAccessibleChildren()` (task
+ * 0146) predates and doesn't depend on any of this.
  */
 class HivelogAppNavBuilder {
 
@@ -95,6 +99,13 @@ class HivelogAppNavBuilder {
   /**
    * Builds the nav render array.
    *
+   * Task 0148: each top-level key (besides the `#`-prefixed render
+   * properties) is a primary item's *wrapper*, not its link directly —
+   * `$build['apiaries']['link']` is the link, `$build['apiaries']['submenu']`
+   * (if present) is a `.hivelog-app-nav__submenu` container of that
+   * hub's own child links, keyed the same way this method's own keys
+   * are.
+   *
    * @return array
    *   A render array keyed `hivelog_app_nav`'s own contents, or an
    *   empty array if not a single item's route is accessible to the
@@ -107,42 +118,31 @@ class HivelogAppNavBuilder {
       return [];
     }
 
-    $this->sortByGroupThenWeight($accessible);
+    [$primary, $children_by_parent] = $this->partitionByParent($accessible);
+    $this->sortByGroupThenWeight($primary);
+    foreach ($children_by_parent as &$children) {
+      $this->sortByGroupThenWeight($children);
+    }
+    unset($children);
 
     [$active_key, $aria_current] = $this->resolveActiveItem($accessible);
+    $active_parent_key = $this->findActiveParent($children_by_parent, $active_key);
 
-    $links = [];
-    $previous_group = NULL;
-    $separator_index = 0;
-    foreach ($accessible as $key => $item) {
-      $group = $item['group'] ?? 'default';
-      if ($previous_group !== NULL && $group !== $previous_group) {
-        // A decorative divider between groups, not a nav item of its
-        // own — `aria-hidden` keeps it out of a screen reader's list of
-        // links, matching how a purely visual separator should behave.
-        $links['hivelog_app_nav_separator_' . $separator_index++] = [
-          '#type' => 'html_tag',
-          '#tag' => 'span',
-          '#attributes' => [
-            'class' => ['hivelog-app-nav__separator'],
-            'aria-hidden' => 'true',
-          ],
-        ];
+    $rendered_items = [];
+    foreach ($primary as $key => $item) {
+      $wrapper_classes = ['hivelog-app-nav__item'];
+      if ($key === $active_parent_key) {
+        $wrapper_classes[] = 'has-active-child';
       }
-      $previous_group = $group;
 
-      $classes = ['hivelog-app-nav__link'];
-      $attributes = [];
-      if ($key === $active_key) {
-        $classes[] = 'is-active';
-        $attributes['aria-current'] = $aria_current;
-      }
-      $links[$key] = [
-        '#type' => 'link',
-        '#title' => $item['title'],
-        '#url' => $item['url'],
-        '#attributes' => ['class' => $classes] + $attributes,
+      $rendered_items[$key] = [
+        '#type' => 'container',
+        '#attributes' => ['class' => $wrapper_classes],
+        'link' => $this->buildItemLink($item, $key === $active_key, $aria_current),
       ];
+      if (!empty($children_by_parent[$key])) {
+        $rendered_items[$key]['submenu'] = $this->buildSubmenu($children_by_parent[$key], $active_key, $aria_current);
+      }
     }
 
     return [
@@ -168,6 +168,129 @@ class HivelogAppNavBuilder {
         // makes the output path-dependent").
         'contexts' => ['url.path', 'user.permissions'],
       ],
+    ] + $rendered_items;
+  }
+
+  /**
+   * Splits accessible items into primary (top-level) items and hub children.
+   *
+   * Task 0148, ADR-0104: an item with no `parent` is always primary.
+   * An item that declares a `parent` nests under it *only if that key
+   * is itself present in `$accessible`* — an unresolvable `parent` (a
+   * typo, or the named parent exists in the registry but isn't
+   * accessible to this user) falls back to rendering at the top level
+   * instead of disappearing silently, per this task's own acceptance
+   * criteria.
+   *
+   * @param array[] $accessible
+   *   Accessible item descriptors, keyed, as filtered in `build()`.
+   *
+   * @return array{0: array[], 1: array<string, array[]>}
+   *   `[primary items keyed as in $accessible, children keyed by
+   *   parent key then by their own key]`.
+   */
+  protected function partitionByParent(array $accessible): array {
+    $primary = [];
+    $children_by_parent = [];
+    foreach ($accessible as $key => $item) {
+      $parent_key = $item['parent'] ?? NULL;
+      if ($parent_key !== NULL && isset($accessible[$parent_key])) {
+        $children_by_parent[$parent_key][$key] = $item;
+      }
+      else {
+        $primary[$key] = $item;
+      }
+    }
+    return [$primary, $children_by_parent];
+  }
+
+  /**
+   * The primary item key whose children include the active item, if any.
+   *
+   * @param array<string, array[]> $children_by_parent
+   *   As returned by `partitionByParent()`.
+   * @param string|null $active_key
+   *   The active item's key, from `resolveActiveItem()`.
+   */
+  protected function findActiveParent(array $children_by_parent, ?string $active_key): ?string {
+    if ($active_key === NULL) {
+      return NULL;
+    }
+    foreach ($children_by_parent as $parent_key => $children) {
+      if (isset($children[$active_key])) {
+        return $parent_key;
+      }
+    }
+    return NULL;
+  }
+
+  /**
+   * Builds one item's link render array.
+   *
+   * Shared by `build()`'s primary items and `buildSubmenu()`'s children
+   * — every link, at either tier, carries the same base class and
+   * active-state treatment.
+   */
+  protected function buildItemLink(array $item, bool $is_active, ?string $aria_current): array {
+    $classes = ['hivelog-app-nav__link'];
+    $attributes = [];
+    if ($is_active) {
+      $classes[] = 'is-active';
+      $attributes['aria-current'] = $aria_current;
+    }
+    return [
+      '#type' => 'link',
+      '#title' => $item['title'],
+      '#url' => $item['url'],
+      '#attributes' => ['class' => $classes] + $attributes,
+    ];
+  }
+
+  /**
+   * Builds a hub's submenu: its children's links, with group separators.
+   *
+   * The group-separator divider (task 0120) moves here from the top
+   * level (task 0148, ADR-0104) — with only 2–3 primary items, a
+   * divider between them would be visual noise; it still means
+   * something between a hub's own `records`- and `inventory`-sourced
+   * children (Apiaries' case today).
+   *
+   * @param array[] $children
+   *   A hub's accessible children, sorted.
+   * @param string|null $active_key
+   *   The active item's key, from `resolveActiveItem()`.
+   * @param string|null $aria_current
+   *   The `aria-current` value to use if a child is the active item.
+   *
+   * @return array
+   *   A render array for the submenu container.
+   */
+  protected function buildSubmenu(array $children, ?string $active_key, ?string $aria_current): array {
+    $links = [];
+    $previous_group = NULL;
+    $separator_index = 0;
+    foreach ($children as $key => $item) {
+      $group = $item['group'] ?? 'default';
+      if ($previous_group !== NULL && $group !== $previous_group) {
+        // A decorative divider between groups, not a nav item of its
+        // own — `aria-hidden` keeps it out of a screen reader's list of
+        // links, matching how a purely visual separator should behave.
+        $links['hivelog_app_nav_separator_' . $separator_index++] = [
+          '#type' => 'html_tag',
+          '#tag' => 'span',
+          '#attributes' => [
+            'class' => ['hivelog-app-nav__separator'],
+            'aria-hidden' => 'true',
+          ],
+        ];
+      }
+      $previous_group = $group;
+      $links[$key] = $this->buildItemLink($item, $key === $active_key, $aria_current);
+    }
+
+    return [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['hivelog-app-nav__submenu']],
     ] + $links;
   }
 

@@ -78,7 +78,9 @@ class AppNavItemsTest extends KernelTestBase {
    */
   public function testAiProviderConfigsItemAppearsInRealAppNav(): void {
     $build = \Drupal::service('hivelog.app_nav_builder')->build();
-    $this->assertArrayHasKey('nexus_ai_provider_configs', $build);
+    // Nests under the "Setup" primary item's submenu since task 0148
+    // — it declares `parent: 'setup'` (task 0147).
+    $this->assertArrayHasKey('nexus_ai_provider_configs', $build['setup']['submenu']);
   }
 
   /**
