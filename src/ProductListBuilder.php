@@ -16,7 +16,13 @@ use Drupal\hivelog\Form\HivelogProductFilterForm;
  * than the inherited #type => 'table') and its own "Add Product" heading,
  * matching every other list page in the module — see
  * InventoryItemListBuilder::render(). Filtered by
- * `HivelogProductFilterForm` (task 0156).
+ * `HivelogProductFilterForm` (task 0156). The heading also cross-links to
+ * the combined financial report (task 0160) — that report (costs vs.
+ * product/yield income, `InventoryReportController::combinedReport()`) has
+ * never had its own nav-strip/main-menu entry (task 0120 excluded it
+ * deliberately — "a report is a different feature from 'manage
+ * apiaries'"), so its only other access paths are the apiary page's own
+ * "View Financial Report" button and the dashboard's "Net YTD" stat tile.
  */
 class ProductListBuilder extends HivelogListBuilder {
 
@@ -61,6 +67,10 @@ class ProductListBuilder extends HivelogListBuilder {
         'label' => (string) $this->t('Add Product'),
         'url' => Url::fromRoute('entity.product.add_form')->toString(),
         'variant' => 'primary',
+      ],
+      [
+        'label' => (string) $this->t('View Financial Report'),
+        'url' => Url::fromRoute('hivelog.apiaries.financial_report')->toString(),
       ],
     ];
   }
