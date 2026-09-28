@@ -387,6 +387,15 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
 
   /**
    * Every list / report page that has no entity chain ends Home › HiveLog › <own name>.
+   *
+   * Task 0153, ADR-0105: the 10 collection routes that now thread
+   * through their own conceptual ancestor collection(s) moved out of
+   * this provider into `threadedCollectionProvider()` /
+   * `testBuildThreadedCollectionAncestry()` below — what's left here
+   * is exactly the set that stays a flat single self-link: the
+   * combined report, Insights itself, calendar actions, and the two
+   * action-log types (deliberately not given a chain — see ADR-0105's
+   * own Open questions).
    */
   #[DataProvider('leafPageProvider')]
   public function testBuildLeafPageTerminalCrumb(string $route_name, string $expected_text): void {
@@ -407,21 +416,107 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
    */
   public static function leafPageProvider(): array {
     return [
-      'hives' => ['entity.hive.collection', 'Hives'],
-      'inspections' => ['entity.hive_inspection.collection', 'Inspections'],
-      'queens' => ['entity.queen.collection', 'Queens'],
-      'queen observations' => ['entity.queen_observation.collection', 'Queen Observations'],
       'calendar actions' => ['entity.calendar_action.collection', 'Calendar Actions'],
       'hive action logs' => ['entity.hive_action_log.collection', 'Hive Action Logs'],
       'apiary action logs' => ['entity.apiary_action_log.collection', 'Apiary Action Logs'],
-      'inventory items' => ['entity.inventory_item.collection', 'Inventory Items'],
-      'inventory purchases' => ['entity.inventory_purchase.collection', 'Inventory Purchases'],
-      'products' => ['entity.product.collection', 'Products'],
-      'sensor devices' => ['entity.sensor_device.collection', 'Sensor Devices'],
-      'ai provider configs' => ['entity.ai_provider_config.collection', 'AI Provider Configs'],
-      'api clients' => ['entity.api_client.collection', 'API Clients'],
       'combined financial report' => ['hivelog.apiaries.financial_report', 'Financial Report: All Apiaries'],
       'insights' => ['hivelog.insights', 'Insights'],
+    ];
+  }
+
+  /**
+   * Collection pages that thread through their own ancestor collection(s).
+   *
+   * Task 0153, ADR-0105. Asserts the full chain — every ancestor
+   * crumb's text *and* route, not just the terminal one — since a
+   * wrong middle crumb would be just as broken as a wrong terminal.
+   * Five of these use a shorter breadcrumb-only label than their real
+   * `label_collection` (Observations/Inventory/Purchases/AI Providers/
+   * Sensors); the other five (Hives, Inspections, Queens, Products,
+   * API Clients) use their existing `label_collection` unchanged.
+   */
+  #[DataProvider('threadedCollectionProvider')]
+  public function testBuildThreadedCollectionAncestry(string $route_name, array $ancestor_chain, string $terminal_text): void {
+    $route_match = $this->createRouteMatch($route_name);
+    $route_match->method('getParameter')->willReturn(NULL);
+
+    $links = $this->builder->build($route_match)->getLinks();
+
+    $this->assertEquals('Home', (string) $links[0]->getText());
+    $this->assertEquals('HiveLog', (string) $links[1]->getText());
+    foreach ($ancestor_chain as $i => $ancestor) {
+      [$text, $route] = $ancestor;
+      $this->assertEquals($text, (string) $links[2 + $i]->getText(), "Ancestor $i of $route_name");
+      $this->assertEquals($route, $links[2 + $i]->getUrl()->getRouteName(), "Ancestor $i route of $route_name");
+    }
+    $terminal_index = 2 + count($ancestor_chain);
+    $this->assertEquals($terminal_text, (string) $links[$terminal_index]->getText());
+    $this->assertEquals($route_name, $links[$terminal_index]->getUrl()->getRouteName());
+    $this->assertCount($terminal_index + 1, $links);
+  }
+
+  /**
+   * Data provider: `[route_name, ancestor chain (root-first), terminal text]`.
+   *
+   * The ancestor chain is `[[text, route], …]`, root-to-leaf, not
+   * including the route's own terminal crumb.
+   */
+  public static function threadedCollectionProvider(): array {
+    return [
+      'hives' => [
+        'entity.hive.collection',
+        [['Apiaries', 'entity.apiary.collection']],
+        'Hives',
+      ],
+      'inspections' => [
+        'entity.hive_inspection.collection',
+        [['Apiaries', 'entity.apiary.collection'], ['Hives', 'entity.hive.collection']],
+        'Inspections',
+      ],
+      'queens' => [
+        'entity.queen.collection',
+        [['Apiaries', 'entity.apiary.collection'], ['Hives', 'entity.hive.collection']],
+        'Queens',
+      ],
+      'queen observations' => [
+        'entity.queen_observation.collection',
+        [
+          ['Apiaries', 'entity.apiary.collection'],
+          ['Hives', 'entity.hive.collection'],
+          ['Queens', 'entity.queen.collection'],
+        ],
+        'Observations',
+      ],
+      'inventory items' => [
+        'entity.inventory_item.collection',
+        [['Apiaries', 'entity.apiary.collection']],
+        'Inventory',
+      ],
+      'inventory purchases' => [
+        'entity.inventory_purchase.collection',
+        [['Apiaries', 'entity.apiary.collection'], ['Inventory', 'entity.inventory_item.collection']],
+        'Purchases',
+      ],
+      'products' => [
+        'entity.product.collection',
+        [['Apiaries', 'entity.apiary.collection']],
+        'Products',
+      ],
+      'api clients' => [
+        'entity.api_client.collection',
+        [['Insights', 'hivelog.insights']],
+        'API Clients',
+      ],
+      'ai provider configs' => [
+        'entity.ai_provider_config.collection',
+        [['Insights', 'hivelog.insights']],
+        'AI Providers',
+      ],
+      'sensor devices' => [
+        'entity.sensor_device.collection',
+        [['Insights', 'hivelog.insights']],
+        'Sensors',
+      ],
     ];
   }
 
@@ -429,53 +524,74 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
    * Site-wide add forms hang off their collection: Home › HiveLog › <Plural> › Add <Type>.
    *
    * The terminal crumb (task 0117) is the route's own static title, a
-   * self-link the theme renders as plain text.
+   * self-link the theme renders as plain text. Task 0153, ADR-0105:
+   * the collection crumb now threads its own ancestor chain first too
+   * (and uses the same breadcrumb-only label override where one
+   * applies) — an add-form page must never disagree with its own
+   * collection page about where that collection sits.
    */
   #[DataProvider('addFormProvider')]
-  public function testBuildAddFormThreadsToCollection(string $route_name, string $collection_route, string $text, string $add_title): void {
+  public function testBuildAddFormThreadsToCollection(string $route_name, string $collection_route, array $ancestor_chain, string $collection_text, string $add_title): void {
     $route_match = $this->createRouteMatch($route_name, NULL, [], $add_title);
     $route_match->method('getParameter')->willReturn(NULL);
 
     $links = $this->builder->build($route_match)->getLinks();
 
-    $this->assertCount(4, $links);
-    $this->assertEquals($text, (string) $links[2]->getText());
-    $this->assertEquals($collection_route, $links[2]->getUrl()->getRouteName());
-    $this->assertEquals($add_title, (string) $links[3]->getText());
-    $this->assertEquals($route_name, $links[3]->getUrl()->getRouteName());
+    foreach ($ancestor_chain as $i => $ancestor) {
+      [$text, $route] = $ancestor;
+      $this->assertEquals($text, (string) $links[2 + $i]->getText(), "Ancestor $i of $route_name");
+      $this->assertEquals($route, $links[2 + $i]->getUrl()->getRouteName(), "Ancestor $i route of $route_name");
+    }
+    $collection_index = 2 + count($ancestor_chain);
+    $this->assertEquals($collection_text, (string) $links[$collection_index]->getText());
+    $this->assertEquals($collection_route, $links[$collection_index]->getUrl()->getRouteName());
+    $this->assertEquals($add_title, (string) $links[$collection_index + 1]->getText());
+    $this->assertEquals($route_name, $links[$collection_index + 1]->getUrl()->getRouteName());
+    $this->assertCount($collection_index + 2, $links);
   }
 
   /**
-   * Data provider: global add-form routes → their collection crumb + title.
+   * Data provider: `[route_name, collection_route, ancestor chain, collection text, add title]`.
+   *
+   * The ancestor chain is `[[text, route], …]`, root-to-leaf — the
+   * exact same chain `threadedCollectionProvider()` uses for each of
+   * these collections, since an add-form's own collection crumb must
+   * thread identically to a direct visit to that collection.
    */
   public static function addFormProvider(): array {
     return [
       'apiary' => [
-        'entity.apiary.add_form', 'entity.apiary.collection', 'Apiaries', 'Add Apiary',
+        'entity.apiary.add_form', 'entity.apiary.collection', [], 'Apiaries', 'Add Apiary',
       ],
       'inventory item' => [
         'entity.inventory_item.add_form',
         'entity.inventory_item.collection',
-        'Inventory Items',
+        [['Apiaries', 'entity.apiary.collection']],
+        'Inventory',
         'Add Inventory Item',
       ],
       'inventory purchase' => [
         'entity.inventory_purchase.add_form',
         'entity.inventory_purchase.collection',
-        'Inventory Purchases',
+        [['Apiaries', 'entity.apiary.collection'], ['Inventory', 'entity.inventory_item.collection']],
+        'Purchases',
         'Add Inventory Purchase',
       ],
       'product' => [
-        'entity.product.add_form', 'entity.product.collection', 'Products', 'Add Product',
+        'entity.product.add_form', 'entity.product.collection',
+        [['Apiaries', 'entity.apiary.collection']], 'Products', 'Add Product',
       ],
       'sensor device' => [
-        'entity.sensor_device.add_form', 'entity.sensor_device.collection', 'Sensor Devices', 'Add Sensor Device',
+        'entity.sensor_device.add_form', 'entity.sensor_device.collection',
+        [['Insights', 'hivelog.insights']], 'Sensors', 'Add Sensor Device',
       ],
       'ai provider config' => [
-        'entity.ai_provider_config.add_form', 'entity.ai_provider_config.collection', 'AI Provider Configs', 'Add AI Provider Config',
+        'entity.ai_provider_config.add_form', 'entity.ai_provider_config.collection',
+        [['Insights', 'hivelog.insights']], 'AI Providers', 'Add AI Provider Config',
       ],
       'api client' => [
-        'entity.api_client.add_form', 'entity.api_client.collection', 'API Clients', 'Add API Client',
+        'entity.api_client.add_form', 'entity.api_client.collection',
+        [['Insights', 'hivelog.insights']], 'API Clients', 'Add API Client',
       ],
     ];
   }

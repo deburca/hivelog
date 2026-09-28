@@ -41,6 +41,18 @@ use Drupal\hivelog\HivelogEntityHierarchy;
  * that `HiveInspection::label_collection` reads "Inspections" like
  * every other surface, `collectionLabels()` can read each type's own
  * `label_collection` instead of a hand-maintained duplicate.
+ *
+ * Task 0153, ADR-0105 adds a second, independent declarative map,
+ * `COLLECTION_ANCESTOR_ROUTE`, walked by `addCollectionAncestryLinks()`
+ * — the same "walk a map to the root" shape as `PARENT_FIELD`/
+ * `addAncestryLinks()` above, but for a *collection* route's own
+ * conceptual parent collection(s) (e.g. Inspections' collection page
+ * threading `Apiaries › Hives › Inspections`) rather than a specific
+ * entity instance's real ancestor chain. The two maps serve different
+ * page kinds and are deliberately not merged: changing what a
+ * `PARENT_FIELD` entry means would also silently change every
+ * per-instance canonical/edit/delete breadcrumb of that type, which
+ * this feature was never asked to touch.
  */
 class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
 
@@ -67,6 +79,38 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
     'entity.sensor_device.readings' => 'sensor_device',
     'nanoprobe.sensor_device.config' => 'sensor_device',
     'collective.api_client.regenerate_token' => 'api_client',
+  ];
+
+  /**
+   * A collection route → the route of its own parent crumb.
+   *
+   * Task 0153, ADR-0105: a *separate* declarative map from
+   * `HivelogEntityHierarchy::PARENT_FIELD` — that one walks a specific
+   * *instance's* real reference field for canonical/edit/delete pages
+   * (and is unaffected by this one); this map only ever fires for a
+   * *collection* route, threading through the conceptual type
+   * hierarchy the two-tier nav strip (task 0148) already shows for the
+   * same relationships, one level at a time. `build()` walks this from
+   * the current route to its root — neither `entity.apiary.collection`
+   * nor `hivelog.insights` is a key here, so the walk always
+   * terminates there. Deliberately does not cover
+   * `calendar_action`/`hive_action_log`/`apiary_action_log` (their own
+   * per-instance threading, task 0122, already has a different,
+   * well-established rule this would need reconciling with, not just
+   * copying — see ADR-0105's own Open questions) or the combined
+   * financial report (no single parent to thread).
+   */
+  protected const COLLECTION_ANCESTOR_ROUTE = [
+    'entity.hive.collection' => 'entity.apiary.collection',
+    'entity.hive_inspection.collection' => 'entity.hive.collection',
+    'entity.queen.collection' => 'entity.hive.collection',
+    'entity.queen_observation.collection' => 'entity.queen.collection',
+    'entity.inventory_item.collection' => 'entity.apiary.collection',
+    'entity.inventory_purchase.collection' => 'entity.inventory_item.collection',
+    'entity.product.collection' => 'entity.apiary.collection',
+    'entity.api_client.collection' => 'hivelog.insights',
+    'entity.ai_provider_config.collection' => 'hivelog.insights',
+    'entity.sensor_device.collection' => 'hivelog.insights',
   ];
 
   /**
@@ -146,18 +190,28 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
       'hivelog.insights' => $this->t('Insights'),
     ];
     if (isset($leaf_pages[$route_name])) {
-      $breadcrumb->addLink(Link::createFromRoute($leaf_pages[$route_name], $route_name));
+      // Task 0153, ADR-0105: a route in `COLLECTION_ANCESTOR_ROUTE`
+      // gets its conceptual parent collection(s) threaded in first —
+      // every other leaf page (the combined report, Insights itself,
+      // calendar actions and the two action-log types) stays exactly
+      // the flat single self-link it always was.
+      $this->addCollectionAncestryLinks($breadcrumb, $route_name, $leaf_pages);
+      $breadcrumb->addLink(Link::createFromRoute($this->collectionCrumbLabel($route_name, $leaf_pages), $route_name));
       return $breadcrumb;
     }
 
     // Site-wide "add" forms (entity.<type>.add_form, no parent in the
     // path) hang off their collection: Home › HiveLog › <Plural> › Add
-    // <Type>.
+    // <Type> — threading that collection's own ancestry first (task
+    // 0153), same as a direct visit to the collection itself would,
+    // so the two pages never disagree about where the collection sits.
     if (preg_match('/^entity\.([a-z_]+)\.add_form$/', $route_name, $m)
       && isset($collections["entity.{$m[1]}.collection"])) {
+      $collection_route = "entity.{$m[1]}.collection";
+      $this->addCollectionAncestryLinks($breadcrumb, $collection_route, $leaf_pages);
       $breadcrumb->addLink(Link::createFromRoute(
-        $collections["entity.{$m[1]}.collection"],
-        "entity.{$m[1]}.collection",
+        $this->collectionCrumbLabel($collection_route, $leaf_pages),
+        $collection_route,
       ));
       $this->addGenericTerminalCrumb($breadcrumb, $route_match, $route_name);
       return $breadcrumb;
@@ -213,6 +267,55 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
       }
     }
     return $labels;
+  }
+
+  /**
+   * Adds one crumb per `COLLECTION_ANCESTOR_ROUTE` ancestor, root first.
+   *
+   * Task 0153, ADR-0105. Mirrors `addAncestryLinks()`'s own "walk a
+   * declarative map to the root" shape, but over route names for a
+   * collection page rather than entity instances for a canonical one.
+   *
+   * @param \Drupal\Core\Breadcrumb\Breadcrumb $breadcrumb
+   *   The breadcrumb being built.
+   * @param string $route_name
+   *   The current (leaf) collection route.
+   * @param array $leaf_pages
+   *   Route name → default label, from `build()` — every possible
+   *   ancestor in `COLLECTION_ANCESTOR_ROUTE` is guaranteed to be a key
+   *   here (either a real entity collection, or `hivelog.insights`).
+   */
+  protected function addCollectionAncestryLinks(Breadcrumb $breadcrumb, string $route_name, array $leaf_pages): void {
+    $chain = [];
+    $current = $route_name;
+    while (isset(self::COLLECTION_ANCESTOR_ROUTE[$current])) {
+      $current = self::COLLECTION_ANCESTOR_ROUTE[$current];
+      $chain[] = $current;
+    }
+    foreach (array_reverse($chain) as $ancestor_route) {
+      $breadcrumb->addLink(Link::createFromRoute($this->collectionCrumbLabel($ancestor_route, $leaf_pages), $ancestor_route));
+    }
+  }
+
+  /**
+   * A collection route's breadcrumb text: an override, or its default.
+   *
+   * Task 0153, ADR-0105: five steps use shorter breadcrumb-only text
+   * than their real `label_collection` (unchanged everywhere else —
+   * the nav strip, the page's own heading, routing.yml's own `_title`)
+   * since only "Setup → Insights" came with its own explicit rename
+   * instruction; every other shortened label here is breadcrumb
+   * display text only.
+   */
+  protected function collectionCrumbLabel(string $route_name, array $leaf_pages) {
+    return match ($route_name) {
+      'entity.queen_observation.collection' => $this->t('Observations'),
+      'entity.inventory_item.collection' => $this->t('Inventory'),
+      'entity.inventory_purchase.collection' => $this->t('Purchases'),
+      'entity.ai_provider_config.collection' => $this->t('AI Providers'),
+      'entity.sensor_device.collection' => $this->t('Sensors'),
+      default => $leaf_pages[$route_name],
+    };
   }
 
   /**

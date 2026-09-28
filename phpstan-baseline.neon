@@ -957,5 +957,5 @@ parameters:
 		-
 			message: '#^Call to an undefined method Drupal\\Core\\Routing\\RouteMatchInterface\:\:method\(\)\.$#'
 			identifier: method.notFound
-			count: 51
+			count: 52
 			path: tests/src/Unit/Breadcrumb/HivelogBreadcrumbBuilderTest.php
