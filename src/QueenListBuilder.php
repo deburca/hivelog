@@ -3,12 +3,15 @@
 namespace Drupal\hivelog;
 
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\Query\QueryInterface;
 use Drupal\Core\Url;
+use Drupal\hivelog\Form\HivelogQueenFilterForm;
 
 /**
  * Provides a list builder for Queen entities.
  *
  * Columns follow issue #51: colour, hive, date of introduction.
+ * Filtered by `HivelogQueenFilterForm` (task 0155).
  */
 class QueenListBuilder extends HivelogListBuilder {
 
@@ -59,6 +62,35 @@ class QueenListBuilder extends HivelogListBuilder {
         'variant' => 'primary',
       ],
     ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getFilterForm(): array {
+    return $this->formBuilder->getForm(HivelogQueenFilterForm::class);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function applyFilters(QueryInterface $query): void {
+    HivelogQueenFilterForm::apply($query, $this->currentFilters());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function hasActiveFilters(): bool {
+    return (bool) $this->currentFilters();
+  }
+
+  /**
+   * The current request's queen filter values, or `[]` with no request.
+   */
+  protected function currentFilters(): array {
+    $request = $this->requestStack->getCurrentRequest();
+    return $request ? HivelogQueenFilterForm::extract($request) : [];
   }
 
 }

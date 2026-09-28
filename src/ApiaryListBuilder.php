@@ -3,12 +3,16 @@
 namespace Drupal\hivelog;
 
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\Query\QueryInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
+use Drupal\hivelog\Form\HivelogApiaryFilterForm;
 use Drupal\user\UserInterface;
 
 /**
  * Provides a list builder for Apiary entities.
+ *
+ * Filtered by `HivelogApiaryFilterForm` (task 0155).
  */
 class ApiaryListBuilder extends HivelogListBuilder {
 
@@ -76,6 +80,35 @@ class ApiaryListBuilder extends HivelogListBuilder {
       return '';
     }
     return trim((string) $user->get('cbr_number')->value);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getFilterForm(): array {
+    return $this->formBuilder->getForm(HivelogApiaryFilterForm::class);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function applyFilters(QueryInterface $query): void {
+    HivelogApiaryFilterForm::apply($query, $this->currentFilters());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function hasActiveFilters(): bool {
+    return (bool) $this->currentFilters();
+  }
+
+  /**
+   * The current request's apiary filter values, or `[]` with no request.
+   */
+  protected function currentFilters(): array {
+    $request = $this->requestStack->getCurrentRequest();
+    return $request ? HivelogApiaryFilterForm::extract($request) : [];
   }
 
 }
