@@ -1,7 +1,7 @@
 ---
 type: project
 tags: [hivelog/project]
-status: planning
+status: done
 target:
 created: 2026-09-27
 ---

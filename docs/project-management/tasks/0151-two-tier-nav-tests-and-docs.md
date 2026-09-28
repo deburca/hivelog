@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: review
+status: done
 priority: low
 project: "[[in-app-navigation-restructuring]]"
 area: docs
