@@ -4,14 +4,18 @@ namespace Drupal\hivelog;
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\Query\QueryInterface;
+use Drupal\Core\Url;
 use Drupal\hivelog\Form\HivelogInspectionFilterForm;
 
 /**
  * Provides a list builder for Hive Inspection entities.
  *
  * No context-free add route exists for HiveInspection (always added from
- * a hive's own page), so the collection page has no heading action — see
- * AGENTS.md "Routing, controllers and forms". Filtered by the same
+ * a hive's own page), so the heading has no Add button — see AGENTS.md
+ * "Routing, controllers and forms". It does carry a "View Hives"
+ * cross-link (task 0159), the same kind of navigational shortcut
+ * `InventoryPurchaseListBuilder`'s "View Inventory Items" already is, not
+ * an add-route workaround. Filtered by the same
  * `HivelogInspectionFilterForm` as the hive page's embedded inspections
  * table (task 0132) — built with no parent hive, so its Reset targets
  * this collection route instead of a hive page.
@@ -45,6 +49,18 @@ class HiveInspectionListBuilder extends HivelogListBuilder {
     $row['honey'] = $honey ? ($entity->get('honey_stores')->getSetting('allowed_values')[$honey] ?? $honey) : '';
     $row['inspector'] = $entity->getOwner() ? $entity->getOwner()->getDisplayName() : '';
     return $row;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getHeadingActions(): array {
+    return [
+      [
+        'label' => (string) $this->t('View Hives'),
+        'url' => Url::fromRoute('entity.hive.collection')->toString(),
+      ],
+    ];
   }
 
   /**

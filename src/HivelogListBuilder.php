@@ -31,10 +31,14 @@ use Symfony\Component\HttpFoundation\RequestStack;
  *   `buildHeader()` order — do not include an Operations cell, `render()`
  *   appends one automatically via `buildOperations()`.
  * - `getHeadingActions()`: Add button / cross-link button props for the
- *   list heading, or `[]` for no heading at all (entity types with no
- *   context-free add route — Hive, HiveInspection, QueenObservation,
- *   HiveActionLog, ApiaryActionLog, CalendarAction — return `[]`; see
- *   AGENTS.md "Routing, controllers and forms").
+ *   list heading, or `[]` for no heading at all. Entity types with no
+ *   context-free add route (Hive, HiveInspection, QueenObservation,
+ *   HiveActionLog, ApiaryActionLog, CalendarAction) never get an Add
+ *   button here — see AGENTS.md "Routing, controllers and forms" — but
+ *   three of them (Hive, HiveInspection, QueenObservation; task 0159)
+ *   still return a single "View <parent collection>" cross-link, the
+ *   same kind of navigational shortcut `InventoryPurchaseListBuilder`'s
+ *   "View Inventory Items" already is.
  *
  * `load()` filters rows by per-entity `access('view')` (task 0124) and
  * paginates the *filtered* set (task 0126) — in that order, so filtering

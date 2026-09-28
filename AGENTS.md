@@ -329,8 +329,14 @@ collections with a context-free add route — `entity.apiary.add_form` and
 in `render()`. Hive, HiveInspection and QueenObservation have no
 context-free add route at all (they always require a parent —
 apiary/hive/queen — pre-selected via a scoped add route above), so their
-collection pages have no add button by design, with or without menu
-chrome.
+collection pages have no Add button by design, with or without menu
+chrome. Since task 0159 each of the three instead carries a single "View
+<parent collection>" cross-link in the same heading slot (Hive → View
+Apiaries, HiveInspection → View Hives, QueenObservation → View Queens) —
+a plain navigational shortcut to the collection a beekeeper would pick a
+specific parent from, not a workaround for the missing add route (it
+does not open an add form itself, and none of the three list builders
+gained a new route).
 
 **Every canonical page owns its Edit/Delete; there are no local tasks or
 actions at all (task 0118).** `hivelog.links.task.yml` (per-type

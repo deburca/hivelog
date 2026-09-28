@@ -4,14 +4,18 @@ namespace Drupal\hivelog;
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\Query\QueryInterface;
+use Drupal\Core\Url;
 use Drupal\hivelog\Form\HivelogQueenObservationFilterForm;
 
 /**
  * Provides a list builder for Queen Observation entities.
  *
  * No context-free add route exists for QueenObservation (always added
- * from a queen's own page), so the collection page has no heading action
- * — see AGENTS.md "Routing, controllers and forms". Filtered by the same
+ * from a queen's own page), so the heading has no Add button — see
+ * AGENTS.md "Routing, controllers and forms". It does carry a "View
+ * Queens" cross-link (task 0159), the same kind of navigational shortcut
+ * `InventoryPurchaseListBuilder`'s "View Inventory Items" already is, not
+ * an add-route workaround. Filtered by the same
  * `HivelogQueenObservationFilterForm` as the hive page's embedded
  * observations table (task 0132) — built with no parent hive, so its
  * Reset targets this collection route instead of a hive page, and its
@@ -49,6 +53,18 @@ class QueenObservationListBuilder extends HivelogListBuilder {
     $row['active'] = $entity->get('active')->value ? $this->t('Yes') : $this->t('No');
 
     return $row;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getHeadingActions(): array {
+    return [
+      [
+        'label' => (string) $this->t('View Queens'),
+        'url' => Url::fromRoute('entity.queen.collection')->toString(),
+      ],
+    ];
   }
 
   /**

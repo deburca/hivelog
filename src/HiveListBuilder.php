@@ -4,17 +4,21 @@ namespace Drupal\hivelog;
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\Query\QueryInterface;
+use Drupal\Core\Url;
 use Drupal\hivelog\Form\HivelogHiveFilterForm;
 
 /**
  * Provides a list builder for Hive entities.
  *
  * No context-free add route exists for Hive (always added from an
- * apiary's own page), so the collection page has no heading action — see
- * AGENTS.md "Routing, controllers and forms". Filtered by the same
- * `HivelogHiveFilterForm` as the apiary page's embedded hive table (task
- * 0132) — built with no parent apiary, so its Reset targets this
- * collection route instead of an apiary page.
+ * apiary's own page), so the heading has no Add button — see AGENTS.md
+ * "Routing, controllers and forms". It does carry a "View Apiaries"
+ * cross-link (task 0159), the same kind of navigational shortcut
+ * `InventoryPurchaseListBuilder`'s "View Inventory Items" already is, not
+ * an add-route workaround. Filtered by the same `HivelogHiveFilterForm`
+ * as the apiary page's embedded hive table (task 0132) — built with no
+ * parent apiary, so its Reset targets this collection route instead of
+ * an apiary page.
  */
 class HiveListBuilder extends HivelogListBuilder {
 
@@ -44,6 +48,18 @@ class HiveListBuilder extends HivelogListBuilder {
     $status = $entity->get('status')->value;
     $row['status'] = $entity->get('status')->getSetting('allowed_values')[$status] ?? $status;
     return $row;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getHeadingActions(): array {
+    return [
+      [
+        'label' => (string) $this->t('View Apiaries'),
+        'url' => Url::fromRoute('entity.apiary.collection')->toString(),
+      ],
+    ];
   }
 
   /**
