@@ -218,6 +218,42 @@ class InventoryItemTest extends KernelTestBase {
   }
 
   /**
+   * Tests that `weight_kg` can be set, saved, and reloaded.
+   */
+  public function testWeightKgSetAndRetrieved(): void {
+    $item = InventoryItem::create([
+      'apiary' => $this->apiary->id(),
+      'name' => '10x12 Brood Chamber (Wood, empty)',
+      'category' => 'equipment',
+      'unit' => 'each',
+      'item_type' => 'durable',
+      'useful_life_years' => 10,
+      'weight_kg' => 4.25,
+    ]);
+    $item->save();
+
+    $loaded = InventoryItem::load($item->id());
+    $this->assertEquals(4.25, (float) $loaded->get('weight_kg')->value);
+  }
+
+  /**
+   * Tests that `weight_kg` is optional — no weight set is a valid entity.
+   */
+  public function testWeightKgOptional(): void {
+    $item = InventoryItem::create([
+      'apiary' => $this->apiary->id(),
+      'name' => 'No Weight Set',
+      'unit' => 'kg',
+      'item_type' => 'consumable',
+    ]);
+    $this->assertCount(0, $item->validate());
+    $item->save();
+
+    $loaded = InventoryItem::load($item->id());
+    $this->assertTrue($loaded->get('weight_kg')->isEmpty());
+  }
+
+  /**
    * Tests that stock on hand sums purchases for a consumable item.
    */
   public function testGetStockOnHandSumsPurchases(): void {
@@ -449,6 +485,41 @@ class InventoryItemTest extends KernelTestBase {
   }
 
   /**
+   * Tests that the collection list shows a Weight column, blank when unset.
+   */
+  public function testCollectionShowsWeightColumn(): void {
+    InventoryItem::create([
+      'apiary' => $this->apiary->id(),
+      'name' => '10x12 Brood Chamber (Wood, empty)',
+      'unit' => 'each',
+      'item_type' => 'durable',
+      'useful_life_years' => 10,
+      'weight_kg' => 4.25,
+    ])->save();
+    InventoryItem::create([
+      'apiary' => $this->apiary->id(),
+      'name' => 'No Weight Item',
+      'unit' => 'kg',
+      'item_type' => 'consumable',
+    ])->save();
+
+    $build = \Drupal::entityTypeManager()->getListBuilder('inventory_item')->render();
+    $header_labels = array_map('strval', $build['table']['#props']['headers']);
+    $this->assertContains('Weight', $header_labels);
+
+    $rows = $build['table']['#props']['rows'];
+    $weighted_row = array_filter($rows, fn($row) => str_contains((string) $row['cells'][0], 'Brood Chamber'));
+    $this->assertNotEmpty($weighted_row);
+    $weighted_cells = reset($weighted_row)['cells'];
+    $this->assertStringContainsString('4.25 kg', (string) $weighted_cells[array_search('Weight', $header_labels)]);
+
+    $unweighted_row = array_filter($rows, fn($row) => str_contains((string) $row['cells'][0], 'No Weight Item'));
+    $this->assertNotEmpty($unweighted_row);
+    $unweighted_cells = reset($unweighted_row)['cells'];
+    $this->assertSame('', (string) $unweighted_cells[array_search('Weight', $header_labels)]);
+  }
+
+  /**
    * Tests that the canonical view groups fields into Overview / Type sections.
    *
    * Task 0140: `InventoryItemController` had no dedicated kernel test at
@@ -479,6 +550,46 @@ class InventoryItemTest extends KernelTestBase {
     $this->assertStringContainsString('Frames', $html);
     $this->assertStringContainsString('Test Apiary', $html);
     $this->assertStringContainsString('5', $html);
+  }
+
+  /**
+   * Tests that a set weight renders on the item's own canonical page.
+   */
+  public function testItemViewShowsWeightWhenSet(): void {
+    $item = InventoryItem::create([
+      'apiary' => $this->apiary->id(),
+      'name' => '10x12 Brood Chamber (Wood, empty)',
+      'unit' => 'each',
+      'item_type' => 'durable',
+      'useful_life_years' => 10,
+      'weight_kg' => 4.25,
+    ]);
+    $item->save();
+
+    $controller = \Drupal::service('class_resolver')->getInstanceFromDefinition(InventoryItemController::class);
+    $build = $controller->view(InventoryItem::load($item->id()));
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+
+    $this->assertStringContainsString('4.25 kg', $html);
+  }
+
+  /**
+   * Tests that an unset weight renders as an em dash, not blank or an error.
+   */
+  public function testItemViewShowsEmDashWhenWeightUnset(): void {
+    $item = InventoryItem::create([
+      'apiary' => $this->apiary->id(),
+      'name' => 'No Weight Item',
+      'unit' => 'kg',
+      'item_type' => 'consumable',
+    ]);
+    $item->save();
+
+    $controller = \Drupal::service('class_resolver')->getInstanceFromDefinition(InventoryItemController::class);
+    $build = $controller->view(InventoryItem::load($item->id()));
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+
+    $this->assertStringContainsString('—', $html);
   }
 
   /**

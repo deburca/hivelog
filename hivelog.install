@@ -953,6 +953,33 @@ function hivelog_update_10029(&$sandbox) {
 }
 
 /**
+ * Installs the weight_kg field storage on Inventory Item.
+ *
+ * Optional per-item weight (kg) for docs/project-management/tasks/
+ * 0162-inventory-item-weight-field.md — used by task 0163's
+ * Hive Components feature to compute a hive's empty weight. The module
+ * is not yet in production, so no data migration is required.
+ */
+function hivelog_update_10030(&$sandbox) {
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+
+  $field_definitions = InventoryItem::baseFieldDefinitions(
+    $entity_type_manager->getDefinition('inventory_item')
+  );
+  if (isset($field_definitions['weight_kg'])) {
+    $entity_definition_update_manager->installFieldStorageDefinition(
+      'weight_kg',
+      'inventory_item',
+      'hivelog',
+      $field_definitions['weight_kg']
+    );
+  }
+
+  return t('Installed the weight_kg field storage on Inventory Item.');
+}
+
+/**
  * Removes all traces of the cbr_number field from Drupal's tracking stores.
  *
  * The normal EntityDefinitionUpdateManager::uninstallFieldStorageDefinition()

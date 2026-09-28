@@ -31,6 +31,7 @@ class InventoryItemListBuilder extends HivelogListBuilder {
     $header['category'] = $this->t('Category');
     $header['unit'] = $this->t('Unit');
     $header['item_type'] = $this->t('Type');
+    $header['weight_kg'] = $this->t('Weight');
     $header['stock'] = $this->t('Stock on Hand');
     $header['status'] = $this->t('Status');
     return $header;
@@ -54,6 +55,9 @@ class InventoryItemListBuilder extends HivelogListBuilder {
 
     $item_type = $entity->get('item_type')->value;
     $row['item_type'] = $entity->get('item_type')->getSetting('allowed_values')[$item_type] ?? $item_type;
+
+    $weight_kg = $entity->get('weight_kg')->value;
+    $row['weight_kg'] = $weight_kg === NULL ? '' : rtrim(rtrim(number_format((float) $weight_kg, 3, '.', ''), '0'), '.') . ' kg';
 
     /** @var \Drupal\hivelog\Entity\InventoryItem $entity */
     $stock = $entity->getStockOnHand();

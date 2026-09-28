@@ -380,6 +380,24 @@ class InventoryItem extends ContentEntityBase implements EntityChangedInterface,
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
+    $fields['weight_kg'] = BaseFieldDefinition::create('decimal')
+      ->setLabel(t('Weight (kg)'))
+      ->setDescription(t('Optional: this item\'s own weight, in kilograms. Used to compute a hive\'s empty weight when this item is assigned as one of its components (see the Hive Components section on a hive\'s own page).'))
+      ->setSetting('precision', 10)
+      ->setSetting('scale', 3)
+      ->setSetting('min', 0)
+      ->setDisplayOptions('form', [
+        'type' => 'number',
+        'weight' => 7,
+      ])
+      ->setDisplayOptions('view', [
+        'label' => 'inline',
+        'type' => 'number_decimal',
+        'weight' => 7,
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
+
     $fields['status'] = BaseFieldDefinition::create('list_string')
       ->setLabel(t('Status'))
       ->setDescription(t('Discontinued items are hidden from new purchase/requirement selection, but remain listed here for management.'))
@@ -391,12 +409,12 @@ class InventoryItem extends ContentEntityBase implements EntityChangedInterface,
       ])
       ->setDisplayOptions('form', [
         'type' => 'options_select',
-        'weight' => 7,
+        'weight' => 8,
       ])
       ->setDisplayOptions('view', [
         'label' => 'inline',
         'type' => 'list_default',
-        'weight' => 7,
+        'weight' => 8,
       ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
@@ -406,7 +424,7 @@ class InventoryItem extends ContentEntityBase implements EntityChangedInterface,
       ->setDescription(t('The user who created this inventory item.'))
       ->setDisplayOptions('form', [
         'type' => 'entity_reference_autocomplete',
-        'weight' => 8,
+        'weight' => 9,
       ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);

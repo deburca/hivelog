@@ -70,6 +70,7 @@ class InventoryItemController extends ControllerBase {
         'name',
         'category',
         'unit',
+        'weight_kg',
         'status',
       ]),
       'type' => $this->buildSection($this->t('Type & Depreciation'), $inventory_item, [
@@ -142,6 +143,11 @@ class InventoryItemController extends ControllerBase {
       case 'low_stock_threshold':
         return [
           '#plain_text' => rtrim(rtrim(number_format((float) $field->value, 3, '.', ''), '0'), '.') . ' ' . $entity->get('unit')->value,
+        ];
+
+      case 'weight_kg':
+        return [
+          '#plain_text' => rtrim(rtrim(number_format((float) $field->value, 3, '.', ''), '0'), '.') . ' kg',
         ];
 
       default:
