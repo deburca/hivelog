@@ -21,6 +21,17 @@
  * submenu's links from the tab order entirely — a keyboard user tabbing
  * past a primary item must still be able to tab into its children.
  *
+ * Bug fix, found live on `/hivelog/hives`: `.has-active-child` was
+ * originally an *additional* trigger that force-opened a hub's
+ * dropdown too, on the theory that "you're in this section" should
+ * stay visible without hovering. It doesn't — `.hivelog-app-nav__submenu`
+ * is `position: absolute`, so a force-opened dropdown reserves no
+ * space in the page's own flow and instead floats on top of whatever
+ * renders right below the nav strip (here, the Hives table). Disclosure
+ * is `:hover`/`:focus-within` only now; `.has-active-child` still marks
+ * the hub's own pill (see that rule below), just without forcing its
+ * dropdown open.
+ *
  * Mobile (≤ 768px) drops the hover-gated dropdown entirely: every
  * accessible child renders always-visible, indented under its primary
  * parent — tapping a real `<a href>` navigates immediately with no
@@ -134,8 +145,7 @@
 }
 
 .hivelog-app-nav__item:hover > .hivelog-app-nav__submenu,
-.hivelog-app-nav__item:focus-within > .hivelog-app-nav__submenu,
-.hivelog-app-nav__item.has-active-child > .hivelog-app-nav__submenu {
+.hivelog-app-nav__item:focus-within > .hivelog-app-nav__submenu {
   opacity: 1;
   pointer-events: auto;
   transform: translateY(0);

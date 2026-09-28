@@ -30,8 +30,12 @@ order — use `opacity` + `pointer-events` instead).
       revealed via `:hover`/`:focus-within` on the primary item's
       wrapper. Keyboard-only navigation (Tab, no mouse) can reach every
       child link in source order without any child ever being skipped.
-  - [x] A hub with `has-active-child` (from [[0148-two-tier-app-nav-strip-rendering]])
-      renders its children open by default, not just on hover/focus.
+  - [x] ~~A hub with `has-active-child` renders its children open by
+      default, not just on hover/focus.~~ **Reverted post-ship — see
+      Implementation notes' "Regression found live" entry.** A real
+      user hit the bug this criterion's own original implementation
+      caused; `has-active-child` now only styles the hub's own pill
+      (unchanged), never force-opens its dropdown.
 - [x] Mobile (≤ 768px, the module's existing small-tablet breakpoint):
       the hover-gated behaviour is dropped entirely — every accessible
       child renders always-visible, indented under its primary parent
@@ -55,6 +59,25 @@ order — use `opacity` + `pointer-events` instead).
       phpcs genuinely doesn't apply to `.css` files.
 
 ## Implementation notes
+- **Regression found live on `cms2`, reported by the user, fixed same
+  day (2026-09-28):** on `/hivelog/hives`, the secondary nav appeared
+  as a permanent vertical block of links covering the top of the Hives
+  table. Root cause: `.has-active-child` was an *additional* trigger
+  that force-opened a hub's dropdown, on the theory that "you're in
+  this section" should stay visible without hovering — reasonable in
+  concept, wrong in practice, because `.hivelog-app-nav__submenu` is
+  `position: absolute` and reserves no space in the page's own layout
+  flow. A force-opened dropdown just floats on top of whatever content
+  happens to render immediately below the nav strip — here, the Hives
+  list's own filter form and table. Fixed by making disclosure
+  `:hover`/`:focus-within` only; `.has-active-child` still gives the
+  hub's own pill its outline treatment (unchanged), it just no longer
+  forces the dropdown itself open. Live-verified via the same
+  inline-CSS-injection technique this task's own notes already
+  describe (browser asset requests to `cms2` are still blocked in this
+  session): the Hives page now renders its filter form and table with
+  nothing overlapping, and hovering "Apiaries" still correctly opens
+  its dropdown, with "Hives" shown `is-active` inside it.
 - **Visual verification had a real obstacle, worked around, not
   skipped.** Every asset request to `cms2` in this session's browser
   tool returns `net::ERR_BLOCKED_BY_CLIENT` — site-wide (fonts, JS,
