@@ -13,10 +13,11 @@ matching the shape [[page-structure-consistency]]'s own
 [[0132-filters-on-hive-inspection-observation-lists]] already
 established for Hives, Inspections and Queen Observations — narrow the
 table, keep the filter state in the URL query string, Reset back to
-the bare collection route. Extends the same coverage to the seven
+the bare collection route. Extends the same coverage to the eight
 collection pages that still have none: Apiaries, Queens, Inventory
 Items, Inventory Purchases, Products, AI Provider Configs, Sensor
-Devices.
+Devices, API Clients (the last added to scope after the first seven
+were already underway — see [[0158-api-client-list-filters]]).
 
 ## Scope
 - In scope: a new `HivelogXFilterForm` per entity type (static
