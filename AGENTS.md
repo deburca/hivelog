@@ -510,12 +510,33 @@ for a route that must NOT get a breadcrumb.
 
 `build()` shape (task 0116's declarative refactor, extracted further into
 `HivelogEntityHierarchy` in tasks 0127/0120):
-- **Collections + the combined report** end with their own name as a terminal
-  crumb: `Home › HiveLog › <Plural>`. The label is read from each type's own
-  `label_collection` (`collectionLabels()`, task 0119) — no hand-maintained
-  route → label map.
-- **Site-wide `entity.<type>.add_form`** (no parent in the path) hang off their
-  collection: `Home › HiveLog › <Plural>`.
+- **Collections** end with their own name as a terminal crumb, read from
+  each type's own `label_collection` (`collectionLabels()`, task 0119) —
+  no hand-maintained route → label map. Ten of them (task 0153,
+  ADR-0105) thread through their own conceptual parent collection(s)
+  first — `Apiaries › Hives › Inspections`, `Apiaries › Hives › Queens
+  › Observations`, `Apiaries › Inventory › Purchases`, `Insights › AI
+  Providers`, and so on — via a **second, independent** declarative
+  map, `COLLECTION_ANCESTOR_ROUTE` (route name → its own parent
+  crumb's route), walked to the root by `addCollectionAncestryLinks()`.
+  This map is deliberately separate from `PARENT_FIELD` below: that one
+  walks a specific *instance's* real reference field for canonical/
+  edit/delete pages, and changing what one of its entries means would
+  silently deepen every such page's own breadcrumb too — this map only
+  ever fires for a *collection* route. Five of the ten use a shorter
+  breadcrumb-only label than their real `label_collection`
+  (Observations / Inventory / Purchases / AI Providers / Sensors —
+  `collectionCrumbLabel()`); the entity's own label, the nav strip and
+  the page's own heading are unchanged. The combined report and
+  Insights itself stay a flat single self-link — neither is in the
+  ancestor map.
+- **Site-wide `entity.<type>.add_form`** (no parent in the path) hang off
+  their own collection the same way that collection itself renders —
+  ancestor chain and label override included, so an add-form page can
+  never disagree with its own collection page about where that
+  collection sits (task 0153 fixed this exact drift: it originally
+  used a flat crumb regardless of whether the collection itself had
+  grown a chain).
 - **Canonical / edit / delete / Layout Builder / any other page** thread the
   route's "subject" entity's ancestor chain to the root, ending with a
   terminal crumb naming the current page (ADR-0102, task 0117): the entity's
