@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Drupal\collective;
 
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\Query\QueryInterface;
 use Drupal\Core\Url;
+use Drupal\collective\Form\ApiClientFilterForm;
 use Drupal\hivelog\HivelogListBuilder;
 
 /**
@@ -14,7 +16,7 @@ use Drupal\hivelog\HivelogListBuilder;
  * Mirrors `\Drupal\hivelog\ProductListBuilder`'s shape exactly (the
  * `hivelog:entity-table` SDC component, its own "Add" heading) — reusing
  * core's `HivelogListBuilder` base class, since `collective` depends on
- * `hivelog`.
+ * `hivelog`. Filtered by `ApiClientFilterForm` (task 0158).
  */
 class ApiClientListBuilder extends HivelogListBuilder {
 
@@ -62,6 +64,35 @@ class ApiClientListBuilder extends HivelogListBuilder {
    */
   protected function dateFormatter() {
     return \Drupal::service('date.formatter');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getFilterForm(): array {
+    return $this->formBuilder->getForm(ApiClientFilterForm::class);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function applyFilters(QueryInterface $query): void {
+    ApiClientFilterForm::apply($query, $this->currentFilters());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function hasActiveFilters(): bool {
+    return (bool) $this->currentFilters();
+  }
+
+  /**
+   * The current request's API client filter values, or `[]`.
+   */
+  protected function currentFilters(): array {
+    $request = $this->requestStack->getCurrentRequest();
+    return $request ? ApiClientFilterForm::extract($request) : [];
   }
 
 }
