@@ -63,13 +63,31 @@
 .hivelog-app-nav__link {
   display: inline-block;
   padding: 0.25rem 0.75rem;
-  border-radius: 999px;
   border: 1px solid var(--hivelog-border);
   background: var(--hivelog-surface-2);
   color: var(--hivelog-ink);
   font-size: 0.875rem;
   text-decoration: none;
   white-space: nowrap;
+  /*
+   * Task 0161: an elongated hexagon, not a pill — the honeycomb-cell
+   * shape a beekeeping app should lean into, per ADR-0012's own
+   * "the module stays palette-free but a shape is still a shape"
+   * spirit. Six points, flat top/bottom, angled left/right sides
+   * meeting at a point — `--hivelog-nav-hex-cut` is how far each top/
+   * bottom corner is pulled in from the box's own edge; the border
+   * renders correctly along every edge of the clipped shape, no
+   * separate border layer needed.
+   */
+  --hivelog-nav-hex-cut: 10px;
+  clip-path: polygon(
+    var(--hivelog-nav-hex-cut) 0%,
+    calc(100% - var(--hivelog-nav-hex-cut)) 0%,
+    100% 50%,
+    calc(100% - var(--hivelog-nav-hex-cut)) 100%,
+    var(--hivelog-nav-hex-cut) 100%,
+    0% 50%
+  );
 }
 
 .hivelog-app-nav__link:hover,
@@ -152,9 +170,11 @@
 }
 
 /* Inside the dropdown, a child link fills the panel's width and
- * left-aligns instead of staying a centred pill — standard dropdown-
- * menu shape. The mobile override below reverts this to the pill look,
- * since mobile drops the dropdown panel entirely. */
+ * left-aligns instead of staying a centred, self-contained shape —
+ * standard dropdown-menu row, just still hexagon-clipped rather than a
+ * plain rectangle (task 0161). The mobile override below reverts this
+ * to the standalone look, since mobile drops the dropdown panel
+ * entirely. */
 .hivelog-app-nav__submenu .hivelog-app-nav__link {
   display: block;
   width: 100%;
