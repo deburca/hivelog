@@ -24,11 +24,12 @@ site" testing culture, extended here to real hardware for the first
 time.
 
 ## Acceptance criteria
-- [ ] **Procurement — order placed 2026-09-21.** Most items expected by
-      end of this week; the LiFePO4 batteries (GLK-Technologies) are on
-      a separate delivery, expected the following week — do not start
-      the power-wiring or multi-day power smoke test criteria until
-      those actually arrive. Went through two corrections along the way
+- [x] **Procurement — order placed 2026-09-21, everything arrived
+      2026-09-28**: main order, the LiFePO4 batteries (separate
+      delivery), the weatherproofing items, and tools/consumables are
+      all confirmed in hand now — the power-wiring and multi-day power
+      smoke test criteria below are unblocked. Went through two
+      corrections along the way
       before ordering (a wrong charge-controller pairing dropped, then
       briefly reintroduced with the wrong chemistry, before landing on a
       genuinely dual-chemistry board) — this list is the reconciled
@@ -71,8 +72,8 @@ time.
         socket the solar panel's cable can plug into. Confirm the panel
         itself has (or you already own) a standard USB-A male-to-male
         cable to complete that link.
-      - **Weatherproofing — real options identified, not yet added to
-        the basket**: an IP65 ABS project box, ~115×90×55mm (Focket/
+      - **Weatherproofing — ordered and arrived 2026-09-28**: an IP65
+        ABS project box, ~115×90×55mm (Focket/
         Akozon/Tyenaza-family listings, ~DKK 80–97) for the main
         electronics — sized to comfortably fit the DevKitC board, LoRa
         breakout, HX711, TP5000 module, and battery together; a second,
@@ -102,8 +103,8 @@ time.
       ESP32/HX711/LoRa module directly; a boost-regulator variant of the
       charge-controller board would be redundant for this wiring, not an
       upgrade.
-- [ ] **Tools & consumables — reusable across builds, not part of the
-      device itself, and not yet confirmed on hand.**
+- [x] **Tools & consumables — reusable across builds, not part of the
+      device itself, confirmed on hand 2026-09-28.**
       - An assorted **Dupont jumper wire kit** (male-male, male-female,
         female-female) + a **breadboard**, for bench-prototyping the
         LoRa/HX711/ESP32 wiring and validating firmware before
@@ -207,9 +208,9 @@ time.
       reads battery voltage, sends both as a raw point-to-point LoRa
       packet, deep-sleeps — no LoRaWAN join, no gateway, per
       [[0075-sensor-hardware-and-connectivity-selection]]'s pilot
-      recommendation. **Not yet compiled, flashed, or validated against
-      real hardware** — this criterion isn't fully satisfied until it
-      is; see Implementation notes.
+      recommendation. **Compiles clean (2026-09-28) but not yet flashed
+      or validated against real hardware** — this criterion isn't fully
+      satisfied until it is; see Implementation notes.
 - [x] **Receiver firmware drafted** (`hardware/receiver/`, PlatformIO):
       receives the LoRa packet, reads its own signal RSSI, reads its
       locally stored configuration descriptor (downloaded via
@@ -217,7 +218,8 @@ time.
       during setup) for the endpoint URL and bearer token, `POST`s a
       batch of `weight_kg`/`battery_voltage`/`signal_rssi` to
       [[0077-sensor-ingestion-endpoint-and-device-auth]]'s endpoint.
-      **Not yet compiled, flashed, or validated against real hardware.**
+      **Compiles clean (2026-09-28, after fixing a missing `#include
+      <map>`) but not yet flashed or validated against real hardware.**
 - [ ] Register a real `SensorDevice` (`scope: hive`, `device_type:
       weight`, `transport: lorawan`) against a real test hive; download
       its config descriptor; copy it onto the receiver.
@@ -298,6 +300,33 @@ time.
   `TARE_OFFSET` are explicit TODO placeholders that must be set per
   physical build once real load cells are in hand — see the README's
   calibration procedure.
+- **2026-09-28 — everything ordered has arrived** (main order, the
+  separately-delivered LiFePO4 batteries, the weatherproofing items,
+  and tools/consumables), unblocking every remaining criterion below.
+  Compiled both firmware projects for the first time via `pio run`
+  (PlatformIO 6.2.0, `espressif32` platform 7.1.3) ahead of any actual
+  flashing, since that needed no physical board to catch — and it did:
+  **`hardware/receiver/src/main.cpp` failed to compile** —
+  `parsePacket()`/`loop()` use `std::map` but the file never included
+  `<map>` (only pulled in transitively before by something that no
+  longer provides it in this toolchain version). Fixed with one added
+  `#include <map>`. `hardware/oneof9/src/main.cpp` compiled clean on
+  the first try (RAM 7.1%, Flash 22.8%); the receiver compiles clean
+  now too (RAM 14.5%, Flash 75.6% — WiFi+TLS+JSON+LittleFS is
+  naturally heavier, still comfortably under the 4MB partition). Also
+  ran `pio check` (cppcheck) on both — nothing actionable: two
+  `setup()`/`loop()` "unused function" notes on `oneof9` are cppcheck
+  not recognising the Arduino framework's own entry points, and one
+  `preprocessorErrorDirective` inside `ArduinoJson`'s own header (a
+  known cppcheck/ArduinoJson macro-parsing limitation, not this
+  project's code, and irrelevant given the real compiler already
+  accepted it). This compile-check is a real, if partial, substitute
+  for "run against real hardware" — it proves the C++ is syntactically
+  and semantically valid for this exact toolchain/board target, but
+  says nothing about wiring correctness, HX711/LoRa timing, or the
+  still-placeholder pin assignments and calibration constants, all of
+  which still need the physical build and the acceptance criteria
+  below.
 
 ## Related
 - Project:: [[sensor-data-collection]]

@@ -24,6 +24,7 @@
 #include <SPI.h>
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
+#include <map>
 #include <time.h>
 
 #include "secrets.h"  // Copy secrets.h.example to secrets.h and fill in.
