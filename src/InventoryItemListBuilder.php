@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Drupal\hivelog;
 
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\Query\QueryInterface;
 use Drupal\Core\Url;
+use Drupal\hivelog\Form\HivelogInventoryItemFilterForm;
 
 /**
  * Provides a list builder for Inventory Item entities.
@@ -16,7 +18,7 @@ use Drupal\Core\Url;
  * ApiaryListBuilder::render(). The heading is self-built rather than
  * relying on the core Local Actions block, since this page moved onto the
  * site's front-end main menu where that block isn't guaranteed to be
- * placed.
+ * placed. Filtered by `HivelogInventoryItemFilterForm` (task 0156).
  */
 class InventoryItemListBuilder extends HivelogListBuilder {
 
@@ -82,6 +84,35 @@ class InventoryItemListBuilder extends HivelogListBuilder {
         'url' => Url::fromRoute('entity.inventory_purchase.collection')->toString(),
       ],
     ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getFilterForm(): array {
+    return $this->formBuilder->getForm(HivelogInventoryItemFilterForm::class);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function applyFilters(QueryInterface $query): void {
+    HivelogInventoryItemFilterForm::apply($query, $this->currentFilters());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function hasActiveFilters(): bool {
+    return (bool) $this->currentFilters();
+  }
+
+  /**
+   * The current request's inventory item filter values, or `[]`.
+   */
+  protected function currentFilters(): array {
+    $request = $this->requestStack->getCurrentRequest();
+    return $request ? HivelogInventoryItemFilterForm::extract($request) : [];
   }
 
 }

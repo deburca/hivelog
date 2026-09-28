@@ -5,14 +5,17 @@ declare(strict_types=1);
 namespace Drupal\hivelog;
 
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\Query\QueryInterface;
 use Drupal\Core\Url;
+use Drupal\hivelog\Form\HivelogInventoryPurchaseFilterForm;
 
 /**
  * Provides a list builder for Inventory Purchase entities.
  *
  * Builds the table using the hivelog:entity-table SDC component and its
  * own "Add Purchase" heading — see InventoryItemListBuilder for the full
- * rationale (mirrors ApiaryListBuilder/QueenListBuilder).
+ * rationale (mirrors ApiaryListBuilder/QueenListBuilder). Filtered by
+ * `HivelogInventoryPurchaseFilterForm` (task 0156).
  */
 class InventoryPurchaseListBuilder extends HivelogListBuilder {
 
@@ -67,6 +70,35 @@ class InventoryPurchaseListBuilder extends HivelogListBuilder {
         'url' => Url::fromRoute('entity.inventory_item.collection')->toString(),
       ],
     ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getFilterForm(): array {
+    return $this->formBuilder->getForm(HivelogInventoryPurchaseFilterForm::class);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function applyFilters(QueryInterface $query): void {
+    HivelogInventoryPurchaseFilterForm::apply($query, $this->currentFilters());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function hasActiveFilters(): bool {
+    return (bool) $this->currentFilters();
+  }
+
+  /**
+   * The current request's inventory purchase filter values, or `[]`.
+   */
+  protected function currentFilters(): array {
+    $request = $this->requestStack->getCurrentRequest();
+    return $request ? HivelogInventoryPurchaseFilterForm::extract($request) : [];
   }
 
 }

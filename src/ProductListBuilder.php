@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Drupal\hivelog;
 
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\Query\QueryInterface;
 use Drupal\Core\Url;
+use Drupal\hivelog\Form\HivelogProductFilterForm;
 
 /**
  * Provides a list builder for Product entities.
@@ -13,7 +15,8 @@ use Drupal\Core\Url;
  * Builds the table using the hivelog:entity-table SDC component (rather
  * than the inherited #type => 'table') and its own "Add Product" heading,
  * matching every other list page in the module — see
- * InventoryItemListBuilder::render().
+ * InventoryItemListBuilder::render(). Filtered by
+ * `HivelogProductFilterForm` (task 0156).
  */
 class ProductListBuilder extends HivelogListBuilder {
 
@@ -60,6 +63,35 @@ class ProductListBuilder extends HivelogListBuilder {
         'variant' => 'primary',
       ],
     ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getFilterForm(): array {
+    return $this->formBuilder->getForm(HivelogProductFilterForm::class);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function applyFilters(QueryInterface $query): void {
+    HivelogProductFilterForm::apply($query, $this->currentFilters());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function hasActiveFilters(): bool {
+    return (bool) $this->currentFilters();
+  }
+
+  /**
+   * The current request's product filter values, or `[]`.
+   */
+  protected function currentFilters(): array {
+    $request = $this->requestStack->getCurrentRequest();
+    return $request ? HivelogProductFilterForm::extract($request) : [];
   }
 
 }
