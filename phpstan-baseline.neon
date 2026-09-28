@@ -49,6 +49,12 @@ parameters:
 			path: modules/collective/src/Entity/ApiClient.php
 
 		-
+			message: '#^Unsafe usage of new static\(\)\.$#'
+			identifier: new.static
+			count: 1
+			path: modules/collective/src/Form/ApiClientFilterForm.php
+
+		-
 			message: '#^Call to an undefined method Drupal\\Core\\Entity\\ContentEntityInterface\|Drupal\\Core\\Entity\\RevisionLogInterface\:\:getPlainTextToken\(\)\.$#'
 			identifier: method.notFound
 			count: 1
@@ -101,6 +107,12 @@ parameters:
 			identifier: method.notFound
 			count: 1
 			path: modules/nanoprobe/src/Entity/SensorDevice.php
+
+		-
+			message: '#^Unsafe usage of new static\(\)\.$#'
+			identifier: new.static
+			count: 1
+			path: modules/nanoprobe/src/Form/SensorDeviceFilterForm.php
 
 		-
 			message: '#^Call to an undefined method Drupal\\Core\\Entity\\ContentEntityInterface\|Drupal\\Core\\Entity\\RevisionLogInterface\:\:getPlainTextToken\(\)\.$#'
@@ -197,6 +209,12 @@ parameters:
 			identifier: method.notFound
 			count: 1
 			path: modules/nexus/src/Entity/AiProviderConfig.php
+
+		-
+			message: '#^Unsafe usage of new static\(\)\.$#'
+			identifier: new.static
+			count: 1
+			path: modules/nexus/src/Form/AiProviderConfigFilterForm.php
 
 		-
 			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'

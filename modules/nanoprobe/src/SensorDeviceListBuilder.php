@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Drupal\nanoprobe;
 
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\Query\QueryInterface;
 use Drupal\Core\Url;
 use Drupal\hivelog\HivelogListBuilder;
+use Drupal\nanoprobe\Form\SensorDeviceFilterForm;
 
 /**
  * Provides a list builder for Sensor Device entities.
@@ -17,7 +19,7 @@ use Drupal\hivelog\HivelogListBuilder;
  * `hivelog`. Per-row `access('view')` filtering (SensorDevice is
  * apiary-scoped and multi-tenant) lives in `HivelogListBuilder::load()`,
  * the way `SensorPanelBuilder::loadAccessibleDevices()` already filters
- * elsewhere.
+ * elsewhere. Filtered by `SensorDeviceFilterForm` (task 0157).
  */
 class SensorDeviceListBuilder extends HivelogListBuilder {
 
@@ -82,6 +84,35 @@ class SensorDeviceListBuilder extends HivelogListBuilder {
    */
   protected function dateFormatter() {
     return \Drupal::service('date.formatter');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getFilterForm(): array {
+    return $this->formBuilder->getForm(SensorDeviceFilterForm::class);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function applyFilters(QueryInterface $query): void {
+    SensorDeviceFilterForm::apply($query, $this->currentFilters());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function hasActiveFilters(): bool {
+    return (bool) $this->currentFilters();
+  }
+
+  /**
+   * The current request's sensor device filter values, or `[]`.
+   */
+  protected function currentFilters(): array {
+    $request = $this->requestStack->getCurrentRequest();
+    return $request ? SensorDeviceFilterForm::extract($request) : [];
   }
 
 }

@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Drupal\nexus;
 
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\Query\QueryInterface;
 use Drupal\Core\Url;
 use Drupal\hivelog\HivelogListBuilder;
 use Drupal\nexus\Entity\AiProviderConfig;
+use Drupal\nexus\Form\AiProviderConfigFilterForm;
 
 /**
  * Provides a list builder for AI Provider Config entities.
@@ -15,7 +17,7 @@ use Drupal\nexus\Entity\AiProviderConfig;
  * Mirrors `\Drupal\collective\ApiClientListBuilder`'s shape exactly (the
  * `hivelog:entity-table` SDC component, its own "Add" heading) — reusing
  * core's `HivelogListBuilder` base class, since `nexus` depends on
- * `hivelog`.
+ * `hivelog`. Filtered by `AiProviderConfigFilterForm` (task 0157).
  */
 class AiProviderConfigListBuilder extends HivelogListBuilder {
 
@@ -66,6 +68,35 @@ class AiProviderConfigListBuilder extends HivelogListBuilder {
    */
   protected function dateFormatter() {
     return \Drupal::service('date.formatter');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getFilterForm(): array {
+    return $this->formBuilder->getForm(AiProviderConfigFilterForm::class);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function applyFilters(QueryInterface $query): void {
+    AiProviderConfigFilterForm::apply($query, $this->currentFilters());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function hasActiveFilters(): bool {
+    return (bool) $this->currentFilters();
+  }
+
+  /**
+   * The current request's AI provider config filter values, or `[]`.
+   */
+  protected function currentFilters(): array {
+    $request = $this->requestStack->getCurrentRequest();
+    return $request ? AiProviderConfigFilterForm::extract($request) : [];
   }
 
 }
