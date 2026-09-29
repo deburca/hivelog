@@ -1,13 +1,13 @@
 ---
 type: task
 tags: [hivelog/task]
-status: review
+status: done
 priority: medium
 project: "[[hive-component-weight-tracking]]"
 area: entity
 created: 2026-09-28
 branch: feature/0163-hive-component-entity-and-empty-weight
-release:
+release: 2.2.0
 depends-on: ["[[0162-inventory-item-weight-field]]"]
 blocked-by:
 ---

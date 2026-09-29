@@ -1,13 +1,13 @@
 ---
 type: task
 tags: [hivelog/task]
-status: review
+status: done
 priority: medium
 project: "[[hive-component-weight-tracking]]"
 area: entity
 created: 2026-09-28
 branch: feature/0164-net-colony-honey-weight-stat-tile
-release:
+release: 2.2.0
 depends-on: ["[[0163-hive-component-entity-and-empty-weight]]"]
 blocked-by:
 ---
