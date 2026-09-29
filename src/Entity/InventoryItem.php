@@ -471,7 +471,14 @@ class InventoryItem extends ContentEntityBase implements EntityChangedInterface,
       ->setSetting('min', 0)
       ->setDisplayOptions('form', [
         'type' => 'number',
-        'weight' => 6,
+        // 7, not 6 — swapped with weight_kg's own form weight below so
+        // the Overview vertical tab (InventoryItemForm::form()) shows
+        // Weight directly under Unit, ahead of this field, matching the
+        // view page's own field order (InventoryItemController::view()).
+        // The 'view' weight two lines down is untouched: that display
+        // isn't weight-sorted at all — the canonical page's own explicit
+        // per-section field-name arrays control its order instead.
+        'weight' => 7,
       ])
       ->setDisplayOptions('view', [
         'label' => 'inline',
@@ -489,7 +496,7 @@ class InventoryItem extends ContentEntityBase implements EntityChangedInterface,
       ->setSetting('min', 0)
       ->setDisplayOptions('form', [
         'type' => 'number',
-        'weight' => 7,
+        'weight' => 6,
       ])
       ->setDisplayOptions('view', [
         'label' => 'inline',

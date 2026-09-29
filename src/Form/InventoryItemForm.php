@@ -35,7 +35,7 @@ class InventoryItemForm extends ContentEntityForm {
         'title' => $this->t('Overview'),
         'weight' => 0,
         'open' => TRUE,
-        'fields' => ['apiary', 'name', 'category', 'unit', 'low_stock_threshold', 'status'],
+        'fields' => ['apiary', 'name', 'category', 'unit', 'weight_kg', 'low_stock_threshold', 'status'],
       ],
       'inventory_item_depreciation' => [
         'title' => $this->t('Type & Depreciation'),

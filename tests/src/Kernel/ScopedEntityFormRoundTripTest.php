@@ -234,6 +234,28 @@ class ScopedEntityFormRoundTripTest extends KernelTestBase {
   }
 
   /**
+   * Tests `weight_kg` sits in the Overview vertical tab, not floating loose.
+   *
+   * Regression test: task 0162 added `weight_kg` to
+   * `InventoryItem::baseFieldDefinitions()` but never added it to
+   * `InventoryItemForm::form()`'s own `inventory_item_overview` field
+   * list, so the widget rendered outside every vertical-tab `details`
+   * element (above the tabs entirely) instead of alongside Unit/Low
+   * Stock Threshold — fixed alongside this test.
+   */
+  public function testInventoryItemFormWeightFieldIsInOverviewTab(): void {
+    $item = InventoryItem::create(['apiary' => $this->apiary->id()]);
+    $form_object = \Drupal::entityTypeManager()->getFormObject('inventory_item', 'add');
+    $form_object->setEntity($item);
+    $form_state = new FormState();
+    $form = \Drupal::formBuilder()->buildForm($form_object, $form_state);
+
+    $this->assertEquals('inventory_item_overview', $form['weight_kg']['#group']);
+    $this->assertEquals('inventory_item_overview', $form['unit']['#group']);
+    $this->assertEquals('inventory_item_overview', $form['low_stock_threshold']['#group']);
+  }
+
+  /**
    * Tests InventoryPurchaseForm saves and redirects to the collection.
    */
   public function testInventoryPurchaseFormSavesAndRedirectsToCollection(): void {
