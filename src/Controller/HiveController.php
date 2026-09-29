@@ -588,6 +588,9 @@ class HiveController extends ControllerBase {
 
     $section = [
       '#type' => 'container',
+      // 'components' is the anchor task 0164's net-weight stat tile
+      // links to when a hive's composition is incomplete.
+      '#attributes' => ['id' => 'components'],
       'heading' => [
         '#type' => 'container',
         '#attributes' => ['class' => ['hivelog-list-heading']],

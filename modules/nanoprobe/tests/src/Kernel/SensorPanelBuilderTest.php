@@ -6,6 +6,9 @@ namespace Drupal\Tests\nanoprobe\Kernel;
 
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\Hive;
+use Drupal\hivelog\Entity\HiveComponent;
+use Drupal\hivelog\Entity\InventoryItem;
+use Drupal\hivelog\Entity\InventoryPurchase;
 use Drupal\nanoprobe\Entity\SensorDevice;
 use Drupal\nanoprobe\Entity\SensorReading;
 use Drupal\nanoprobe\SensorReadingRetentionService;
@@ -73,6 +76,9 @@ class SensorPanelBuilderTest extends KernelTestBase {
     $this->installEntitySchema('sensor_device');
     $this->installEntitySchema('sensor_reading');
     $this->installEntitySchema('sensor_reading_daily');
+    $this->installEntitySchema('inventory_item');
+    $this->installEntitySchema('inventory_purchase');
+    $this->installEntitySchema('hive_component');
     $this->installSchema('file', ['file_usage']);
 
     $role = Role::create(['id' => 'beekeeper', 'label' => 'Beekeeper']);
@@ -572,6 +578,106 @@ class SensorPanelBuilderTest extends KernelTestBase {
 
     $apiary_tiles = \Drupal::moduleHandler()->invokeAll('hivelog_apiary_stat_tiles', [$this->apiary]);
     $this->assertIsArray($apiary_tiles);
+  }
+
+  /**
+   * Tests the net colony weight tile is absent when there's no weight reading.
+   *
+   * Task 0164, ADR-0106 §6, state 1 — no accessible weight-scope
+   * device/reading at all, so `buildNetWeightTile()` contributes nothing
+   * (same "nothing to show" convention `buildDeviceStatTile()` itself
+   * already uses for a silent device).
+   */
+  public function testNetWeightTileAbsentWithoutWeightReading(): void {
+    $tiles = \Drupal::service('nanoprobe.sensor_panel_builder')->buildHiveStatTiles($this->hive);
+    $this->assertArrayNotHasKey('nanoprobe_net_weight', $tiles);
+  }
+
+  /**
+   * Tests the net colony weight tile flags an incomplete hive composition.
+   *
+   * Task 0164, ADR-0106 §6, state 2 — a weight reading exists, but the
+   * hive has no Hive Components yet, so Hive::getEmptyWeightKg() returns
+   * NULL. Unlike state 1, the tile still renders here (a working sensor
+   * with an unfinished composition should say *why* net weight is
+   * unavailable), linking to the Hive Components section.
+   */
+  public function testNetWeightTileShowsUnknownWhenCompositionIncomplete(): void {
+    $device = SensorDevice::create([
+      'label' => 'Weight Sensor',
+      'apiary' => $this->apiary->id(),
+      'hive' => $this->hive->id(),
+      'scope' => 'hive',
+      'device_type' => 'weight',
+      'uid' => $this->owner->id(),
+    ]);
+    $device->save();
+    $this->createReading($device, 'weight_kg', 42.0, 0);
+
+    $tiles = \Drupal::service('nanoprobe.sensor_panel_builder')->buildHiveStatTiles($this->hive);
+
+    $this->assertArrayHasKey('nanoprobe_net_weight', $tiles);
+    $tile = $tiles['nanoprobe_net_weight'];
+    $this->assertEquals('Unknown', $tile['value']);
+    $this->assertEquals('warning', $tile['sublabel_variant']);
+    $this->assertEquals('entity.hive.canonical', $tile['url']->getRouteName());
+    $this->assertEquals('components', $tile['url']->getOption('fragment'));
+  }
+
+  /**
+   * Tests the net colony weight tile computes the correct figure.
+   *
+   * Task 0164, ADR-0106 §6, state 3 — a weight reading and a fully
+   * weighed hive composition both exist: value = reading − empty weight.
+   */
+  public function testNetWeightTileShowsNetFigureWhenComplete(): void {
+    $device = SensorDevice::create([
+      'label' => 'Weight Sensor',
+      'apiary' => $this->apiary->id(),
+      'hive' => $this->hive->id(),
+      'scope' => 'hive',
+      'device_type' => 'weight',
+      'uid' => $this->owner->id(),
+    ]);
+    $device->save();
+    $this->createReading($device, 'weight_kg', 42.0, 0);
+
+    $item = InventoryItem::create([
+      'apiary' => $this->apiary->id(),
+      'name' => 'Brood Chamber (Wood, empty)',
+      'category' => 'equipment',
+      'unit' => 'each',
+      'item_type' => 'durable',
+      'useful_life_years' => 10,
+      'weight_kg' => 4.25,
+      'uid' => $this->owner->id(),
+    ]);
+    $item->save();
+    InventoryPurchase::create([
+      'apiary' => $this->apiary->id(),
+      'item' => $item->id(),
+      'purchase_date' => '2026-01-01',
+      'quantity' => 5,
+      'unit_price' => 20,
+      'uid' => $this->owner->id(),
+    ])->save();
+
+    HiveComponent::create([
+      'hive' => $this->hive->id(),
+      'item' => $item->id(),
+      'quantity' => 2,
+      'uid' => $this->owner->id(),
+    ])->save();
+
+    $tiles = \Drupal::service('nanoprobe.sensor_panel_builder')->buildHiveStatTiles($this->hive);
+
+    $this->assertArrayHasKey('nanoprobe_net_weight', $tiles);
+    $tile = $tiles['nanoprobe_net_weight'];
+    // Empty weight = 2 × 4.25 kg = 8.5 kg; net = 42.0 - 8.5 = 33.5 kg.
+    $this->assertEquals('33.5 kg', $tile['value']);
+    $this->assertEquals('default', $tile['sublabel_variant']);
+    $this->assertEquals('entity.sensor_device.readings', $tile['url']->getRouteName());
+    $this->assertEquals(['sensor_device' => $device->id()], $tile['url']->getRouteParameters());
   }
 
 }

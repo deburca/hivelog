@@ -172,7 +172,17 @@ class SensorPanelBuilder {
       'scope' => 'hive',
       'enabled' => 1,
     ]);
-    return $this->buildStatTiles($devices);
+    $tiles = $this->buildStatTiles($devices);
+
+    // Net colony + honey weight (task 0164, ADR-0106 §6): raw scale
+    // weight minus Hive::getEmptyWeightKg() — a beekeeping-relevant
+    // figure the raw per-device tile above doesn't give on its own.
+    $net_weight_tile = $this->buildNetWeightTile($hive, $devices);
+    if ($net_weight_tile) {
+      $tiles['nanoprobe_net_weight'] = $net_weight_tile;
+    }
+
+    return $tiles;
   }
 
   /**
@@ -260,6 +270,86 @@ class SensorPanelBuilder {
         : $this->t('Updated @time ago', ['@time' => $this->dateFormatter->formatTimeDiffSince($recorded)]),
       'sublabel_variant' => $is_stale ? 'warning' : 'default',
       'weight' => 10,
+    ];
+  }
+
+  /**
+   * Builds the net colony + honey weight stat tile, or NULL.
+   *
+   * Task 0164, ADR-0106 §6: `raw scale weight − Hive::getEmptyWeightKg()`
+   * — nothing else in `hivelog`/`nanoprobe` nets hive structure out of a
+   * sensor reading today. Weight 11 — right after the raw weight
+   * device's own tile (weight 10), so the two read together.
+   *
+   * Three states, matching the task's own spec exactly (deliberately no
+   * fourth "stale" state — `buildDeviceStatTile()`'s own tile for the
+   * same device already surfaces staleness separately):
+   * - No accessible weight-scope device/reading at all: NULL — omitted
+   *   entirely, same "nothing to show" convention `buildDeviceStatTile()`
+   *   itself already uses.
+   * - A reading exists but `getEmptyWeightKg()` is NULL (composition
+   *   incomplete): the tile still renders — a working sensor with an
+   *   unfinished composition should say *why* net weight is
+   *   unavailable, not silently vanish — linking to the Hive Components
+   *   section.
+   * - Both exist: the net figure, linking to the weight device's own
+   *   full-history page (same target `buildDeviceStatTile()`'s own tile
+   *   for that device links to).
+   *
+   * @param \Drupal\hivelog\Entity\Hive $hive
+   *   The hive being displayed.
+   * @param \Drupal\nanoprobe\Entity\SensorDevice[] $devices
+   *   This hive's already-loaded, access-filtered devices (from
+   *   `buildHiveStatTiles()`) — reused rather than re-querying.
+   *
+   * @return array|null
+   *   A tile descriptor, or NULL if there's no accessible weight
+   *   reading for this hive at all.
+   */
+  protected function buildNetWeightTile(Hive $hive, array $devices): ?array {
+    $weight_device = NULL;
+    foreach ($devices as $device) {
+      if ($device->get('device_type')->value === 'weight') {
+        $weight_device = $device;
+        break;
+      }
+    }
+    if (!$weight_device) {
+      return NULL;
+    }
+
+    $latest_by_metric = array_filter(
+      $this->getLatestReadingPerMetric($weight_device),
+      fn(SensorReading $reading) => $reading->access('view', $this->currentUser)
+    );
+    $reading = $latest_by_metric['weight_kg'] ?? NULL;
+    if (!$reading) {
+      return NULL;
+    }
+
+    $empty_weight_kg = $hive->getEmptyWeightKg();
+    if ($empty_weight_kg === NULL) {
+      return [
+        'value' => (string) $this->t('Unknown'),
+        'label' => (string) $this->t('Net Colony Weight'),
+        'url' => Url::fromRoute('entity.hive.canonical', ['hive' => $hive->id()], ['fragment' => 'components']),
+        'sublabel' => $this->t('Hive composition incomplete'),
+        'sublabel_variant' => 'warning',
+        'weight' => 11,
+      ];
+    }
+
+    $net = (float) $reading->get('value')->value - $empty_weight_kg;
+    $net_display = rtrim(rtrim(number_format($net, 2, '.', ''), '0'), '.');
+    $recorded = (int) $reading->get('recorded')->value;
+
+    return [
+      'value' => "$net_display kg",
+      'label' => (string) $this->t('Net Colony Weight'),
+      'url' => Url::fromRoute('entity.sensor_device.readings', ['sensor_device' => $weight_device->id()]),
+      'sublabel' => $this->t('Updated @time ago', ['@time' => $this->dateFormatter->formatTimeDiffSince($recorded)]),
+      'sublabel_variant' => 'default',
+      'weight' => 11,
     ];
   }
 
