@@ -166,6 +166,50 @@ entity.hive.delete_form:
       hive:
         type: entity:hive
 
+# Hive component routes (task 0163, ADR-0106) — no collection/canonical
+# route of its own, managed entirely from the embedded table on the
+# parent hive's canonical page (HiveController::buildComponentsSection()),
+# mirroring hivelog.calendar_action_item_requirement.add's exact shape.
+hivelog.hive_component.add:
+  path: '/hivelog/hive/{hive}/component/add'
+  defaults:
+    _controller: '\Drupal\hivelog\Controller\HiveController::addComponentForm'
+    _title: 'Add Hive Component'
+  requirements:
+    _permission: 'add hive component+administer hivelog'
+    _entity_access: 'hive.update'
+    _entity_create_access: 'hive_component'
+  options:
+    parameters:
+      hive:
+        type: entity:hive
+
+entity.hive_component.edit_form:
+  path: '/hivelog/hive-component/{hive_component}/edit'
+  defaults:
+    _entity_form: 'hive_component.edit'
+    _title: 'Edit Hive Component'
+  requirements:
+    _permission: 'edit own hive component+edit any hive component+administer hivelog'
+    _entity_access: 'hive_component.update'
+  options:
+    parameters:
+      hive_component:
+        type: entity:hive_component
+
+entity.hive_component.delete_form:
+  path: '/hivelog/hive-component/{hive_component}/delete'
+  defaults:
+    _entity_form: 'hive_component.delete'
+    _title: 'Delete Hive Component'
+  requirements:
+    _permission: 'delete own hive component+delete any hive component+administer hivelog'
+    _entity_access: 'hive_component.delete'
+  options:
+    parameters:
+      hive_component:
+        type: entity:hive_component
+
 # Inspection routes.
 entity.hive_inspection.collection:
   path: '/hivelog/inspections'

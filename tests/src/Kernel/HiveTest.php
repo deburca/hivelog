@@ -70,6 +70,11 @@ class HiveTest extends KernelTestBase {
     $this->installEntitySchema('calendar_action');
     $this->installEntitySchema('hive_action_log');
     $this->installEntitySchema('apiary_action_log');
+    // Task 0163: HiveController::view() now unconditionally queries
+    // hive_component (the new "Hive Components" section) for every hive
+    // page render, so any test rendering that page needs this schema
+    // installed even if the test itself never creates a component.
+    $this->installEntitySchema('hive_component');
     $this->installSchema('file', ['file_usage']);
 
     $this->apiary = Apiary::create(['name' => 'Test Apiary']);
@@ -342,9 +347,15 @@ class HiveTest extends KernelTestBase {
     $this->assertStringNotContainsString('22 kg', $svg);
     $this->assertStringNotContainsString('06/01', $svg);
 
-    // Histogram must appear before the inspections table.
+    // Histogram must appear before the inspections table. The first
+    // <table> on the page is now the Hive Components section (task
+    // 0163) — it always renders a table, even empty — so the
+    // inspections table is the *second* one; skip past the first to
+    // find it.
     $histogram_pos = strpos($html, 'hivelog-weight-histogram');
-    $table_pos = strpos($html, '<table');
+    $first_table_pos = strpos($html, '<table');
+    $this->assertNotFalse($first_table_pos);
+    $table_pos = strpos($html, '<table', $first_table_pos + 1);
     $this->assertNotFalse($histogram_pos);
     $this->assertNotFalse($table_pos);
     $this->assertLessThan($table_pos, $histogram_pos, 'Histogram should appear before the inspections table.');
@@ -661,10 +672,14 @@ class HiveTest extends KernelTestBase {
     $this->assertStringContainsString('32.5 kg', $html);
 
     // Verify Weight column appears before Queen column in the inspections
-    // table. Scope the search to the first <table> onward so the Queen
-    // section heading (rendered earlier on the page) doesn't confuse the
-    // ordering check.
-    $table_start = strpos($html, '<table');
+    // table. Scope the search to the inspections table onward so the
+    // Queen section heading (rendered earlier on the page) doesn't
+    // confuse the ordering check. The first <table> on the page is now
+    // the Hive Components section (task 0163) — it always renders a
+    // table, even empty — so the inspections table is the *second* one.
+    $first_table_pos = strpos($html, '<table');
+    $this->assertNotFalse($first_table_pos);
+    $table_start = strpos($html, '<table', $first_table_pos + 1);
     $this->assertNotFalse($table_start);
     $table_html = substr($html, $table_start);
     $weight_pos = strpos($table_html, '>Weight<');

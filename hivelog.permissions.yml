@@ -178,6 +178,22 @@ delete own calendar action item requirement:
 delete any calendar action item requirement:
   title: 'Delete any calendar action item requirement'
 
+# Hive component permissions (task 0163).
+view own hive component:
+  title: 'View own hive components'
+view any hive component:
+  title: 'View any hive component'
+add hive component:
+  title: 'Add hive components'
+edit own hive component:
+  title: 'Edit own hive components'
+edit any hive component:
+  title: 'Edit any hive component'
+delete own hive component:
+  title: 'Delete own hive components'
+delete any hive component:
+  title: 'Delete any hive component'
+
 # Inventory usage permissions.
 view own inventory usage:
   title: 'View own inventory usage records'

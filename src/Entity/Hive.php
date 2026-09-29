@@ -118,6 +118,45 @@ class Hive extends ContentEntityBase implements EntityChangedInterface, EntityOw
   }
 
   /**
+   * Returns this hive's empty (tare) weight, in kilograms.
+   *
+   * Sums `quantity × item.weight_kg` across every `HiveComponent` this
+   * hive is built from (task 0163, ADR-0106). Returns `NULL` — not a
+   * partial sum — if the hive has no components at all, or if any
+   * referenced component's item has no `weight_kg` set: a number that
+   * looks complete but silently excludes an unweighed component would be
+   * worse than an honest "unknown" (ADR-0106 §3).
+   *
+   * @return float|null
+   *   The empty weight in kg, or NULL if unknown/incomplete.
+   */
+  public function getEmptyWeightKg(): ?float {
+    if ($this->isNew()) {
+      return NULL;
+    }
+
+    $component_storage = $this->entityTypeManager()->getStorage('hive_component');
+    $component_ids = $component_storage->getQuery()
+      ->accessCheck(FALSE)
+      ->condition('hive', $this->id())
+      ->execute();
+    if (!$component_ids) {
+      return NULL;
+    }
+
+    $total = 0.0;
+    foreach ($component_storage->loadMultiple($component_ids) as $component) {
+      $item = $component->get('item')->entity;
+      if (!$item || $item->get('weight_kg')->isEmpty()) {
+        return NULL;
+      }
+      $total += (float) $component->get('quantity')->value * (float) $item->get('weight_kg')->value;
+    }
+
+    return $total;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public static function baseFieldDefinitions(EntityTypeInterface $entity_type) {

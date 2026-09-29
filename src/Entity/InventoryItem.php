@@ -135,6 +135,107 @@ class InventoryItem extends ContentEntityBase implements EntityChangedInterface,
   }
 
   /**
+   * Returns the total quantity of this item ever purchased, any item_type.
+   *
+   * Unlike `getStockOnHand()`, this is not consumable-only — a durable
+   * item (e.g. a hive component) is purchased in discrete quantities too,
+   * it just has no "usage" concept to net against. Used by
+   * `getAvailableForHiveAssignmentQuantity()` (task 0163's stock-
+   * availability guard on `HiveComponent`).
+   *
+   * @return float
+   *   Total purchased quantity, or `0.0` for an unsaved item or one with
+   *   no purchases yet — never NULL, since "never purchased" is a
+   *   meaningful, real value here, not an error.
+   */
+  public function getTotalPurchasedQuantity(): float {
+    if ($this->isNew()) {
+      return 0.0;
+    }
+
+    $purchase_storage = $this->entityTypeManager()->getStorage('inventory_purchase');
+    $purchase_ids = $purchase_storage->getQuery()
+      ->accessCheck(FALSE)
+      ->condition('item', $this->id())
+      ->execute();
+    if (!$purchase_ids) {
+      return 0.0;
+    }
+
+    $purchased = 0.0;
+    foreach ($purchase_storage->loadMultiple($purchase_ids) as $purchase) {
+      $purchased += (float) $purchase->get('quantity')->value;
+    }
+
+    return $purchased;
+  }
+
+  /**
+   * Returns how many units of this item are assigned to hives' components.
+   *
+   * Sums `quantity` across every `HiveComponent` row referencing this
+   * item, across every hive — an item is apiary-scoped, not hive-scoped,
+   * so its assignments compete across every hive in that apiary, not
+   * partitioned per hive.
+   *
+   * @param int|null $excludeHiveComponentId
+   *   A `HiveComponent` id to exclude from the sum — used when editing an
+   *   existing row's own quantity, so that row's *prior* value doesn't
+   *   count against itself.
+   *
+   * @return float
+   *   Total assigned quantity, or `0.0` for an unsaved item or one with
+   *   no assignments yet.
+   */
+  public function getAssignedToHivesQuantity(?int $excludeHiveComponentId = NULL): float {
+    if ($this->isNew()) {
+      return 0.0;
+    }
+
+    $component_storage = $this->entityTypeManager()->getStorage('hive_component');
+    $query = $component_storage->getQuery()
+      ->accessCheck(FALSE)
+      ->condition('item', $this->id());
+    if ($excludeHiveComponentId !== NULL) {
+      $query->condition('id', $excludeHiveComponentId, '<>');
+    }
+    $component_ids = $query->execute();
+    if (!$component_ids) {
+      return 0.0;
+    }
+
+    $assigned = 0.0;
+    foreach ($component_storage->loadMultiple($component_ids) as $component) {
+      $assigned += (float) $component->get('quantity')->value;
+    }
+
+    return $assigned;
+  }
+
+  /**
+   * Returns how many units of this item remain available for assignment.
+   *
+   * `getTotalPurchasedQuantity() - getAssignedToHivesQuantity()`. Always
+   * a real float, never `NULL` — an item nobody has ever purchased has a
+   * perfectly meaningful availability of `0.0`, not an unknown state
+   * (contrast `Hive::getEmptyWeightKg()`'s deliberate `NULL`-on-
+   * incomplete rule, a different situation: there, an unset component
+   * weight makes the *sum itself* unknowable, not merely zero).
+   *
+   * @param int|null $excludeHiveComponentId
+   *   Passed straight through to `getAssignedToHivesQuantity()` — see its
+   *   own docblock.
+   *
+   * @return float
+   *   The available quantity. May be negative in principle (more assigned
+   *   than ever purchased, e.g. after a purchase record is deleted) — a
+   *   real state worth surfacing as-is rather than clamping to zero.
+   */
+  public function getAvailableForHiveAssignmentQuantity(?int $excludeHiveComponentId = NULL): float {
+    return $this->getTotalPurchasedQuantity() - $this->getAssignedToHivesQuantity($excludeHiveComponentId);
+  }
+
+  /**
    * Whether this item's stock on hand is at or below its low-stock threshold.
    *
    * Always `FALSE` for a durable item (no stock-on-hand concept — see

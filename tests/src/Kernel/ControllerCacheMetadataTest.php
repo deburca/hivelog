@@ -57,6 +57,9 @@ class ControllerCacheMetadataTest extends KernelTestBase {
     $this->installEntitySchema('apiary');
     $this->installEntitySchema('hive');
     $this->installEntitySchema('hive_inspection');
+    // Task 0163: HiveController::view() now unconditionally queries
+    // hive_component for every hive page render.
+    $this->installEntitySchema('hive_component');
     $this->installEntitySchema('queen');
     $this->installEntitySchema('queen_observation');
     $this->installEntitySchema('calendar_action');

@@ -59,7 +59,10 @@ final class HivelogDeleteDependencyRegistry {
    * Keys: `adr_row` (ADR-0103's inventory row number, for cross-
    * reference — `19a`/`19b`/`20a`/`20b` split the ADR's single #19/#20
    * rows, which name "Hive/ApiaryActionLog" as one combined parent,
-   * into the two real reference fields involved), `parent` (entity
+   * into the two real reference fields involved; a later ADR extending
+   * this registry with its own new rows, e.g. ADR-0106's `0106-1`/
+   * `0106-2`, uses that ADR's own number instead of a bare integer, so
+   * it's never mistaken for one of ADR-0103's original 28), `parent` (entity
    * type ID), `child` (entity type ID), `field` (the child's reference
    * field naming the parent), `treatment`, and `manage` — either NULL
    * (no sensible single link; the count is shown alone), the literal
@@ -272,6 +275,29 @@ final class HivelogDeleteDependencyRegistry {
       'child' => 'harvest_yield',
       'field' => 'product',
       'treatment' => self::WARN,
+      'manage' => NULL,
+    ],
+    // ADR-0106 §4 (task 0163) — not part of ADR-0103's own inventory
+    // table (rows 1-28 above), hence the '0106-N' adr_row style rather
+    // than a bare number.
+    [
+      'adr_row' => '0106-1',
+      'parent' => 'hive',
+      'child' => 'hive_component',
+      'field' => 'hive',
+      'treatment' => self::CASCADE,
+      'manage' => NULL,
+    ],
+    [
+      'adr_row' => '0106-2',
+      'parent' => 'inventory_item',
+      'child' => 'hive_component',
+      'field' => 'item',
+      'treatment' => self::BLOCK,
+      // Same reasoning as row #24 (inventory_item →
+      // calendar_action_item_requirement): an item can be assigned to
+      // more than one hive's composition, so there's no single
+      // management target.
       'manage' => NULL,
     ],
   ];

@@ -387,7 +387,7 @@ parameters:
 		-
 			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
 			identifier: method.notFound
-			count: 25
+			count: 27
 			path: src/Controller/HiveController.php
 
 		-
@@ -577,6 +577,12 @@ parameters:
 			path: src/Entity/HarvestYield.php
 
 		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: src/Entity/Hive.php
+
+		-
 			message: '#^Call to an undefined method Drupal\\Core\\Field\\FieldDefinitionInterface\:\:setLabel\(\)\.$#'
 			identifier: method.notFound
 			count: 1
@@ -589,6 +595,18 @@ parameters:
 			path: src/Entity/HiveActionLog.php
 
 		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Entity/HiveComponent.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Field\\FieldDefinitionInterface\:\:setLabel\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Entity/HiveComponent.php
+
+		-
 			message: '#^Call to an undefined method Drupal\\Core\\Field\\FieldDefinitionInterface\:\:setLabel\(\)\.$#'
 			identifier: method.notFound
 			count: 1
@@ -597,7 +615,7 @@ parameters:
 		-
 			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
 			identifier: method.notFound
-			count: 7
+			count: 9
 			path: src/Entity/InventoryItem.php
 
 		-
@@ -725,6 +743,18 @@ parameters:
 			identifier: globalDrupalDependencyInjection.useDependencyInjection
 			count: 1
 			path: src/Form/HiveActionLogForm.php
+
+		-
+			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: src/Form/HiveComponentForm.php
+
+		-
+			message: '#^Method Drupal\\hivelog\\Form\\HiveComponentForm\:\:save\(\) should return int but return statement is missing\.$#'
+			identifier: return.missing
+			count: 2
+			path: src/Form/HiveComponentForm.php
 
 		-
 			message: '#^Method Drupal\\hivelog\\Form\\HiveForm\:\:save\(\) should return int but return statement is missing\.$#'
@@ -947,6 +977,12 @@ parameters:
 			identifier: method.notFound
 			count: 5
 			path: tests/src/Kernel/HarvestYieldReportingIntegrationTest.php
+
+		-
+			message: '#^Cannot call method getReferenceableEntities\(\) on object\|false\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/src/Kernel/HiveComponentTest.php
 
 		-
 			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'

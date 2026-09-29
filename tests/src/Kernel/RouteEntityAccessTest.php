@@ -12,6 +12,7 @@ use Drupal\hivelog\Entity\CalendarActionItemRequirement;
 use Drupal\hivelog\Entity\CalendarActionProductYield;
 use Drupal\hivelog\Entity\Hive;
 use Drupal\hivelog\Entity\HiveActionLog;
+use Drupal\hivelog\Entity\HiveComponent;
 use Drupal\hivelog\Entity\HiveInspection;
 use Drupal\hivelog\Entity\InventoryItem;
 use Drupal\hivelog\Entity\InventoryPurchase;
@@ -132,6 +133,7 @@ class RouteEntityAccessTest extends KernelTestBase {
     $this->installEntitySchema('product');
     $this->installEntitySchema('calendar_action_item_requirement');
     $this->installEntitySchema('calendar_action_product_yield');
+    $this->installEntitySchema('hive_component');
     $this->installSchema('file', ['file_usage']);
     \Drupal::service('router.builder')->rebuild();
 
@@ -145,6 +147,7 @@ class RouteEntityAccessTest extends KernelTestBase {
       'calendar action', 'hive action log', 'apiary action log',
       'inventory item', 'inventory purchase', 'product',
       'calendar action item requirement', 'calendar action product yield',
+      'hive component',
     ] as $phrase) {
       $permissions[] = 'view own ' . $phrase;
       $permissions[] = 'edit own ' . $phrase;
@@ -291,6 +294,15 @@ class RouteEntityAccessTest extends KernelTestBase {
     ]);
     $yield->save();
     $this->fixtures['calendar_action_product_yield'] = $yield;
+
+    $component = HiveComponent::create([
+      'hive' => $hive->id(),
+      'item' => $item->id(),
+      'quantity' => 1,
+      'uid' => $this->owner->id(),
+    ]);
+    $component->save();
+    $this->fixtures['hive_component'] = $component;
   }
 
   /**

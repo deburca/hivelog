@@ -31,6 +31,7 @@ trait ApiaryAccessTrait {
    * - InventoryPurchase: inventory_purchase → apiary directly.
    * - CalendarActionItemRequirement: calendar_action_item_requirement →
    *   calendar_action → apiary.
+   * - HiveComponent: hive_component → hive → apiary.
    * - InventoryUsage: inventory_usage → hive_action_log → hive → apiary,
    *   or → apiary_action_log → apiary directly (exactly one is set).
    * - Product: product → apiary directly.
@@ -135,6 +136,14 @@ trait ApiaryAccessTrait {
       $calendar_action = $entity->get('calendar_action')->entity;
       // @phpstan-ignore-next-line
       return $calendar_action ? $calendar_action->get('apiary')->entity : NULL;
+    }
+
+    // HiveComponent → hive → apiary.
+    if ($entity_type === 'hive_component') {
+      // @phpstan-ignore-next-line
+      $hive = $entity->get('hive')->entity;
+      // @phpstan-ignore-next-line
+      return $hive ? $hive->get('apiary')->entity : NULL;
     }
 
     // InventoryUsage → hive_action_log → hive → apiary, or →

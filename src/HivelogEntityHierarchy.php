@@ -45,6 +45,7 @@ final class HivelogEntityHierarchy {
     'product' => 'apiary',
     'calendar_action_item_requirement' => 'calendar_action',
     'calendar_action_product_yield' => 'calendar_action',
+    'hive_component' => 'hive',
   ];
 
   /**
@@ -136,6 +137,7 @@ final class HivelogEntityHierarchy {
     'api_client',
     'calendar_action_item_requirement',
     'calendar_action_product_yield',
+    'hive_component',
   ];
 
   /**

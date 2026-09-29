@@ -980,6 +980,26 @@ function hivelog_update_10030(&$sandbox) {
 }
 
 /**
+ * Installs the Hive Component entity type.
+ *
+ * Task 0163, ADR-0106 — the "recipe" line saying what a hive is
+ * physically built from, mirroring CalendarActionItemRequirement's own
+ * installation shape (hivelog_update_10021). The module is not yet in
+ * production, so no data migration is required.
+ */
+function hivelog_update_10031(&$sandbox) {
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+
+  if (!$entity_definition_update_manager->getEntityType('hive_component')) {
+    $hive_component_type = $entity_type_manager->getDefinition('hive_component');
+    $entity_definition_update_manager->installEntityType($hive_component_type);
+  }
+
+  return t('Installed the Hive Component entity type.');
+}
+
+/**
  * Removes all traces of the cbr_number field from Drupal's tracking stores.
  *
  * The normal EntityDefinitionUpdateManager::uninstallFieldStorageDefinition()

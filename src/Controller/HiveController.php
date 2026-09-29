@@ -131,6 +131,18 @@ class HiveController extends ControllerBase {
   }
 
   /**
+   * Provides the add form for a hive component within a hive context.
+   *
+   * Task 0163, ADR-0106 §2. Mirrors addForm()'s own shape.
+   */
+  public function addComponentForm(Hive $hive) {
+    $component = $this->entityTypeManager->getStorage('hive_component')->create([
+      'hive' => $hive->id(),
+    ]);
+    return $this->entityFormBuilder->getForm($component, 'add');
+  }
+
+  /**
    * Displays a hive with its inspections.
    */
   public function view(Hive $hive) {
@@ -156,6 +168,11 @@ class HiveController extends ControllerBase {
     $view_builder = $this->entityTypeManager->getViewBuilder('hive');
     $build['hive'] = $view_builder->view($hive);
     $build['hive']['#weight'] = 5;
+
+    // Hive Components (task 0163, ADR-0106) — what this hive is
+    // physically built from, and the empty weight computed from it.
+    [$components_section, $components] = $this->buildComponentsSection($hive);
+    $build['components'] = $components_section + ['#weight' => 6];
 
     // Render a letterboxed weight histogram for the year of the most recent
     // inspection, based on the full (unpaginated, unfiltered) inspection set
@@ -434,9 +451,20 @@ class HiveController extends ControllerBase {
       ->addCacheTags($this->entityTypeManager->getDefinition('queen_observation')->getListCacheTags())
       ->addCacheTags($this->entityTypeManager->getDefinition('calendar_action')->getListCacheTags())
       ->addCacheTags($this->entityTypeManager->getDefinition('hive_action_log')->getListCacheTags())
+      ->addCacheTags($this->entityTypeManager->getDefinition('hive_component')->getListCacheTags())
       ->setCacheMaxAge($this->calendarChecklistBuilder->secondsUntilNextIsoWeek());
     if ($active_queen) {
       $cache->addCacheableDependency($active_queen);
+    }
+    foreach ($components as $component) {
+      $cache->addCacheableDependency($component);
+      $item = $component->get('item')->entity;
+      if ($item) {
+        // The Empty Weight figure depends on each referenced item's own
+        // weight_kg — invalidate this page if that changes, not just on
+        // a HiveComponent row change.
+        $cache->addCacheableDependency($item);
+      }
     }
     foreach ($inspections as $inspection) {
       $cache->addCacheableDependency($inspection);
@@ -469,6 +497,133 @@ class HiveController extends ControllerBase {
    */
   public function title(Hive $hive) {
     return $hive->label();
+  }
+
+  /**
+   * Builds the embedded "Hive Components" section of the hive view page.
+   *
+   * What this hive is physically built from (task 0163, ADR-0106), plus
+   * the computed Empty Weight — mirrors
+   * CalendarActionController::buildRequirementsSection()'s heading+table
+   * shape exactly.
+   *
+   * @param \Drupal\hivelog\Entity\Hive $hive
+   *   The hive being rendered.
+   *
+   * @return array{0: array, 1: \Drupal\hivelog\Entity\HiveComponent[]}
+   *   Tuple of [render array, loaded component entities for cache deps].
+   */
+  protected function buildComponentsSection(Hive $hive): array {
+    $component_ids = $this->entityTypeManager
+      ->getStorage('hive_component')
+      ->getQuery()
+      ->accessCheck(TRUE)
+      ->condition('hive', $hive->id())
+      ->sort('id', 'ASC')
+      ->execute();
+    $components = $component_ids
+      ? $this->entityTypeManager->getStorage('hive_component')->loadMultiple($component_ids)
+      : [];
+
+    $header = [
+      $this->t('Item'),
+      $this->t('Quantity'),
+      $this->t('Unit Weight'),
+      $this->t('Subtotal'),
+      $this->t('Operations'),
+    ];
+
+    $rows = [];
+    $missing_weight_count = 0;
+    foreach ($components as $component) {
+      $item = $component->get('item')->entity;
+      $quantity = (float) $component->get('quantity')->value;
+      $weight_kg = $item && !$item->get('weight_kg')->isEmpty() ? (float) $item->get('weight_kg')->value : NULL;
+      if ($weight_kg === NULL) {
+        $missing_weight_count++;
+      }
+
+      $buttons = [];
+      if ($component->access('update')) {
+        $buttons[] = ['label' => (string) $this->t('Edit'), 'url' => $component->toUrl('edit-form')->toString()];
+      }
+      if ($component->access('delete')) {
+        $buttons[] = [
+          'label' => (string) $this->t('Delete'),
+          'url' => $component->toUrl('delete-form')->toString(),
+          'variant' => 'danger',
+        ];
+      }
+      $actions = [
+        '#type' => 'component',
+        '#component' => 'hivelog:button-group',
+        '#props' => ['buttons' => $buttons],
+      ];
+
+      $rows[] = [
+        'cells' => [
+          $item ? $item->toLink()->toString() : (string) $this->t('Unknown item'),
+          rtrim(rtrim(number_format($quantity, 3, '.', ''), '0'), '.'),
+          $weight_kg !== NULL ? rtrim(rtrim(number_format($weight_kg, 3, '.', ''), '0'), '.') . ' kg' : (string) $this->t('Not set'),
+          $weight_kg !== NULL ? rtrim(rtrim(number_format($quantity * $weight_kg, 3, '.', ''), '0'), '.') . ' kg' : '',
+          $this->renderer->renderInIsolation($actions),
+        ],
+      ];
+    }
+
+    if (!$components) {
+      $empty_weight_display = (string) $this->t('Empty weight: not yet composed.');
+    }
+    elseif ($missing_weight_count > 0) {
+      $empty_weight_display = (string) $this->t('Empty weight: incomplete — @count of @total components missing a weight.', [
+        '@count' => $missing_weight_count,
+        '@total' => count($components),
+      ]);
+    }
+    else {
+      $empty_weight_display = (string) $this->t('Empty weight: @weight kg.', [
+        '@weight' => rtrim(rtrim(number_format((float) $hive->getEmptyWeightKg(), 3, '.', ''), '0'), '.'),
+      ]);
+    }
+
+    $section = [
+      '#type' => 'container',
+      'heading' => [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['hivelog-list-heading']],
+        'title' => [
+          '#type' => 'html_tag',
+          // H2 (task 0128) — a top-level hive-page section.
+          '#tag' => 'h2',
+          '#value' => $this->t('Hive Components'),
+          '#attributes' => ['class' => ['hivelog-list-heading__title']],
+        ],
+        'add' => [
+          '#type' => 'component',
+          '#component' => 'hivelog:button',
+          '#props' => [
+            'label' => (string) $this->t('Add Component'),
+            'url' => Url::fromRoute('hivelog.hive_component.add', ['hive' => $hive->id()])->toString(),
+            'variant' => 'primary',
+            'extra_classes' => 'hivelog-list-heading__action',
+          ],
+        ],
+      ],
+      'table' => [
+        '#type' => 'component',
+        '#component' => 'hivelog:entity-table',
+        '#props' => [
+          'headers' => array_map('strval', $header),
+          'rows' => $rows,
+          'empty_message' => (string) $this->t('No components have been recorded for this hive yet.'),
+        ],
+      ],
+      'empty_weight' => [
+        '#markup' => '<p>' . $empty_weight_display . '</p>',
+      ],
+    ];
+
+    return [$section, $components];
   }
 
   /**
