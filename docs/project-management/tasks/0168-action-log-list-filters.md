@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: review
+status: done
 priority: medium
 project:
 area: routing
@@ -37,7 +37,7 @@ benefit most from filtering. Calendar Actions stays out of scope, as before.
 - [x] Empty-state message distinguishes "no rows" from "no rows match your
       filters" (as `HivelogListBuilder` already does for the others).
 - [x] Filters survive pagination on these lists.
-- [ ] Full suite green (see Implementation notes — running at commit time).
+- [x] Full suite green: 1,131 tests / 19,008 assertions, 0 failures, 0 errors.
 - [x] Kernel tests per form, following `ApiaryQueenFilterTest` /
       `InventoryProductFilterTest`.
 - [x] Verified live on `cms2` with throwaway fixtures, cleaned up afterward.
@@ -97,9 +97,17 @@ benefit most from filtering. Calendar Actions stays out of scope, as before.
 - Not done: heading cross-links ("View Hives" / "View Apiaries") on these
   two lists, as 0159 gave Hives/Inspections/Queen Observations — out of
   scope here.
-- **Full suite: started before this commit and still running when it was
-  made (about 5% through). Result to be recorded in a follow-up commit;
-  until then this task stays `review`, not `done`.**
+- **Full suite: 1,131 tests / 19,008 assertions, 0 failures, 0 errors**
+  (only the usual third-party deprecations and notices). It was *not* one
+  run: a single `phpunit` invocation over everything hit the background
+  time limit at 37%, and four parallel chunks hit it again at 47–78% (the
+  parallel runs slow each other down). The final result is seven
+  separately-completed runs — the 109 non-Functional test files split into
+  six chunks of about 170 tests by method count (167, 270, 167, 178, 173
+  and 166 tests, run four at a time then two) plus Functional (10). Every
+  file was in exactly one chunk; the chunk totals add up to the 1,131 the
+  single run reported. The task was committed in `review` before this
+  finished, and flipped to `done` in a follow-up commit.
 
 ## Related
 - Project:: [[collection-page-filter-coverage]] (done; follow-up)
