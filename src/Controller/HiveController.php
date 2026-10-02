@@ -682,15 +682,55 @@ class HiveController extends ControllerBase {
    *   The hive's currently active queen, if any.
    */
   protected function buildQueenSection(Hive $hive, ?Queen $queen): array {
+    // The heading row holds only the title and ONE right-aligned button
+    // group — the same shape HivelogListBuilder::render() and the other
+    // hive-page sections use. Previously the table and each button were
+    // direct children of the flex heading, each button carrying its own
+    // `margin-left: auto`, so the free space was split between them: Edit
+    // Queen floated mid-row, ungrouped from View all Queens.
+    $buttons = [];
+    if ($queen) {
+      // Note: no "Add Observation" button here — it lives on the Queen
+      // Observations column's own heading instead (see
+      // buildObservationsColumn()), alongside the observations it adds to.
+      $buttons[] = [
+        'label' => (string) $this->t('Edit Queen'),
+        'url' => $queen->toUrl('edit-form')->toString(),
+      ];
+    }
+    else {
+      $buttons[] = [
+        'label' => (string) $this->t('Add Queen'),
+        'url' => Url::fromRoute('hivelog.queen.add', ['hive' => $hive->id()])->toString(),
+        'variant' => 'primary',
+      ];
+    }
+    $buttons[] = [
+      'label' => (string) $this->t('View all Queens'),
+      'url' => Url::fromRoute('entity.queen.collection')->toString(),
+    ];
+
     $section = [
       '#type' => 'container',
-      '#attributes' => ['class' => ['hivelog-list-heading']],
-      'title' => [
-        '#type' => 'html_tag',
-        // H2 (task 0128) — a top-level hive-page section.
-        '#tag' => 'h2',
-        '#value' => $this->t('Queen'),
-        '#attributes' => ['class' => ['hivelog-list-heading__title']],
+      'heading' => [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['hivelog-list-heading']],
+        'title' => [
+          '#type' => 'html_tag',
+          // H2 (task 0128) — a top-level hive-page section.
+          '#tag' => 'h2',
+          '#value' => $this->t('Queen'),
+          '#attributes' => ['class' => ['hivelog-list-heading__title']],
+        ],
+        'actions' => [
+          '#type' => 'container',
+          '#attributes' => ['class' => ['hivelog-list-heading__action']],
+          'buttons' => [
+            '#type' => 'component',
+            '#component' => 'hivelog:button-group',
+            '#props' => ['buttons' => $buttons],
+          ],
+        ],
       ],
     ];
 
@@ -721,44 +761,12 @@ class HiveController extends ControllerBase {
           [$this->t('Introduced'), $queen->get('introduction_date')->value ?: $this->t('Not set')],
         ],
       ];
-      // Note: no "Add Observation" button here — it lives on the Queen
-      // Observations column's own heading instead (see
-      // buildObservationsColumn()), alongside the observations it adds to.
-      $section['edit'] = [
-        '#type' => 'component',
-        '#component' => 'hivelog:button',
-        '#props' => [
-          'label' => (string) $this->t('Edit Queen'),
-          'url' => $queen->toUrl('edit-form')->toString(),
-          'extra_classes' => 'hivelog-list-heading__action',
-        ],
-      ];
     }
     else {
       $section['empty'] = [
         '#markup' => '<p>' . $this->t('No active queen is recorded for this hive.') . '</p>',
       ];
-      $section['add'] = [
-        '#type' => 'component',
-        '#component' => 'hivelog:button',
-        '#props' => [
-          'label' => (string) $this->t('Add Queen'),
-          'url' => Url::fromRoute('hivelog.queen.add', ['hive' => $hive->id()])->toString(),
-          'variant' => 'primary',
-          'extra_classes' => 'hivelog-list-heading__action',
-        ],
-      ];
     }
-
-    $section['view_all'] = [
-      '#type' => 'component',
-      '#component' => 'hivelog:button',
-      '#props' => [
-        'label' => (string) $this->t('View all Queens'),
-        'url' => Url::fromRoute('entity.queen.collection')->toString(),
-        'extra_classes' => 'hivelog-list-heading__action',
-      ],
-    ];
 
     return $section;
   }

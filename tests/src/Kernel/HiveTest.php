@@ -552,6 +552,8 @@ class HiveTest extends KernelTestBase {
     // of whether this hive currently has an active queen.
     $this->assertStringContainsString('View all Queens', $html);
     $this->assertStringContainsString('/hivelog/queens', $html);
+
+    $this->assertQueenButtonsAreOneGroupInTheHeading($build, ['Add Queen', 'View all Queens']);
   }
 
   /**
@@ -631,6 +633,39 @@ class HiveTest extends KernelTestBase {
       $edit_pos,
       'Edit Queen button should render before Add Observation button.'
     );
+
+    $this->assertQueenButtonsAreOneGroupInTheHeading($build, ['Edit Queen', 'View all Queens']);
+  }
+
+  /**
+   * Asserts the Queen section's buttons are one group inside its heading row.
+   *
+   * Regression test: the buttons used to be separate flex children of the
+   * heading, each with its own `margin-left: auto`, so Edit Queen floated
+   * mid-row, ungrouped from View all Queens. The details table also sat
+   * inside the heading row. Now the heading row holds only the title and one
+   * `hivelog:button-group`, and the table is a sibling after it.
+   *
+   * @param array $build
+   *   The hive view render array.
+   * @param string[] $labels
+   *   The button labels expected in the group, in order.
+   */
+  protected function assertQueenButtonsAreOneGroupInTheHeading(array $build, array $labels): void {
+    $heading = $build['queen']['heading'];
+    $this->assertContains('hivelog-list-heading', $heading['#attributes']['class']);
+    $this->assertContains('hivelog-list-heading__action', $heading['actions']['#attributes']['class']);
+
+    $group = $heading['actions']['buttons'];
+    $this->assertSame('hivelog:button-group', $group['#component']);
+    $this->assertSame($labels, array_column($group['#props']['buttons'], 'label'));
+
+    // Nothing else in the heading row is a loose button or the table.
+    $children = array_values(array_filter(array_keys($heading), fn($key) => !str_starts_with((string) $key, '#')));
+    $this->assertSame(['title', 'actions'], $children);
+    $this->assertArrayNotHasKey('edit', $build['queen']);
+    $this->assertArrayNotHasKey('add', $build['queen']);
+    $this->assertArrayNotHasKey('view_all', $build['queen']);
   }
 
   /**

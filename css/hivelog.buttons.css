@@ -64,7 +64,10 @@
 
 /* Standalone buttons (not inside a group) get a right margin so
    adjacent siblings are spaced apart. Button groups manage their own
-   spacing via margin-left: -1px (border collapse) and need no margin. */
+   spacing via margin-left: -1px (border collapse) and need no margin —
+   hence the :not(): without it a group sitting inside one of these
+   wrappers (e.g. a heading row) picked up the margin too, leaving a gap
+   between its segments and a gap before the right edge. */
 :is(
   .hivelog-list-heading,
   .hivelog-filter-form__actions,
@@ -77,7 +80,7 @@
   .hivelog-dashboard__welcome-actions,
   .nanoprobe-sensor-device-actions,
   .collective-api-client-actions
-) .button {
+) .button:not(.hivelog-button-group .button) {
   margin-right: 0.5em;
 }
 
