@@ -169,6 +169,42 @@ IDs and keep applying.
   until it's an observed problem, not a speculative one — the module
   has no analytics and no reported complaint about strip height today.
 
+## Amendment — 2026-10-02 (task 0166): accessibility of the disclosure
+
+Recorded after the fact; the Decision above is unchanged.
+
+**What the CSS-only dropdown now exposes.** The strip is a labelled
+`role="navigation"` landmark ("HiveLog"). A hub's link carries an id, and
+its submenu is a `role="group"` named by that link, so a screen reader
+announces the section on entering it. Two CSS fixes came with it: a
+transparent strip bridging the 2px gap between a hub link and its panel
+(a pointer crossing the gap used to drop `:hover` and close the dropdown
+before it could be reached — WCAG 1.4.13 "hoverable"), and no
+transition under `prefers-reduced-motion`.
+
+**What it deliberately does not claim.**
+- `aria-haspopup="true"` / `role="menu"` / `role="menuitem"`: these promise
+  the ARIA menu keyboard model (arrow-key roving, typeahead) that this
+  disclosure doesn't implement. A hub is a real link that navigates, not a
+  menu button. The W3C "disclosure navigation" pattern uses a button plus
+  `aria-expanded`, which would mean splitting each hub into a link and a
+  toggle button.
+- `aria-expanded`: it would have to change with the dropdown's state, and
+  `:hover`/`:focus-within` state can't be reflected into an attribute
+  without script. A static value would be a lie.
+
+**Known gap: no Escape-to-dismiss.** WCAG 1.4.13 asks that content shown on
+hover or focus be dismissible without moving the pointer or focus. Closing
+a `:hover`/`:focus-within` panel on Escape is not possible in CSS. Options:
+(b) a progressive-enhancement script of roughly a dozen lines — on Escape,
+add a class that hides the open panel until focus leaves, and return focus
+to the hub link — which would amend this ADR's "no JavaScript" position and
+needs a new library and a place to ship it; or (c) the full disclosure
+pattern above. Not done: it is a change to a stated principle, so it is
+left for an explicit decision. Mitigations today: tabbing out of the panel
+closes it, the dropdown never covers the hub's own link, and on touch or
+narrow screens it is always open, so nothing needs dismissing.
+
 ## Related
 - Project:: [[in-app-navigation-restructuring]]
 - Decisions:: [[0102-breadcrumb-terminal-crumb-on-non-canonical-pages]],

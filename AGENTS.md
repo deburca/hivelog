@@ -719,11 +719,20 @@ accessible.
   via `HivelogEntityHierarchy::resolveSubject()`, the same one the
   breadcrumb trail uses) but now cascades: a hub whose *child* is active
   gets `has-active-child` on its own wrapper too. `css/hivelog.app-nav.css`
-  makes this a CSS-only (no JavaScript) dropdown on desktop/tablet
-  (`:hover`/`:focus-within`, opened unconditionally when
-  `has-active-child`) and an always-open, indented accordion on mobile
-  (≤ 768px) — tapping a real link navigates immediately, with no
-  hover/focus gesture to reveal a closed dropdown. Injected into
+  makes this a CSS-only (no JavaScript) dropdown opened by
+  `:hover`/`:focus-within` only (`has-active-child` marks the hub's pill
+  but deliberately doesn't force the dropdown open — it floats over the
+  page below), and an always-open, indented accordion on narrow screens
+  (≤ 768px) and on any device that can't hover (`@media (hover: none)`,
+  task 0165) — tapping a real link navigates immediately, with no
+  hover/focus gesture to reveal a closed dropdown. Accessibility (task
+  0166): the strip is a labelled `role="navigation"` landmark; a hub's
+  link gets an id (`hivelog-app-nav-<key>`) and its submenu is a
+  `role="group"` labelled by it. It deliberately claims no
+  `aria-haspopup` / `role="menu"` / `aria-expanded` — those promise a menu
+  keyboard model, or a state, that CSS alone can't deliver truthfully (see
+  ADR-0104's accessibility amendment, including the one known gap: no
+  Escape-to-dismiss). Injected into
   `page.content` via `hivelog_preprocess_page()` (task 0105; not a
   placed block or `hook_page_top()` — see that hook's own docblock in
   `hivelog.module`).

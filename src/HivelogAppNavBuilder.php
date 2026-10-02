@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\hivelog;
 
+use Drupal\Component\Utility\Html;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Routing\CurrentRouteMatch;
 use Drupal\Core\Session\AccountInterface;
@@ -135,13 +136,17 @@ class HivelogAppNavBuilder {
         $wrapper_classes[] = 'has-active-child';
       }
 
+      // Task 0166: a hub's link needs an id so its submenu can be labelled
+      // by it (`aria-labelledby`) — see buildSubmenu().
+      $hub_link_id = !empty($children_by_parent[$key]) ? 'hivelog-app-nav-' . Html::cleanCssIdentifier($key) : NULL;
+
       $rendered_items[$key] = [
         '#type' => 'container',
         '#attributes' => ['class' => $wrapper_classes],
-        'link' => $this->buildItemLink($item, $key === $active_key, $aria_current),
+        'link' => $this->buildItemLink($item, $key === $active_key, $aria_current, $hub_link_id),
       ];
-      if (!empty($children_by_parent[$key])) {
-        $rendered_items[$key]['submenu'] = $this->buildSubmenu($children_by_parent[$key], $active_key, $aria_current);
+      if ($hub_link_id !== NULL) {
+        $rendered_items[$key]['submenu'] = $this->buildSubmenu($children_by_parent[$key], $active_key, $aria_current, $hub_link_id);
       }
     }
 
@@ -157,7 +162,15 @@ class HivelogAppNavBuilder {
       // hivelog's own page-internal sections.
       '#weight' => -1000,
       '#type' => 'container',
-      '#attributes' => ['class' => ['hivelog-app-nav']],
+      // Task 0166: a labelled navigation landmark, so a screen reader user
+      // can jump to (and skip past) the strip. `role` on the container
+      // rather than a native <nav>: the render array is a plain container,
+      // and the two expose the same landmark.
+      '#attributes' => [
+        'class' => ['hivelog-app-nav'],
+        'role' => 'navigation',
+        'aria-label' => $this->t('HiveLog'),
+      ],
       '#attached' => ['library' => ['hivelog/app_nav']],
       '#cache' => [
         // `url.path` did nothing before task 0120 — output never
@@ -231,12 +244,15 @@ class HivelogAppNavBuilder {
    * — every link, at either tier, carries the same base class and
    * active-state treatment.
    */
-  protected function buildItemLink(array $item, bool $is_active, ?string $aria_current): array {
+  protected function buildItemLink(array $item, bool $is_active, ?string $aria_current, ?string $id = NULL): array {
     $classes = ['hivelog-app-nav__link'];
     $attributes = [];
     if ($is_active) {
       $classes[] = 'is-active';
       $attributes['aria-current'] = $aria_current;
+    }
+    if ($id !== NULL) {
+      $attributes['id'] = $id;
     }
     return [
       '#type' => 'link',
@@ -261,11 +277,13 @@ class HivelogAppNavBuilder {
    *   The active item's key, from `resolveActiveItem()`.
    * @param string|null $aria_current
    *   The `aria-current` value to use if a child is the active item.
+   * @param string $hub_link_id
+   *   The id of the hub's own link, which labels this group.
    *
    * @return array
    *   A render array for the submenu container.
    */
-  protected function buildSubmenu(array $children, ?string $active_key, ?string $aria_current): array {
+  protected function buildSubmenu(array $children, ?string $active_key, ?string $aria_current, string $hub_link_id): array {
     $links = [];
     $previous_group = NULL;
     $separator_index = 0;
@@ -288,9 +306,19 @@ class HivelogAppNavBuilder {
       $links[$key] = $this->buildItemLink($item, $key === $active_key, $aria_current);
     }
 
+    // Task 0166: a labelled group, named by its hub's link, so a screen
+    // reader announces which section the links belong to on entering it.
+    // Deliberately NOT `aria-haspopup` / `role="menu"`: those promise the
+    // menu keyboard model (arrow-key roving, typeahead) this CSS-only
+    // disclosure doesn't implement, and `aria-expanded` can't be kept
+    // truthful without script (ADR-0104 amendment, task 0166).
     return [
       '#type' => 'container',
-      '#attributes' => ['class' => ['hivelog-app-nav__submenu']],
+      '#attributes' => [
+        'class' => ['hivelog-app-nav__submenu'],
+        'role' => 'group',
+        'aria-labelledby' => $hub_link_id,
+      ],
     ] + $links;
   }
 

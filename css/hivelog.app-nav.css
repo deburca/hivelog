@@ -170,6 +170,23 @@
   transition: opacity 0.15s ease-in-out, transform 0.15s ease-in-out;
 }
 
+/*
+ * Task 0166 (WCAG 1.4.13, "hoverable"): the panel sits 2px below its hub
+ * link (`margin-top`), and that gap belongs to neither the item nor the
+ * panel, so a pointer crossing it dropped :hover and closed the dropdown
+ * before it could be reached. This invisible strip, part of the panel's own
+ * box, bridges it. It inherits the panel's `pointer-events: none` while the
+ * panel is closed, so it can never open the dropdown by itself.
+ */
+.hivelog-app-nav__submenu::before {
+  content: "";
+  position: absolute;
+  top: -4px;
+  left: 0;
+  right: 0;
+  height: 4px;
+}
+
 .hivelog-app-nav__item:hover > .hivelog-app-nav__submenu,
 .hivelog-app-nav__item:focus-within > .hivelog-app-nav__submenu {
   opacity: 1;
@@ -188,6 +205,13 @@
   width: 100%;
   text-align: left;
   white-space: nowrap;
+}
+
+/* Task 0166: no sliding/fading for people who ask for less motion. */
+@media (prefers-reduced-motion: reduce) {
+  .hivelog-app-nav__submenu {
+    transition: none;
+  }
 }
 
 @media (max-width: 768px), (hover: none) {
@@ -226,6 +250,13 @@
     display: inline-block;
     width: auto;
     text-align: center;
+  }
+
+  /* No dropdown here, so no hover gap to bridge — and a statically
+   * positioned panel would anchor the strip to a distant ancestor and
+   * could swallow clicks. */
+  .hivelog-app-nav__submenu::before {
+    content: none;
   }
 
   .hivelog-app-nav__separator {

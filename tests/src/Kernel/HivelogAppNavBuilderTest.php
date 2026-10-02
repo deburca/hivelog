@@ -469,4 +469,84 @@ class HivelogAppNavBuilderTest extends KernelTestBase {
     $this->assertArrayNotHasKey('hivelog_app_nav', $variables['page']['content']);
   }
 
+  /**
+   * Tests the strip is a labelled navigation landmark (task 0166).
+   */
+  public function testNavIsLabelledLandmark(): void {
+    $this->loginAdmin();
+    $build = \Drupal::service('hivelog.app_nav_builder')->build();
+
+    $this->assertSame('navigation', $build['#attributes']['role']);
+    $this->assertSame('HiveLog', (string) $build['#attributes']['aria-label']);
+  }
+
+  /**
+   * Tests a hub's submenu is a group labelled by the hub's own link.
+   *
+   * Task 0166. Renders the nav to HTML so the `id` / `aria-labelledby` pair
+   * is checked as it reaches the browser, not just as render-array keys.
+   */
+  public function testHubSubmenuIsGroupLabelledByItsHubLink(): void {
+    $this->loginAdmin();
+    $build = \Drupal::service('hivelog.app_nav_builder')->build();
+
+    $this->assertSame('hivelog-app-nav-apiaries', $build['apiaries']['link']['#attributes']['id']);
+    $submenu = $build['apiaries']['submenu']['#attributes'];
+    $this->assertSame('group', $submenu['role']);
+    $this->assertSame('hivelog-app-nav-apiaries', $submenu['aria-labelledby']);
+
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+    $this->assertStringContainsString('id="hivelog-app-nav-apiaries"', $html);
+    $this->assertStringContainsString('aria-labelledby="hivelog-app-nav-apiaries"', $html);
+    $this->assertSame(1, substr_count($html, 'id="hivelog-app-nav-apiaries"'), 'The id must be unique.');
+  }
+
+  /**
+   * Tests an item with no children gets no id and no group.
+   */
+  public function testItemWithoutChildrenHasNoIdOrGroup(): void {
+    $this->loginAdmin();
+    $build = \Drupal::service('hivelog.app_nav_builder')->build();
+
+    $this->assertArrayNotHasKey('id', $build['dashboard']['link']['#attributes']);
+    $this->assertArrayNotHasKey('submenu', $build['dashboard']);
+  }
+
+  /**
+   * Tests the strip claims no menu or expanded-state semantics (task 0166).
+   *
+   * A regression guard for a deliberate decision: `aria-haspopup` /
+   * `role="menu"` promise arrow-key menu behaviour this CSS-only disclosure
+   * doesn't implement, and `aria-expanded` can't be kept truthful without
+   * script. If a script is ever added (ADR-0104 amendment), this test is
+   * the thing to revisit.
+   */
+  public function testNoMenuOrExpandedSemanticsAreClaimed(): void {
+    $this->loginAdmin();
+    $build = \Drupal::service('hivelog.app_nav_builder')->build();
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+
+    foreach (['aria-haspopup', 'aria-expanded', 'role="menu"', 'role="menuitem"'] as $forbidden) {
+      $this->assertStringNotContainsString($forbidden, $html);
+    }
+  }
+
+  /**
+   * Tests the decorative group separators stay hidden from assistive tech.
+   */
+  public function testSeparatorsStayAriaHidden(): void {
+    $this->loginAdmin();
+    $build = \Drupal::service('hivelog.app_nav_builder')->build();
+
+    $separators = array_filter(
+      $build['apiaries']['submenu'],
+      fn($key) => is_string($key) && str_starts_with($key, 'hivelog_app_nav_separator_'),
+      ARRAY_FILTER_USE_KEY
+    );
+    $this->assertNotEmpty($separators, 'Apiaries mixes groups, so it has a separator.');
+    foreach ($separators as $separator) {
+      $this->assertSame('true', $separator['#attributes']['aria-hidden']);
+    }
+  }
+
 }

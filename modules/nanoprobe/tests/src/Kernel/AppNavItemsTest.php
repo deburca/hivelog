@@ -124,4 +124,15 @@ class AppNavItemsTest extends KernelTestBase {
     $this->assertNotContains('has-active-child', $build['apiaries']['#attributes']['class'], 'Only the hub that owns the active child is marked.');
   }
 
+  /**
+   * Tests the Insights hub's submenu is labelled by the Insights link (task 0166).
+   */
+  public function testInsightsSubmenuIsGroupLabelledByItsHubLink(): void {
+    $build = \Drupal::service('hivelog.app_nav_builder')->build();
+
+    $this->assertSame('hivelog-app-nav-insights', $build['insights']['link']['#attributes']['id']);
+    $this->assertSame('group', $build['insights']['submenu']['#attributes']['role']);
+    $this->assertSame('hivelog-app-nav-insights', $build['insights']['submenu']['#attributes']['aria-labelledby']);
+  }
+
 }
