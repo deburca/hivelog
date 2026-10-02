@@ -189,4 +189,26 @@ class ApiaryQueenFilterTest extends KernelTestBase {
     return $reset;
   }
 
+  /**
+   * Tests the Queens list's empty state distinguishes filtered from unfiltered.
+   *
+   * Task 0170: only some lists had this assertion.
+   */
+  public function testQueenListEmptyStateDistinguishesFilteredFromUnfiltered(): void {
+    $this->pushRoutedRequest('entity.queen.collection', '/hivelog/queens');
+    $build = \Drupal::entityTypeManager()->getListBuilder('queen')->render();
+    $this->assertStringContainsString('There are no', $build['table']['#props']['empty_message']);
+
+    $apiary = Apiary::create(['name' => 'Test Apiary']);
+    $apiary->save();
+    $hive = Hive::create(['name' => 'Test Hive', 'apiary' => $apiary->id(), 'status' => 'active']);
+    $hive->save();
+    Queen::create(['name' => 'Q1', 'hive' => $hive->id(), 'queen_year' => 2025, 'status' => 'active'])->save();
+
+    $this->pushRoutedRequest('entity.queen.collection', '/hivelog/queens', ['status' => 'inactive']);
+    $build = \Drupal::entityTypeManager()->getListBuilder('queen')->render();
+    $this->assertCount(0, $build['table']['#props']['rows']);
+    $this->assertStringContainsString('match the current filters', $build['table']['#props']['empty_message']);
+  }
+
 }

@@ -130,4 +130,41 @@ class ApiClientFilterTest extends KernelTestBase {
     return $reset;
   }
 
+  /**
+   * Asserts the list pages over its filtered set and keeps the filter.
+   *
+   * Task 0170. Five rows are expected to exist, three matching `$query`;
+   * page size is forced to two.
+   */
+  protected function assertPagesOverFilteredSet(string $entity_type, string $route_name, string $path, array $query): void {
+    $list_builder = \Drupal::entityTypeManager()->getListBuilder($entity_type);
+    (new \ReflectionProperty($list_builder, 'limit'))->setValue($list_builder, 2);
+
+    $this->pushRoutedRequest($route_name, $path, $query);
+    $build = $list_builder->render();
+    $this->assertCount(2, $build['table']['#props']['rows'], 'Page one holds a full page of matching rows.');
+    $this->assertSame('pager', $build['pager']['#type']);
+
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build['pager']);
+    $key = array_key_first($query);
+    $this->assertStringContainsString($key . '=' . $query[$key], $html, 'Pager links must carry the active filter.');
+
+    $this->pushRoutedRequest($route_name, $path, $query + ['page' => '1']);
+    $build = $list_builder->render();
+    $this->assertCount(1, $build['table']['#props']['rows'], 'Page two holds only the remaining matching row.');
+  }
+
+  /**
+   * Tests the API Clients list pages over the filtered set (task 0170).
+   */
+  public function testListPagesOverFilteredSet(): void {
+    foreach ([1, 2, 3] as $i) {
+      ApiClient::create(['label' => "Retired $i", 'enabled' => FALSE])->save();
+    }
+    foreach ([1, 2] as $i) {
+      ApiClient::create(['label' => "Live $i", 'enabled' => TRUE])->save();
+    }
+    $this->assertPagesOverFilteredSet('api_client', 'entity.api_client.collection', '/hivelog/api-clients', ['enabled' => '0']);
+  }
+
 }

@@ -264,4 +264,50 @@ class FullListFilterTest extends KernelTestBase {
     return $reset;
   }
 
+  /**
+   * Tests the Inspections list's empty state distinguishes filtered from unfiltered.
+   *
+   * Task 0170: only some lists had this assertion.
+   */
+  public function testInspectionListEmptyStateDistinguishesFilteredFromUnfiltered(): void {
+    $this->pushRoutedRequest('entity.hive_inspection.collection', '/hivelog/inspections');
+    $build = \Drupal::entityTypeManager()->getListBuilder('hive_inspection')->render();
+    $this->assertStringContainsString('There are no', $build['table']['#props']['empty_message']);
+
+    $apiary = Apiary::create(['name' => 'Test Apiary']);
+    $apiary->save();
+    $hive = Hive::create(['name' => 'Test Hive', 'apiary' => $apiary->id(), 'status' => 'active']);
+    $hive->save();
+    HiveInspection::create(['hive' => $hive->id(), 'inspection_date' => '2026-01-15'])->save();
+
+    $this->pushRoutedRequest('entity.hive_inspection.collection', '/hivelog/inspections', ['date_from' => '2030-01-01']);
+    $build = \Drupal::entityTypeManager()->getListBuilder('hive_inspection')->render();
+    $this->assertCount(0, $build['table']['#props']['rows']);
+    $this->assertStringContainsString('match the current filters', $build['table']['#props']['empty_message']);
+  }
+
+  /**
+   * Tests the Queen Observations list's empty state distinguishes filtered from unfiltered.
+   *
+   * Task 0170: only some lists had this assertion.
+   */
+  public function testQueenObservationListEmptyStateDistinguishesFilteredFromUnfiltered(): void {
+    $this->pushRoutedRequest('entity.queen_observation.collection', '/hivelog/queen-observations');
+    $build = \Drupal::entityTypeManager()->getListBuilder('queen_observation')->render();
+    $this->assertStringContainsString('There are no', $build['table']['#props']['empty_message']);
+
+    $apiary = Apiary::create(['name' => 'Test Apiary']);
+    $apiary->save();
+    $hive = Hive::create(['name' => 'Test Hive', 'apiary' => $apiary->id(), 'status' => 'active']);
+    $hive->save();
+    $queen = Queen::create(['name' => 'Q1', 'hive' => $hive->id(), 'queen_year' => 2025, 'status' => 'active']);
+    $queen->save();
+    QueenObservation::create(['queen' => $queen->id(), 'observation_date' => '2026-01-01', 'health' => 'good'])->save();
+
+    $this->pushRoutedRequest('entity.queen_observation.collection', '/hivelog/queen-observations', ['obs_health' => 'poor']);
+    $build = \Drupal::entityTypeManager()->getListBuilder('queen_observation')->render();
+    $this->assertCount(0, $build['table']['#props']['rows']);
+    $this->assertStringContainsString('match the current filters', $build['table']['#props']['empty_message']);
+  }
+
 }

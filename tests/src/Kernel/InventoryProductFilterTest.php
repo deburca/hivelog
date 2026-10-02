@@ -282,4 +282,57 @@ class InventoryProductFilterTest extends KernelTestBase {
     return $reset;
   }
 
+  /**
+   * Tests the Inventory Purchases list's empty state distinguishes filtered from unfiltered.
+   *
+   * Task 0170: only some lists had this assertion.
+   */
+  public function testInventoryPurchaseListEmptyStateDistinguishesFilteredFromUnfiltered(): void {
+    $this->pushRoutedRequest('entity.inventory_purchase.collection', '/hivelog/inventory-purchases');
+    $build = \Drupal::entityTypeManager()->getListBuilder('inventory_purchase')->render();
+    $this->assertStringContainsString('There are no', $build['table']['#props']['empty_message']);
+
+    $apiary = Apiary::create(['name' => 'Test Apiary']);
+    $apiary->save();
+    $item = InventoryItem::create([
+      'apiary' => $apiary->id(),
+      'name' => 'Sugar',
+      'unit' => 'kg',
+      'item_type' => 'consumable',
+    ]);
+    $item->save();
+    InventoryPurchase::create([
+      'apiary' => $apiary->id(),
+      'item' => $item->id(),
+      'purchase_date' => '2026-01-15',
+      'quantity' => 1,
+      'unit_price' => 1,
+    ])->save();
+
+    $this->pushRoutedRequest('entity.inventory_purchase.collection', '/hivelog/inventory-purchases', ['date_from' => '2030-01-01']);
+    $build = \Drupal::entityTypeManager()->getListBuilder('inventory_purchase')->render();
+    $this->assertCount(0, $build['table']['#props']['rows']);
+    $this->assertStringContainsString('match the current filters', $build['table']['#props']['empty_message']);
+  }
+
+  /**
+   * Tests the Products list's empty state distinguishes filtered from unfiltered.
+   *
+   * Task 0170: only some lists had this assertion.
+   */
+  public function testProductListEmptyStateDistinguishesFilteredFromUnfiltered(): void {
+    $this->pushRoutedRequest('entity.product.collection', '/hivelog/products');
+    $build = \Drupal::entityTypeManager()->getListBuilder('product')->render();
+    $this->assertStringContainsString('There are no', $build['table']['#props']['empty_message']);
+
+    $apiary = Apiary::create(['name' => 'Test Apiary']);
+    $apiary->save();
+    Product::create(['apiary' => $apiary->id(), 'name' => 'Honey', 'unit' => 'kg', 'status' => 'active'])->save();
+
+    $this->pushRoutedRequest('entity.product.collection', '/hivelog/products', ['status' => 'discontinued']);
+    $build = \Drupal::entityTypeManager()->getListBuilder('product')->render();
+    $this->assertCount(0, $build['table']['#props']['rows']);
+    $this->assertStringContainsString('match the current filters', $build['table']['#props']['empty_message']);
+  }
+
 }

@@ -100,4 +100,28 @@ class AppNavItemsTest extends KernelTestBase {
     $this->assertEquals('hivelog.nav_item:insights', $definitions['hivelog.nav_item:nanoprobe_sensor_devices']['parent']);
   }
 
+  /**
+   * Tests a submodule child route marks its Insights hub as having an active child.
+   *
+   * Task 0170: core's nav tests cover the Apiaries hub's cascade; this
+   * covers the other hub, whose children come from a submodule's
+   * `hook_hivelog_app_nav_items()` rather than core's own registry.
+   */
+  public function testSensorDevicesRouteMarksInsightsHubActive(): void {
+    $route_name = 'entity.sensor_device.collection';
+    $route = \Drupal::service('router.route_provider')->getRouteByName($route_name);
+    $request = \Drupal::requestStack()->getCurrentRequest();
+    $request->attributes->set('_route_object', $route);
+    $request->attributes->set('_route', $route_name);
+
+    $build = \Drupal::service('hivelog.app_nav_builder')->build();
+
+    $child = $build['insights']['submenu']['nanoprobe_sensor_devices']['#attributes'];
+    $this->assertContains('is-active', $child['class']);
+    $this->assertEquals('page', $child['aria-current']);
+    $this->assertContains('has-active-child', $build['insights']['#attributes']['class']);
+    $this->assertArrayNotHasKey('aria-current', $build['insights']['link']['#attributes']);
+    $this->assertNotContains('has-active-child', $build['apiaries']['#attributes']['class'], 'Only the hub that owns the active child is marked.');
+  }
+
 }
