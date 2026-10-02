@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: review
+status: done
 priority: low
 project:
 area: tests
@@ -107,7 +107,13 @@ Found in the 2026-10-02 review of [[collection-page-filter-coverage]] and
 - No product code changed, so nothing to verify live on `cms2`. phpcs and
   phpstan clean; no baseline change.
 - No new Functional tests, as the task said.
-- Full suite: **pending** — result to follow below.
+- **Full suite: 1,173 tests / 19,427 assertions, 0 failures, 0 errors**
+  (1,157 before this task + the 16 new), only the usual third-party
+  deprecations and notices. Run as seven separately-completed chunks (six
+  balanced non-Functional chunks of 172–288 tests, then Functional), since a
+  single invocation exceeds the background time limit. The task was
+  committed in `review` before the run finished and flipped to `done` in a
+  follow-up commit.
 
 ## Related
 - Project:: [[collection-page-filter-coverage]], [[in-app-navigation-restructuring]] (both done; follow-up)
