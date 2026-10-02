@@ -11,9 +11,9 @@ here. When the module is installed into a Drupal site it lands at
 module-relative (e.g. `src/`, `css/`, `components/`, `tests/`).
 
 The module provides a beekeeping activity logger. Core (this repo's own
-`src/`) defines 15 content entity types; four optional submodules under
-`modules/` add 6 more (5 real, 1 development-only) — see "Content entities"
-and "Submodules" below. Apiaries, hives and inspections form a strict
+`src/`) defines 16 content entity types; three of the four optional
+submodules under `modules/` add 6 more between them (the fourth,
+`assimilate`, adds none) — see "Content entities" and "Submodules" below. Apiaries, hives and inspections form a strict
 parent–child hierarchy; queens are tracked separately and linked to the hive
 they are currently installed in (hives outlive queens); queen observations
 hang off a queen:
@@ -64,7 +64,8 @@ then runs, per matrix cell unless noted:
   automatically.
 - **phpstan (PHP 8.3 only, hard gate).** `phpstan analyse -c "$MODULE_PATH/phpstan.neon"`
   — the module's own config, so it covers `modules/` and reads
-  `phpstan-baseline.neon` (440 pre-existing level-2 findings, all the
+  `phpstan-baseline.neon` (the pre-existing level-2 findings — sum its
+  `count:` values for the current total — all the
   Drupal-specific false positives bare phpstan produces without the mglaman
   extension — see `phpstan.neon`'s own comment for why that extension can't
   run here). The baseline is a ratchet, not a pass: fails on any *new*
@@ -150,7 +151,7 @@ with the PHP 8 `#[ContentEntityType]` attribute. Fields are defined entirely
 in code via `baseFieldDefinitions()` — there is no exported config for field
 storage, view display, or form display. Changing a field definition therefore
 requires a corresponding update hook (see "Entity schema changes" below).
-Core defines 15 entity types, grouped below by what they're for; each
+Core's entity types are grouped below by what they're for; each
 submodule's own entity types are in "Submodules".
 
 **The hive hierarchy** (the diagram above):
@@ -166,6 +167,10 @@ submodule's own entity types are in "Submodules".
   to the hive, most recent first, so the hive page can aggregate queen
   observations across the whole hive lifetime (the hive page shows no
   standalone "previous queens" list — "View all Queens" covers that).
+  `Hive::getEmptyWeightKg(): ?float` is its tare weight, summed from its
+  `HiveComponent` rows (see "Hive composition and weight" below); it
+  returns `NULL` — never `0.0` or a partial sum — when the hive has no
+  components or any referenced item has no `weight_kg`.
 - `HiveInspection` — references a `Hive` and carries the full inspection
   payload (external check, queen, brood, stores, health, management, notes).
 - `Queen` — references a `Hive` via `hive` entity_reference (optional).
@@ -210,7 +215,8 @@ entities mirror each other one level removed (inputs vs. outputs):
 - `InventoryItem` — references an `Apiary`. One catalog entry for something
   bought and used (sugar, varroa strips, frames). `item_type` branches
   `consumable` (tracked via purchases + usage) from `durable` (purchased
-  once, depreciates over `useful_life_years`).
+  once, depreciates over `useful_life_years`). An optional `weight_kg`
+  (decimal, per unit) feeds `Hive::getEmptyWeightKg()`.
 - `InventoryPurchase` — references an `Apiary` and the `InventoryItem`
   bought. One acquisition record — amount and unit price; stock on hand is
   always computed from these, never a stored running balance.
@@ -233,6 +239,40 @@ entities mirror each other one level removed (inputs vs. outputs):
   `hive_action_log` / `apiary_action_log`. How much of a product was
   *really* produced when that log was reported `done`. No add/edit/delete
   UI of its own, same as `InventoryUsage`.
+
+**Hive composition and weight** (ADR-0106) — what physical components a
+hive is built from, so its empty weight can be netted out of a raw scale
+reading:
+
+- `HiveComponent` — references a `Hive` and an `InventoryItem` (both
+  required) with an integer `quantity` (min 1; deliberately not decimal,
+  unlike `CalendarActionItemRequirement`). Edit/delete only: no canonical
+  or collection route, managed from the hive page's "Hive Components"
+  section (anchor `#components`, add route `hivelog.hive_component.add`).
+  Two guards, each enforced in both `preSave()` (throws, for programmatic
+  creation) and `HiveComponentForm::validateForm()` (friendly error), the
+  same two-layer convention as `CalendarActionItemRequirement`: the item
+  must belong to the hive's apiary, and `quantity` can't exceed
+  `InventoryItem::getAvailableForHiveAssignmentQuantity()` — purchased
+  (`getTotalPurchasedQuantity()`, any item type, unlike consumable-only
+  `getStockOnHand()`) minus assigned to every hive in the apiary
+  (`getAssignedToHivesQuantity()`). The latter two take an optional
+  component id to exclude, so editing a row doesn't count its own old
+  quantity against itself. Availability is apiary-wide, never a stored
+  balance.
+- The item picker uses its own selection plugin,
+  `default:hivelog_hive_component_item` (`HiveComponentAvailableItemSelection`),
+  which extends `ApiaryScopedSelection` and post-filters the loaded
+  options (availability is computed, so it can't be a query condition),
+  appending "(N available)" to each label. It is deliberately separate
+  from `ApiaryScopedSelection`, which `InventoryPurchaseForm` and the
+  calendar requirement/yield forms share — an availability filter would
+  be wrong on all of them.
+- The delete registry carries two rows for this outside ADR-0103's own
+  1–28 numbering, `adr_row` `0106-1` and `0106-2`; a later ADR adding rows
+  should follow that `<ADR>-N` style. The generic executors need no extra
+  application code as long as the access handlers use the shared delete
+  traits.
 
 The module also adds a `cbr_number` field to the Drupal `user` entity via
 `hook_entity_base_field_info()`. Uninstall has special handling in
@@ -266,7 +306,11 @@ entity types core can't name directly).
   scoped to an apiary or one hive within it), `SensorReading` (raw
   machine-written time-series points, ingestion-endpoint-only) and
   `SensorReadingDaily` (persisted per-day min/max/avg rollups, since raw
-  readings are purged after a retention window). Depends only on
+  readings are purged after a retention window). Its hive stat tiles
+  include `nanoprobe_net_weight` (task 0164): the hive's latest
+  `weight_kg` reading minus `Hive::getEmptyWeightKg()`, omitted with no
+  weight sensor and shown as an "Unknown" warning tile linking to
+  `#components` when the hive's composition is incomplete. Depends only on
   `hivelog`.
 - **`collective`** — structured hive/apiary context served via a
   credentialed HTTP API. Adds `ApiClient` (a site-level context-read
@@ -304,6 +348,7 @@ Routes in `hivelog.routing.yml` follow two patterns:
   - `hivelog.inspection.add` → `/hivelog/hive/{hive}/inspection/add`
   - `hivelog.queen.add` → `/hivelog/hive/{hive}/queen/add`
   - `hivelog.queen_observation.add` → `/hivelog/queen/{queen}/observation/add`
+  - `hivelog.hive_component.add` → `/hivelog/hive/{hive}/component/add`
 
 All routes use the `/hivelog/` path prefix. New routes must follow this
 convention; the breadcrumb builder's `applies()` also relies on it (see
@@ -313,7 +358,8 @@ Canonical view pages are rendered by custom controllers
 (`ApiaryController`, `HiveController`, `HiveInspectionController`,
 `QueenController`, `QueenObservationController`) rather than the default
 view builder, because each parent view embeds a list builder of its children
-(apiary shows its hives; hive shows its inspections newest-first).
+(apiary shows its hives; hive shows its inspections newest-first, and its
+"Hive Components" table with the computed empty weight).
 
 Permissions use the `_permission: 'X+administer hivelog'` OR syntax so that
 users with `administer hivelog` bypass all fine-grained checks; the access
@@ -503,7 +549,8 @@ count it used to state already had. Core's own:
   `HivelogDeleteDependencyRegistry` row (BLOCK/WARN/CASCADE/DETACH), for
   the delete form's dependency sections and (task 0141) the BLOCK access
   check. See `src/Delete/` and
-  `docs/project-management/decisions/0103-delete-policy-for-records-with-children.md`.
+  `docs/project-management/decisions/0103-delete-policy-for-records-with-children.md`
+  (ADR-0106 added two rows of its own, `0106-1` and `0106-2`).
 
 `hivelog.breadcrumb` is a `BreadcrumbBuilder` with priority **1004** that produces
 the Apiary → Hive → … trail on any hivelog route. Since task 0067 `applies()`

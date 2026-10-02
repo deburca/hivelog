@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: backlog
+status: done
 priority: medium
 project:
 area: docs
@@ -39,21 +39,46 @@ still states "15 content entity types" at lines 14 and 153. Gaps:
   actual entity classes.
 
 ## Acceptance criteria
-- [ ] Every item in the list above is reflected in AGENTS.md, in the section
+- [x] Every item in the list above is reflected in AGENTS.md, in the section
       it belongs to (no new top-level section).
-- [ ] Entity counts verified against `src/Entity/` and each submodule's
+- [x] Entity counts verified against `src/Entity/` and each submodule's
       entity classes, not copied from the old number.
-- [ ] The CI section's baseline figure (stated as 440) is rechecked against
+- [x] The CI section's baseline figure (stated as 440) is rechecked against
       `phpstan-baseline.neon` (currently 453 per task 0163's notes).
-- [ ] Decide whether the "update AGENTS.md" step belongs in the task
+- [x] Decide whether the "update AGENTS.md" step belongs in the task
       template's acceptance criteria so it can't be skipped again; if so, add
       it to `docs/project-management/templates/task.md`.
-- [ ] Docs-only: no version bump or release needed.
+- [x] Docs-only: no version bump or release needed.
 
 ## Implementation notes
-- Docs-only change; no code, no tests.
-- Prefer counts-free wording where the number would go stale again (as the
-  Services section already does).
+- Docs-only change; no code, no tests. Files: `AGENTS.md`,
+  `docs/project-management/templates/task.md`.
+- Counts verified against the code: 16 core entity classes in
+  `src/Entity/`; submodules add 6 (nanoprobe 3, collective 1, nexus 2) and
+  `assimilate` adds none. The old intro line said "6 more (5 real, 1
+  development-only)", which was wrong on its face — the same file says
+  `assimilate` adds no entity types — so it now says three of four
+  submodules add the 6.
+- The phpstan baseline figure is now counts-free ("sum its `count:` values")
+  rather than a number: the baseline totals 453 today, up from the 440 the
+  file stated, and a hard-coded number goes stale on every baseline
+  change. The "defines 15 entity types" line under "Content entities" was
+  made counts-free too; only the intro line states a count.
+- New AGENTS.md content: a "Hive composition and weight" group (the
+  `HiveComponent` entity, its two guards and the two-layer convention,
+  apiary-wide availability, the dedicated
+  `default:hivelog_hive_component_item` selection plugin and why it isn't
+  folded into `ApiaryScopedSelection`, the `0106-N` registry row style);
+  `Hive::getEmptyWeightKg()` on the Hive bullet; `weight_kg` on the
+  InventoryItem bullet; the `nanoprobe_net_weight` tile under nanoprobe;
+  the `hivelog.hive_component.add` route; the Components table in the hive
+  controller description; the two ADR-0106 rows in the delete-dependency
+  service bullet.
+- Decision: added "`AGENTS.md` updated if entity types, routes, services,
+  hooks or conventions changed" to the task template's acceptance criteria,
+  so the step is a visible checkbox on every task. The release template
+  already had a similar line, but it runs after the work is done.
+- Docs-only: no version bump or release, per the standing rule.
 
 ## Related
 - Project:: [[page-structure-consistency]] (done; follow-up)

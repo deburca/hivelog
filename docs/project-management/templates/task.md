@@ -20,6 +20,7 @@ ADR/task notes using real wikilinks once they exist.
 ## Acceptance criteria
 - [ ] …
 - [ ] Tests added/updated (`--group hivelog`)
+- [ ] `AGENTS.md` updated if entity types, routes, services, hooks or conventions changed
 - [ ] `ddev drush updb -y && ddev drush cr` clean (if schema changed)
 
 ## Implementation notes
