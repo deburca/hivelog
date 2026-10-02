@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: backlog
+status: dropped
 priority: low
 project:
 area: docs
@@ -22,12 +22,21 @@ AGENTS.md are deliberate rename history (they say "renamed from Setup").
 This one is not: it describes the current structure with the old name.
 
 ## Acceptance criteria
-- [ ] The CSS header comment names the primary items as "Dashboard,
+- [x] The CSS header comment names the primary items as "Dashboard,
       Apiaries, Insights".
-- [ ] Re-run a case-sensitive `grep -rn "Setup\b"` over `css/`, `src/`,
+- [x] Re-run a case-sensitive `grep -rn "Setup\b"` over `css/`, `src/`,
       `modules/*/src`, `*.module` and AGENTS.md; every remaining hit is
       either rename history or a `setUp()` method. Record the result.
-- [ ] Comment-only change: no behaviour change, no test, no release.
+- [x] Comment-only change: no behaviour change, no test, no release.
+
+## Outcome
+Dropped: done as part of [[0165-nav-submenu-on-touch-devices-above-768px]],
+which edited the same CSS header — "Setup" there is now "Insights". The
+remaining `Setup` hits in `src/` and AGENTS.md are rename history or
+`setUp()` methods, as this task expected. Re-checked with the
+case-sensitive grep after the edit: four hits remain, all rename history
+(`HivelogAppNavBuilder.php:83`, `InsightsController.php:15`,
+`HivelogBreadcrumbBuilder.php:306`, `AGENTS.md`).
 
 ## Implementation notes
 - Fold this into [[0165-nav-submenu-on-touch-devices-above-768px]] if that

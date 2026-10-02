@@ -14,6 +14,11 @@
  *   Desktop:                default (unprefixed) rules
  *   Wide (optional):        @media (min-width: 1024px)
  *
+ * Capability queries are separate from the breakpoints: where behaviour
+ * depends on how the user can interact rather than how wide the screen is,
+ * use `(hover: none)` (the primary input can't hover — touch), as the nav
+ * strip does (task 0165). Never use it to pick a layout size.
+ *
  * Where responsive rules live: component-specific rules go in that component's
  * own CSS file (e.g. hivelog.tables.css) inside the breakpoints above — see
  * tasks 0005 (list tables), 0006 (detail tables), 0007 (filter form/heading),

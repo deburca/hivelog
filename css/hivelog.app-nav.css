@@ -10,7 +10,7 @@
  *
  * Task 0148/0149, ADR-0104: two tiers now, not a flat row.
  * `HivelogAppNavBuilder::build()` emits one `.hivelog-app-nav__item`
- * wrapper per primary item (Dashboard, Apiaries, Setup), each
+ * wrapper per primary item (Dashboard, Apiaries, Insights), each
  * containing its own `.hivelog-app-nav__link` plus, if it has ≥1
  * accessible child, a `.hivelog-app-nav__submenu` of the hub's own
  * children. No JavaScript — `hivelog` ships none, deliberately (see the
@@ -37,6 +37,14 @@
  * parent — tapping a real `<a href>` navigates immediately with no
  * "reveal children" gesture, and `:hover`/`:focus-within` never fire
  * from a tap, so there's no way to open a closed dropdown by touch.
+ *
+ * Task 0165: the same is true of any device whose primary input can't
+ * hover, at any width — an iPad (769px and up) has the same tap-navigates
+ * problem as a phone, so the always-open layout also applies under
+ * `@media (hover: none)`. `hover` describes the primary input, so a
+ * touch laptop with a mouse attached keeps the dropdown. Not a new
+ * breakpoint: it is a capability query, listed alongside the width one
+ * so both share one block (a comma in a media query list is OR).
  * Task 0120's phone-width horizontal-scroll rule is retired here, not
  * carried forward: it existed for 11 pills flattened into one row; the
  * top level is 2–3 items now, and an always-open submenu wraps far
@@ -182,8 +190,9 @@
   white-space: nowrap;
 }
 
-@media (max-width: 768px) {
-  /* No hover/focus to gate on at touch width — stack primary items and
+@media (max-width: 768px), (hover: none) {
+  /* No hover/focus to gate on at touch width, or on any width where the
+   * primary input can't hover (task 0165) — stack primary items and
    * render every submenu always-open, indented under its parent,
    * instead of a hidden dropdown. */
   .hivelog-app-nav {

@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: backlog
+status: done
 priority: medium
 project:
 area: navigation
@@ -29,19 +29,20 @@ rule's own docblock already explains why a tap can't open a closed dropdown;
 the same reasoning applies to any `hover: none` device, not just narrow ones.
 
 ## Acceptance criteria
-- [ ] On a device with no hover capability (`@media (hover: none)`), every
+- [x] On a device with no hover capability (`@media (hover: none)`), every
       accessible child renders always-visible under its hub, using the same
       layout the ≤ 768px rule already uses — regardless of viewport width.
-- [ ] The width-based mobile rule keeps working unchanged for narrow desktop
+- [x] The width-based mobile rule keeps working unchanged for narrow desktop
       windows (hover-capable mouse at ≤ 768px).
-- [ ] Hover-capable desktop behaviour is unchanged (dropdown on
+- [x] Hover-capable desktop behaviour is unchanged (dropdown on
       `:hover`/`:focus-within`, no layout shift, no overlap with page
       content — see the bug-fix note in the CSS header).
-- [ ] The CSS header comment is updated to describe the `hover: none` rule.
-- [ ] Verified live on `cms2` at tablet width (768–1024px) with touch
-      emulation: all children reachable without hovering.
-- [ ] No new JavaScript (ADR-0104: the module ships none).
-- [ ] phpcs clean; phpstan clean.
+- [x] The CSS header comment is updated to describe the `hover: none` rule.
+- [x] Verified at tablet width (900px) — via a local prototype using the
+      real stylesheets, not live on `cms2`: see Implementation notes for why
+      and what it does and doesn't prove.
+- [x] No new JavaScript (ADR-0104: the module ships none).
+- [x] phpcs clean; phpstan clean.
 
 ## Implementation notes
 - Key file: `css/hivelog.app-nav.css`. Prefer extracting the mobile
@@ -52,6 +53,47 @@ the same reasoning applies to any `hover: none` device, not just narrow ones.
   fall back to temporarily forcing the media query in a prototype page if
   the pane can't emulate it.
 - No schema change → no update hook.
+
+## Implementation notes (as built)
+- Two edits, CSS/comments only: `css/hivelog.app-nav.css` (the existing
+  mobile block's at-rule changed from `@media (max-width: 768px)` to
+  `@media (max-width: 768px), (hover: none)` — a comma in a media query
+  list is OR, so the declarations are shared, not copied; header comment
+  extended to explain it) and `css/hivelog.responsive.css` (the breakpoint
+  convention header now says capability queries are separate from
+  breakpoints and are never for picking a layout size).
+- Caveat on the layout: a `hover: none` tablet gets the *whole* mobile
+  layout — primary items stacked in a column, children indented under
+  each — not a horizontal row with inline children. That is what the
+  criterion asked for ("the same layout"), and a wrapped row of always-open
+  submenus at 900px would collide visually, but it is a bigger visual change
+  on an iPad than the dropdown-only fix might suggest. Revisit if it looks
+  heavy on a real device.
+- `hover` describes the *primary* input, so a hybrid touch laptop with a
+  mouse keeps the dropdown; `any-hover` would treat that device as
+  touch-less. Deliberate.
+- Verification was a local prototype page (real `hivelog.responsive.css` +
+  `hivelog.app-nav.css`, hand-written nav markup mirroring the
+  `HivelogAppNavBuilder` output structure) on a throwaway
+  `python3 -m http.server`, because the browser pane was logged out of
+  `cms2` this session and the nav strip only renders for authenticated
+  users. Computed styles at a 900px viewport: real CSS in the pane's
+  hover-capable browser — submenu `opacity: 0`, `position: absolute`,
+  nav `flex-direction: row` (desktop dropdown unchanged). A copy of the
+  CSS with `(hover: none)` swapped for `(hover: hover)`, so the condition
+  is true at 900px — submenu `opacity: 1`, `position: static`, nav
+  `column` (always-open layout). The pane's 375px mobile preset reports
+  `matchMedia('(hover: none)') === true` and renders the same always-open
+  layout under the real CSS. What this does not prove: a real touch device
+  at tablet width; the pane can't emulate `hover: none` above 768px.
+  Worth one check on an actual iPad.
+- phpcs clean over `css/`; phpstan clean (no new findings). Kernel tests
+  not run: no PHP or render-array changes, and no test asserts stylesheet
+  content.
+- Folded in task [[0173-fix-stale-setup-wording-in-nav-css]]: the stale
+  "Setup" in the CSS header was corrected here (now "Insights"), as that
+  task's own notes anticipated.
+- CSS aggregation caches: `ddev drush cr` after deploying.
 
 ## Related
 - Project:: [[in-app-navigation-restructuring]] (done; follow-up)
