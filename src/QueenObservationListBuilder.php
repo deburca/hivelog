@@ -38,6 +38,16 @@ class QueenObservationListBuilder extends HivelogListBuilder {
   /**
    * {@inheritdoc}
    */
+  protected function getSortableColumns(): array {
+    return [
+      'date' => 'observation_date',
+      'active' => 'active',
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function buildRow(EntityInterface $entity) {
     $row['date'] = $entity->toLink($entity->get('observation_date')->value ?: $this->t('N/A'))->toString();
 

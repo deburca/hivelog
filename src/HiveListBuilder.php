@@ -36,6 +36,17 @@ class HiveListBuilder extends HivelogListBuilder {
   /**
    * {@inheritdoc}
    */
+  protected function getSortableColumns(): array {
+    return [
+      'name' => 'name',
+      'apiary' => 'apiary.entity.name',
+      'status' => 'status',
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function buildRow(EntityInterface $entity) {
     $row['name'] = $entity->toLink()->toString();
     $apiary = $entity->get('apiary')->entity;

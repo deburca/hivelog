@@ -33,6 +33,17 @@ class ApiClientListBuilder extends HivelogListBuilder {
   /**
    * {@inheritdoc}
    */
+  protected function getSortableColumns(): array {
+    return [
+      'label' => 'label',
+      'enabled' => 'enabled',
+      'last_run' => 'last_run',
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function buildRow(EntityInterface $entity) {
     $row['label'] = $entity->toLink()->toString();
     $row['enabled'] = $entity->get('enabled')->value ? $this->t('Yes') : $this->t('No');

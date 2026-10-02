@@ -28,6 +28,40 @@
 }
 
 /**
+ * Sortable columns (task 0171). A sortable header is a link carrying the
+ * column's next sort; `aria-sort` on the <th> is what assistive tech reads,
+ * the arrow is decoration (aria-hidden in the template). A column not yet
+ * sorted shows a faint two-way arrow so it reads as clickable.
+ */
+.hivelog-entity-table__sort {
+  color: inherit;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.hivelog-entity-table__sort:hover,
+.hivelog-entity-table__sort:focus-visible {
+  text-decoration: underline;
+}
+
+.hivelog-entity-table__sort-indicator::after {
+  margin-left: 0.35em;
+  font-size: 0.75em;
+  color: var(--hivelog-ink-faint);
+  content: "\21C5";
+}
+
+.hivelog-entity-table th[aria-sort="ascending"] .hivelog-entity-table__sort-indicator::after {
+  color: var(--hivelog-ink);
+  content: "\25B2";
+}
+
+.hivelog-entity-table th[aria-sort="descending"] .hivelog-entity-table__sort-indicator::after {
+  color: var(--hivelog-ink);
+  content: "\25BC";
+}
+
+/**
  * Responsive: collapse the table into stacked, labelled cards on small screens
  * (task 0004 convention, ADR-0011) so dense lists — e.g. the 8-column hive
  * inspection list — stay readable without horizontal pinching. Desktop
@@ -56,6 +90,47 @@
     clip-path: inset(50%);
     border: 0;
     white-space: nowrap;
+  }
+
+  /* A sortable table keeps its header row on small screens, but as a
+     compact "Sort by: Name Date …" bar of just the sortable columns —
+     hiding the header (above) would leave the sort links as invisible tab
+     stops. The label text is passed in translated via data-sort-label. */
+  .hivelog-entity-table--sortable thead {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0 0 var(--hivelog-gap-tight, 0.5rem);
+    overflow: visible;
+    clip: auto;
+    clip-path: none;
+    white-space: normal;
+  }
+
+  .hivelog-entity-table--sortable thead tr {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25rem 1rem;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .hivelog-entity-table--sortable thead tr::before {
+    font-weight: 600;
+    content: attr(data-sort-label) ":";
+  }
+
+  .hivelog-entity-table--sortable thead th {
+    display: block;
+    width: auto;
+    padding: 0;
+    border: 0;
+  }
+
+  .hivelog-entity-table--sortable thead th:not([aria-sort]) {
+    display: none;
   }
 
   /* Each row becomes a bordered card. */

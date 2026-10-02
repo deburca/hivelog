@@ -238,4 +238,31 @@ class SensorDeviceFilterTest extends KernelTestBase {
     $this->assertPagesOverFilteredSet('sensor_device', 'entity.sensor_device.collection', '/hivelog/sensor-devices', ['scope' => 'hive']);
   }
 
+  /**
+   * Tests the Sensor Devices list sorts by label, both ways, and ignores a bogus sort (task 0171).
+   */
+  public function testListSortsByLabel(): void {
+    $apiary = Apiary::create(['name' => 'Test Apiary']);
+    $apiary->save();
+    foreach (['Charlie', 'Alpha', 'Bravo'] as $label) {
+      SensorDevice::create([
+        'label' => $label,
+        'apiary' => $apiary->id(),
+        'scope' => 'apiary',
+        'device_type' => 'temperature_humidity',
+        'transport' => 'wifi',
+      ])->save();
+    }
+
+    $labels = function (array $query): array {
+      $this->pushRoutedRequest('entity.sensor_device.collection', '/hivelog/sensor-devices', $query);
+      $build = \Drupal::entityTypeManager()->getListBuilder('sensor_device')->render();
+      return array_map(fn(array $row) => trim(strip_tags((string) $row['cells'][0])), $build['table']['#props']['rows']);
+    };
+
+    $this->assertSame(['Alpha', 'Bravo', 'Charlie'], $labels(['sort' => 'label', 'order' => 'asc']));
+    $this->assertSame(['Charlie', 'Bravo', 'Alpha'], $labels(['sort' => 'label', 'order' => 'desc']));
+    $this->assertSame(['Charlie', 'Alpha', 'Bravo'], $labels(['sort' => 'bogus']), 'Unknown sort keeps creation order.');
+  }
+
 }

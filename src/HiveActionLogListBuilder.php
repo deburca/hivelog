@@ -33,6 +33,18 @@ class HiveActionLogListBuilder extends HivelogListBuilder {
   /**
    * {@inheritdoc}
    */
+  protected function getSortableColumns(): array {
+    return [
+      'hive' => 'hive.entity.name',
+      'year' => 'year',
+      'status' => 'status',
+      'week_completed' => 'week_completed',
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function buildRow(EntityInterface $entity) {
     $hive = $entity->get('hive')->entity;
     $calendar_action = $entity->get('calendar_action')->entity;

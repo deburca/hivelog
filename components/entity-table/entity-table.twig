@@ -1,9 +1,17 @@
+{% set sortable = column_sorts is defined and column_sorts is not empty %}
 <div class="overflow-x-auto">
-  <table class="hivelog-entity-table table w-full">
+  <table class="hivelog-entity-table table w-full{% if sortable %} hivelog-entity-table--sortable{% endif %}">
     <thead>
-      <tr>
+      <tr{% if sortable %} data-sort-label="{{ 'Sort by'|t }}"{% endif %}>
         {% for header in headers %}
-          <th class="text-left">{{ header }}</th>
+          {% set column_sort = sortable ? (column_sorts[header]|default(null)) : null %}
+          {% if column_sort %}
+            <th class="text-left" aria-sort="{{ column_sort.direction }}">
+              <a class="hivelog-entity-table__sort" href="{{ column_sort.url }}">{{ header }}<span class="hivelog-entity-table__sort-indicator" aria-hidden="true"></span></a>
+            </th>
+          {% else %}
+            <th class="text-left">{{ header }}</th>
+          {% endif %}
         {% endfor %}
       </tr>
     </thead>

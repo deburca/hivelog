@@ -33,6 +33,18 @@ class ApiaryActionLogListBuilder extends HivelogListBuilder {
   /**
    * {@inheritdoc}
    */
+  protected function getSortableColumns(): array {
+    return [
+      'apiary' => 'apiary.entity.name',
+      'year' => 'year',
+      'status' => 'status',
+      'week_completed' => 'week_completed',
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function buildRow(EntityInterface $entity) {
     $apiary = $entity->get('apiary')->entity;
     $calendar_action = $entity->get('calendar_action')->entity;

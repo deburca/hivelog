@@ -36,6 +36,19 @@ class InventoryPurchaseListBuilder extends HivelogListBuilder {
   /**
    * {@inheritdoc}
    */
+  protected function getSortableColumns(): array {
+    return [
+      'apiary' => 'apiary.entity.name',
+      'purchase_date' => 'purchase_date',
+      'quantity' => 'quantity',
+      'unit_price' => 'unit_price',
+      'supplier' => 'supplier',
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function buildRow(EntityInterface $entity) {
     $item = $entity->get('item')->entity;
     $row['item'] = $item ? $item->toLink()->toString() : '';

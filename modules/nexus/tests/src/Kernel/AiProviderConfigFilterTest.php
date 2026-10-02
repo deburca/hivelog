@@ -209,4 +209,28 @@ class AiProviderConfigFilterTest extends KernelTestBase {
     $this->assertPagesOverFilteredSet('ai_provider_config', 'entity.ai_provider_config.collection', '/hivelog/ai-provider-configs', ['mode' => 'custom_endpoint']);
   }
 
+  /**
+   * Tests the AI Provider Configs list sorts by label, both ways, and ignores a bogus sort (task 0171).
+   */
+  public function testListSortsByLabel(): void {
+    foreach (['Charlie', 'Alpha', 'Bravo'] as $label) {
+      AiProviderConfig::create([
+        'label' => $label,
+        'mode' => 'direct_api',
+        'provider' => 'anthropic',
+        'key' => 'test_key',
+      ])->save();
+    }
+
+    $labels = function (array $query): array {
+      $this->pushRoutedRequest('entity.ai_provider_config.collection', '/hivelog/ai-provider-configs', $query);
+      $build = \Drupal::entityTypeManager()->getListBuilder('ai_provider_config')->render();
+      return array_map(fn(array $row) => trim(strip_tags((string) $row['cells'][0])), $build['table']['#props']['rows']);
+    };
+
+    $this->assertSame(['Alpha', 'Bravo', 'Charlie'], $labels(['sort' => 'label', 'order' => 'asc']));
+    $this->assertSame(['Charlie', 'Bravo', 'Alpha'], $labels(['sort' => 'label', 'order' => 'desc']));
+    $this->assertSame(['Charlie', 'Alpha', 'Bravo'], $labels(['sort' => 'bogus']), 'Unknown sort keeps creation order.');
+  }
+
 }

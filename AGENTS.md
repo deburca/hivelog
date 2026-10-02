@@ -434,6 +434,26 @@ collection page is the exception: `CalendarActionController::collection()`
 builds it and its filter form (`HivelogCalendarActionsFilterForm`)
 directly, so it doesn't use these hooks.
 
+A list opts into sortable columns by overriding `getSortableColumns()`
+(task 0171): a map from a `buildHeader()` key to what it sorts on — a stored
+field, or for an Apiary or Hive column the relationship path (`apiary.entity.name`
+— the related record's name; the entity query joins LEFT, so a record whose apiary has
+gone stays listed, at the NULL end). Only those keys are ever honoured from
+the `sort` / `order` query parameters, so nothing a visitor sends reaches the
+query as a field name or path; anything else (unknown, non-sortable,
+array-valued) falls back to the default order, and the id key always stays as
+the tie-breaker. Deliberately not sortable: computed columns (stock on hand,
+total cost, breed), the remaining reference columns (Hive on Inspections, Queen
+on Observations, Item on Purchases — the same `x.entity.name` path would do it
+if wanted; Hive Action Logs' Hive column does use it), and ordinal enums where
+alphabetical order misleads (health, honey stores, temperament). Sortable headers become links
+through the optional `column_sorts` prop of `hivelog:entity-table` (omit the
+prop when empty — an empty PHP array would encode as a JSON array and fail the
+`object` schema), with `aria-sort` on the `<th>`; below 768px the header row
+is kept as a "Sort by" bar rather than hidden, because hiding it would leave
+invisible tab stops. The active sort rides through the GET filter form as
+hidden inputs and through pager links; Reset clears both.
+
 ### CSS and components
 
 CSS libraries are declared in `hivelog.libraries.yml` (core) and each

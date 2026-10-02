@@ -40,6 +40,21 @@ class InventoryItemListBuilder extends HivelogListBuilder {
   /**
    * {@inheritdoc}
    */
+  protected function getSortableColumns(): array {
+    return [
+      'name' => 'name',
+      'apiary' => 'apiary.entity.name',
+      'category' => 'category',
+      'unit' => 'unit',
+      'item_type' => 'item_type',
+      'weight_kg' => 'weight_kg',
+      'status' => 'status',
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function buildRow(EntityInterface $entity) {
     $row['name'] = $entity->toLink()->toString();
 

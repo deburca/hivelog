@@ -38,6 +38,17 @@ class HiveInspectionListBuilder extends HivelogListBuilder {
   /**
    * {@inheritdoc}
    */
+  protected function getSortableColumns(): array {
+    return [
+      'date' => 'inspection_date',
+      'weight' => 'weight',
+      'queen' => 'queen_seen',
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function buildRow(EntityInterface $entity) {
     $row['date'] = $entity->toLink($entity->get('inspection_date')->value ?: $this->t('N/A'))->toString();
     $hive = $entity->get('hive')->entity;

@@ -39,6 +39,19 @@ class SensorDeviceListBuilder extends HivelogListBuilder {
   /**
    * {@inheritdoc}
    */
+  protected function getSortableColumns(): array {
+    return [
+      'label' => 'label',
+      'scope' => 'scope',
+      'device_type' => 'device_type',
+      'enabled' => 'enabled',
+      'last_seen' => 'last_seen',
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function buildRow(EntityInterface $entity) {
     /** @var \Drupal\nanoprobe\Entity\SensorDevice $entity */
     $row['label'] = $entity->toLink()->toString();

@@ -30,6 +30,18 @@ class QueenListBuilder extends HivelogListBuilder {
   /**
    * {@inheritdoc}
    */
+  protected function getSortableColumns(): array {
+    return [
+      'name' => 'name',
+      'colour' => 'queen_colour',
+      'introduced' => 'introduction_date',
+      'status' => 'status',
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function buildRow(EntityInterface $entity) {
     $row['name'] = $entity->toLink()->toString();
 

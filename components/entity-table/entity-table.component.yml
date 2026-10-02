@@ -29,6 +29,30 @@ props:
       type: string
       title: Empty state message
       default: 'No items found.'
+    column_sorts:
+      type: object
+      title: Sortable columns
+      description: >
+        Optional (task 0171). Keyed by the exact header string of each
+        sortable column; a column with no entry is not sortable. Omit the
+        prop entirely when no column is sortable (an empty PHP array would
+        encode as a JSON array, not an object, and fail validation).
+      additionalProperties:
+        type: object
+        required:
+          - url
+          - direction
+        properties:
+          url:
+            type: string
+            title: Link that applies this column's next sort
+          direction:
+            type: string
+            title: This column's current sort state
+            enum:
+              - none
+              - ascending
+              - descending
 
 libraryOverrides:
   dependencies:

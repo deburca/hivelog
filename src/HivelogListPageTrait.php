@@ -54,12 +54,15 @@ trait HivelogListPageTrait {
    *   Rows already shaped as `['cells' => [...]]`, per the component.
    * @param string $empty_message
    *   Shown in place of the table body when `$rows` is empty.
+   * @param array $column_sorts
+   *   Optional (task 0171): sortable columns keyed by header string, each
+   *   `['url' => string, 'direction' => 'none'|'ascending'|'descending']`.
    *
    * @return array
    *   The component render array.
    */
-  protected function buildEntityTable(array $headers, array $rows, string $empty_message): array {
-    return [
+  protected function buildEntityTable(array $headers, array $rows, string $empty_message, array $column_sorts = []): array {
+    $table = [
       '#type' => 'component',
       '#component' => 'hivelog:entity-table',
       '#props' => [
@@ -68,6 +71,12 @@ trait HivelogListPageTrait {
         'empty_message' => $empty_message,
       ],
     ];
+    // Omitted when empty, not passed as []: an empty PHP array encodes as a
+    // JSON array and would fail the component's `object` schema.
+    if ($column_sorts) {
+      $table['#props']['column_sorts'] = $column_sorts;
+    }
+    return $table;
   }
 
 }

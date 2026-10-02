@@ -41,6 +41,19 @@ class ProductListBuilder extends HivelogListBuilder {
   /**
    * {@inheritdoc}
    */
+  protected function getSortableColumns(): array {
+    return [
+      'name' => 'name',
+      'apiary' => 'apiary.entity.name',
+      'unit' => 'unit',
+      'expected_unit_price' => 'expected_unit_price',
+      'status' => 'status',
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function buildRow(EntityInterface $entity) {
     $row['name'] = $entity->toLink()->toString();
 
