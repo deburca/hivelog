@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: backlog
+status: review
 priority: medium
 project:
 area: routing
@@ -25,26 +25,26 @@ module (one row per action per occurrence, per hive or apiary), so they
 benefit most from filtering. Calendar Actions stays out of scope, as before.
 
 ## Acceptance criteria
-- [ ] New `HivelogHiveActionLogFilterForm` and
+- [x] New `HivelogHiveActionLogFilterForm` and
       `HivelogApiaryActionLogFilterForm` (static `extract()`/`apply()`, GET
       method, `hivelog-filter-form` class), matching the pattern in
       [[0155-apiary-and-queen-list-filters]].
-- [ ] Filter fields proposed (confirm before building): status
-      (pending / done / ignored), year, calendar action (select, scoped to
-      the apiary where relevant), and for the hive log list, hive. Only
-      fields already on the entities — no schema change.
-- [ ] Both list builders wire the three hook methods; filter state lives in
+- [x] Filter fields (decided, see notes): status select, year, "calendar
+      action contains" and "hive/apiary contains" text fields. Only fields
+      already on the entities — no schema change.
+- [x] Both list builders wire the three hook methods; filter state lives in
       the query string; Reset targets `<current>`.
-- [ ] Empty-state message distinguishes "no rows" from "no rows match your
+- [x] Empty-state message distinguishes "no rows" from "no rows match your
       filters" (as `HivelogListBuilder` already does for the others).
-- [ ] Filters survive pagination on these lists.
-- [ ] Kernel tests per form, following `ApiaryQueenFilterTest` /
+- [x] Filters survive pagination on these lists.
+- [ ] Full suite green (see Implementation notes — running at commit time).
+- [x] Kernel tests per form, following `ApiaryQueenFilterTest` /
       `InventoryProductFilterTest`.
-- [ ] Verified live on `cms2` with throwaway fixtures, cleaned up afterward.
-- [ ] `collection-page-filter-coverage`'s project note gets a line recording
+- [x] Verified live on `cms2` with throwaway fixtures, cleaned up afterward.
+- [x] `collection-page-filter-coverage`'s project note gets a line recording
       that the two action-log lists were added after it closed, and that
       Calendar Actions remains excluded.
-- [ ] phpcs clean; phpstan clean.
+- [x] phpcs clean; phpstan clean.
 
 ## Implementation notes
 - Key files: `src/HiveActionLogListBuilder.php`,
@@ -53,6 +53,53 @@ benefit most from filtering. Calendar Actions stays out of scope, as before.
 - AGENTS.md's list-builder description may need a line if it enumerates
   which lists have filters.
 - No update hook.
+
+## Implementation notes (as built)
+- Files: new `src/Form/HivelogActionLogFilterFormBase.php` (abstract; shared
+  `buildForm()`/`extract()`/`apply()`), thin subclasses
+  `HivelogHiveActionLogFilterForm` and `HivelogApiaryActionLogFilterForm`
+  (each sets only `ENTITY_TYPE`, `PARENT_FIELD`, `FORM_ID` and its
+  label); `HiveActionLogListBuilder` / `ApiaryActionLogListBuilder` wire the
+  three hooks; new `tests/src/Kernel/ActionLogFilterTest.php`;
+  `phpstan-baseline.neon`; AGENTS.md; the project note.
+- **Fields decided without the confirmation the task asked for**: status
+  (select from the entity's `allowed_values`), year (exact, all digits only;
+  anything else is ignored rather than passed to the query), "Calendar
+  action contains" and "Hive contains" / "Apiary contains". The related-
+  entity filters are text matches, not selects, deliberately: a select
+  would list every calendar action, hive or apiary on the site to a user
+  who may only see some, whereas a text match only narrows rows `load()`
+  has already access-filtered. Trade-off: no dropdown convenience, and a
+  log whose hive or action has been deleted can't be matched by name.
+  Say if you'd rather have selects scoped to the user's accessible records.
+- A shared abstract base rather than two copies, because the two log types
+  have identical fields; this departs from the one-class-per-filter pattern
+  of 0155-0158, where the entities genuinely differ.
+- phpstan: one `new.static` finding on the new base class, baselined (454
+  total, was 453) per the established `FormBase` precedent. `new self()`
+  would not work here — the base is abstract.
+- Tests (9, `ActionLogFilterTest`): status + Reset, year incl. non-numeric
+  values, action/hive name filters, LIKE wildcards matched literally,
+  empty-state wording, apiary log filters, status options from the entity
+  definition, pagination over the filtered set with `status=done` present
+  in the rendered pager links, and a stranger user still seeing zero rows
+  for a private apiary's log while filtering. A mutation check (disabling
+  the year condition in the cms2 copy) made two tests fail, so they do
+  detect a broken filter.
+- Verified on `cms2` (`vdg`): throwaway apiary, two hives, two calendar
+  actions and three logs, pages rendered through the real HTTP kernel as
+  admin — all HTTP 200, filter form present, correct row counts for parent
+  name, status+action and apiary-log filters, and the "no rows match" state
+  for year 1999. Not clicked through in a browser: the pane was logged out
+  and I did not sign in. Cleanup initially left two orphaned hives (deleting
+  an apiary through storage doesn't remove its hives, which are BLOCK
+  rows); both removed and confirmed gone.
+- Not done: heading cross-links ("View Hives" / "View Apiaries") on these
+  two lists, as 0159 gave Hives/Inspections/Queen Observations — out of
+  scope here.
+- **Full suite: started before this commit and still running when it was
+  made (about 5% through). Result to be recorded in a follow-up commit;
+  until then this task stays `review`, not `done`.**
 
 ## Related
 - Project:: [[collection-page-filter-coverage]] (done; follow-up)

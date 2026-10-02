@@ -772,6 +772,12 @@ parameters:
 			message: '#^Unsafe usage of new static\(\)\.$#'
 			identifier: new.static
 			count: 1
+			path: src/Form/HivelogActionLogFilterFormBase.php
+
+		-
+			message: '#^Unsafe usage of new static\(\)\.$#'
+			identifier: new.static
+			count: 1
 			path: src/Form/HivelogApiaryFilterForm.php
 
 		-

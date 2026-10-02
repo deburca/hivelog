@@ -36,6 +36,13 @@ were already underway — see [[0158-api-client-list-filters]]).
   controller-built, not a `HivelogListBuilder` subclass, same
   exclusion task 0132 already recorded.
 
+## Follow-up after closing
+The Hive and Apiary Action Log lists (`/hivelog/hive-action-logs`,
+`/hivelog/apiary-action-logs`) were never named in this project's scope,
+and so were still unfiltered when it closed — found in the 2026-10-02
+review and added afterwards by [[0168-action-log-list-filters]]. Calendar
+Actions remains excluded, as above.
+
 ## Tasks
 ```dataview
 TABLE status, priority

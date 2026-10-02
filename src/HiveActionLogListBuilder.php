@@ -5,13 +5,16 @@ declare(strict_types=1);
 namespace Drupal\hivelog;
 
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\Query\QueryInterface;
+use Drupal\hivelog\Form\HivelogHiveActionLogFilterForm;
 
 /**
  * Provides a list builder for Hive Action Log entities.
  *
  * No context-free add route exists for HiveActionLog (always added from
  * a hive + calendar action context), so the collection page has no
- * heading action — see AGENTS.md "Routing, controllers and forms".
+ * heading action — see AGENTS.md "Routing, controllers and forms". Filtered
+ * by `HivelogHiveActionLogFilterForm` (task 0168).
  */
 class HiveActionLogListBuilder extends HivelogListBuilder {
 
@@ -57,6 +60,35 @@ class HiveActionLogListBuilder extends HivelogListBuilder {
       : '';
 
     return $row;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getFilterForm(): array {
+    return $this->formBuilder->getForm(HivelogHiveActionLogFilterForm::class);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function applyFilters(QueryInterface $query): void {
+    HivelogHiveActionLogFilterForm::apply($query, $this->currentFilters());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function hasActiveFilters(): bool {
+    return (bool) $this->currentFilters();
+  }
+
+  /**
+   * The current request's hive action log filter values, or `[]` with no request.
+   */
+  protected function currentFilters(): array {
+    $request = $this->requestStack->getCurrentRequest();
+    return $request ? HivelogHiveActionLogFilterForm::extract($request) : [];
   }
 
 }

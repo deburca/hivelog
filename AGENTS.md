@@ -408,6 +408,25 @@ the ones on core's `#type => 'table'` inherit it via
 `EntityListBuilder::buildRow()`. A new list builder should extend
 `HivelogListBuilder`, never `EntityListBuilder` directly.
 
+A collection page gets a filter form by overriding three hooks on its list
+builder: `getFilterForm()` (renders the form), `applyFilters()` (adds
+conditions to the load query) and `hasActiveFilters()` (picks the
+"no rows match your filters" empty state). Each filter form is a
+`FormBase` with a GET method and static `extract(Request)` /
+`apply(QueryInterface, array)`, so the rendered `#default_value`s and the
+query conditions read the same extracted values and can't drift. Keep the
+Filter/Reset controls in a container named `filter_actions` (not `actions`,
+which admin themes such as Gin hoist into their top bar). Prefer
+"name contains" text fields over selects for filtering on a *related*
+entity (a hive, apiary, calendar action): a select would list every such
+record to a user who may only see some of them, whereas a text match only
+narrows rows `load()` has already access-filtered. The Hive and Apiary
+Action Log filters share `HivelogActionLogFilterFormBase`, each subclass
+naming only its entity type, parent field and label. The Calendar Actions
+collection page is the exception: `CalendarActionController::collection()`
+builds it and its filter form (`HivelogCalendarActionsFilterForm`)
+directly, so it doesn't use these hooks.
+
 ### CSS and components
 
 CSS libraries are declared in `hivelog.libraries.yml` (core) and each
