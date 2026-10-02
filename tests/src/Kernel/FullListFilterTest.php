@@ -175,6 +175,87 @@ class FullListFilterTest extends KernelTestBase {
   }
 
   /**
+   * Tests a reversed Inspections date range is swapped, not silently empty.
+   *
+   * Task 0169: "From" later than "To" used to match nothing with no
+   * explanation.
+   */
+  public function testInspectionListReversedDateRangeIsSwappedWithNotice(): void {
+    $apiary = Apiary::create(['name' => 'Test Apiary']);
+    $apiary->save();
+    $hive = Hive::create(['name' => 'Test Hive', 'apiary' => $apiary->id(), 'status' => 'active']);
+    $hive->save();
+    HiveInspection::create(['hive' => $hive->id(), 'inspection_date' => '2026-01-15'])->save();
+    HiveInspection::create(['hive' => $hive->id(), 'inspection_date' => '2026-06-15'])->save();
+    HiveInspection::create(['hive' => $hive->id(), 'inspection_date' => '2026-12-15'])->save();
+
+    $this->pushRoutedRequest('entity.hive_inspection.collection', '/hivelog/inspections', [
+      'date_from' => '2026-09-01',
+      'date_to' => '2026-03-01',
+    ]);
+    $build = \Drupal::entityTypeManager()->getListBuilder('hive_inspection')->render();
+
+    $this->assertCount(1, $build['table']['#props']['rows'], 'Swapped to Mar-Sep: only the June inspection.');
+    $this->assertStringContainsString('swapped', $build['filter']['range_notice']['#markup']);
+    $this->assertEquals('2026-03-01', $build['filter']['filters']['date_from']['#default_value']);
+    $this->assertEquals('2026-09-01', $build['filter']['filters']['date_to']['#default_value']);
+  }
+
+  /**
+   * Tests a malformed Inspections date is ignored with a notice.
+   */
+  public function testInspectionListMalformedDateIsIgnoredWithNotice(): void {
+    $apiary = Apiary::create(['name' => 'Test Apiary']);
+    $apiary->save();
+    $hive = Hive::create(['name' => 'Test Hive', 'apiary' => $apiary->id(), 'status' => 'active']);
+    $hive->save();
+    HiveInspection::create(['hive' => $hive->id(), 'inspection_date' => '2026-01-15'])->save();
+    HiveInspection::create(['hive' => $hive->id(), 'inspection_date' => '2026-06-15'])->save();
+
+    $this->pushRoutedRequest('entity.hive_inspection.collection', '/hivelog/inspections', ['date_from' => 'banana']);
+    $build = \Drupal::entityTypeManager()->getListBuilder('hive_inspection')->render();
+
+    $this->assertCount(2, $build['table']['#props']['rows'], 'The bad date is dropped, so nothing is filtered out.');
+    $this->assertStringContainsString('not a valid date', $build['filter']['range_notice']['#markup']);
+  }
+
+  /**
+   * Tests a clean range shows no notice at all.
+   */
+  public function testInspectionListValidRangeShowsNoNotice(): void {
+    $this->pushRoutedRequest('entity.hive_inspection.collection', '/hivelog/inspections', [
+      'date_from' => '2026-01-01',
+      'date_to' => '2026-12-31',
+    ]);
+    $build = \Drupal::entityTypeManager()->getListBuilder('hive_inspection')->render();
+
+    $this->assertArrayNotHasKey('range_notice', $build['filter']);
+  }
+
+  /**
+   * Tests a reversed Queen Observations range (obs_ prefix) is swapped.
+   */
+  public function testQueenObservationListReversedDateRangeIsSwappedWithNotice(): void {
+    $apiary = Apiary::create(['name' => 'Test Apiary']);
+    $apiary->save();
+    $hive = Hive::create(['name' => 'Test Hive', 'apiary' => $apiary->id(), 'status' => 'active']);
+    $hive->save();
+    $queen = Queen::create(['name' => 'Q1', 'hive' => $hive->id(), 'queen_year' => 2025, 'status' => 'active']);
+    $queen->save();
+    QueenObservation::create(['queen' => $queen->id(), 'observation_date' => '2026-01-15', 'health' => 'good'])->save();
+    QueenObservation::create(['queen' => $queen->id(), 'observation_date' => '2026-06-15', 'health' => 'good'])->save();
+
+    $this->pushRoutedRequest('entity.queen_observation.collection', '/hivelog/queen-observations', [
+      'obs_date_from' => '2026-09-01',
+      'obs_date_to' => '2026-03-01',
+    ]);
+    $build = \Drupal::entityTypeManager()->getListBuilder('queen_observation')->render();
+
+    $this->assertCount(1, $build['table']['#props']['rows']);
+    $this->assertStringContainsString('swapped', $build['filter']['range_notice']['#markup']);
+  }
+
+  /**
    * Extracts the rendered Reset button's URL from a list builder's build.
    */
   protected function resetUrl(array $build): string {

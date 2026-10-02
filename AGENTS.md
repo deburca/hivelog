@@ -420,7 +420,14 @@ which admin themes such as Gin hoist into their top bar). Prefer
 "name contains" text fields over selects for filtering on a *related*
 entity (a hive, apiary, calendar action): a select would list every such
 record to a user who may only see some of them, whereas a text match only
-narrows rows `load()` has already access-filtered. The Hive and Apiary
+narrows rows `load()` has already access-filtered. A filter with a From/To
+pair (dates or ISO weeks) must run it through `HivelogRangeFilter`
+(`normaliseDates()` / `normaliseWeeks()`, or `datesFromRequest()` inside
+`extract()`): a malformed value is dropped and a reversed pair swapped, and
+the returned notices are shown by the form as a `range_notice` element
+(`noticeElement()`), added only when there is something to say. `extract()`
+itself never prints anything, because list builders and controllers call it
+too. The Hive and Apiary
 Action Log filters share `HivelogActionLogFilterFormBase`, each subclass
 naming only its entity type, parent field and label. The Calendar Actions
 collection page is the exception: `CalendarActionController::collection()`

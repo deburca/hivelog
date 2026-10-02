@@ -175,6 +175,39 @@ class InventoryProductFilterTest extends KernelTestBase {
   }
 
   /**
+   * Tests a reversed Inventory Purchases date range is swapped with a notice.
+   */
+  public function testInventoryPurchaseListReversedDateRangeIsSwappedWithNotice(): void {
+    $apiary = Apiary::create(['name' => 'Test Apiary']);
+    $apiary->save();
+    $item = InventoryItem::create([
+      'apiary' => $apiary->id(),
+      'name' => 'Sugar',
+      'unit' => 'kg',
+      'item_type' => 'consumable',
+    ]);
+    $item->save();
+    foreach (['2026-01-15', '2026-06-15'] as $date) {
+      InventoryPurchase::create([
+        'apiary' => $apiary->id(),
+        'item' => $item->id(),
+        'purchase_date' => $date,
+        'quantity' => 10,
+        'unit_price' => 1.5,
+      ])->save();
+    }
+
+    $this->pushRoutedRequest('entity.inventory_purchase.collection', '/hivelog/inventory-purchases', [
+      'date_from' => '2026-09-01',
+      'date_to' => '2026-03-01',
+    ]);
+    $build = \Drupal::entityTypeManager()->getListBuilder('inventory_purchase')->render();
+
+    $this->assertCount(1, $build['table']['#props']['rows']);
+    $this->assertStringContainsString('swapped', $build['filter']['range_notice']['#markup']);
+  }
+
+  /**
    * Tests the Inventory Purchases list filters by supplier.
    */
   public function testInventoryPurchaseListSupplierFilter(): void {

@@ -186,6 +186,32 @@ class CalendarActionCollectionTest extends KernelTestBase {
   }
 
   /**
+   * The reversed range's form fields show the swapped values, with a notice.
+   *
+   * Task 0169: the controller always swapped silently, but the form kept
+   * showing the reversed values the user typed, so fields and results
+   * disagreed.
+   */
+  public function testReversedWeekRangeFormShowsSwappedValuesAndNotice(): void {
+    $this->pushRequestWithQuery(['week_from' => '30', 'week_to' => '20']);
+    $build = $this->controller()->collection();
+
+    $this->assertEquals(20, $build['filter']['filters']['week_from']['#default_value']);
+    $this->assertEquals(30, $build['filter']['filters']['week_to']['#default_value']);
+    $this->assertStringContainsString('swapped', $build['filter']['range_notice']['#markup']);
+  }
+
+  /**
+   * A valid week range shows no notice.
+   */
+  public function testValidWeekRangeShowsNoNotice(): void {
+    $this->pushRequestWithQuery(['week_from' => '10', 'week_to' => '20']);
+    $build = $this->controller()->collection();
+
+    $this->assertArrayNotHasKey('range_notice', $build['filter']);
+  }
+
+  /**
    * The page offers Edit/Delete operations and the calculation footnote.
    */
   public function testCollectionHasOperationsAndFootnote(): void {

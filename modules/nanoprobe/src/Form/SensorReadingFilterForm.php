@@ -7,6 +7,7 @@ namespace Drupal\nanoprobe\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Drupal\hivelog\HivelogRangeFilter;
 use Drupal\nanoprobe\Entity\SensorDevice;
 use Drupal\nanoprobe\Entity\SensorReading;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -54,10 +55,20 @@ class SensorReadingFilterForm extends FormBase {
     $request = $this->requestStack->getCurrentRequest();
     $query = $request ? $request->query : NULL;
 
+    // Task 0169: same normalisation the readings controller applies to
+    // the range (drop a malformed date, swap a reversed pair), so the
+    // fields show what the chart actually covers.
+    [$date_from, $date_to, $range_notices] = $request
+      ? HivelogRangeFilter::datesFromRequest($request)
+      : ['', '', []];
+
     $form['#method'] = 'get';
     $form['#attributes']['class'][] = 'hivelog-filter-form';
     $form['#attached']['library'][] = 'hivelog/filter_form';
     $form['#cache']['contexts'][] = 'url.query_args';
+    if ($range_notices) {
+      $form['range_notice'] = HivelogRangeFilter::noticeElement($range_notices);
+    }
 
     $form['filters'] = [
       '#type' => 'container',
@@ -80,13 +91,13 @@ class SensorReadingFilterForm extends FormBase {
     $form['filters']['date_from'] = [
       '#type' => 'date',
       '#title' => $this->t('From'),
-      '#default_value' => $query ? (string) $query->get('date_from', '') : '',
+      '#default_value' => $date_from,
     ];
 
     $form['filters']['date_to'] = [
       '#type' => 'date',
       '#title' => $this->t('To'),
-      '#default_value' => $query ? (string) $query->get('date_to', '') : '',
+      '#default_value' => $date_to,
     ];
 
     $form['filter_actions'] = [

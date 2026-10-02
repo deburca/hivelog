@@ -93,3 +93,17 @@
     margin: 0;
   }
 }
+
+/*
+ * Task 0169: the one-line notice shown above a filter form's fields when a
+ * hand-edited or reversed range was corrected (HivelogRangeFilter). Reuses
+ * the warning severity tokens rather than a new colour.
+ */
+.hivelog-filter-form__notice {
+  margin: 0 0 0.5rem;
+  padding: 0.4rem 0.75rem;
+  border-left: 3px solid var(--hivelog-warning);
+  background: var(--hivelog-warning-tint);
+  color: var(--hivelog-ink);
+  font-size: 0.875rem;
+}

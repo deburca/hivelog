@@ -7,6 +7,7 @@ namespace Drupal\hivelog\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Drupal\hivelog\HivelogRangeFilter;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -45,10 +46,20 @@ class HivelogCalendarActionsFilterForm extends FormBase {
     $request = $this->requestStack->getCurrentRequest();
     $query = $request ? $request->query : NULL;
 
+    // Task 0169: the same normalisation the controller applies to the
+    // query (clamp, drop non-numeric, swap a reversed pair), so the
+    // displayed values match what is actually filtered.
+    [$week_from, $week_to, $range_notices] = $query
+      ? HivelogRangeFilter::normaliseWeeks((string) $query->get('week_from', ''), (string) $query->get('week_to', ''))
+      : [NULL, NULL, []];
+
     $form['#method'] = 'get';
     $form['#attributes']['class'][] = 'hivelog-filter-form';
     $form['#attached']['library'][] = 'hivelog/filter_form';
     $form['#cache']['contexts'][] = 'url.query_args';
+    if ($range_notices) {
+      $form['range_notice'] = HivelogRangeFilter::noticeElement($range_notices);
+    }
 
     $form['filters'] = [
       '#type' => 'container',
@@ -61,7 +72,7 @@ class HivelogCalendarActionsFilterForm extends FormBase {
       '#min' => 1,
       '#max' => 53,
       '#size' => 4,
-      '#default_value' => $query ? $query->get('week_from', '') : '',
+      '#default_value' => $week_from ?? '',
     ];
 
     $form['filters']['week_to'] = [
@@ -70,7 +81,7 @@ class HivelogCalendarActionsFilterForm extends FormBase {
       '#min' => 1,
       '#max' => 53,
       '#size' => 4,
-      '#default_value' => $query ? $query->get('week_to', '') : '',
+      '#default_value' => $week_to ?? '',
     ];
 
     // Deliberately named 'filter_actions' (not 'actions') and typed as a

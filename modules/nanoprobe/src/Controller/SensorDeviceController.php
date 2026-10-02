@@ -9,6 +9,7 @@ use Drupal\Core\Url;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\Hive;
 use Drupal\hivelog\HivelogEntityActionsTrait;
+use Drupal\hivelog\HivelogRangeFilter;
 use Drupal\nanoprobe\Entity\SensorDevice;
 use Drupal\nanoprobe\Entity\SensorReading;
 use Drupal\nanoprobe\Form\SensorReadingFilterForm;
@@ -188,8 +189,7 @@ class SensorDeviceController extends ControllerBase {
    */
   protected function extractReadingsDateRange(SensorDevice $sensor_device): array {
     $request = $this->getRequest();
-    $date_from = $this->extractValidDate((string) $request->query->get('date_from', ''));
-    $date_to = $this->extractValidDate((string) $request->query->get('date_to', ''));
+    [$date_from, $date_to] = HivelogRangeFilter::datesFromRequest($request);
 
     $start = $date_from !== '' ? (int) strtotime($date_from . ' 00:00:00') : (int) $sensor_device->get('created')->value;
     $end = $date_to !== '' ? (int) strtotime($date_to . ' 23:59:59') : $this->time()->getRequestTime();
@@ -202,25 +202,6 @@ class SensorDeviceController extends ControllerBase {
       : $this->t('full history');
 
     return [$start, $end, $range_label];
-  }
-
-  /**
-   * Validates a `date_from`/`date_to` query value as a plain `Y-m-d` string.
-   *
-   * @param string $value
-   *   The raw query string value.
-   *
-   * @return string
-   *   $value if it's a genuine `Y-m-d` date, otherwise an empty string —
-   *   a malformed/hand-crafted query value falls back to the default
-   *   range rather than being passed to strtotime() unchecked.
-   */
-  protected function extractValidDate(string $value): string {
-    $value = trim($value);
-    if ($value === '' || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $value)) {
-      return '';
-    }
-    return checkdate((int) substr($value, 5, 2), (int) substr($value, 8, 2), (int) substr($value, 0, 4)) ? $value : '';
   }
 
   /**

@@ -8,6 +8,7 @@ use Drupal\Core\Entity\Query\QueryInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Drupal\hivelog\HivelogRangeFilter;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -54,6 +55,13 @@ class HivelogInventoryPurchaseFilterForm extends FormBase {
     $form['#attributes']['class'][] = 'hivelog-filter-form';
     $form['#attached']['library'][] = 'hivelog/filter_form';
     $form['#cache']['contexts'][] = 'url.query_args';
+
+    if ($request) {
+      [, , $range_notices] = HivelogRangeFilter::datesFromRequest($request);
+      if ($range_notices) {
+        $form['range_notice'] = HivelogRangeFilter::noticeElement($range_notices);
+      }
+    }
 
     $form['filters'] = [
       '#type' => 'container',
@@ -132,9 +140,13 @@ class HivelogInventoryPurchaseFilterForm extends FormBase {
    *   included.
    */
   public static function extract(Request $request): array {
+    // Task 0169: a malformed date is dropped and a reversed From/To pair
+    // is swapped, in one shared place — see HivelogRangeFilter.
+    [$date_from, $date_to] = HivelogRangeFilter::datesFromRequest($request);
+    $normalised = ['date_from' => $date_from, 'date_to' => $date_to];
     $filters = [];
     foreach (['date_from', 'date_to', 'supplier'] as $key) {
-      $value = trim((string) $request->query->get($key, ''));
+      $value = $normalised[$key] ?? trim((string) $request->query->get($key, ''));
       if ($value !== '') {
         $filters[$key] = $value;
       }

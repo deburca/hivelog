@@ -19,6 +19,7 @@ use Drupal\hivelog\Entity\CalendarAction;
 use Drupal\hivelog\Form\HivelogCalendarActionsFilterForm;
 use Drupal\hivelog\HivelogDetailPageTrait;
 use Drupal\hivelog\HivelogListPageTrait;
+use Drupal\hivelog\HivelogRangeFilter;
 use Drupal\hivelog\Utility\SimpleBulletText;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -245,20 +246,20 @@ class CalendarActionController extends ControllerBase {
       return [];
     }
 
+    // Clamping, digit-only filtering and the reversed-pair swap live in
+    // HivelogRangeFilter (task 0169), shared with the filter form so the
+    // form's displayed values can't disagree with the applied ones.
+    [$week_from, $week_to] = HivelogRangeFilter::normaliseWeeks(
+      (string) $request->query->get('week_from', ''),
+      (string) $request->query->get('week_to', ''),
+    );
+
     $filters = [];
-
-    $week_from = trim((string) $request->query->get('week_from', ''));
-    if ($week_from !== '' && ctype_digit($week_from)) {
-      $filters['week_from'] = max(1, min(53, (int) $week_from));
+    if ($week_from !== NULL) {
+      $filters['week_from'] = $week_from;
     }
-
-    $week_to = trim((string) $request->query->get('week_to', ''));
-    if ($week_to !== '' && ctype_digit($week_to)) {
-      $filters['week_to'] = max(1, min(53, (int) $week_to));
-    }
-
-    if (isset($filters['week_from'], $filters['week_to']) && $filters['week_from'] > $filters['week_to']) {
-      [$filters['week_from'], $filters['week_to']] = [$filters['week_to'], $filters['week_from']];
+    if ($week_to !== NULL) {
+      $filters['week_to'] = $week_to;
     }
 
     return $filters;

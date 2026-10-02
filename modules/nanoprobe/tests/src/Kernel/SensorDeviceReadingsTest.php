@@ -223,6 +223,30 @@ class SensorDeviceReadingsTest extends KernelTestBase {
   }
 
   /**
+   * Tests a reversed `date_from`/`date_to` is swapped, not an empty range.
+   *
+   * Task 0169: previously a "From" after "To" produced a range whose start
+   * was after its end.
+   */
+  public function testReversedDateRangeIsSwappedWithNotice(): void {
+    $this->createReading('weight_kg', 20.0, 2);
+    $this->createReading('weight_kg', 21.0, 0);
+
+    $today = date('Y-m-d', \Drupal::time()->getRequestTime());
+    $earlier = date('Y-m-d', \Drupal::time()->getRequestTime() - (4 * 86400));
+    \Drupal::request()->query->set('date_from', $today);
+    \Drupal::request()->query->set('date_to', $earlier);
+
+    $controller = new SensorDeviceController();
+    $build = $controller->readings($this->device);
+
+    $this->assertArrayHasKey('metric_weight_kg', $build['charts'], 'Swapped range covers both readings.');
+    $this->assertEquals($earlier, $build['filter']['filters']['date_from']['#default_value']);
+    $this->assertEquals($today, $build['filter']['filters']['date_to']['#default_value']);
+    $this->assertStringContainsString('swapped', $build['filter']['range_notice']['#markup']);
+  }
+
+  /**
    * Tests the filter form is included on the page.
    */
   public function testFilterFormIsIncluded(): void {
