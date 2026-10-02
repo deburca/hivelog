@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: review
+status: done
 priority: low
 project:
 area: navigation
@@ -119,7 +119,14 @@ to describe the state without JavaScript.
   unconditionally when `has-active-child`", which the CSS header documents
   as a bug fixed in task 0149 — corrected, and the `hover: none` rule from
   task 0165 added.
-- Full suite: **pending** — result to follow below.
+- **Full suite: 1,179 tests / 19,530 assertions, 0 failures, 0 errors**
+  (1,173 before this task + the 6 new), only the usual third-party
+  deprecations and notices. Run as seven separately-completed chunks (six
+  balanced non-Functional chunks of 172–288 tests, then Functional). The
+  task was committed in `review` before the run finished and flipped to
+  `done` in a follow-up commit. Status is `done` with two items open, both
+  recorded above: Escape-to-dismiss (a decision on ADR-0104, not
+  implemented) and the unticked screen-reader / accessibility-tree check.
 
 ## Related
 - Project:: [[in-app-navigation-restructuring]] (done; follow-up)
