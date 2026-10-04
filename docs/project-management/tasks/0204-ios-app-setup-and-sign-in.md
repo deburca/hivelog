@@ -20,13 +20,13 @@ from the HiveLog vault so the project's Dataview table stays complete.
 Part of [[ios-field-app]].
 
 ## Acceptance criteria
-- [x] New repo created (local, not yet on GitHub); SwiftUI app, minimum iOS version decided and noted
+- [x] New repo created (private, github.com/deburca/vinculum); SwiftUI app, minimum iOS version decided and noted
 - [x] "Connect to your HiveLog server" screen: URL entry, discovery check
       that the site has the API submodule enabled, clear error otherwise
 - [x] OAuth auth-code + PKCE sign-in (`ASWebAuthenticationSession`), tokens
       in the Keychain, refresh handled, sign-out revokes
 - [x] Multiple servers or a single one — decided and noted
-- [ ] CI for the app repo (build + unit tests): written, but not yet run anywhere (see below)
+- [x] CI for the app repo (build + unit tests): both jobs passed on GitHub Actions' first run
 
 ## Implementation notes
 
@@ -46,10 +46,10 @@ the **locale folder `en-GB`** is the one you want (the text has no spelling that
 from en-US).
 
 ### Where it lives
-A new repository, **`~/Development/vinculum`** (renamed from `hivelog-ios` once the app was named; local only: `git init`, files
-staged, nothing committed and no GitHub remote). Creating the GitHub repository is
-yours to do, because whether the app is open source alongside the module and who
-owns the App Store listing are still open questions in the project.
+A new repository, **`~/Development/vinculum`** (renamed from `hivelog-ios` once the app
+was named), pushed to the **private** GitHub repository `deburca/vinculum`. Whether the app
+is open source alongside the module, and who owns the App Store listing, are still open
+questions in the project.
 
 ### What was built
 - **`HiveLogKit`** (no UI): `ServerURL` (what people type becomes one address; https
@@ -115,8 +115,11 @@ owns the App Store listing are still open questions in the project.
 - **Observed, not investigated:** the first screen takes several seconds to appear after a
   cold launch of the Debug build on the simulator (a white launch screen first). It may be
   the Debug build or a cold simulator; worth timing on a Release build and a real phone.
+- **CI:** both jobs passed on GitHub Actions' first run (`macos-15`): the package tests on
+  the Mac, and the iOS job (the same tests on an iPhone simulator, project generation with
+  XcodeGen, and a simulator build).
 - **Not verified:** a real HiveLog site end to end from the app; a physical iPhone;
-  TestFlight; and the CI workflow (written, never run).
+  TestFlight.
 
 ### Follow-ups
 - Sign in once against a real site: enable `hivelog_api` on a dev site, give a user the
