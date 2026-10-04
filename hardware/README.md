@@ -15,6 +15,8 @@ firmware (C++, PlatformIO), a different language and build toolchain
 entirely, kept in this repo only because task 0079 didn't require a
 separate one for a solo-maintainer pilot.
 
+> Step-by-step wiring, flashing and troubleshooting: [WEIGHT_SENSOR.md](WEIGHT_SENSOR.md).
+
 ## Two boards, two roles
 
 ```mermaid
