@@ -1,13 +1,13 @@
 ---
 type: task
 tags: [hivelog/task]
-status: review
+status: done
 priority: medium
 project: "[[ios-field-app]]"
 area: integration
 created: 2026-10-04
 branch: feature/0202-hivelog-api-computed-view-endpoints
-release:
+release: 2.8.0
 depends-on: ["[[0201-hivelog-api-submodule-scaffold]]"]
 blocked-by:
 ---
