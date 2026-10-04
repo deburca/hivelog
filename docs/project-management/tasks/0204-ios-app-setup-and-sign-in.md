@@ -84,30 +84,44 @@ owns the App Store listing are still open questions in the project.
   the captured fixture.
 
 ### Verification, and what is not verified
-- **67 tests pass** with `swift test` (Swift 6.4, strict concurrency, Swift Testing):
-  server addresses, the RFC 7636 PKCE vector, discovery in every failure mode, the
-  OAuth exchange and its errors, the sign-in flow (wrong state, Deny, cancel, a
-  refused exchange), the session (single-flight refresh with 12 concurrent callers,
-  offline keeps the session, a revoked refresh token ends it, 401 retry, sign-out
-  online and offline), the Keychain round trip (really run, not skipped), and the
-  app model's phases. **The decoders are checked against responses captured from the
-  real server** (its own functional test), not only hand-written ones.
-- **Backend: the real flow ends to end.** The `hivelog_api` functional test now signs
-  out with a real token pair: the access token is 401 afterwards, the refresh token
-  is `invalid_grant`, and another user's session is untouched. 59 module tests,
-  phpcs and phpstan clean.
-- **Not verified: the iOS app itself.** This Mac has only the Command Line Tools:
-  no Xcode, no iOS SDK, no simulator. So the `@main` shell type-checks (against the
-  macOS SDK) but has **not been built for iOS, run in a simulator or on a phone**.
-  Unverified as a result: the generated Xcode project from `project.yml`, the
-  Info.plist URL-scheme registration, the sheet presentation anchor on iOS, and the
-  two CI jobs (`swift test` on macOS, and an iOS-simulator build) which have never
-  run. The sign-in sheet against a real server from a real device is the first thing
-  to try once Xcode is installed.
+- **68 tests pass** with `swift test` on the Mac (Swift 6.4, strict concurrency, Swift
+  Testing), and the same suite passes **on an iOS 27 simulator**
+  (`xcodebuild test -scheme HiveLog-Package`; the Keychain suite skips itself there
+  because a bare test host has no entitlements). They cover server addresses, the RFC 7636
+  PKCE vector, discovery in every failure mode, the OAuth exchange and errors, the sign-in
+  flow (wrong state, Deny, cancel, a refused exchange), the session (single-flight refresh
+  with 12 concurrent callers, offline keeps the session, a revoked refresh token ends it,
+  401 retry, sign-out online and offline), the Keychain round trip, the app model, the
+  App Store text limits, and the decoders against **responses captured from the real
+  server**.
+- **The app itself was built and run** (Xcode 27, iPhone 18 Pro simulator, iOS 27) once
+  Xcode was installed: it builds, shows the Connect screen with the Vinculum title and the
+  URL keyboard, reports an unreachable server in plain words, finds a server, flags an
+  unencrypted dev connection, shows the real system prompt and `ASWebAuthenticationSession`
+  sheet, follows the `hivelog://` redirect back, completes the PKCE exchange, calls the API
+  with the bearer token, resumes the session from the Keychain after a cold relaunch, and
+  signs out (the server got the bearer and refresh tokens). **That ran against a stand-in
+  server on localhost that I wrote to speak the protocol, not a real HiveLog site**: the
+  PKCE check it applies, the discovery document and the endpoints are the real contract, but
+  the server side of consent and token issue is the PHP module's own tests' job.
+- **Bugs found only by running the app:**
+  1. A build with `CODE_SIGNING_ALLOWED=NO` has no entitlements and the Keychain refuses
+     every write (-34018), so sign-in failed at the very last step with a generic "Something
+     went wrong". Fixed twice: the simulator build is now signed to run locally
+     (`project.yml`), and a Keychain failure now says so in words and logs its cause
+     (`Messages`, `os.Logger`). The README records the gotcha.
+  2. The app fetched the apiary list twice after sign-in (once in the model, once when the
+     screen appeared); the model no longer does.
+- **Observed, not investigated:** the first screen takes several seconds to appear after a
+  cold launch of the Debug build on the simulator (a white launch screen first). It may be
+  the Debug build or a cold simulator; worth timing on a Release build and a real phone.
+- **Not verified:** a real HiveLog site end to end from the app; a physical iPhone;
+  TestFlight; and the CI workflow (written, never run).
 
 ### Follow-ups
-- Install Xcode, run `xcodegen generate`, build and try the sign-in against a dev
-  site (the `.ddev.site` host is allowed over http).
+- Sign in once against a real site: enable `hivelog_api` on a dev site, give a user the
+  `hivelog_field_app` role, generate the OAuth keys, and use its `.ddev.site` address
+  (allowed over http; the simulator will need the site's certificate trusted if https).
 - Decide the GitHub home for the repo and the bundle id (`org.deburca.hivelog` is a
   placeholder) before 0209.
 - Backend release: the sign-out endpoint is new API surface, so a minor bump
