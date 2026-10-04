@@ -1,13 +1,13 @@
 ---
 type: task
 tags: [hivelog/task]
-status: review
+status: done
 priority: high
 project: "[[ios-field-app]]"
 area: tests
 created: 2026-10-04
 branch: feature/0203-hivelog-api-access-parity-tests
-release:
+release: 2.8.1
 depends-on: ["[[0201-hivelog-api-submodule-scaffold]]"]
 blocked-by:
 ---
