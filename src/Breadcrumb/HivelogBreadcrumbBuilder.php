@@ -105,6 +105,7 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
     'entity.hive_inspection.collection' => 'entity.hive.collection',
     'entity.queen.collection' => 'entity.hive.collection',
     'entity.queen_observation.collection' => 'entity.queen.collection',
+    'entity.calendar_action.collection' => 'entity.apiary.collection',
     'entity.inventory_item.collection' => 'entity.apiary.collection',
     'entity.inventory_purchase.collection' => 'entity.inventory_item.collection',
     'entity.product.collection' => 'entity.apiary.collection',

@@ -130,7 +130,7 @@ class HivelogMenuLinksTest extends KernelTestBase {
     $links = $this->derivedNavItemLinks();
 
     $apiaries_children = [
-      'hives', 'inspections', 'queens', 'queen_observations',
+      'hives', 'inspections', 'queens', 'queen_observations', 'calendar_actions',
       'inventory_items', 'inventory_purchases', 'products',
     ];
     foreach ($apiaries_children as $key) {

@@ -416,7 +416,6 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
    */
   public static function leafPageProvider(): array {
     return [
-      'calendar actions' => ['entity.calendar_action.collection', 'Calendar Actions'],
       'hive action logs' => ['entity.hive_action_log.collection', 'Hive Action Logs'],
       'apiary action logs' => ['entity.apiary_action_log.collection', 'Apiary Action Logs'],
       'combined financial report' => ['hivelog.apiaries.financial_report', 'Financial Report: All Apiaries'],
@@ -430,7 +429,8 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
    * Task 0153, ADR-0105. Asserts the full chain — every ancestor
    * crumb's text *and* route, not just the terminal one — since a
    * wrong middle crumb would be just as broken as a wrong terminal.
-   * Five of these use a shorter breadcrumb-only label than their real
+   * Task 0172 added Calendar Actions to this set. Five of these use a shorter
+   * breadcrumb-only label than their real
    * `label_collection` (Observations/Inventory/Purchases/AI Providers/
    * Sensors); the other five (Hives, Inspections, Queens, Products,
    * API Clients) use their existing `label_collection` unchanged.
@@ -501,6 +501,11 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
         'entity.product.collection',
         [['Apiaries', 'entity.apiary.collection']],
         'Products',
+      ],
+      'calendar actions' => [
+        'entity.calendar_action.collection',
+        [['Apiaries', 'entity.apiary.collection']],
+        'Calendar Actions',
       ],
       'api clients' => [
         'entity.api_client.collection',

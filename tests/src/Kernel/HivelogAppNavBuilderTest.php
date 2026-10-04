@@ -78,7 +78,7 @@ class HivelogAppNavBuilderTest extends KernelTestBase {
     $this->assertArrayHasKey('apiaries', $build);
 
     $apiaries_children = [
-      'hives', 'inspections', 'queens', 'queen_observations',
+      'hives', 'inspections', 'queens', 'queen_observations', 'calendar_actions',
       'inventory_items', 'inventory_purchases', 'products',
     ];
     foreach ($apiaries_children as $key) {
@@ -106,7 +106,7 @@ class HivelogAppNavBuilderTest extends KernelTestBase {
     $this->assertArrayNotHasKey('parent', $items['apiaries']);
     $this->assertArrayNotHasKey('parent', $items['insights']);
     $apiaries_children = [
-      'hives', 'inspections', 'queens', 'queen_observations',
+      'hives', 'inspections', 'queens', 'queen_observations', 'calendar_actions',
       'inventory_items', 'inventory_purchases', 'products',
     ];
     foreach ($apiaries_children as $key) {
@@ -230,7 +230,7 @@ class HivelogAppNavBuilderTest extends KernelTestBase {
 
     $submenu_keys = array_keys(array_filter($build['apiaries']['submenu'], fn($k) => is_string($k) && !str_starts_with((string) $k, '#'), ARRAY_FILTER_USE_KEY));
     $expected_submenu_keys = [
-      'hives', 'inspections', 'queens', 'queen_observations',
+      'hives', 'inspections', 'queens', 'queen_observations', 'calendar_actions',
       'hivelog_app_nav_separator_0',
       'inventory_items', 'inventory_purchases', 'products',
     ];
@@ -547,6 +547,39 @@ class HivelogAppNavBuilderTest extends KernelTestBase {
     foreach ($separators as $separator) {
       $this->assertSame('true', $separator['#attributes']['aria-hidden']);
     }
+  }
+
+  /**
+   * Tests Calendar Actions is an Apiaries child with its own active state.
+   *
+   * Task 0172: its only inbound link used to be a dashboard tile.
+   */
+  public function testCalendarActionsIsAnApiariesChildAndMarksItselfActive(): void {
+    $this->loginAdmin();
+    $items = \Drupal::service('hivelog.app_nav_builder')->getAllItems();
+    $this->assertSame('apiaries', $items['calendar_actions']['parent']);
+    $this->assertSame('entity.calendar_action.collection', $items['calendar_actions']['url']->getRouteName());
+
+    $this->setCurrentRequestRoute('entity.calendar_action.collection');
+    $build = \Drupal::service('hivelog.app_nav_builder')->build();
+    $link = $build['apiaries']['submenu']['calendar_actions']['#attributes'];
+    $this->assertContains('is-active', $link['class']);
+    $this->assertEquals('page', $link['aria-current']);
+    $this->assertContains('has-active-child', $build['apiaries']['#attributes']['class']);
+  }
+
+  /**
+   * Tests the action logs are deliberately NOT nav items.
+   *
+   * The Apiaries submenu is already seven long; the logs are reached from
+   * the Calendar Actions page and from each other (task 0172).
+   */
+  public function testActionLogsAreNotNavItems(): void {
+    $this->loginAdmin();
+    $items = \Drupal::service('hivelog.app_nav_builder')->getAllItems();
+    $routes = array_map(fn(array $item) => $item['url']->isRouted() ? $item['url']->getRouteName() : '', $items);
+    $this->assertNotContains('entity.hive_action_log.collection', $routes);
+    $this->assertNotContains('entity.apiary_action_log.collection', $routes);
   }
 
 }

@@ -554,6 +554,18 @@ class HivelogAppNavBuilder {
         'section' => 'queen_observation',
         'parent' => 'apiaries',
       ],
+      // Task 0172: the site-wide Calendar Actions list had a single inbound
+      // link (the dashboard's "Open seasonal tasks" tile). A leaf under
+      // Apiaries, like the other collections; the hive/apiary action *logs*
+      // are deliberately not nav items (see ADR-0104's task-0172 note).
+      'calendar_actions' => [
+        'title' => $this->t('Calendar Actions'),
+        'url' => Url::fromRoute('entity.calendar_action.collection'),
+        'weight' => 5,
+        'group' => 'records',
+        'section' => 'calendar_action',
+        'parent' => 'apiaries',
+      ],
       'inventory_items' => [
         'title' => $this->t('Inventory Items'),
         'url' => Url::fromRoute('entity.inventory_item.collection'),

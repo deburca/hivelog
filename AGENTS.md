@@ -382,7 +382,16 @@ Apiaries, HiveInspection → View Hives, QueenObservation → View Queens) —
 a plain navigational shortcut to the collection a beekeeper would pick a
 specific parent from, not a workaround for the missing add route (it
 does not open an add form itself, and none of the three list builders
-gained a new route).
+gained a new route). Likewise the Calendar Actions page and the Hive and
+Apiary Action Log lists (task 0172) link to one another — Calendar Actions
+→ View Hive Logs / View Apiary Logs; each log list → View Calendar Actions
+and the sibling log list — and Products and Inventory Purchases link to the
+combined financial report. These come from
+`HivelogListPageTrait::accessibleLinkAction()`, which offers a link only if
+the target route's access check passes (so nobody is sent into a 403) and
+whose heading declares the `user.permissions` cache context; it is only
+correct for permission-gated targets, so a link to an entity-access-gated
+route needs the `user` context instead.
 
 **Every canonical page owns its Edit/Delete; there are no local tasks or
 actions at all (task 0118).** `hivelog.links.task.yml` (per-type
@@ -611,7 +620,8 @@ for a route that must NOT get a breadcrumb.
 `HivelogEntityHierarchy` in tasks 0127/0120):
 - **Collections** end with their own name as a terminal crumb, read from
   each type's own `label_collection` (`collectionLabels()`, task 0119) —
-  no hand-maintained route → label map. Ten of them (task 0153,
+  no hand-maintained route → label map. Eleven of them (task 0153, plus
+  Calendar Actions from task 0172;
   ADR-0105) thread through their own conceptual parent collection(s)
   first — `Apiaries › Hives › Inspections`, `Apiaries › Hives › Queens
   › Observations`, `Apiaries › Inventory › Purchases`, `Insights › AI
@@ -622,7 +632,7 @@ for a route that must NOT get a breadcrumb.
   walks a specific *instance's* real reference field for canonical/
   edit/delete pages, and changing what one of its entries means would
   silently deepen every such page's own breadcrumb too — this map only
-  ever fires for a *collection* route. Five of the ten use a shorter
+  ever fires for a *collection* route. Five of the eleven use a shorter
   breadcrumb-only label than their real `label_collection`
   (Observations / Inventory / Purchases / AI Providers / Sensors —
   `collectionCrumbLabel()`); the entity's own label, the nav strip and
@@ -686,7 +696,7 @@ below 1004 without confirming `easy_breadcrumb` is not installed.
 ### In-app navigation (tasks 0119/0120, two-tier since 0146–0150, ADR-0104)
 
 `HivelogAppNavBuilder::getAllItems()` is the single registry for
-`hivelog`'s destinations: core's own 9 built-ins (`builtInItems()`) plus
+`hivelog`'s destinations: core's own 10 built-ins (`builtInItems()`) plus
 every `hook_hivelog_app_nav_items()` contribution (`hivelog.api.php`) —
 each item a `['title' => TranslatableMarkup, 'url' => Url, 'weight' =>
 int, 'group' => string, 'section' => string (optional), 'parent' =>
@@ -704,8 +714,8 @@ and **Insights** (`hivelog.insights`, `InsightsController`, task 0146,
 named "Setup" before task 0152's rename — a small landing page whose
 sole job is to exist for `insights`-group items to nest under; it has
 no content of its own beyond listing its accessible children). Every
-other built-in (Hives, Inspections, Queens, Queen Observations,
-Inventory Items, Inventory Purchases, Products) declares
+other built-in (Hives, Inspections, Queens, Queen Observations, Calendar
+Actions, Inventory Items, Inventory Purchases, Products) declares
 `parent: 'apiaries'` — each is a descendant of `Apiary` in the domain
 model. Every current submodule contribution (`collective`'s API
 Clients, `nexus`'s AI Provider Configs, `nanoprobe`'s Sensor Devices)

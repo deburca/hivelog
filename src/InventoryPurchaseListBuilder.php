@@ -72,7 +72,7 @@ class InventoryPurchaseListBuilder extends HivelogListBuilder {
    * workflow shortcut, kept per task 0126's heading cross-link review.
    */
   protected function getHeadingActions(): array {
-    return [
+    return array_values(array_filter([
       [
         'label' => (string) $this->t('Add Purchase'),
         'url' => Url::fromRoute('entity.inventory_purchase.add_form')->toString(),
@@ -82,7 +82,9 @@ class InventoryPurchaseListBuilder extends HivelogListBuilder {
         'label' => (string) $this->t('View Inventory Items'),
         'url' => Url::fromRoute('entity.inventory_item.collection')->toString(),
       ],
-    ];
+      // Task 0172: purchases are the cost side of the financial report.
+      $this->accessibleLinkAction($this->t('View Financial Report'), 'hivelog.apiaries.financial_report'),
+    ]));
   }
 
   /**

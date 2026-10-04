@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Drupal\hivelog;
 
+use Drupal\Core\Url;
+
 /**
  * Shared pagination and table-building helpers for HiveLog list pages.
  *
@@ -77,6 +79,76 @@ trait HivelogListPageTrait {
       $table['#props']['column_sorts'] = $column_sorts;
     }
     return $table;
+  }
+
+  /**
+   * Builds the heading row of a list page: one right-aligned button group.
+   *
+   * Shared by `HivelogListBuilder::render()` and the controller-built
+   * Calendar Actions page (task 0172) so both lay the heading out the same
+   * way.
+   *
+   * @param array[] $actions
+   *   Button props for `hivelog:button-group`: a label, a URL and an
+   *   optional variant. Empty means no heading at all.
+   *
+   * @return array
+   *   The heading render array, or `[]` when there are no actions.
+   */
+  protected function buildListHeading(array $actions): array {
+    if (!$actions) {
+      return [];
+    }
+    return [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['hivelog-list-heading']],
+      '#weight' => -90,
+      'actions' => [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['hivelog-list-heading__action']],
+        'buttons' => [
+          '#type' => 'component',
+          '#component' => 'hivelog:button-group',
+          '#props' => ['buttons' => $actions],
+        ],
+      ],
+      '#attached' => ['library' => ['hivelog/buttons']],
+      // Which cross-links are present depends on the viewer's permissions
+      // (accessibleLinkAction()), so the heading must vary by them or one
+      // user's buttons could be served to another from the page cache.
+      // Permission-gated routes only: link an entity-access-gated route and
+      // this needs the `user` context instead.
+      '#cache' => ['contexts' => ['user.permissions']],
+    ];
+  }
+
+  /**
+   * A cross-link button for a heading, or NULL if the viewer can't open it.
+   *
+   * Task 0172: a link to a page the viewer is not allowed on is a dead end
+   * (a 403), so cross-links are only offered when the route's own access
+   * check passes. Callers `array_filter()` the result.
+   *
+   * @param \Drupal\Core\StringTranslation\TranslatableMarkup|string $label
+   *   The button label.
+   * @param string $route_name
+   *   The target route.
+   * @param string|null $variant
+   *   Optional button variant (`primary`, `danger`).
+   *
+   * @return array|null
+   *   `hivelog:button-group` button props, or NULL.
+   */
+  protected function accessibleLinkAction($label, string $route_name, ?string $variant = NULL): ?array {
+    $url = Url::fromRoute($route_name);
+    if (!$url->access()) {
+      return NULL;
+    }
+    $action = ['label' => (string) $label, 'url' => $url->toString()];
+    if ($variant !== NULL) {
+      $action['variant'] = $variant;
+    }
+    return $action;
   }
 
 }

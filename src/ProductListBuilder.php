@@ -75,17 +75,17 @@ class ProductListBuilder extends HivelogListBuilder {
    * {@inheritdoc}
    */
   protected function getHeadingActions(): array {
-    return [
+    // The report is offered only to viewers who can open it (task 0172): it
+    // needs inventory-item view access, which is not the same permission as
+    // viewing products.
+    return array_values(array_filter([
       [
         'label' => (string) $this->t('Add Product'),
         'url' => Url::fromRoute('entity.product.add_form')->toString(),
         'variant' => 'primary',
       ],
-      [
-        'label' => (string) $this->t('View Financial Report'),
-        'url' => Url::fromRoute('hivelog.apiaries.financial_report')->toString(),
-      ],
-    ];
+      $this->accessibleLinkAction($this->t('View Financial Report'), 'hivelog.apiaries.financial_report'),
+    ]));
   }
 
   /**

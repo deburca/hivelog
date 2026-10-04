@@ -103,4 +103,19 @@ class ApiaryActionLogListBuilder extends HivelogListBuilder {
     return $request ? HivelogApiaryActionLogFilterForm::extract($request) : [];
   }
 
+  /**
+   * {@inheritdoc}
+   *
+   * Task 0172: no Add button (no context-free add route), but the page used
+   * to be a dead end — a cross-link to the Calendar Actions these logs report
+   * on, and to the sibling log list, joins the three into one cluster.
+   * Each is offered only if the viewer can open it.
+   */
+  protected function getHeadingActions(): array {
+    return array_values(array_filter([
+      $this->accessibleLinkAction($this->t('View Calendar Actions'), 'entity.calendar_action.collection'),
+      $this->accessibleLinkAction($this->t('View Hive Logs'), 'entity.hive_action_log.collection'),
+    ]));
+  }
+
 }

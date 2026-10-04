@@ -298,21 +298,7 @@ abstract class HivelogListBuilder extends EntityListBuilder {
 
     $heading_actions = $this->getHeadingActions();
     if ($heading_actions) {
-      $build['heading'] = [
-        '#type' => 'container',
-        '#attributes' => ['class' => ['hivelog-list-heading']],
-        '#weight' => -90,
-        'actions' => [
-          '#type' => 'container',
-          '#attributes' => ['class' => ['hivelog-list-heading__action']],
-          'buttons' => [
-            '#type' => 'component',
-            '#component' => 'hivelog:button-group',
-            '#props' => ['buttons' => $heading_actions],
-          ],
-        ],
-        '#attached' => ['library' => ['hivelog/buttons']],
-      ];
+      $build['heading'] = $this->buildListHeading($heading_actions);
     }
 
     $filter_form = $this->getFilterForm();

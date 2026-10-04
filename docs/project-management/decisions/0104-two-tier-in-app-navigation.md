@@ -205,6 +205,25 @@ left for an explicit decision. Mitigations today: tabbing out of the panel
 closes it, the dropdown never covers the hub's own link, and on touch or
 narrow screens it is always open, so nothing needs dismissing.
 
+## Amendment — 2026-10-02 (task 0172): Calendar Actions added; logs are not
+
+Recorded after the fact; the Decision above is unchanged.
+
+The site-wide Calendar Actions list (`entity.calendar_action.collection`) had
+one inbound link, the dashboard's "Open seasonal tasks" tile. It is a
+site-wide collection like Hives, not an apiary-scoped page, so it now sits in
+the Apiaries submenu (`group: records`, `parent: apiaries`) and its
+breadcrumb threads `Apiaries › Calendar Actions`. That adds a leaf under an
+existing hub; the primary tier and the hierarchy are unchanged.
+
+The Hive and Apiary Action Log lists are deliberately **not** nav items: the
+Apiaries submenu would reach ten entries, and the logs are an audit trail
+read in the context of the calendar. They are joined to it by heading
+cross-links instead (Calendar Actions ⇄ Hive Logs ⇄ Apiary Logs), as are the
+financial report (from Products and Inventory Purchases). Per-apiary pages —
+the Full Calendar and the cost report — remain reached from the apiary and
+hive pages, since they need a chosen apiary and so cannot be nav entries.
+
 ## Related
 - Project:: [[in-app-navigation-restructuring]]
 - Decisions:: [[0102-breadcrumb-terminal-crumb-on-non-canonical-pages]],

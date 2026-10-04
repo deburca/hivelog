@@ -105,6 +105,16 @@ class CalendarActionController extends ControllerBase {
   public function collection(): array {
     $build = [];
 
+    // Task 0172: cross-links to the action logs this page's actions are
+    // reported in; each only if the viewer can open it.
+    $heading = $this->buildListHeading(array_values(array_filter([
+      $this->accessibleLinkAction($this->t('View Hive Logs'), 'entity.hive_action_log.collection'),
+      $this->accessibleLinkAction($this->t('View Apiary Logs'), 'entity.apiary_action_log.collection'),
+    ])));
+    if ($heading) {
+      $build['heading'] = $heading;
+    }
+
     $build['filter'] = $this->formBuilder->getForm(HivelogCalendarActionsFilterForm::class);
     $build['filter']['#weight'] = 0;
 
