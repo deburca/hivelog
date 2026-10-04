@@ -1,13 +1,13 @@
 ---
 type: task
 tags: [hivelog/task]
-status: review
+status: done
 priority: high
 project: "[[ios-field-app]]"
 area: entity
 created: 2026-10-04
 branch: feature/0200-move-form-validation-to-entity-constraints
-release:
+release: 2.6.0
 depends-on:
 blocked-by:
 ---
