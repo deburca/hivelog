@@ -417,7 +417,21 @@ entity types core can't name directly).
   `HivelogApiContractTest`, and needs an alias or a new `API_VERSION` and
   prefix. simple_oauth lets a public client request *any* scope that has the
   authorization-code grant, not just its consumer's, so the status report
-  warns if any other scope enables it.
+  warns if any other scope enables it. **Computed views** (task 0202), for
+  values no entity stores, are plain-JSON, read-only routes beside the
+  JSON:API ones: `GET /hivelog/api/v1/computed/alerts` (the dashboard's
+  "Needs attention" queue for the current user), and
+  `/computed/hive/{hive}/stat-tiles` (the hive page's tiles plus
+  `empty_weight_kg`) and `/computed/hive/{hive}/insight`, where `{hive}` is
+  the hive's UUID (`HivelogApiUuidParamConverter`; an unknown one is 404, one
+  the user cannot view is 403). Each calls the service the web page uses
+  (`hivelog.alert_collector`, `hivelog.stat_tile_builder`) and only turns the
+  result into data. The insight comes from `hook_hivelog_api_hive_insight()`
+  (`hivelog_api.api.php`, implemented by `nexus`), so `hivelog_api` never
+  depends on `nexus`; it returns `{"data": null}` when nothing provides one.
+  They need no `_auth` option: the OAuth provider is global, so a bearer token
+  just works; the kernel tests opt in Basic Auth through the
+  `hivelog_api_test` module instead.
 
 ### Routing, controllers and forms
 
@@ -686,6 +700,16 @@ count it used to state already had. Core's own:
 - `hivelog.stat_tile_builder` (`HivelogStatTileBuilder`) — merges the
   "at a glance" stat tiles a canonical page shows, from
   `hook_hivelog_apiary_stat_tiles()` / `hook_hivelog_hive_stat_tiles()`.
+- `hivelog.alert_collector` (`HivelogAlertCollector`, task 0202) — the
+  "Needs attention" alerts: the seasonal-calendar pass, low-stock inventory,
+  and whatever submodules contribute through
+  `hook_hivelog_needs_attention_alerts()`. Moved out of `DashboardController`
+  so the dashboard and the mobile API serve the same rows. Each row is the
+  descriptor the dashboard renders plus two optional data keys, `kind` and
+  `subject` (`apiary`, `hive`, `detail`, and `calendar_action` on seasonal
+  rows), so a caller that is not a web page needs no markup. A new alert source
+  should set both. `hivelog.stat_tile_builder` likewise exposes
+  `tilesForHive()`, the tile descriptors as data.
 - `hivelog.delete_dependency_counter` (`HivelogDeleteDependencyCounter`,
   task 0134) — counts a parent entity's children per
   `HivelogDeleteDependencyRegistry` row (BLOCK/WARN/CASCADE/DETACH), for

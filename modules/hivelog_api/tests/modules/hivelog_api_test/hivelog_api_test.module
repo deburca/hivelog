@@ -1,0 +1,49 @@
+<?php
+
+/**
+ * @file
+ * Test implementations of the hooks behind the computed-view endpoints.
+ */
+
+use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Url;
+use Drupal\hivelog\Entity\Hive;
+
+/**
+ * Implements hook_hivelog_hive_stat_tiles().
+ */
+function hivelog_api_test_hivelog_hive_stat_tiles(Hive $hive) {
+  return [
+    'test_tile' => [
+      'value' => '42',
+      'label' => t('Answer'),
+      'url' => Url::fromRoute('entity.hive.canonical', ['hive' => $hive->id()]),
+      'sublabel' => t('and counting'),
+      'sublabel_variant' => 'warning',
+      'weight' => 3,
+    ],
+    'first_tile' => [
+      'value' => '1',
+      'label' => t('First'),
+      'url' => Url::fromRoute('entity.hive.canonical', ['hive' => $hive->id()]),
+      'weight' => -1,
+    ],
+  ];
+}
+
+/**
+ * Implements hook_hivelog_api_hive_insight().
+ */
+function hivelog_api_test_hivelog_api_hive_insight(Hive $hive, CacheableMetadata $cache) {
+  $cache->addCacheTags(['hivelog_api_test']);
+  return [
+    'verdict' => 'inspect_soon',
+    'verdict_label' => 'Inspect soon',
+    'recommendation' => 'Check the brood.',
+    'signals' => ['Weight is flat'],
+    'confidence' => 'medium',
+    'confidence_label' => 'Medium',
+    'generated' => '2026-10-01T08:00:00+00:00',
+    'stale' => FALSE,
+  ];
+}

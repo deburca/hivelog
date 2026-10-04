@@ -1,0 +1,5 @@
+services:
+  hivelog_api_test.route_subscriber:
+    class: Drupal\hivelog_api_test\Routing\TestRouteSubscriber
+    tags:
+      - { name: event_subscriber }

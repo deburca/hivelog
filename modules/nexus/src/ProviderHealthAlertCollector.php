@@ -144,15 +144,19 @@ class ProviderHealthAlertCollector {
       ? Url::fromRoute('entity.ai_provider_config.canonical', ['ai_provider_config' => $config->id()])->toString()
       : Url::fromRoute('entity.ai_provider_config.collection')->toString();
 
+    $detail = $this->t('Last run @time ago', ['@time' => $this->dateFormatter->formatTimeDiffSince($last_run)]);
+
     return [
       'severity' => 'warning',
       'chip' => $this->t('AI provider stale'),
       'title' => $config->label(),
+      'kind' => 'ai_provider_stale',
+      'subject' => ['apiary' => NULL, 'hive' => NULL, 'detail' => (string) $detail],
       'context' => [
         '#type' => 'inline_template',
         '#template' => '<span class="hivelog-attention__ctx">{{ detail }}</span>',
         '#context' => [
-          'detail' => $this->t('Last run @time ago', ['@time' => $this->dateFormatter->formatTimeDiffSince($last_run)]),
+          'detail' => $detail,
         ],
       ],
       'action_label' => $this->t('View Config'),

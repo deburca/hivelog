@@ -234,6 +234,15 @@ class HivelogApiOauthTest extends BrowserTestBase {
     $this->assertSame(200, $upload->getStatusCode(), (string) $upload->getBody());
     $this->assertSame(422, $this->bearer('POST', '/hivelog/api/v1/hive_inspection/hive_inspection', $access, $document($their_hive->uuid()))['status']);
 
+    // The computed views take the same bearer token.
+    $alerts = $this->bearer('GET', '/hivelog/api/v1/computed/alerts', $access);
+    $this->assertSame(200, $alerts['status']);
+    $this->assertArrayHasKey('data', $alerts['json']);
+    $tiles = $this->bearer('GET', '/hivelog/api/v1/computed/hive/' . $my_hive->uuid() . '/stat-tiles', $access);
+    $this->assertSame(200, $tiles['status']);
+    $this->assertSame(403, $this->bearer('GET', '/hivelog/api/v1/computed/hive/' . $their_hive->uuid() . '/stat-tiles', $access)['status']);
+    $this->assertSame(401, $this->bearer('GET', '/hivelog/api/v1/computed/alerts', 'not-a-token')['status']);
+
     // Outside the allow-list, and no way to read other users.
     $this->assertSame(404, $this->bearer('GET', '/hivelog/api/v1/inventory_item/inventory_item', $access)['status']);
     $users = $this->bearer('GET', '/jsonapi/user/user', $access);

@@ -38,7 +38,24 @@ class HivelogStatTileBuilder {
    *   contributed a tile for this hive.
    */
   public function buildForHive(Hive $hive): array {
-    return $this->build($this->moduleHandler->invokeAll('hivelog_hive_stat_tiles', [$hive]));
+    return $this->build($this->tilesForHive($hive));
+  }
+
+  /**
+   * Gets a hive's tile descriptors as data, sorted by weight.
+   *
+   * The same descriptors buildForHive() lays out, for a caller that is not a
+   * web page (the mobile API, task 0202). Nothing is rendered; each value is
+   * exactly what the hook implementation returned.
+   *
+   * @param \Drupal\hivelog\Entity\Hive $hive
+   *   The hive.
+   *
+   * @return array[]
+   *   Tile descriptors keyed by the contributing module's own key.
+   */
+  public function tilesForHive(Hive $hive): array {
+    return $this->sortTiles($this->moduleHandler->invokeAll('hivelog_hive_stat_tiles', [$hive]));
   }
 
   /**
@@ -56,6 +73,14 @@ class HivelogStatTileBuilder {
   }
 
   /**
+   * Sorts tile descriptors by their weight, keeping their keys.
+   */
+  protected function sortTiles(array $tiles): array {
+    uasort($tiles, fn(array $a, array $b) => ($a['weight'] ?? 0) <=> ($b['weight'] ?? 0));
+    return $tiles;
+  }
+
+  /**
    * Assembles the shared grid from a set of tile descriptors.
    *
    * @param array $tiles
@@ -70,7 +95,7 @@ class HivelogStatTileBuilder {
       return [];
     }
 
-    uasort($tiles, fn(array $a, array $b) => ($a['weight'] ?? 0) <=> ($b['weight'] ?? 0));
+    $tiles = $this->sortTiles($tiles);
 
     $build = [
       '#type' => 'container',

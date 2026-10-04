@@ -172,13 +172,17 @@ class SensorAlertCollector {
       ? Url::fromRoute('entity.sensor_device.canonical', ['sensor_device' => $device->id()])->toString()
       : NULL;
 
+    $offline_detail = $this->t('Last seen @time ago', [
+      '@time' => $this->dateFormatter->formatTimeDiffSince($last_seen),
+    ]);
+
     return [
       'severity' => 'warning',
       'chip' => $this->t('Device offline'),
       'title' => $device->label(),
-      'context' => $this->attentionContext($apiary, $hive, $this->t('Last seen @time ago', [
-        '@time' => $this->dateFormatter->formatTimeDiffSince($last_seen),
-      ])),
+      'kind' => 'sensor_offline',
+      'subject' => ['apiary' => $apiary, 'hive' => $hive, 'detail' => (string) $offline_detail],
+      'context' => $this->attentionContext($apiary, $hive, $offline_detail),
       'action_label' => $this->t('View Device'),
       'action_url' => $device_url ?? $apiary->toUrl()->toString(),
       'sort' => [2, mb_strtolower($device->label())],
@@ -209,13 +213,17 @@ class SensorAlertCollector {
       return NULL;
     }
 
+    $swarm_detail = $this->t('Weight dropped @drop kg today', [
+      '@drop' => $this->trimDecimal($drop),
+    ]);
+
     return [
       'severity' => 'critical',
       'chip' => $this->t('Possible swarm'),
       'title' => $device->label(),
-      'context' => $this->attentionContext($apiary, $hive, $this->t('Weight dropped @drop kg today', [
-        '@drop' => $this->trimDecimal($drop),
-      ])),
+      'kind' => 'possible_swarm',
+      'subject' => ['apiary' => $apiary, 'hive' => $hive, 'detail' => (string) $swarm_detail],
+      'context' => $this->attentionContext($apiary, $hive, $swarm_detail),
       'action_label' => $this->t('View Hive'),
       'action_url' => ($hive ?? $apiary)->toUrl()->toString(),
       'sort' => [0, -$drop],
@@ -245,15 +253,19 @@ class SensorAlertCollector {
 
     $latest_value = (float) $readings[0]->get('value')->value;
 
+    $temperature_detail = $this->t('@value °C, outside @min–@max °C brood range', [
+      '@value' => $this->trimDecimal($latest_value),
+      '@min' => self::BROOD_TEMP_MIN_C,
+      '@max' => self::BROOD_TEMP_MAX_C,
+    ]);
+
     return [
       'severity' => 'warning',
       'chip' => $this->t('Temperature out of range'),
       'title' => $device->label(),
-      'context' => $this->attentionContext($apiary, $hive, $this->t('@value °C, outside @min–@max °C brood range', [
-        '@value' => $this->trimDecimal($latest_value),
-        '@min' => self::BROOD_TEMP_MIN_C,
-        '@max' => self::BROOD_TEMP_MAX_C,
-      ])),
+      'kind' => 'temperature_out_of_range',
+      'subject' => ['apiary' => $apiary, 'hive' => $hive, 'detail' => (string) $temperature_detail],
+      'context' => $this->attentionContext($apiary, $hive, $temperature_detail),
       'action_label' => $this->t('View Hive'),
       'action_url' => ($hive ?? $apiary)->toUrl()->toString(),
       'sort' => [2, mb_strtolower($device->label())],

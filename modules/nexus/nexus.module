@@ -73,6 +73,17 @@ function nexus_hivelog_apiary_stat_tiles(Apiary $apiary) {
 }
 
 /**
+ * Implements hook_hivelog_api_hive_insight().
+ *
+ * Defined by the optional hivelog_api submodule (task 0202), which has no
+ * dependency on this one: the latest AI insight for a hive, as plain data.
+ * See hivelog_api.api.php.
+ */
+function nexus_hivelog_api_hive_insight(Hive $hive, CacheableMetadata $cache) {
+  return \Drupal::service('nexus.hive_insight_panel_builder')->buildHiveInsightData($hive, $cache);
+}
+
+/**
  * Implements hook_hivelog_needs_attention_alerts().
  *
  * See hivelog.api.php and

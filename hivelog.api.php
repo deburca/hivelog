@@ -130,9 +130,16 @@ function hook_hivelog_hive_insights_panels(Hive $hive) {
  *   `.hivelog-attention__ctx` markup, e.g. apiary/hive links + a detail
  *   string), `action_label` + `action_url` (or an `actions` list for a
  *   Done/Ignored-style button group), and `sort` (a `[tier, secondary]`
- *   array — see `DashboardController::attentionTiming()` for the
+ *   array — see `HivelogAlertCollector::attentionTiming()` for the
  *   existing tier numbering: `0` = critical/most urgent, higher = less
  *   urgent).
+ *
+ *   Two optional keys carry the same facts without markup, for a caller
+ *   that is not a web page (the mobile API, task 0202): `kind` (a short
+ *   machine name, e.g. `sensor_offline`) and `subject` (`['apiary' =>
+ *   Apiary|NULL, 'hive' => Hive|NULL, 'detail' => string]`; the same
+ *   inputs as `context`). A row without them is still served, with no
+ *   subject. Give both whenever the row is about an apiary or hive.
  */
 function hook_hivelog_needs_attention_alerts(array $apiaries, CacheableMetadata $cache) {
   return [];

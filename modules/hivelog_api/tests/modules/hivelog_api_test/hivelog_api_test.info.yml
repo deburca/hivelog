@@ -1,0 +1,7 @@
+name: 'HiveLog API test hooks'
+type: module
+description: 'Implements the hooks the computed-view endpoints serve, so the tests can see a tile and an insight without optional submodules.'
+package: Testing
+core_version_requirement: ^11
+dependencies:
+  - hivelog_api:hivelog_api

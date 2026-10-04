@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\nexus\Kernel;
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\user\Traits\UserCreationTrait;
 use Drupal\hivelog\Entity\Apiary;
@@ -346,6 +347,59 @@ class HiveInsightPanelBuilderTest extends KernelTestBase {
 
     $tiles = \Drupal::moduleHandler()->invokeAll('hivelog_hive_stat_tiles', [$this->hive]);
     $this->assertArrayHasKey('nexus_ai_insight', $tiles);
+  }
+
+  /**
+   * Tests the insight-as-data method serves the latest insight (task 0202).
+   */
+  public function testInsightDataServesTheLatestInsight(): void {
+    $generated = \Drupal::time()->getRequestTime() - 3600;
+    $this->createInsight(['generated' => $generated - 86400, 'verdict' => 'all_clear']);
+    $this->createInsight(['generated' => $generated]);
+
+    $cache = new CacheableMetadata();
+    $data = $this->builder()->buildHiveInsightData($this->hive, $cache);
+
+    $this->assertSame('inspect_soon', $data['verdict']);
+    $this->assertSame('Possible swarm risk — inspect within 2 days', $data['recommendation']);
+    $this->assertSame(['Weight dropped 2.1 kg overnight', 'Queen cells present'], $data['signals']);
+    $this->assertSame('high', $data['confidence']);
+    $this->assertNotEmpty($data['verdict_label']);
+    $this->assertSame(gmdate('Y-m-d\TH:i:sP', $generated), $data['generated']);
+    $this->assertFalse($data['stale']);
+    $this->assertContains('hive_insight_list', $cache->getCacheTags());
+  }
+
+  /**
+   * Tests the data is empty when opted out, absent, hidden, and flags stale.
+   */
+  public function testInsightDataEmptyCasesAndStaleness(): void {
+    $this->assertSame([], $this->builder()->buildHiveInsightData($this->hive, new CacheableMetadata()), 'No insight yet');
+
+    $this->createInsight(['generated' => \Drupal::time()->getRequestTime() - (49 * 3600)]);
+    $this->assertTrue($this->builder()->buildHiveInsightData($this->hive, new CacheableMetadata())['stale']);
+
+    $this->setCurrentUser($this->outsider);
+    $this->assertSame([], $this->builder()->buildHiveInsightData($this->hive, new CacheableMetadata()), 'No access');
+
+    $this->setCurrentUser($this->owner);
+    $this->apiary->set('ai_insights_enabled', FALSE)->save();
+    // Load afresh, as the next request would: the entity caches still hold the
+    // apiary as it was before this test changed it.
+    \Drupal::entityTypeManager()->getStorage('apiary')->resetCache();
+    \Drupal::entityTypeManager()->getStorage('hive')->resetCache();
+    $fresh = Hive::load($this->hive->id());
+    $this->assertSame([], $this->builder()->buildHiveInsightData($fresh, new CacheableMetadata()), 'Opted out');
+  }
+
+  /**
+   * Tests the API's insight hook is wired to this module.
+   */
+  public function testApiInsightHookIsDispatchedByModuleHandler(): void {
+    $this->createInsight();
+
+    $data = \Drupal::moduleHandler()->invokeAll('hivelog_api_hive_insight', [$this->hive, new CacheableMetadata()]);
+    $this->assertSame('inspect_soon', $data['verdict']);
   }
 
   /**

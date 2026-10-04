@@ -8,3 +8,43 @@ hivelog_api.discovery:
     # Public on purpose: a client reads this before it signs in, to check
     # the server speaks a version it supports. Static facts only.
     _access: 'TRUE'
+
+# Computed views (task 0202): values no entity stores, each built by the same
+# service as the matching web page. Plain JSON, read-only, OAuth or session.
+hivelog_api.computed_alerts:
+  path: '/hivelog/api/v1/computed/alerts'
+  defaults:
+    _controller: '\Drupal\hivelog_api\Controller\ComputedViewsController::alerts'
+    _title: 'Needs attention'
+    _format: json
+  methods: [GET]
+  requirements:
+    _user_is_logged_in: 'TRUE'
+
+hivelog_api.computed_hive_stat_tiles:
+  path: '/hivelog/api/v1/computed/hive/{hive}/stat-tiles'
+  defaults:
+    _controller: '\Drupal\hivelog_api\Controller\ComputedViewsController::hiveStatTiles'
+    _title: 'Hive stat tiles'
+    _format: json
+  methods: [GET]
+  requirements:
+    _entity_access: 'hive.view'
+  options:
+    parameters:
+      hive:
+        type: hivelog_api_uuid:hive
+
+hivelog_api.computed_hive_insight:
+  path: '/hivelog/api/v1/computed/hive/{hive}/insight'
+  defaults:
+    _controller: '\Drupal\hivelog_api\Controller\ComputedViewsController::hiveInsight'
+    _title: 'Hive insight'
+    _format: json
+  methods: [GET]
+  requirements:
+    _entity_access: 'hive.view'
+  options:
+    parameters:
+      hive:
+        type: hivelog_api_uuid:hive

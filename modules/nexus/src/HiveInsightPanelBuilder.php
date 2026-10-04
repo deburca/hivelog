@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\nexus;
 
 use Drupal\Component\Datetime\TimeInterface;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Session\AccountInterface;
@@ -91,6 +92,66 @@ class HiveInsightPanelBuilder {
 
     $insight = $this->loadLatestInsight(['scope' => 'hive', 'hive' => $hive->id()]);
     return $this->buildPanel($insight);
+  }
+
+  /**
+   * Gets a hive's latest insight as plain data, for the mobile API.
+   *
+   * Backs hook_hivelog_api_hive_insight() (nexus.module, task 0202). The same
+   * rules as buildHivePanel(): nothing unless the hive's apiary has opted in,
+   * and only an insight the current user can view. Returns data, not markup.
+   *
+   * @param \Drupal\hivelog\Entity\Hive $hive
+   *   The hive.
+   * @param \Drupal\Core\Cache\CacheableMetadata $cache
+   *   Collects what the answer depends on.
+   *
+   * @return array
+   *   `verdict`, `verdict_label`, `recommendation`, `signals` (a list of
+   *   strings), `confidence` and `confidence_label` (or NULL), `generated`
+   *   (ISO 8601) and `stale` (bool); an empty array if there is no insight to
+   *   show.
+   */
+  public function buildHiveInsightData(Hive $hive, CacheableMetadata $cache): array {
+    $cache->addCacheableDependency($hive);
+    $cache->addCacheTags($this->entityTypeManager->getDefinition('hive_insight')->getListCacheTags());
+
+    /** @var \Drupal\hivelog\Entity\Apiary|null $apiary */
+    $apiary = $hive->get('apiary')->entity;
+    if ($apiary) {
+      $cache->addCacheableDependency($apiary);
+    }
+    if (!$apiary || !$apiary->get('ai_insights_enabled')->value) {
+      return [];
+    }
+
+    $insight = $this->loadLatestInsight(['scope' => 'hive', 'hive' => $hive->id()]);
+    if (!$insight) {
+      return [];
+    }
+
+    $verdict = (string) $insight->get('verdict')->value;
+    $confidence = $insight->get('confidence')->value;
+    $generated = (int) $insight->get('generated')->value;
+
+    $signals = [];
+    foreach (preg_split('/\r\n|\r|\n/', (string) $insight->get('signals')->value) ?: [] as $line) {
+      $line = trim($line);
+      if ($line !== '') {
+        $signals[] = preg_replace('/^[-*]\s+/', '', $line);
+      }
+    }
+
+    return [
+      'verdict' => $verdict,
+      'verdict_label' => (string) (HiveInsight::VERDICTS[$verdict] ?? $verdict),
+      'recommendation' => (string) $insight->get('recommendation')->value,
+      'signals' => $signals,
+      'confidence' => $confidence ?: NULL,
+      'confidence_label' => $confidence ? (string) (HiveInsight::CONFIDENCE_LEVELS[$confidence] ?? $confidence) : NULL,
+      'generated' => (new \DateTimeImmutable('@' . $generated))->format(\DateTimeInterface::ATOM),
+      'stale' => ($this->time->getRequestTime() - $generated) > self::STALE_THRESHOLD_SECONDS,
+    ];
   }
 
   /**
