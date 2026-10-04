@@ -29,7 +29,13 @@ Part of [[ios-field-app]].
 - [ ] Recently viewed apiaries/hives readable offline (cached)
 
 ## Implementation notes
-- Rescope this task if 0199 picks option B.
+- 0199 picked option A, so this task stands as written.
+- From 0199's API requirements: replay in creation order and stop a dependent
+  item when its dependency failed; upload photos at replay time (orphan
+  uploads are purged by cron after about 6 hours), not at capture time; treat
+  409 on create as applied, 4xx as user-fixable, and only network failures and
+  5xx as retryable (capped); serialise token refresh (refresh tokens rotate);
+  send capture-time dates from the device.
 
 ## Related
 - Project:: [[ios-field-app]]

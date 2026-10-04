@@ -1,14 +1,14 @@
 ---
 type: decision
 tags: [hivelog/decision]
-status: proposed
+status: accepted
 date: 2026-10-04
 supersedes:
 ---
 # ADR-0107: Per-user mobile API and a native iOS field app
 
 ## Status
-proposed, 2026-10-04. Planning artifact only, with no code changes yet.
+accepted, 2026-10-04 (proposed earlier the same day). Planning artifact only, with no code changes yet.
 Spike [[0198-mobile-api-jsonapi-oauth-spike]] (2026-10-04) supports §1 and
 §2 with one amendment, below.
 See [[ios-field-app]] for the project scope and phasing.
@@ -118,24 +118,29 @@ insight, and scanning a hive QR label. Inventory, purchases, products,
 financial reports, calendar *planning* and all admin or configuration
 screens stay web-only.
 
-### 4. Offline: decided before any client code (open)
-This is the decision with the biggest impact on how the API is shaped,
-and it's left **open** in this ADR. Two options are on the table:
+### 4. Offline: A, online with an outbox (decided in 0199)
+Decided in [[0199-decide-mobile-offline-scope]]: **option A for writes, plus
+a client-side read cache** of recently viewed apiaries and hives. Option B was
+the other candidate and is not built for v1.
 
-- **A. Online with an outbox.** Reads need signal. Writes made without
-  signal go into a local queue and are sent in order when the device
-  reconnects. Records are created with client-generated UUIDs, so a
-  retry is idempotent. Conflicts are rare because new inspections and
+- **A. Online with an outbox.** Reads need signal (or hit the cache). Writes
+  made without signal go into a local queue and are sent in order when the
+  device reconnects. Records are created with client-generated UUIDs, so a
+  retry is idempotent (a repeated UUID returns 409, which the outbox treats as
+  "already applied"). Conflicts are rare because new inspections and
   observations are create-only.
-- **B. Offline-first.** A local copy of every apiary the user can
-  access, delta sync using `changed`, and conflict resolution for
-  edits. Several times the effort of A on both client and server
-  (delta endpoint, tombstones for deletes).
+- **B. Offline-first (not chosen).** A local copy of every apiary the user can
+  access, delta sync using `changed`, and conflict resolution for edits. Several
+  times the effort of A on both client and server (delta endpoint, tombstones for
+  deletes).
 
-The provisional lean is **A**. The field-critical actions are almost
-all *creates*, so A covers the poor-signal case for the work that
-matters, and B can be built on top later without changing the API
-shape A requires (client UUIDs, `changed` exposed).
+Why A: the field-critical actions are all *creates of leaf records*, parents
+already exist, and the app deletes nothing, so there are no tombstones. B can
+be built on top later without changing the API shape A requires. The API
+requirements this implies (UUIDs, replay order, upload-at-replay for photos,
+422 not 500, serialised token refresh) are listed in 0199. One consequence for
+later: edits are last-write-wins, since JSON:API offers no optimistic locking
+(`changed` is not writable).
 
 ### 5. Alternative considered: a PWA
 A web manifest and service worker over the existing responsive UI
