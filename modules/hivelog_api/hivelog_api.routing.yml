@@ -1,0 +1,10 @@
+hivelog_api.discovery:
+  path: '/hivelog/api/v1'
+  defaults:
+    _controller: '\Drupal\hivelog_api\Controller\DiscoveryController::index'
+    _title: 'HiveLog API'
+  methods: [GET]
+  requirements:
+    # Public on purpose: a client reads this before it signs in, to check
+    # the server speaks a version it supports. Static facts only.
+    _access: 'TRUE'

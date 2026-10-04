@@ -183,7 +183,11 @@ jobs:
           # install it explicitly here, matching README.md's own documented
           # `composer require drupal/key` step, so nexus's kernel tests
           # (AiProviderConfig*) don't fail with "Unavailable module: 'key'".
-          composer require --dev drupal/key \
+          # drupal/simple_oauth is likewise only a `suggest` (task 0201),
+          # needed by the optional `hivelog_api` submodule; its kernel,
+          # unit and functional tests need the module (and its `consumers`
+          # dependency) available, and phpstan needs its classes to resolve.
+          composer require --dev drupal/key drupal/simple_oauth \
             --no-interaction --no-progress --prefer-dist
 
       - name: Install Drupal site

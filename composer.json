@@ -17,7 +17,8 @@
         "drupal/leaflet": "^10"
     },
     "suggest": {
-        "drupal/key": "^1.18 — required only if you enable the optional nexus submodule (AI provider credentials); run `composer require drupal/key` first, then `drush en nexus -y`."
+        "drupal/key": "^1.18 — required only if you enable the optional nexus submodule (AI provider credentials); run `composer require drupal/key` first, then `drush en nexus -y`.",
+        "drupal/simple_oauth": "^6.1 — required only if you enable the optional hivelog_api submodule (OAuth for the field app); run `composer require drupal/simple_oauth` first, then `drush en hivelog_api -y`."
     },
     "extra": {
         "branch-alias": {

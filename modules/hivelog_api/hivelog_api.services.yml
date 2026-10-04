@@ -1,0 +1,33 @@
+services:
+  hivelog_api.resources:
+    class: Drupal\hivelog_api\HivelogApiResources
+    arguments: ['@extension.list.module', '%jsonapi.base_path%']
+
+  # Maps the versioned /hivelog/api/v1 prefix onto core JSON:API routes (and
+  # their generated links back), for allow-listed resource types only.
+  hivelog_api.path_processor:
+    class: Drupal\hivelog_api\PathProcessor\HivelogApiPathProcessor
+    arguments: ['@hivelog_api.resources', '@request_stack', '%jsonapi.base_path%']
+    tags:
+      - { name: path_processor_inbound, priority: 300 }
+      - { name: path_processor_outbound, priority: 50 }
+
+  # Lets writes through on the versioned prefix even when JSON:API's site-wide
+  # read-only mode is on, without changing that setting for anything else.
+  hivelog_api.core_method_filter:
+    class: Drupal\Core\Routing\MethodFilter
+    public: false
+
+  hivelog_api.method_filter:
+    class: Drupal\hivelog_api\Routing\HivelogApiMethodFilter
+    decorates: method_filter
+    decoration_priority: -10
+    arguments: ['@hivelog_api.method_filter.inner', '@hivelog_api.core_method_filter']
+    public: false
+
+  # Keeps a field-app token on the versioned API, away from the rest of /jsonapi.
+  hivelog_api.token_confinement:
+    class: Drupal\hivelog_api\EventSubscriber\HivelogApiTokenConfinementSubscriber
+    arguments: ['@current_user']
+    tags:
+      - { name: event_subscriber }

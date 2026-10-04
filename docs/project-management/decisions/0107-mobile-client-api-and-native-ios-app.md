@@ -112,6 +112,13 @@ Implemented in [[0200-move-form-validation-to-entity-constraints]]: the
 form rules and the parent-access rule (`update` on the parent, matching the
 scoped add routes) are field constraints; `preSave()` keeps its throw.
 
+**Implementation note from 0201:** the allow-list and versioning are done
+without `jsonapi_extras`, which would change site-wide JSON:API settings. A path
+processor serves core JSON:API under `/hivelog/api/v1` for an allow-listed set of
+resources, writes are enabled on that prefix only, and the contract (every exposed
+resource and field name) is pinned by a fixture test. See
+[[0201-hivelog-api-submodule-scaffold]].
+
 ### 3. A native SwiftUI app, scoped to the field workflow
 A separate repository, not this module repo. The app covers:
 connecting to a server, signing in, browsing apiaries and hives,

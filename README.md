@@ -71,18 +71,34 @@ Apiary → Calendar Action ─┬─→ Hive Action Log ──→ (optional) Hiv
 - [Geofield](https://www.drupal.org/project/geofield) module — provides the geofield field type for storing geospatial data
 - [Leaflet](https://www.drupal.org/project/leaflet) module — provides Leaflet/OpenStreetMap map display and interactive map widget
 
-Core has no other dependencies — the four optional submodules under
-`modules/` (`assimilate`, `collective`, `nanoprobe`, `nexus`) are never
-required to enable HiveLog itself. One of them, `nexus`, additionally
-needs the [Key](https://www.drupal.org/project/key) module for resolving
-AI provider credentials; it's listed under `suggest` in `composer.json`
-rather than `require`, so it isn't pulled in unless you actually want
-`nexus`:
+Core has no other dependencies — the five optional submodules under
+`modules/` (`assimilate`, `collective`, `hivelog_api`, `nanoprobe`, `nexus`)
+are never required to enable HiveLog itself. Two of them need an extra
+contrib module, listed under `suggest` in `composer.json` rather than
+`require`, so it isn't pulled in unless you actually want that submodule.
+`nexus` needs the [Key](https://www.drupal.org/project/key) module for
+resolving AI provider credentials:
 
 ```
 composer require drupal/key
 drush en nexus -y
 ```
+
+`hivelog_api` (the OAuth-secured API for a field app) needs
+[Simple OAuth](https://www.drupal.org/project/simple_oauth) 6.1 or later, and
+Drupal core's JSON:API:
+
+```
+composer require drupal/simple_oauth
+drush en hivelog_api -y
+```
+
+Enabling it creates a `hivelog_field_app` role, a scope of the same name and a
+public (no secret) PKCE client `hivelog-ios`; give the role to the beekeepers
+who may use the app, and generate Simple OAuth's key pair at
+**Configuration → People → Simple OAuth** (keep it outside the web root; the
+status report warns until you do). The API is served under
+`/hivelog/api/v1`. It does not change JSON:API's site-wide settings.
 
 ## Installation
 

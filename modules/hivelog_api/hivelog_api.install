@@ -1,0 +1,187 @@
+<?php
+
+/**
+ * @file
+ * Install, update, uninstall and requirements for the HiveLog API module.
+ */
+
+use Drupal\consumers\Entity\Consumer;
+use Drupal\Core\Hook\Attribute\LegacyRequirementsHook;
+use Drupal\hivelog_api\HivelogApiResources;
+use Drupal\simple_oauth\Entity\Oauth2Scope;
+use Drupal\user\Entity\Role;
+
+/**
+ * The permissions of the field-app role.
+ *
+ * This is the whole of what an app token can do (a token's roles are the
+ * scope's roles intersected with the user's own, so it can only narrow). It
+ * deliberately has no `delete` permission: the app deletes nothing in v1
+ * (ADR-0107 §4), and no inventory, product or sensor permission either.
+ * `access content` is needed to reference an uploaded file;
+ * `grant simple_oauth codes` is the user's own permission to approve the
+ * consent screen.
+ *
+ * Known over-grant: adding a child record needs `update` on its parent (the
+ * same rule the web routes apply, task 0133, and the parent-access
+ * constraint, task 0200), so the role must include `edit own apiary`, `hive`
+ * and `queen`. The allow-list does not stop the app from also editing those
+ * records. Narrowing that needs a separate "add children" permission in core.
+ *
+ * @return string[]
+ *   Permission machine names.
+ */
+function hivelog_api_field_app_permissions(): array {
+  $viewable = [
+    'apiary', 'hive', 'hive inspection', 'queen', 'queen observation',
+    'calendar action', 'hive action log', 'apiary action log',
+  ];
+  $permissions = ['access content', 'grant simple_oauth codes'];
+  foreach ($viewable as $type) {
+    $permissions[] = 'view own ' . $type;
+  }
+  // Parents a child is added under; see the note above.
+  foreach (['apiary', 'hive', 'queen'] as $parent) {
+    $permissions[] = 'edit own ' . $parent;
+  }
+  foreach (['hive inspection', 'queen observation', 'hive action log', 'apiary action log'] as $type) {
+    $permissions[] = 'add ' . $type;
+    $permissions[] = 'edit own ' . $type;
+  }
+  return $permissions;
+}
+
+/**
+ * Creates or tops up the field-app role, granting only existing permissions.
+ *
+ * Granting is additive and idempotent, so it is safe to call from an update
+ * hook when the app's permission set grows. A site-added permission on the
+ * role is never revoked here.
+ */
+function hivelog_api_sync_field_app_role(): void {
+  $role = Role::load(HivelogApiResources::SCOPE);
+  if (!$role) {
+    $role = Role::create([
+      'id' => HivelogApiResources::SCOPE,
+      'label' => 'HiveLog field app',
+    ]);
+  }
+  // `access content` belongs to node; a site without it simply lacks it.
+  $known = array_keys(\Drupal::service('user.permissions')->getPermissions());
+  foreach (hivelog_api_field_app_permissions() as $permission) {
+    if (in_array($permission, $known, TRUE)) {
+      $role->grantPermission($permission);
+    }
+  }
+  $role->save();
+}
+
+/**
+ * Implements hook_install().
+ *
+ * Creates, idempotently, the three things the app needs to sign in:
+ * - the `hivelog_field_app` role. Give it to a user to allow them to use the
+ *   app, and it also caps what their app token can do;
+ * - a scope of the same name that maps to that role;
+ * - the public (no secret) PKCE OAuth client for the app's URL scheme.
+ *
+ * Nothing here changes JSON:API's site-wide settings.
+ */
+function hivelog_api_install() {
+  hivelog_api_sync_field_app_role();
+
+  if (!Oauth2Scope::load(HivelogApiResources::SCOPE)) {
+    Oauth2Scope::create([
+      'id' => HivelogApiResources::SCOPE,
+      'name' => HivelogApiResources::SCOPE,
+      'description' => 'Log inspections, queen observations and calendar action reports from the HiveLog field app.',
+      'grant_types' => [
+        'authorization_code' => ['status' => TRUE, 'description' => 'Sign in to the HiveLog field app.'],
+        'refresh_token' => ['status' => TRUE, 'description' => 'Stay signed in to the HiveLog field app.'],
+      ],
+      'umbrella' => FALSE,
+      'parent' => NULL,
+      'granularity_id' => 'role',
+      'granularity_configuration' => ['role' => HivelogApiResources::SCOPE],
+    ])->save();
+  }
+
+  $existing = \Drupal::entityTypeManager()->getStorage('consumer')
+    ->loadByProperties(['client_id' => HivelogApiResources::CLIENT_ID]);
+  if (!$existing) {
+    Consumer::create([
+      'client_id' => HivelogApiResources::CLIENT_ID,
+      'label' => 'HiveLog field app',
+      'confidential' => FALSE,
+      'pkce' => TRUE,
+      'grant_types' => ['authorization_code', 'refresh_token'],
+      'redirect' => HivelogApiResources::REDIRECT_URI,
+      'authorization_code_scopes' => [['target_id' => HivelogApiResources::SCOPE]],
+    ])->save();
+  }
+}
+
+/**
+ * Implements hook_uninstall().
+ *
+ * Removes only what install created, leaving any token history alone to be
+ * cleaned up by simple_oauth's own expiry.
+ */
+function hivelog_api_uninstall() {
+  $consumers = \Drupal::entityTypeManager()->getStorage('consumer')
+    ->loadByProperties(['client_id' => HivelogApiResources::CLIENT_ID]);
+  foreach ($consumers as $consumer) {
+    $consumer->delete();
+  }
+  if ($scope = Oauth2Scope::load(HivelogApiResources::SCOPE)) {
+    $scope->delete();
+  }
+  if ($role = Role::load(HivelogApiResources::SCOPE)) {
+    $role->delete();
+  }
+}
+
+/**
+ * Implements hook_requirements().
+ */
+#[LegacyRequirementsHook]
+function hivelog_api_requirements($phase) {
+  $requirements = [];
+  if ($phase !== 'runtime') {
+    return $requirements;
+  }
+
+  // The OAuth server cannot issue a token without its key pair.
+  $settings = \Drupal::config('simple_oauth.settings');
+  $keys_ok = TRUE;
+  foreach (['public_key', 'private_key'] as $key) {
+    $path = (string) $settings->get($key);
+    if ($path === '' || !is_readable($path)) {
+      $keys_ok = FALSE;
+    }
+  }
+  $requirements['hivelog_api_keys'] = [
+    'title' => t('HiveLog API: OAuth keys'),
+    'value' => $keys_ok ? t('Configured') : t('Missing'),
+    'description' => $keys_ok ? NULL : t('The field app cannot sign in until simple_oauth has a readable public and private key. Generate them at /admin/config/people/simple_oauth, and keep them outside the web root.'),
+    'severity' => $keys_ok ? REQUIREMENT_OK : REQUIREMENT_ERROR,
+  ];
+
+  // For the authorization-code grant, simple_oauth lets a client request any
+  // scope that has that grant enabled, not only the ones on its consumer. The
+  // field app's client is public, so any other such scope is reachable by it.
+  $others = [];
+  foreach (Oauth2Scope::loadMultiple() as $scope) {
+    if ($scope->id() !== HivelogApiResources::SCOPE && $scope->isGrantTypeEnabled('authorization_code')) {
+      $others[] = $scope->id();
+    }
+  }
+  $requirements['hivelog_api_scopes'] = [
+    'title' => t('HiveLog API: authorization-code scopes'),
+    'value' => $others ? t('Other scopes enabled') : t('Only the field app scope'),
+    'description' => $others ? t('These scopes also allow the authorization-code grant, so the public field app client could request them: @scopes. Disable that grant on any broad scope.', ['@scopes' => implode(', ', $others)]) : NULL,
+    'severity' => $others ? REQUIREMENT_WARNING : REQUIREMENT_OK,
+  ];
+
+  return $requirements;
+}

@@ -69,9 +69,11 @@ Static index (in suggested execution order):
   enabled**: the spike showed a user can otherwise create in, or move
   records into, another beekeeper's apiary.
 - How is the API versioned so a `baseFieldDefinitions()` rename doesn't
-  break shipped app versions? Partly answered: `jsonapi_extras` can alias
-  fields and set a `path_prefix`, so a versioned prefix and stable aliases
-  are viable. Not yet exercised against a rename; settle in 0201.
+  break shipped app versions? ~~Partly answered~~ Answered by
+  [[0201-hivelog-api-submodule-scaffold]]: a versioned path prefix
+  (`/hivelog/api/v1`) plus a pinned contract fixture that fails CI on a rename
+  or removal, until an alias or a new version is added. `jsonapi_extras` was
+  not used (its settings are site-wide).
 - Push notifications: does the site send APNs directly (needs an Apple
   key per site), or go through a relay service? Self-hosted installs
   make this awkward either way.

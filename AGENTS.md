@@ -11,9 +11,9 @@ here. When the module is installed into a Drupal site it lands at
 module-relative (e.g. `src/`, `css/`, `components/`, `tests/`).
 
 The module provides a beekeeping activity logger. Core (this repo's own
-`src/`) defines 16 content entity types; three of the four optional
-submodules under `modules/` add 6 more between them (the fourth,
-`assimilate`, adds none) — see "Content entities" and "Submodules" below. Apiaries, hives and inspections form a strict
+`src/`) defines 16 content entity types; three of the five optional
+submodules under `modules/` add 6 more between them (the other two,
+`assimilate` and `hivelog_api`, add none) — see "Content entities" and "Submodules" below. Apiaries, hives and inspections form a strict
 parent–child hierarchy; queens are tracked separately and linked to the hive
 they are currently installed in (hives outlive queens); queen observations
 hang off a queen:
@@ -45,7 +45,8 @@ A GitHub Actions workflow runs on every push and on every published release:
 (`phpcs.xml.dist`, `phpstan.neon`) with no separate path/extension lists to
 drift out of sync — every `phpcs`/`phpstan` invocation, local or CI, covers
 `src/`, `tests/` **and every submodule under `modules/`** (nanoprobe,
-collective, nexus, assimilate). A submodule with zero test/lint coverage is
+collective, nexus, assimilate, hivelog_api). The `test` job installs `drupal/key` and `drupal/simple_oauth` (both only
+`suggest`ed, for `nexus` and `hivelog_api`) so those submodules' tests run. A submodule with zero test/lint coverage is
 the gap ADR-0098 §7 warns about; every discovery loop below (phpcs, phpstan,
 Kernel/Unit/Functional test dirs) exists specifically to avoid it.
 
@@ -335,7 +336,7 @@ field's allowed values already cover).
 
 ### Submodules
 
-Four optional modules live under `modules/`, each its own installable
+Five optional modules live under `modules/`, each its own installable
 Drupal module with its own `src/`, routes, hooks and tests — `hivelog` core
 never depends on any of them (ADR-0098). They register with core through the
 `hook_hivelog_*` hooks documented in `hivelog.api.php`:
@@ -381,6 +382,44 @@ entity types core can't name directly).
   before real hardware exists. Refuses to install on a site with real
   AI-insights-enabled data. Depends on `hivelog` and `nanoprobe`; adds no
   entity types of its own.
+
+- **`hivelog_api`** — a per-user, OAuth-secured JSON:API for field apps
+  (ADR-0107, task 0201). Adds no entity types. Depends on `hivelog`, core
+  `jsonapi` and `simple_oauth` (only a `suggest` in `composer.json`, like
+  `key`). It serves core JSON:API under the versioned prefix
+  `/hivelog/api/v1` for an **allow-list** of resources
+  (`HivelogApiResources::RESOURCES`: apiary, hive, inspection, queen, queen
+  observation, calendar action, both action logs, file). Everything else —
+  inventory, products, components, sensors, API clients, AI providers, users —
+  is not routed there (404). `HivelogApiPathProcessor` rewrites the prefix
+  onto `/jsonapi` inbound and the links back outbound (adding the `url.path`
+  cache context); it must stay free of side effects, because the router caches
+  an inbound path's result so a processor only runs on the first request for a
+  path — "arrived on the prefix" is read from the request path
+  (`HivelogApiResources::isVersionedRequest()`), never a flag. A decorator on
+  `method_filter` lets writes through on the prefix even when JSON:API's
+  site-wide read-only mode is on, so enabling the module changes no site-wide
+  setting. `HivelogApiTokenConfinementSubscriber` refuses a token carrying the
+  app's scope on any JSON:API route off the prefix (a token could otherwise
+  list every user's display name at `/jsonapi/user/user`). `GET
+  /hivelog/api/v1` is a public discovery document (`api_version`, OAuth
+  endpoints) a client reads before signing in. Install creates, idempotently,
+  the `hivelog_field_app` role, a scope of that name (granularity `role`) and
+  the public PKCE client `hivelog-ios` (redirect `hivelog://oauth/callback`);
+  the role (`hivelog_api_field_app_permissions()`) is the whole of what an app
+  token can do — a token's roles are the scope's intersected with the user's
+  own, so it only narrows — and it has no `delete` permission. It does hold
+  `edit own apiary|hive|queen`, because adding a child needs `update` on its
+  parent (task 0133 / the parent-access constraint); that over-grant is
+  documented in the install file. **Versioning:** the contract is pinned by
+  `tests/fixtures/api-v1-contract.json` (every exposed resource and field
+  name); renaming or removing an exposed field fails
+  `HivelogApiContractTest`, and needs an alias or a new `API_VERSION` and
+  prefix. simple_oauth lets a public client request *any* scope that has the
+  authorization-code grant, not just its consumer's, so the status report
+  warns if any other scope enables it.
+
+### Routing, controllers and forms
 
 ### Routing, controllers and forms
 
