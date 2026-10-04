@@ -432,6 +432,30 @@ entity types core can't name directly).
   They need no `_auth` option: the OAuth provider is global, so a bearer token
   just works; the kernel tests opt in Basic Auth through the
   `hivelog_api_test` module instead.
+  **Access parity (task 0203).** The API must grant nothing the web UI does
+  not; `HivelogApiAccessParityTest` compares every exposed type's read, list,
+  update, create and delete, for an owner, an unrelated user, a beekeeper
+  member, a `view any` user and an admin, against the web's own route access
+  (`access_manager->checkNamedRoute()`), not a second table. Four behaviours
+  exist for that reason. (1) **No credentials on the prefix is a 401** with a
+  Bearer challenge, answered directly as JSON by `HivelogApiChallengeSubscriber`
+  (main request only: Drupal renders its 401 page as a sub-request that
+  inherits the original path, and a thrown 401 looped on it until memory ran
+  out); the public discovery document is exempt; a missing, invalid or expired
+  token all mean "refresh or sign in". (2) **Collections are narrowed in the
+  query** by `HivelogApiQueryAccess` (`hook_query_alter()`): JSON:API paginates
+  *before* it drops records the user may not view, and these entity types have
+  no query-level access, so without it the first page was the site's first 50
+  records, often empty for the user, and `meta.omitted` named other people's
+  records by id. It adds the ids the type's own `view` check allows, only on a
+  versioned request, only for a query that asked for an access check (core
+  tags it `<type>_access`; the delete-block counts use `accessCheck(FALSE)` and
+  must see every row), and not for `administer hivelog`. (3) **The file
+  collection is not served**, only a file by id or an upload onto a field.
+  (4) A rule broken through the API is a 422 naming the field, never a 500
+  (`HivelogApiValidationTest`). `HivelogApiNonExposedTypesTest` enables every
+  submodule to prove inventory, products, components, sensors, API clients, AI
+  providers and insights exist in plain JSON:API but 404 on the prefix.
 
 ### Routing, controllers and forms
 

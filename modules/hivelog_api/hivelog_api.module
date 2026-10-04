@@ -1,0 +1,22 @@
+<?php
+
+/**
+ * @file
+ * The HiveLog API module.
+ *
+ * Mostly services and routes: a path processor serves core JSON:API under
+ * /hivelog/api/v1 for an allow-list of resources (see HivelogApiResources).
+ */
+
+use Drupal\Core\Database\Query\AlterableInterface;
+
+/**
+ * Implements hook_query_alter().
+ *
+ * Narrows an access-checked entity query for an exposed type to the records
+ * the current user may view, on the versioned API only. See
+ * HivelogApiQueryAccess for why JSON:API needs this.
+ */
+function hivelog_api_query_alter(AlterableInterface $query) {
+  \Drupal::service('hivelog_api.query_access')->alter($query);
+}

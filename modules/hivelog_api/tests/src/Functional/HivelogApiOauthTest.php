@@ -63,7 +63,8 @@ class HivelogApiOauthTest extends BrowserTestBase {
       $options['body'] = json_encode($json);
     }
     $response = $this->getHttpClient()->request($method, $this->buildUrl($path), $options);
-    return ['status' => $response->getStatusCode(), 'json' => json_decode((string) $response->getBody(), TRUE)];
+    $text = (string) $response->getBody();
+    return ['status' => $response->getStatusCode(), 'json' => json_decode($text, TRUE), 'text' => $text];
   }
 
   /**
@@ -200,7 +201,8 @@ class HivelogApiOauthTest extends BrowserTestBase {
     // Discovery needs no token; the data does.
     $this->drupalGet('/hivelog/api/v1');
     $this->assertSession()->statusCodeEquals(200);
-    $this->assertSame(401, $this->bearer('GET', '/hivelog/api/v1/apiary/apiary', 'not-a-token')['status']);
+    $garbage = $this->bearer('GET', '/hivelog/api/v1/apiary/apiary', 'not-a-token');
+    $this->assertSame(401, $garbage['status'], substr($garbage['text'], 0, 600));
 
     // The app sees its own records only.
     $read = $this->bearer('GET', '/hivelog/api/v1/apiary/apiary', $access);
@@ -248,6 +250,24 @@ class HivelogApiOauthTest extends BrowserTestBase {
     $users = $this->bearer('GET', '/jsonapi/user/user', $access);
     $names = array_column(array_column($users['json']['data'] ?? [], 'attributes'), 'display_name');
     $this->assertNotContains('oauth_them', $names, 'The token can enumerate other users');
+
+    // No credentials is a 401 with a Bearer challenge, not a 403 or an empty list.
+    $anonymous = $this->getHttpClient()->request('GET', $this->buildUrl('/hivelog/api/v1/apiary/apiary'), [
+      'http_errors' => FALSE,
+      'headers' => ['Accept' => 'application/vnd.api+json'],
+    ]);
+    $this->assertSame(401, $anonymous->getStatusCode());
+    $this->assertStringStartsWith('Bearer', $anonymous->getHeaderLine('WWW-Authenticate'));
+
+    // An expired token is a 401 too, so the app knows to refresh.
+    // (The lifetime is per client in simple_oauth 6: 300 seconds by default.)
+    $consumer->set('access_token_expiration', 1)->save();
+    $short_params = $this->authorize($me, $verifier);
+    $short = $this->exchange($short_params['code'], $verifier);
+    $this->assertSame(200, $short['status']);
+    sleep(3);
+    $this->assertSame(401, $this->bearer('GET', '/hivelog/api/v1/apiary/apiary', $short['json']['access_token'])['status']);
+    $this->assertSame(401, $this->bearer('GET', '/hivelog/api/v1/computed/alerts', $short['json']['access_token'])['status']);
 
     // Refresh works and rotates.
     $refresh = $this->getHttpClient()->request('POST', $this->buildUrl('/oauth/token'), [

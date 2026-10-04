@@ -40,6 +40,9 @@ class HivelogApiTokenConfinementSubscriber implements EventSubscriberInterface {
    * Refuses a field-app token on a JSON:API route off the versioned prefix.
    */
   public function onRequest(RequestEvent $event): void {
+    if (!$event->isMainRequest()) {
+      return;
+    }
     $request = $event->getRequest();
     if (!$this->isJsonApiRoute($request) || HivelogApiResources::isVersionedRequest($request)) {
       return;

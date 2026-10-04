@@ -38,3 +38,15 @@ services:
     arguments: ['@entity_type.manager']
     tags:
       - { name: paramconverter }
+
+  # A request with no credentials on the versioned API is a 401, not a 403.
+  hivelog_api.challenge:
+    class: Drupal\hivelog_api\EventSubscriber\HivelogApiChallengeSubscriber
+    arguments: ['@current_user']
+    tags:
+      - { name: event_subscriber }
+
+  # Narrows the API's access-checked collection queries to viewable records.
+  hivelog_api.query_access:
+    class: Drupal\hivelog_api\HivelogApiQueryAccess
+    arguments: ['@entity_type.manager', '@current_user', '@request_stack']

@@ -75,7 +75,13 @@ class HivelogApiPathProcessor implements InboundPathProcessorInterface, Outbound
    */
   protected function restIsAllowed(string $rest): bool {
     $segments = explode('/', $rest);
-    return count($segments) >= 2 && $this->resources->isAllowed($segments[0], $segments[1]);
+    if (count($segments) < 2 || !$this->resources->isAllowed($segments[0], $segments[1])) {
+      return FALSE;
+    }
+    // A file is only ever fetched by id or uploaded onto a field. Its
+    // collection would list every file on the site, and the app has no use
+    // for it.
+    return $segments[0] !== 'file' || count($segments) >= 3;
   }
 
 }
