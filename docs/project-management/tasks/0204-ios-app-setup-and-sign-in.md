@@ -46,7 +46,7 @@ the **locale folder `en-GB`** is the one you want (the text has no spelling that
 from en-US).
 
 ### Where it lives
-A new repository, **`~/Development/hivelog-ios`** (local only: `git init`, files
+A new repository, **`~/Development/vinculum`** (renamed from `hivelog-ios` once the app was named; local only: `git init`, files
 staged, nothing committed and no GitHub remote). Creating the GitHub repository is
 yours to do, because whether the app is open source alongside the module and who
 owns the App Store listing are still open questions in the project.
