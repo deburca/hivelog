@@ -64,6 +64,7 @@ class DiscoveryController extends ControllerBase {
             'scope' => HivelogApiResources::SCOPE,
             'authorize' => $url('oauth2_token.authorize'),
             'token' => $url('oauth2_token.token'),
+            'sign_out' => $url('hivelog_api.sign_out'),
           ],
         ],
       ],

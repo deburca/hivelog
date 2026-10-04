@@ -34,6 +34,11 @@ class HivelogApiResources {
    */
   public const CLIENT_ID = 'hivelog-ios';
 
+  /**
+   * The app's name, as a beekeeper sees it when approving the sign-in.
+   */
+  public const APP_NAME = 'Vinculum';
+
   public const SCOPE = 'hivelog_field_app';
 
   public const REDIRECT_URI = 'hivelog://oauth/callback';

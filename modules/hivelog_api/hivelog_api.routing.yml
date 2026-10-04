@@ -9,6 +9,17 @@ hivelog_api.discovery:
     # the server speaks a version it supports. Static facts only.
     _access: 'TRUE'
 
+# Sign out (task 0204): revokes the app's tokens, which simple_oauth cannot do.
+hivelog_api.sign_out:
+  path: '/hivelog/api/v1/sign-out'
+  defaults:
+    _controller: '\Drupal\hivelog_api\Controller\SignOutController::signOut'
+    _title: 'Sign out'
+    _format: json
+  methods: [POST]
+  requirements:
+    _user_is_logged_in: 'TRUE'
+
 # Computed views (task 0202): values no entity stores, each built by the same
 # service as the matching web page. Plain JSON, read-only, OAuth or session.
 hivelog_api.computed_alerts:

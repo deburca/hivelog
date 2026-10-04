@@ -27,6 +27,7 @@ class HivelogApiRoutingTest extends HivelogApiKernelTestBase {
     $this->assertSame('hivelog_field_app', $meta['oauth']['scope']);
     $this->assertStringEndsWith('/oauth/authorize', $meta['oauth']['authorize']);
     $this->assertStringEndsWith('/oauth/token', $meta['oauth']['token']);
+    $this->assertStringEndsWith('/hivelog/api/v1/sign-out', $meta['oauth']['sign_out']);
     $this->assertStringEndsWith('/hivelog/api/v1/hive/hive', $response['body']['links']['hive--hive']['href']);
     $this->assertArrayNotHasKey('inventory_item--inventory_item', $response['body']['links']);
   }

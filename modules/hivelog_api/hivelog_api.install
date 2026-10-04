@@ -94,10 +94,10 @@ function hivelog_api_install() {
     Oauth2Scope::create([
       'id' => HivelogApiResources::SCOPE,
       'name' => HivelogApiResources::SCOPE,
-      'description' => 'Log inspections, queen observations and calendar action reports from the HiveLog field app.',
+      'description' => 'Log inspections, queen observations and calendar action reports from the Vinculum app.',
       'grant_types' => [
-        'authorization_code' => ['status' => TRUE, 'description' => 'Sign in to the HiveLog field app.'],
-        'refresh_token' => ['status' => TRUE, 'description' => 'Stay signed in to the HiveLog field app.'],
+        'authorization_code' => ['status' => TRUE, 'description' => 'Sign in to the Vinculum app.'],
+        'refresh_token' => ['status' => TRUE, 'description' => 'Stay signed in to the Vinculum app.'],
       ],
       'umbrella' => FALSE,
       'parent' => NULL,
@@ -111,7 +111,7 @@ function hivelog_api_install() {
   if (!$existing) {
     Consumer::create([
       'client_id' => HivelogApiResources::CLIENT_ID,
-      'label' => 'HiveLog field app',
+      'label' => HivelogApiResources::APP_NAME,
       'confidential' => FALSE,
       'pkce' => TRUE,
       'grant_types' => ['authorization_code', 'refresh_token'],
@@ -184,4 +184,45 @@ function hivelog_api_requirements($phase) {
   ];
 
   return $requirements;
+}
+
+/**
+ * Names the app "Vinculum" on the consent screen.
+ *
+ * The client's label and the scope's wording are what a beekeeper reads when
+ * asked to approve the sign-in. Sites that installed 2.7.0 to 2.8.x have the
+ * earlier "HiveLog field app" wording; it is replaced only where it is still the
+ * default, so a label an administrator chose is left alone.
+ */
+function hivelog_api_update_10001() {
+  $changed = [];
+  /** @var \Drupal\consumers\Entity\Consumer[] $consumers */
+  $consumers = \Drupal::entityTypeManager()->getStorage('consumer')
+    ->loadByProperties(['client_id' => HivelogApiResources::CLIENT_ID]);
+  foreach ($consumers as $consumer) {
+    if ($consumer->label() === 'HiveLog field app') {
+      $consumer->set('label', HivelogApiResources::APP_NAME)->save();
+      $changed[] = 'client';
+    }
+  }
+  if ($scope = Oauth2Scope::load(HivelogApiResources::SCOPE)) {
+    $grants = $scope->get('grant_types');
+    $old = [
+      'description' => 'Log inspections, queen observations and calendar action reports from the HiveLog field app.',
+      'authorization_code' => 'Sign in to the HiveLog field app.',
+      'refresh_token' => 'Stay signed in to the HiveLog field app.',
+    ];
+    if ($scope->get('description') === $old['description']) {
+      $scope->set('description', 'Log inspections, queen observations and calendar action reports from the Vinculum app.');
+      $changed[] = 'scope';
+    }
+    foreach (['authorization_code', 'refresh_token'] as $grant) {
+      if (($grants[$grant]['description'] ?? NULL) === $old[$grant]) {
+        $grants[$grant]['description'] = str_replace('HiveLog field app', 'Vinculum app', $old[$grant]);
+        $scope->set('grant_types', $grants);
+      }
+    }
+    $scope->save();
+  }
+  return t('Renamed the app to Vinculum on: @what.', ['@what' => $changed ? implode(', ', $changed) : 'nothing needed changing']);
 }

@@ -87,6 +87,40 @@ class HivelogApiInstallTest extends KernelTestBase {
   }
 
   /**
+   * Tests the sign-in names the app as Vinculum.
+   */
+  public function testTheConsentScreenNamesTheApp(): void {
+    $consumers = $this->consumers();
+    $this->assertSame('Vinculum', reset($consumers)->label());
+    $this->assertStringContainsString('Vinculum', (string) Oauth2Scope::load(HivelogApiResources::SCOPE)->get('description'));
+  }
+
+  /**
+   * Tests the update renames an old default and leaves a chosen label alone.
+   */
+  public function testUpdateRenamesOnlyTheOldDefaults(): void {
+    $this->loadInstallFile();
+    $consumers = $this->consumers();
+    $consumer = reset($consumers);
+    $consumer->set('label', 'HiveLog field app')->save();
+    $scope = Oauth2Scope::load(HivelogApiResources::SCOPE);
+    $scope->set('description', 'Log inspections, queen observations and calendar action reports from the HiveLog field app.')->save();
+
+    hivelog_api_update_10001();
+
+    $consumers = $this->consumers();
+    $this->assertSame('Vinculum', reset($consumers)->label());
+    $this->assertStringContainsString('Vinculum', (string) Oauth2Scope::load(HivelogApiResources::SCOPE)->get('description'));
+
+    // An administrator's own label survives a second run.
+    $consumer = reset($consumers);
+    $consumer->set('label', 'Our club app')->save();
+    hivelog_api_update_10001();
+    $consumers = $this->consumers();
+    $this->assertSame('Our club app', reset($consumers)->label());
+  }
+
+  /**
    * Tests the scope maps to the role of the same name.
    */
   public function testInstallCreatesTheScopeForTheRole(): void {

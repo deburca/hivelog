@@ -279,6 +279,43 @@ class HivelogApiOauthTest extends BrowserTestBase {
       ],
     ]);
     $this->assertSame(200, $refresh->getStatusCode());
+    $rotated = json_decode((string) $refresh->getBody(), TRUE);
+
+    // Sign out revokes this session's tokens on the server, not just locally.
+    $sign_out = $this->getHttpClient()->request('POST', $this->buildUrl('/hivelog/api/v1/sign-out'), [
+      'http_errors' => FALSE,
+      'headers' => ['Authorization' => 'Bearer ' . $rotated['access_token'], 'Content-Type' => 'application/json'],
+      'body' => json_encode(['refresh_token' => $rotated['refresh_token']]),
+    ]);
+    $this->assertSame(204, $sign_out->getStatusCode(), (string) $sign_out->getBody());
+    $this->assertSame(401, $this->bearer('GET', '/hivelog/api/v1/apiary/apiary', $rotated['access_token'])['status']);
+    $again = $this->getHttpClient()->request('POST', $this->buildUrl('/oauth/token'), [
+      'http_errors' => FALSE,
+      'form_params' => [
+        'grant_type' => 'refresh_token',
+        'client_id' => HivelogApiResources::CLIENT_ID,
+        'refresh_token' => $rotated['refresh_token'],
+      ],
+    ]);
+    $this->assertSame(400, $again->getStatusCode(), 'The revoked refresh token must not work');
+
+    // Another user's refresh token cannot be revoked with your own bearer.
+    $mine = $this->exchange($this->authorize($me, $verifier)['code'], $verifier);
+    $theirs = $this->exchange($this->authorize($them, $verifier)['code'], $verifier);
+    $this->getHttpClient()->request('POST', $this->buildUrl('/hivelog/api/v1/sign-out'), [
+      'http_errors' => FALSE,
+      'headers' => ['Authorization' => 'Bearer ' . $mine['json']['access_token'], 'Content-Type' => 'application/json'],
+      'body' => json_encode(['refresh_token' => $theirs['json']['refresh_token']]),
+    ]);
+    $still = $this->getHttpClient()->request('POST', $this->buildUrl('/oauth/token'), [
+      'http_errors' => FALSE,
+      'form_params' => [
+        'grant_type' => 'refresh_token',
+        'client_id' => HivelogApiResources::CLIENT_ID,
+        'refresh_token' => $theirs['json']['refresh_token'],
+      ],
+    ]);
+    $this->assertSame(200, $still->getStatusCode(), 'Signing out must not revoke another user\'s session');
   }
 
 }

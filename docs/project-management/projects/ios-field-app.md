@@ -8,6 +8,9 @@ created: 2026-10-04
 # Project: iOS Field App
 
 ## Goal
+The app's name is **Vinculum** (subtitle "Smarter beekeeping"); HiveLog is the
+server it connects to.
+
 Give beekeepers a native iPhone app for the work they do *at the hive*:
 logging inspections with photos, recording queen observations, ticking
 off seasonal actions and checking alerts. It should keep working where
@@ -78,7 +81,8 @@ Static index (in suggested execution order):
   key per site), or go through a relay service? Self-hosted installs
   make this awkward either way.
 - Is the app open source alongside the module, and who owns the App
-  Store listing?
+  Store listing? (Bundle id `org.deburca.hivelog` is a placeholder until decided; see
+  [[0204-ios-app-setup-and-sign-in]].)
 - Order relative to [[shared-apiaries-and-team-roles]]: ship the API
   first and adapt, or wait for the access-model change?
 

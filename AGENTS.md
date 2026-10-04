@@ -405,7 +405,10 @@ entity types core can't name directly).
   /hivelog/api/v1` is a public discovery document (`api_version`, OAuth
   endpoints) a client reads before signing in. Install creates, idempotently,
   the `hivelog_field_app` role, a scope of that name (granularity `role`) and
-  the public PKCE client `hivelog-ios` (redirect `hivelog://oauth/callback`);
+  the public PKCE client `hivelog-ios` (redirect `hivelog://oauth/callback`), labelled
+  with the app's name, Vinculum (`HivelogApiResources::APP_NAME`), which is what a
+  beekeeper reads on the consent screen (`hivelog_api_update_10001()` renames the
+  earlier default on existing sites and leaves a label an administrator chose);
   the role (`hivelog_api_field_app_permissions()`) is the whole of what an app
   token can do — a token's roles are the scope's intersected with the user's
   own, so it only narrows — and it has no `delete` permission. It does hold
@@ -432,6 +435,17 @@ entity types core can't name directly).
   They need no `_auth` option: the OAuth provider is global, so a bearer token
   just works; the kernel tests opt in Basic Auth through the
   `hivelog_api_test` module instead.
+  **Sign-out (task 0204).** simple_oauth 6 has no revocation endpoint, so
+  `POST /hivelog/api/v1/sign-out` (`SignOutController`) revokes the bearer
+  token's access token and, if the body carries `{"refresh_token": "..."}`, that
+  refresh token and the access token it was issued with, so one device signs out
+  and another stays signed in. The refresh token is the opaque blob the client
+  holds: it is decrypted the way League's `RefreshTokenGrant` does
+  (`Defuse\Crypto\Crypto::decryptWithPassword()` with the first 32 characters of
+  the hash salt) and honoured only if its `user_id` and `client_id` match the
+  bearer's, so nobody can revoke another user's session. It always answers 204
+  to a valid bearer; a session user (no token) gets a 400. The discovery
+  document advertises it as `meta.hivelog_api.oauth.sign_out`.
   **Access parity (task 0203).** The API must grant nothing the web UI does
   not; `HivelogApiAccessParityTest` compares every exposed type's read, list,
   update, create and delete, for an owner, an unrelated user, a beekeeper
