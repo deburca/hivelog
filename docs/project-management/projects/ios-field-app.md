@@ -62,10 +62,16 @@ Static index (in suggested execution order):
 
 ## Open questions
 - Offline: outbox (A) or offline-first (B)? See the ADR's §4.
-- Stock JSON:API with a resource allow-list, or a hand-written REST
-  layer shaped around the app's screens? Settle in [[0198-mobile-api-jsonapi-oauth-spike]].
+- ~~Stock JSON:API or hand-written REST?~~ Answered by
+  [[0198-mobile-api-jsonapi-oauth-spike]]: stock JSON:API with a
+  `jsonapi_extras` allow-list, plus a few read-only computed endpoints,
+  **conditional on parent-access constraints (0200) before writes are
+  enabled**: the spike showed a user can otherwise create in, or move
+  records into, another beekeeper's apiary.
 - How is the API versioned so a `baseFieldDefinitions()` rename doesn't
-  break shipped app versions?
+  break shipped app versions? Partly answered: `jsonapi_extras` can alias
+  fields and set a `path_prefix`, so a versioned prefix and stable aliases
+  are viable. Not yet exercised against a rename; settle in 0201.
 - Push notifications: does the site send APNs directly (needs an Apple
   key per site), or go through a relay service? Self-hosted installs
   make this awkward either way.

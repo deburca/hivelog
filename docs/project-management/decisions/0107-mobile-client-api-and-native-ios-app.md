@@ -9,6 +9,8 @@ supersedes:
 
 ## Status
 proposed, 2026-10-04. Planning artifact only, with no code changes yet.
+Spike [[0198-mobile-api-jsonapi-oauth-spike]] (2026-10-04) supports §1 and
+§2 with one amendment, below.
 See [[ios-field-app]] for the project scope and phasing.
 
 ## Context
@@ -70,7 +72,7 @@ A fifth submodule, provisionally `hivelog_api`, under `modules/`
 
 - **JSON:API resources for core entity types**, restricted to the
   types and fields the app needs (via `jsonapi` resource config or a
-  `jsonapi_extras`-style allow-list, decided in [[0198-mobile-api-jsonapi-oauth-spike]]). Writes
+  `jsonapi_extras`-style allow-list, decided in [[0198-mobile-api-jsonapi-oauth-spike]]: `jsonapi_extras` with `default_disabled`, which also sets `path_prefix` for versioning). Writes
   go through the entity API, so the access handlers, ADR-0103 delete
   behaviour and `preSave()` invariants (one active queen, queen colour)
   apply unchanged.
@@ -97,6 +99,15 @@ two-layer convention becomes: **constraint (validates and gives a
 friendly message) plus `preSave()` (backstop)**, with the form
 inheriting the constraint through `ContentEntityForm::validateForm()`
 instead of repeating the rule.
+
+**Amendment from the spike (0198): this is a security requirement.**
+Create and relationship-PATCH access is a global permission and does not see
+the target parent, so through stock JSON:API a user could create records in,
+and move their records into, another beekeeper's apiary or hive (HTTP
+201/204). A "current user can view the referenced parent" field constraint on
+every parent reference closes it (422). Writes must stay disabled until those
+constraints exist. Constraints should also replace `preSave()` throws that
+guard client-fixable states, which otherwise surface as HTTP 500.
 
 ### 3. A native SwiftUI app, scoped to the field workflow
 A separate repository, not this module repo. The app covers:
