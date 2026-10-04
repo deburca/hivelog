@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: review
+status: done
 priority: low
 project:
 area: navigation
@@ -136,7 +136,18 @@ submodule contribution.
   did not sign in), and no real restricted-user page was rendered on `cms2` —
   restricted viewers are covered by the kernel tests only.
 - phpcs and phpstan clean; no baseline change.
-- Full suite: **pending** — result to follow below.
+- **Full suite: 1,206 tests / 20,048 assertions, 0 failures, 0 errors**
+  (1,198 before this task + the 8 new: 6 cross-link, 2 nav), only the usual
+  third-party deprecations and notices. It took four attempts. A single run
+  and then four- and eight-way chunked runs were stopped at the background
+  time limit with nothing completed, and the environment had stopped
+  answering `ddev exec` altogether; the cause was 727 leftover `test<digits>`
+  tables from my earlier killed runs. Drupal's cleanup, run inside the
+  container (`run-tests.sh --clean --sqlite /tmp/...` with `SIMPLETEST_DB` set;
+  it fails on the host), removed them, leaving the 182 real tables untouched,
+  and the suite then ran clean as eight chunks (134–198 tests each) plus
+  Functional. The task was committed in `review` before the run finished and
+  pushed the same way; this commit flips it to `done`.
 
 ## Related
 - Project:: [[in-app-navigation-restructuring]] (done; follow-up)
