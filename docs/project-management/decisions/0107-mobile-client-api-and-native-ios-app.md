@@ -108,6 +108,9 @@ and move their records into, another beekeeper's apiary or hive (HTTP
 every parent reference closes it (422). Writes must stay disabled until those
 constraints exist. Constraints should also replace `preSave()` throws that
 guard client-fixable states, which otherwise surface as HTTP 500.
+Implemented in [[0200-move-form-validation-to-entity-constraints]]: the
+form rules and the parent-access rule (`update` on the parent, matching the
+scoped add routes) are field constraints; `preSave()` keeps its throw.
 
 ### 3. A native SwiftUI app, scoped to the field workflow
 A separate repository, not this module repo. The app covers:

@@ -151,8 +151,9 @@ class HiveInspectionForm extends ContentEntityForm {
     // controlling field isn't punished for something the UI hides anyway.
     $this->normaliseDependentFields($form_state);
 
+    // The "required when" rules (feed type when fed, varroa count when a
+    // check was done) are entity constraints now, run by the parent.
     parent::validateForm($form, $form_state);
-    $this->validateDependentFields($form_state);
   }
 
   /**
@@ -168,29 +169,6 @@ class HiveInspectionForm extends ContentEntityForm {
   }
 
   /**
-   * Validates dependent inspection fields for consistent combinations.
-   */
-  protected function validateDependentFields(FormStateInterface $form_state): void {
-    $fed = $this->getBooleanFieldValue($form_state, 'fed');
-    $feed_type = trim($this->getStringFieldValue($form_state, 'feed_type'));
-    if ($fed && $feed_type === '') {
-      $form_state->setErrorByName(
-        'feed_type',
-        $this->t('Feed type is required when the colony was fed.')
-      );
-    }
-
-    $varroa_check = $this->getBooleanFieldValue($form_state, 'varroa_check');
-    $varroa_count = $this->getNullableFieldValue($form_state, 'varroa_count');
-    if ($varroa_check && $varroa_count === NULL) {
-      $form_state->setErrorByName(
-        'varroa_count',
-        $this->t('Varroa count is required when a varroa check was performed.')
-      );
-    }
-  }
-
-  /**
    * Extracts a boolean value from an entity form field.
    */
   protected function getBooleanFieldValue(FormStateInterface $form_state, string $field_name): bool {
@@ -199,31 +177,6 @@ class HiveInspectionForm extends ContentEntityForm {
       $value = $value[0]['value'] ?? $value['value'] ?? NULL;
     }
     return (bool) $value;
-  }
-
-  /**
-   * Extracts a string value from an entity form field.
-   */
-  protected function getStringFieldValue(FormStateInterface $form_state, string $field_name): string {
-    $value = $form_state->getValue($field_name);
-    if (is_array($value)) {
-      $value = $value[0]['value'] ?? $value['value'] ?? '';
-    }
-    return (string) ($value ?? '');
-  }
-
-  /**
-   * Extracts an optional scalar field value.
-   */
-  protected function getNullableFieldValue(FormStateInterface $form_state, string $field_name): mixed {
-    $value = $form_state->getValue($field_name);
-    if (is_array($value)) {
-      $value = $value[0]['value'] ?? $value['value'] ?? NULL;
-    }
-    if ($value === '' || $value === NULL) {
-      return NULL;
-    }
-    return $value;
   }
 
   /**

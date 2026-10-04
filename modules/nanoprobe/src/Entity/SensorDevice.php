@@ -436,6 +436,10 @@ class SensorDevice extends ContentEntityBase implements EntityChangedInterface, 
       ->setLabel(t('Changed'))
       ->setDescription(t('The time this device was last updated.'));
 
+    // Data-integrity constraints (task 0200): forms and API share one rule.
+    // preSave() keeps its throw as the backstop for non-validating callers.
+    $fields['hive']->addConstraint('SensorDeviceHiveScope');
+
     return $fields;
   }
 

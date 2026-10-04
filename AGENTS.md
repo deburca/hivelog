@@ -249,9 +249,10 @@ reading:
   unlike `CalendarActionItemRequirement`). Edit/delete only: no canonical
   or collection route, managed from the hive page's "Hive Components"
   section (anchor `#components`, add route `hivelog.hive_component.add`).
-  Two guards, each enforced in both `preSave()` (throws, for programmatic
-  creation) and `HiveComponentForm::validateForm()` (friendly error), the
-  same two-layer convention as `CalendarActionItemRequirement`: the item
+  Two guards, each a field constraint (`HivelogSameApiary` on `item`,
+  `HivelogHiveComponentQuantity` on `quantity`, giving the friendly error to
+  forms and APIs alike) with a `preSave()` throw behind it as the backstop —
+  see "Validation" below: the item
   must belong to the hive's apiary, and `quantity` can't exceed
   `InventoryItem::getAvailableForHiveAssignmentQuantity()` — purchased
   (`getTotalPurchasedQuantity()`, any item type, unlike consumable-only
@@ -284,6 +285,53 @@ queen `breed` / `temperament` / `status`, and the various inspection enums
 are hard-coded in the respective `baseFieldDefinitions()`.
 Extending them requires editing the entity class **and** writing an update
 hook if existing data must be preserved.
+
+#### Validation: constraints first, `preSave()` as backstop (task 0200)
+
+A data-integrity rule is an entity **constraint**, attached to the field it
+reports on in `baseFieldDefinitions()`. A web form, a JSON:API request
+(ADR-0107) and a bare `$entity->validate()` all run it, so they all give the
+same error. `preSave()` keeps its `\InvalidArgumentException` as the backstop
+for a caller that never validates (a script, a migration); it is not the
+place for the friendly message, and a form's `validateForm()` must not repeat
+a rule a constraint already owns. Without the constraint a non-form caller
+gets an HTTP 500 for a client error, which a retrying client mistakes for a
+transient failure.
+
+The generic plugins live in `src/Plugin/Validation/Constraint/`, and a
+submodule may use them (it depends on core): `HivelogParentAccess` (below),
+`HivelogSameApiary` (`against` names the sibling reference whose apiary it
+must match), `HivelogNotBefore` (`other` names the sibling field; works for
+ISO dates and numbers), `HivelogConditionalField` (`when` / `is` / `negate` /
+`require`: fill in, or leave empty, a field depending on a sibling — a numeric
+0 counts as filled), `HivelogDurableItemDisposal` and
+`HivelogHiveComponentQuantity`. Rules that only make sense for one entity
+live beside it (nanoprobe's `SensorDeviceHiveScope`). Pass the exact wording
+as the `message` option so each call site names its own thing; the wording is
+what the old form validators showed. A field holds **one constraint per
+plugin ID** (`addConstraint()` is keyed by it), so two rules of the same kind
+on one field need a combined plugin, as `SensorDeviceHiveScope` is.
+
+**`HivelogParentAccess` is a security rule, not polish.** Create access is a
+global permission and cannot see which parent a new record points at, and the
+scoped add routes only protect the web UI (`_entity_access: hive.update`,
+task 0133). Spike 0198 showed a generic API could otherwise create records in,
+or move them into, another beekeeper's apiary or hive. The constraint applies
+the same route rule (`update` on the referenced parent) to every caller, and
+is on the primary parent reference of every child type (`hive.apiary`,
+`hive_inspection.hive`, `queen.hive`, `queen_observation.queen`,
+`calendar_action.apiary`, both action logs, `inventory_item` / `purchase` /
+`product.apiary`, requirement and yield `.calendar_action`,
+`hive_component.hive`). It checks only a reference that is new or changed, so
+an unrelated edit never fails because the parent's access has since moved, and
+its message names the kind of record, never the one it refused. A **new child
+entity type must add it** to its parent field; 0203's access-parity tests
+expect it.
+
+Deliberately `preSave()`-only: machine-written types that have no form and are
+not exposed to an API (`SensorReading`, `HiveInsight`, `InventoryUsage`,
+`HarvestYield`, and `AiProviderConfig`'s "mode is recognised" check, which the
+field's allowed values already cover).
 
 ### Submodules
 
@@ -793,6 +841,10 @@ accessible.
 All test classes use the PHP 8 `#[Group('hivelog')]` attribute, so
 `--group hivelog` runs exactly this module's suite.
 
+- `tests/src/Kernel/EntityConstraintsTest.php` — every constraint above,
+  plus the parent-access matrix (own parent allowed, foreign parent refused for
+  every child type, admin allowed, re-parenting refused, unchanged parent not
+  re-checked) and the `preSave()` backstop.
 - `tests/src/Kernel/*` — kernel tests (`KernelTestBase`) covering entity
   CRUD, field option validation, parent/child relationships, queen-colour
   auto-calc, inspection logging, access control, and cache metadata. Install

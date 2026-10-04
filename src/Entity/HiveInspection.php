@@ -513,6 +513,22 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
       ->setLabel(t('Changed'))
       ->setDescription(t('The time the inspection was last updated.'));
 
+    // Data-integrity constraints (task 0200): forms and API share one rule.
+    // preSave() keeps its throw as the backstop for non-validating callers.
+    // Parent-access: the same rule the scoped add route applies (task 0133),
+    // enforced for every caller, not only the web form (tasks 0198/0200).
+    $fields['hive']->addConstraint('HivelogParentAccess');
+    $fields['feed_type']->addConstraint('HivelogConditionalField', [
+      'when' => 'fed',
+      'is' => TRUE,
+      'message' => 'Feed type is required when the colony was fed.',
+    ]);
+    $fields['varroa_count']->addConstraint('HivelogConditionalField', [
+      'when' => 'varroa_check',
+      'is' => TRUE,
+      'message' => 'Varroa count is required when a varroa check was performed.',
+    ]);
+
     return $fields;
   }
 

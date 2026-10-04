@@ -167,6 +167,16 @@ class CalendarActionItemRequirement extends ContentEntityBase implements EntityC
       ->setLabel(t('Changed'))
       ->setDescription(t('The time the requirement was last updated.'));
 
+    // Data-integrity constraints (task 0200): forms and API share one rule.
+    // preSave() keeps its throw as the backstop for non-validating callers.
+    // Parent-access: the same rule the scoped add route applies (task 0133),
+    // enforced for every caller, not only the web form (tasks 0198/0200).
+    $fields['calendar_action']->addConstraint('HivelogParentAccess');
+    $fields['item']->addConstraint('HivelogSameApiary', [
+      'against' => 'calendar_action',
+      'message' => 'The selected item must belong to the same apiary as this calendar action.',
+    ]);
+
     return $fields;
   }
 

@@ -267,6 +267,21 @@ class InventoryPurchase extends ContentEntityBase implements EntityChangedInterf
       ->setLabel(t('Changed'))
       ->setDescription(t('The time the purchase record was last updated.'));
 
+    // Data-integrity constraints (task 0200): forms and API share one rule.
+    // preSave() keeps its throw as the backstop for non-validating callers.
+    // Parent-access: the same rule the scoped add route applies (task 0133),
+    // enforced for every caller, not only the web form (tasks 0198/0200).
+    $fields['apiary']->addConstraint('HivelogParentAccess');
+    $fields['item']->addConstraint('HivelogSameApiary', [
+      'against' => 'apiary',
+      'message' => 'The selected item must belong to the same apiary as this purchase.',
+    ]);
+    $fields['disposal_date']->addConstraint('HivelogNotBefore', [
+      'other' => 'purchase_date',
+      'message' => 'The disposal date cannot be before the purchase date.',
+    ]);
+    $fields['disposal_date']->addConstraint('HivelogDurableItemDisposal');
+
     return $fields;
   }
 

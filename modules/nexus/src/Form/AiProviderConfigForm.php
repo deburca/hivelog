@@ -100,43 +100,6 @@ class AiProviderConfigForm extends ContentEntityForm {
 
   /**
    * {@inheritdoc}
-   *
-   * `AiProviderConfig::preSave()` enforces the same mode-conditional
-   * requirements, but throwing `\InvalidArgumentException` from there
-   * surfaces as a raw, uncaught "unexpected error" page, not a normal
-   * inline form error — confirmed by actually submitting this form
-   * without a key selected. Duplicating the checks here, against a
-   * `buildEntity()`'d clone, turns that into the ordinary
-   * `setErrorByName()` experience every other hivelog form gives; the
-   * entity-level check stays too, as the real invariant guard for any
-   * non-form caller (e.g. a future import, or direct API use).
-   *
-   * Deliberately does NOT skip these checks when `parent::validateForm()`
-   * already recorded some other, unrelated field error — `buildEntity()`
-   * only needs a form/form_state to read submitted values from, not an
-   * already-valid entity, and a beekeeper fixing one error at a time
-   * shouldn't have this one silently withheld until the other is fixed
-   * first.
-   */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
-    parent::validateForm($form, $form_state);
-
-    $entity = $this->buildEntity($form, $form_state);
-    $mode = $entity->get('mode')->value;
-
-    if ($mode !== 'ai_module' && $entity->get('key')->isEmpty()) {
-      $form_state->setErrorByName('key', $this->t('Key is required unless mode is "Drupal AI module".'));
-    }
-    if ($mode === 'direct_api' && $entity->get('provider')->isEmpty()) {
-      $form_state->setErrorByName('provider', $this->t('Provider is required when mode is "Direct provider API".'));
-    }
-    if ($mode === 'custom_endpoint' && $entity->get('endpoint_url')->isEmpty()) {
-      $form_state->setErrorByName('endpoint_url', $this->t('Custom Endpoint URL is required when mode is "Custom endpoint".'));
-    }
-  }
-
-  /**
-   * {@inheritdoc}
    */
   public function save(array $form, FormStateInterface $form_state) {
     $entity = $this->entity;

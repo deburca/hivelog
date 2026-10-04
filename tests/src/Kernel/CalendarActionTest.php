@@ -59,6 +59,11 @@ class CalendarActionTest extends KernelTestBase {
     $this->installEntitySchema('calendar_action_product_yield');
     $this->installSchema('file', ['file_usage']);
 
+    // The first user is uid 1 (superuser), so the parent-access constraint
+    // (task 0200) passes for the current user.
+    User::create(['name' => 'root', 'mail' => 'root@example.com'])->save();
+    \Drupal::currentUser()->setAccount(User::load(1));
+
     $this->apiary = Apiary::create(['name' => 'Test Apiary']);
     $this->apiary->save();
   }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\hivelog\Kernel;
 
+use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Form\FormState;
 use Drupal\hivelog\Controller\InventoryItemController;
 use Drupal\hivelog\Controller\InventoryPurchaseController;
@@ -336,6 +337,10 @@ class ScopedEntityFormRoundTripTest extends KernelTestBase {
     $form_state = new FormState();
     $form = \Drupal::formBuilder()->buildForm($form_object, $form_state);
     $form_state->setValue('item', [['target_id' => $durable->id()]]);
+    // A submitted datetime element hands the widget a DrupalDateTime; an
+    // unsubmitted built form does not, so set both as a submit would.
+    $form_state->setValue('purchase_date', [['value' => new DrupalDateTime('2026-03-01')]]);
+    $form_state->setValue('disposal_date', [['value' => new DrupalDateTime('2026-01-01')]]);
     $form_object->validateForm($form, $form_state);
 
     $this->assertArrayHasKey('disposal_date', $form_state->getErrors());

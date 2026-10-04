@@ -168,6 +168,16 @@ class CalendarActionProductYield extends ContentEntityBase implements EntityChan
       ->setLabel(t('Changed'))
       ->setDescription(t('The time the yield was last updated.'));
 
+    // Data-integrity constraints (task 0200): forms and API share one rule.
+    // preSave() keeps its throw as the backstop for non-validating callers.
+    // Parent-access: the same rule the scoped add route applies (task 0133),
+    // enforced for every caller, not only the web form (tasks 0198/0200).
+    $fields['calendar_action']->addConstraint('HivelogParentAccess');
+    $fields['product']->addConstraint('HivelogSameApiary', [
+      'against' => 'calendar_action',
+      'message' => 'The selected product must belong to the same apiary as this calendar action.',
+    ]);
+
     return $fields;
   }
 

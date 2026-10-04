@@ -186,6 +186,12 @@ class Product extends ContentEntityBase implements EntityChangedInterface, Entit
       ->setLabel(t('Changed'))
       ->setDescription(t('The time the product was last updated.'));
 
+    // Data-integrity constraints (task 0200): forms and API share one rule.
+    // preSave() keeps its throw as the backstop for non-validating callers.
+    // Parent-access: the same rule the scoped add route applies (task 0133),
+    // enforced for every caller, not only the web form (tasks 0198/0200).
+    $fields['apiary']->addConstraint('HivelogParentAccess');
+
     return $fields;
   }
 

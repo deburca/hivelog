@@ -166,6 +166,44 @@ class AiProviderConfigTest extends KernelTestBase {
   }
 
   /**
+   * Tests the mode rules are reported by validate(), not only thrown.
+   *
+   * A form and any API caller get a validation error on the missing field;
+   * the preSave() throws above stay as the backstop.
+   */
+  public function testModeRulesAreValidationErrors(): void {
+    $messages = function (array $values, string $field): array {
+      $config = AiProviderConfig::create(['label' => 'Mode check'] + $values);
+      $messages = [];
+      foreach ($config->validate() as $violation) {
+        if ($violation->getPropertyPath() === $field) {
+          $messages[] = (string) $violation->getMessage();
+        }
+      }
+      return $messages;
+    };
+
+    $this->assertSame(
+      ['Key is required unless mode is "Drupal AI module".'],
+      $messages(['mode' => 'direct_api', 'provider' => 'anthropic'], 'key')
+    );
+    $this->assertSame([], $messages(['mode' => 'ai_module'], 'key'));
+    $this->assertSame(
+      ['Provider is required when mode is "Direct provider API".'],
+      $messages(['mode' => 'direct_api', 'key' => 'k'], 'provider')
+    );
+    $this->assertSame(
+      ['Custom Endpoint URL is required when mode is "Custom endpoint".'],
+      $messages(['mode' => 'custom_endpoint', 'key' => 'k'], 'endpoint_url')
+    );
+    $this->assertSame([], $messages([
+      'mode' => 'custom_endpoint',
+      'key' => 'k',
+      'endpoint_url' => 'https://example.com/x',
+    ], 'endpoint_url'));
+  }
+
+  /**
    * Tests ownership-based access — no apiary/hive dimension at all.
    *
    * Only `view` has an "own" permission (task 0135 removed `edit own`/

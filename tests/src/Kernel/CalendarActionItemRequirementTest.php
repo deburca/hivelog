@@ -9,6 +9,7 @@ use Drupal\hivelog\Entity\CalendarAction;
 use Drupal\hivelog\Entity\CalendarActionItemRequirement;
 use Drupal\hivelog\Entity\InventoryItem;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\user\Entity\User;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
@@ -61,6 +62,11 @@ class CalendarActionItemRequirementTest extends KernelTestBase {
     $this->installEntitySchema('inventory_item');
     $this->installEntitySchema('calendar_action_item_requirement');
     $this->installSchema('file', ['file_usage']);
+
+    // The first user is uid 1 (superuser), so the parent-access constraint
+    // (task 0200) passes for the current user.
+    User::create(['name' => 'root', 'mail' => 'root@example.com'])->save();
+    \Drupal::currentUser()->setAccount(User::load(1));
 
     $this->apiary = Apiary::create(['name' => 'Test Apiary']);
     $this->apiary->save();

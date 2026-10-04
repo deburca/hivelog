@@ -66,36 +66,6 @@ class InventoryItemForm extends ContentEntityForm {
   /**
    * {@inheritdoc}
    */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
-    parent::validateForm($form, $form_state);
-
-    $item_type = $this->getNullableFieldValue($form_state, 'item_type');
-    $useful_life_years = $this->getNullableFieldValue($form_state, 'useful_life_years');
-    if ($item_type === 'durable' && $useful_life_years === NULL) {
-      $form_state->setErrorByName('useful_life_years', $this->t('Durable items must have a useful life (in years) set.'));
-    }
-  }
-
-  /**
-   * Extracts a scalar value from an entity form field, or NULL if empty.
-   *
-   * Mirrors the equivalent helper in CalendarActionForm — handles both the
-   * `[0]['value']` and flat `['value']` shapes a widget might produce.
-   */
-  protected function getNullableFieldValue(FormStateInterface $form_state, string $field_name): mixed {
-    $value = $form_state->getValue($field_name);
-    if (is_array($value)) {
-      $value = $value[0]['value'] ?? $value['value'] ?? NULL;
-    }
-    if ($value === '' || $value === NULL) {
-      return NULL;
-    }
-    return $value;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function save(array $form, FormStateInterface $form_state) {
     $entity = $this->entity;
     $status = $entity->save();

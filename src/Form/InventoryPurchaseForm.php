@@ -90,55 +90,6 @@ class InventoryPurchaseForm extends ContentEntityForm {
   /**
    * {@inheritdoc}
    */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
-    parent::validateForm($form, $form_state);
-
-    $item_id = $this->getNullableFieldValue($form_state, 'item');
-    $apiary_id = $this->getNullableFieldValue($form_state, 'apiary');
-    $item = $item_id !== NULL ? $this->entityTypeManager->getStorage('inventory_item')->load($item_id) : NULL;
-    if ($item && $apiary_id !== NULL && (int) $item->get('apiary')->target_id !== (int) $apiary_id) {
-      $form_state->setErrorByName('item', $this->t('The selected item must belong to the same apiary as this purchase.'));
-    }
-
-    // Read the massaged, string-formatted date values off a freshly built
-    // entity clone rather than $form_state->getValue() directly — the
-    // datetime widget's raw form value is a DrupalDateTime object at this
-    // point, not yet the 'Y-m-d' string WidgetInterface::extractFormValues()
-    // produces, and buildEntity() is what runs that massaging.
-    $entity = $this->buildEntity($form, $form_state);
-    $disposal_date = $entity->get('disposal_date')->value;
-    if ($disposal_date) {
-      if ($item && $item->get('item_type')->value !== 'durable') {
-        $form_state->setErrorByName('disposal_date', $this->t('A disposal date can only be recorded for a purchase of a durable item.'));
-      }
-      $purchase_date = $entity->get('purchase_date')->value;
-      if ($purchase_date && $disposal_date < $purchase_date) {
-        $form_state->setErrorByName('disposal_date', $this->t('The disposal date cannot be before the purchase date.'));
-      }
-    }
-  }
-
-  /**
-   * Extracts a scalar value from an entity form field, or NULL if empty.
-   *
-   * Mirrors the equivalent helper in CalendarActionForm — handles both the
-   * `[0]['value']`/`[0]['target_id']` and flat `['value']` shapes a widget
-   * might produce.
-   */
-  protected function getNullableFieldValue(FormStateInterface $form_state, string $field_name): mixed {
-    $value = $form_state->getValue($field_name);
-    if (is_array($value)) {
-      $value = $value[0]['target_id'] ?? $value[0]['value'] ?? $value['value'] ?? NULL;
-    }
-    if ($value === '' || $value === NULL) {
-      return NULL;
-    }
-    return $value;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function save(array $form, FormStateInterface $form_state) {
     $entity = $this->entity;
     $status = $entity->save();

@@ -11,7 +11,6 @@ use Drupal\hivelog\Controller\HiveInspectionController;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\Hive;
 use Drupal\hivelog\Entity\HiveInspection;
-use Drupal\hivelog\Form\HiveInspectionForm;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
@@ -62,25 +61,34 @@ class HiveInspectionTest extends KernelTestBase {
   protected User $user;
 
   /**
-   * Validates dependent inspection fields using form-level rule logic.
+   * Submits the inspection form's dependent fields through its real validation.
+   *
+   * The "required when" rules are entity constraints (task 0200), run by
+   * `ContentEntityForm::validateForm()`; the form itself only normalises a
+   * hidden dependent value first. So this goes through `validateForm()`
+   * rather than calling a rule method directly.
    */
   protected function validateDependentInspectionFields(array $values): FormState {
-    $defaults = [
+    $values += [
       'fed' => [['value' => 0]],
       'feed_type' => [['value' => '']],
       'varroa_check' => [['value' => 0]],
       'varroa_count' => [['value' => '']],
     ];
 
-    $form_state = new FormState();
-    $form_state->setValues(array_replace($defaults, $values));
+    // The first user is uid 1 (superuser), so the parent-access constraint
+    // passes for the current user.
+    \Drupal::currentUser()->setAccount($this->user);
 
-    /** @var \Drupal\hivelog\Form\HiveInspectionForm $form_object */
-    $form_object = \Drupal::service('class_resolver')
-      ->getInstanceFromDefinition(HiveInspectionForm::class);
-    $method = new \ReflectionMethod(HiveInspectionForm::class, 'validateDependentFields');
-    $method->setAccessible(TRUE);
-    $method->invoke($form_object, $form_state);
+    $inspection = HiveInspection::create(['hive' => $this->hive->id()]);
+    $form_object = \Drupal::entityTypeManager()->getFormObject('hive_inspection', 'add');
+    $form_object->setEntity($inspection);
+    $form_state = new FormState();
+    $form = \Drupal::formBuilder()->buildForm($form_object, $form_state);
+    foreach ($values as $name => $value) {
+      $form_state->setValue($name, $value);
+    }
+    $form_object->validateForm($form, $form_state);
 
     return $form_state;
   }
@@ -89,29 +97,7 @@ class HiveInspectionTest extends KernelTestBase {
    * Runs the full normalise-then-validate sequence the form uses on submit.
    */
   protected function normaliseThenValidateDependentInspectionFields(array $values): FormState {
-    $defaults = [
-      'fed' => [['value' => 0]],
-      'feed_type' => [['value' => '']],
-      'varroa_check' => [['value' => 0]],
-      'varroa_count' => [['value' => '']],
-    ];
-
-    $form_state = new FormState();
-    $form_state->setValues(array_replace($defaults, $values));
-
-    /** @var \Drupal\hivelog\Form\HiveInspectionForm $form_object */
-    $form_object = \Drupal::service('class_resolver')
-      ->getInstanceFromDefinition(HiveInspectionForm::class);
-
-    $normalise = new \ReflectionMethod(HiveInspectionForm::class, 'normaliseDependentFields');
-    $normalise->setAccessible(TRUE);
-    $normalise->invoke($form_object, $form_state);
-
-    $validate = new \ReflectionMethod(HiveInspectionForm::class, 'validateDependentFields');
-    $validate->setAccessible(TRUE);
-    $validate->invoke($form_object, $form_state);
-
-    return $form_state;
+    return $this->validateDependentInspectionFields($values);
   }
 
   /**
@@ -613,7 +599,7 @@ class HiveInspectionTest extends KernelTestBase {
       'feed_type' => [['value' => 'Fondant']],
     ]);
 
-    $this->assertFalse($form_state->hasAnyErrors());
+    $this->assertArrayNotHasKey('feed_type', $form_state->getErrors());
     $feed_type = $form_state->getValue('feed_type');
     $this->assertSame('', $feed_type[0]['value'] ?? NULL);
   }
@@ -640,7 +626,7 @@ class HiveInspectionTest extends KernelTestBase {
       'varroa_count' => [['value' => 3]],
     ]);
 
-    $this->assertFalse($form_state->hasAnyErrors());
+    $this->assertArrayNotHasKey('varroa_count', $form_state->getErrors());
     $varroa_count = $form_state->getValue('varroa_count');
     $this->assertNull($varroa_count[0]['value'] ?? NULL);
   }
@@ -656,7 +642,8 @@ class HiveInspectionTest extends KernelTestBase {
       'varroa_count' => [['value' => 2]],
     ]);
 
-    $this->assertFalse($form_state->hasAnyErrors());
+    $this->assertArrayNotHasKey('feed_type', $form_state->getErrors());
+    $this->assertArrayNotHasKey('varroa_count', $form_state->getErrors());
   }
 
   /**

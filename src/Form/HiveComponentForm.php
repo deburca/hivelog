@@ -55,66 +55,6 @@ class HiveComponentForm extends ContentEntityForm {
   /**
    * {@inheritdoc}
    */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
-    parent::validateForm($form, $form_state);
-
-    $item_id = $this->getNullableFieldValue($form_state, 'item');
-    $hive_id = $this->getNullableFieldValue($form_state, 'hive');
-    $quantity = $this->getNullableFieldValue($form_state, 'quantity');
-
-    if ($item_id === NULL) {
-      return;
-    }
-    /** @var \Drupal\hivelog\Entity\InventoryItem|null $item */
-    $item = $this->entityTypeManager->getStorage('inventory_item')->load($item_id);
-    if (!$item) {
-      return;
-    }
-
-    if ($hive_id !== NULL) {
-      $hive = $this->entityTypeManager->getStorage('hive')->load($hive_id);
-      if ($hive && (int) $item->get('apiary')->target_id !== (int) $hive->get('apiary')->target_id) {
-        $form_state->setErrorByName('item', $this->t('The selected item must belong to the same apiary as this hive.'));
-        return;
-      }
-    }
-
-    if ($quantity !== NULL) {
-      $exclude_id = $this->entity->isNew() ? NULL : (int) $this->entity->id();
-      $available = $item->getAvailableForHiveAssignmentQuantity($exclude_id);
-      if ((float) $quantity > $available) {
-        $form_state->setErrorByName('quantity', $this->t('Only @available of "@item" @is available, not @requested.', [
-          '@available' => rtrim(rtrim(number_format($available, 3, '.', ''), '0'), '.'),
-          '@item' => $item->label(),
-          '@is' => $available == 1 ? $this->t('is') : $this->t('are'),
-          '@requested' => rtrim(rtrim(number_format((float) $quantity, 3, '.', ''), '0'), '.'),
-        ]));
-      }
-    }
-  }
-
-  /**
-   * Extracts a scalar value from an entity form field, or NULL if empty.
-   *
-   * Mirrors the equivalent helper in CalendarActionItemRequirementForm /
-   * InventoryPurchaseForm — handles both the
-   * `[0]['target_id']`/`[0]['value']` and flat `['value']` shapes a
-   * widget might produce.
-   */
-  protected function getNullableFieldValue(FormStateInterface $form_state, string $field_name): mixed {
-    $value = $form_state->getValue($field_name);
-    if (is_array($value)) {
-      $value = $value[0]['target_id'] ?? $value[0]['value'] ?? $value['value'] ?? NULL;
-    }
-    if ($value === '' || $value === NULL) {
-      return NULL;
-    }
-    return $value;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function save(array $form, FormStateInterface $form_state) {
     $entity = $this->entity;
     $status = $entity->save();

@@ -121,12 +121,6 @@ parameters:
 			path: modules/nanoprobe/src/Form/SensorDeviceForm.php
 
 		-
-			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
-			identifier: method.notFound
-			count: 2
-			path: modules/nanoprobe/src/Form/SensorDeviceForm.php
-
-		-
 			message: '#^Unsafe usage of new static\(\)\.$#'
 			identifier: new.static
 			count: 1
@@ -215,12 +209,6 @@ parameters:
 			identifier: new.static
 			count: 1
 			path: modules/nexus/src/Form/AiProviderConfigFilterForm.php
-
-		-
-			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
-			identifier: method.notFound
-			count: 4
-			path: modules/nexus/src/Form/AiProviderConfigForm.php
 
 		-
 			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
@@ -705,7 +693,7 @@ parameters:
 		-
 			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
 			identifier: method.notFound
-			count: 3
+			count: 1
 			path: src/Form/CalendarActionItemRequirementForm.php
 
 		-
@@ -717,7 +705,7 @@ parameters:
 		-
 			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
 			identifier: method.notFound
-			count: 3
+			count: 1
 			path: src/Form/CalendarActionProductYieldForm.php
 
 		-
@@ -747,7 +735,7 @@ parameters:
 		-
 			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
 			identifier: method.notFound
-			count: 2
+			count: 1
 			path: src/Form/HiveComponentForm.php
 
 		-
@@ -851,12 +839,6 @@ parameters:
 			identifier: return.missing
 			count: 1
 			path: src/Form/InventoryItemForm.php
-
-		-
-			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
-			identifier: method.notFound
-			count: 4
-			path: src/Form/InventoryPurchaseForm.php
 
 		-
 			message: '#^Method Drupal\\hivelog\\Form\\InventoryPurchaseForm\:\:save\(\) should return int but return statement is missing\.$#'

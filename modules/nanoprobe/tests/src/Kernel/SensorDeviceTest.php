@@ -160,6 +160,38 @@ class SensorDeviceTest extends KernelTestBase {
   }
 
   /**
+   * Tests the scope rules are reported by validate(), not only thrown.
+   *
+   * A form and any API caller get a validation error on `hive`; the
+   * preSave() throws above stay as the backstop.
+   */
+  public function testScopeRulesAreValidationErrors(): void {
+    $device = fn(string $scope, ?int $hive) => SensorDevice::create([
+      'label' => 'Scope check',
+      'apiary' => $this->apiary->id(),
+      'hive' => $hive,
+      'scope' => $scope,
+    ]);
+    $messages = function (SensorDevice $device): array {
+      $messages = [];
+      foreach ($device->validate() as $violation) {
+        if ($violation->getPropertyPath() === 'hive') {
+          $messages[] = (string) $violation->getMessage();
+        }
+      }
+      return $messages;
+    };
+
+    $this->assertSame(['Hive is required when scope is "Hive".'], $messages($device('hive', NULL)));
+    $this->assertSame(
+      ['Hive must be left empty when scope is "Apiary".'],
+      $messages($device('apiary', (int) $this->hive->id()))
+    );
+    $this->assertSame([], $messages($device('hive', (int) $this->hive->id())));
+    $this->assertSame([], $messages($device('apiary', NULL)));
+  }
+
+  /**
    * Tests that a token is auto-generated on insert.
    */
   public function testTokenGeneratedOnInsert(): void {

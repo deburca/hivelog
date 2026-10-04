@@ -253,6 +253,25 @@ class AiProviderConfig extends ContentEntityBase implements EntityChangedInterfa
       ->setLabel(t('Changed'))
       ->setDescription(t('The time this config was last updated.'));
 
+    // Data-integrity constraints (task 0200): forms and API share one rule.
+    // preSave() keeps its throw as the backstop for non-validating callers.
+    $fields['key']->addConstraint('HivelogConditionalField', [
+      'when' => 'mode',
+      'is' => ['ai_module'],
+      'negate' => TRUE,
+      'message' => 'Key is required unless mode is "Drupal AI module".',
+    ]);
+    $fields['provider']->addConstraint('HivelogConditionalField', [
+      'when' => 'mode',
+      'is' => 'direct_api',
+      'message' => 'Provider is required when mode is "Direct provider API".',
+    ]);
+    $fields['endpoint_url']->addConstraint('HivelogConditionalField', [
+      'when' => 'mode',
+      'is' => 'custom_endpoint',
+      'message' => 'Custom Endpoint URL is required when mode is "Custom endpoint".',
+    ]);
+
     return $fields;
   }
 
