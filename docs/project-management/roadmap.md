@@ -2,22 +2,30 @@
 type: roadmap
 tags: [hivelog/roadmap]
 status: living
-updated: 2026-09-26
+updated: 2026-10-04
 ---
 # 🐝 Hivelog Roadmap
 A living roadmap derived from the projects, tasks, decisions, and releases in
 this vault. Sequencing is driven by dependencies and completed work rather than
-fixed dates. Last refreshed **2026-09-26**.
+fixed dates. Last refreshed **2026-10-04**.
 ## Where things stand
-131 tasks: **116 done**, 2 in-progress, 12 backlog, 1 dropped — no task is in
-`todo` or `review`. 13 projects: **8 done**, 4 active, 1 dropped. 43
-decisions: 42 accepted, 1 proposed.
-Everything that was code-complete is now released: **2.0.0** shipped
-2026-09-26. No task work is currently blocked on a release decision.
+183 tasks: **142 done**, 2 in-progress, 1 review, 36 backlog, 2 dropped —
+none in `todo`. 24 projects: **11 done**, 4 active, **8 planning**, 1
+dropped. 46 decisions: 45 accepted, 1 proposed.
+The latest release is **2.4.0** (2026-10-02). The 8 planning projects and
+their 24 backlog tasks (0174–0197) came out of the
+[[2026-10-04-beekeeping-software-market-survey]]. See "Planned projects"
+below.
 ## Release timeline
 ### ✅ Released
-18 versions, 1.1.0 through **2.0.0** (the latest tag, and the version in
-`hivelog.info.yml`). Each has its own note in `releases/`.
+26 versions, 1.1.0 through **2.4.0** (the latest tag). Each has its own
+note in `releases/`.
+- **Since 2.0.0:** [[2.1.0]] (2026-09-28) two-tier in-app navigation
+  (ADR-0104); [[2.2.0]] (2026-09-29) hive component weight tracking
+  (ADR-0106), with the [[2.2.1]] form fix; [[2.2.2]] (2026-10-02) nav
+  submenu on touch devices; [[2.3.0]] (2026-10-02) action log list
+  filters, with the [[2.3.1]] date-range and [[2.3.2]] queen-button fixes;
+  [[2.4.0]] (2026-10-02) sortable columns on collection lists.
 - **[[1.8.9]]** (2026-09-24) — the two security fixes:
   [[0133-route-level-entity-access]] (closed an IDOR — no hivelog route
   except one checked per-entity access, so "own"-only permissions passed for
@@ -98,19 +106,55 @@ actions) — also removed.
 - **[[ai-apiary-insights]]** — 14 done across `collective`, `nexus` and the
   dashboard. [[0094-ai-insights-prelaunch-validation]] remains in backlog and
   is the gate before pointing this at real beekeepers.
+## Planned projects (from the 2026-10-04 market survey)
+All 8 are `planning`; every task is `backlog`. Any task that adds an entity
+or changes access starts with an ADR task, and the tasks after it depend on
+that ADR.
+- **[[qr-hive-labels]]** (B, high) — [[0177-hive-quick-access-page]] →
+  [[0178-printable-qr-label-sheet]]. Smallest win; the QR helper is reused by
+  G.
+- **[[data-export-and-printable-records]]** (A, high) —
+  [[0174-collection-csv-export]], [[0175-printable-hive-record]],
+  [[0176-apiary-export-bundle]]. 0174 feeds D's register report.
+- **[[treatment-register]]** (D, high) — [[0182-treatment-register-adr]] →
+  [[0183-treatment-entity-and-ui]] → [[0185-treatment-register-report]];
+  [[0184-varroa-trend-and-threshold-alert]] can start straight away.
+- **[[sensor-event-detection]]** (H, medium, nanoprobe) —
+  [[0195-weight-step-change-detection]] →
+  [[0196-sensor-event-alerts-and-confirmation]];
+  [[0197-hive-opened-detection]]. Tune against real data from
+  [[0079-pilot-weight-sensor-hardware-build]].
+- **[[weather-aware-inspection-planning]]** (C, medium) —
+  [[0179-weather-forecast-adr-and-client]] →
+  [[0180-inspection-window-panel]], [[0181-inspection-weather-snapshot]].
+  Sends apiary coordinates to a third party, so it's opt-in.
+- **[[colony-lifecycle-events]]** (E, medium) — [[0186-colony-lifecycle-adr]]
+  → [[0187-colony-event-entity-and-timeline]],
+  [[0188-hive-lineage-and-moves]].
+- **[[honey-sales-and-batch-provenance]]** (G, low) —
+  [[0192-sales-and-batch-adr]] (resolves the ADR prerequisite on
+  [[0046-real-sales-ledger]]) → [[0193-honey-batch-entity]] →
+  [[0194-public-batch-provenance-page]].
+- **[[shared-apiaries-and-team-roles]]** (F, medium, largest and riskiest) —
+  [[0189-apiary-membership-access-adr]] →
+  [[0190-apiary-member-entity-and-ui]] →
+  [[0191-membership-aware-access-handlers]]. Touches every access check;
+  may need a major version bump.
 ## Completed projects
 [[mobile-ux-improvements]], [[action-button-consistency]],
 [[breadcrumb-consistency]], [[page-structure-consistency]],
 [[dashboard-landing-page]], [[hivelog-visual-identity]],
-[[inventory-tracking-and-depreciation]] and
-[[honey-wax-propolis-yield-and-potential-income]] are all `done`.
+[[inventory-tracking-and-depreciation]],
+[[honey-wax-propolis-yield-and-potential-income]],
+[[in-app-navigation-restructuring]], [[hive-component-weight-tracking]] and
+[[collection-page-filter-coverage]] are all `done`.
 ## Dropped projects
 **[[queen-observation-enhancements]]**, 2026-09-26. Its only undelivered goal
 (CSV export, [[0001-queen-observation-csv-export]]) was judged unnecessary on
 review and dropped; its other task
 ([[0002-breadcrumb-queen-canonical]]) was already satisfied by existing code.
 ## Decision gate
-**42 accepted · 1 proposed.** Nothing blocks execution.
+**45 accepted · 1 proposed.** Nothing blocks execution.
 [[0057-dashboard-information-architecture]] and
 [[0060-visual-identity-in-site-theme]] were accepted in body `## Status` all
 along but were missing the `status:` frontmatter field Dataview reads — now
@@ -136,10 +180,20 @@ Two backlog tasks belong to no project: [[0003-apiary-map-marker-clustering]]
    [[0094-ai-insights-prelaunch-validation]] before any real-world AI rollout.
 4. Pick up [[inventory-and-yield-improvements]]' backlog only when a real need
    surfaces — every item there is `low` and speculative.
+5. Close out [[0172-decide-nav-reachability-of-calendar-logs-and-report]]
+   (in `review`).
+6. Start the planned projects in the survey's recommended order:
+   [[qr-hive-labels]] → [[data-export-and-printable-records]] →
+   [[treatment-register]] → [[sensor-event-detection]], then
+   [[weather-aware-inspection-planning]], [[colony-lifecycle-events]],
+   [[honey-sales-and-batch-provenance]] and
+   [[shared-apiaries-and-team-roles]].
 ## Current state
 ```mermaid
 flowchart LR
-  Rel(["2.0.0 released<br/>2026-09-26"]) --> Bees(["beeswax 1.0.3<br/>released 2026-09-26"])
+  Rel(["2.4.0 released<br/>2026-10-02"])
+  Survey(["market survey<br/>2026-10-04"]) --> Plan["8 planning projects<br/>tasks 0174–0197"]
+  Plan --> B["B QR labels"] --> A["A export"] --> D["D treatments"] --> H["H sensor events"]
   T79["0079 pilot hardware<br/>in-progress, unblocked"] --> Sensors(["sensor-data-collection<br/>chain complete"])
   T26["0026 refinements<br/>idle"] --> Decide{{"add items<br/>or close"}}
 ```
