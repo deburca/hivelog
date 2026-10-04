@@ -1,13 +1,13 @@
 ---
 type: task
 tags: [hivelog/task]
-status: review
+status: done
 priority: high
 project: "[[ios-field-app]]"
 area: integration
 created: 2026-10-04
 branch: feature/0201-hivelog-api-submodule-scaffold
-release:
+release: 2.7.0
 depends-on: ["[[0198-mobile-api-jsonapi-oauth-spike]]", "[[0199-decide-mobile-offline-scope]]", "[[0200-move-form-validation-to-entity-constraints]]"]
 blocked-by:
 ---
