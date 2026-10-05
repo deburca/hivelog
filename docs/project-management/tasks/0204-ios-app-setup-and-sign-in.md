@@ -1,13 +1,13 @@
 ---
 type: task
 tags: [hivelog/task]
-status: review
+status: done
 priority: high
 project: "[[ios-field-app]]"
 area: app
 created: 2026-10-04
 branch: feature/0204-ios-app-setup-and-sign-in
-release:
+release: 2.9.0
 depends-on: ["[[0201-hivelog-api-submodule-scaffold]]"]
 blocked-by:
 ---
