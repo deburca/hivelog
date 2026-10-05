@@ -3,7 +3,7 @@ type: module
 description: 'A per-user, OAuth-secured JSON:API for HiveLog field apps (ADR-0107). Exposes the field-workflow records under a versioned /hivelog/api/v1 path. Optional; HiveLog core never depends on it.'
 core_version_requirement: ^11
 package: Custom
-version: '2.9.0'
+version: '2.10.0'
 dependencies:
   - hivelog:hivelog
   - drupal:file
