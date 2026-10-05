@@ -79,7 +79,7 @@ function hivelog_api_sync_field_app_role(): void {
 /**
  * Installs any consumer fields that simple_oauth declares but the site lacks.
  *
- * simple_oauth adds its fields (PKCE, grant types, redirect, scopes…) to the
+ * The simple_oauth module adds its fields (PKCE, grant types, redirect, scopes…) to the
  * `consumer` entity, and core normally creates their storage when it installs
  * simple_oauth. On at least one real site, enabling this module in the same
  * batch as its dependencies left them uncreated, and creating the app's client

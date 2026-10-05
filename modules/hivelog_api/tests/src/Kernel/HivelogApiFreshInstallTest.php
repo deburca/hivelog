@@ -56,6 +56,7 @@ class HivelogApiFreshInstallTest extends KernelTestBase {
     $consumers = \Drupal::entityTypeManager()->getStorage('consumer')
       ->loadByProperties(['client_id' => HivelogApiResources::CLIENT_ID]);
     $this->assertCount(1, $consumers, 'The client was created');
+    /** @var \Drupal\consumers\Entity\Consumer $consumer */
     $consumer = reset($consumers);
     $this->assertTrue((bool) $consumer->get('pkce')->value);
     $this->assertSame(HivelogApiResources::REDIRECT_URI, $consumer->get('redirect')->value);
@@ -94,7 +95,9 @@ class HivelogApiFreshInstallTest extends KernelTestBase {
     $consumers = \Drupal::entityTypeManager()->getStorage('consumer')
       ->loadByProperties(['client_id' => HivelogApiResources::CLIENT_ID]);
     $this->assertCount(1, $consumers);
-    $this->assertTrue((bool) reset($consumers)->get('pkce')->value);
+    /** @var \Drupal\consumers\Entity\Consumer $consumer */
+    $consumer = reset($consumers);
+    $this->assertTrue((bool) $consumer->get('pkce')->value);
   }
 
 }
