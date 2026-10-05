@@ -77,6 +77,30 @@ function hivelog_api_sync_field_app_role(): void {
 }
 
 /**
+ * Installs any consumer fields that simple_oauth declares but the site lacks.
+ *
+ * simple_oauth adds its fields (PKCE, grant types, redirect, scopes…) to the
+ * `consumer` entity, and core normally creates their storage when it installs
+ * simple_oauth. On at least one real site, enabling this module in the same
+ * batch as its dependencies left them uncreated, and creating the app's client
+ * then failed with "Table 'consumer__grant_types' doesn't exist". This does,
+ * idempotently, what simple_oauth's own update hooks do for an existing site,
+ * so the client can be created whatever the order the modules arrived in.
+ */
+function hivelog_api_ensure_consumer_fields(): void {
+  $field_manager = \Drupal::service('entity_field.manager');
+  $field_manager->clearCachedFieldDefinitions();
+  $installed = \Drupal::service('entity.last_installed_schema.repository')
+    ->getLastInstalledFieldStorageDefinitions('consumer');
+  $manager = \Drupal::entityDefinitionUpdateManager();
+  foreach ($field_manager->getFieldStorageDefinitions('consumer') as $name => $definition) {
+    if (!isset($installed[$name])) {
+      $manager->installFieldStorageDefinition($name, 'consumer', $definition->getProvider(), $definition);
+    }
+  }
+}
+
+/**
  * Implements hook_install().
  *
  * Creates, idempotently, the three things the app needs to sign in:
@@ -105,6 +129,8 @@ function hivelog_api_install() {
       'granularity_configuration' => ['role' => HivelogApiResources::SCOPE],
     ])->save();
   }
+
+  hivelog_api_ensure_consumer_fields();
 
   $existing = \Drupal::entityTypeManager()->getStorage('consumer')
     ->loadByProperties(['client_id' => HivelogApiResources::CLIENT_ID]);

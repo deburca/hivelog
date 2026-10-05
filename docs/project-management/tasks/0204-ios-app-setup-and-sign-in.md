@@ -118,13 +118,34 @@ questions in the project.
 - **CI:** both jobs passed on GitHub Actions' first run (`macos-15`): the package tests on
   the Mac, and the iOS job (the same tests on an iPhone simulator, project generation with
   XcodeGen, and a simulator build).
-- **Not verified:** a real HiveLog site end to end from the app; a physical iPhone;
-  TestFlight.
+- **Real site (`kragebaekgaard.ddev.site`, the kbg dev site):** `hivelog_api` and
+  simple_oauth enabled there, with a test user holding the `hivelog_field_app` role.
+  - Found only by doing it: **enabling `hivelog_api` together with its dependencies failed**
+    ("Table `consumer__grant_types` doesn't exist"), because the consumer entity's extra
+    fields had not been created when the client was. `hivelog_api_install()` now calls
+    `hivelog_api_ensure_consumer_fields()` first; `HivelogApiFreshInstallTest` covers it and
+    was checked to fail without the fix.
+  - The app found the real server over https (after trusting the mkcert root in the
+    simulator) and showed "Kragebækgård".
+  - **The protocol, run against that site by a script** (the same requests the app makes,
+    logged in with a one-time link): discovery; authorize shows the consent form, which names
+    "Vinculum"; Allow redirects to `hivelog://oauth/callback` with the `state` echoed; code +
+    PKCE verifier exchange gives a 300-second access token and a refresh token; the API
+    answers a bearer-only request (no cookie) with the test apiary and hive, and 401 with
+    `WWW-Authenticate: Bearer realm="HiveLog API"` without one; refresh works and the old
+    refresh token is then refused (rotation); `POST /sign-out` with the refresh token gives 204,
+    after which the access token gets 401 and the refresh token 400.
+  - **The sign-in sheet inside the app was not completed.** On the simulator the
+    `ASWebAuthenticationSession` sheet did not see the Safari app's logged-in session (Safari
+    showed the test user logged in; the sheet showed the login form), so someone has to type
+    the test user's password into the sheet. I did not do that. On a phone the sheet normally
+    shares Safari's cookies, but that is not confirmed.
+- **Not verified:** the app's own sign-in against the real site (see above); a physical
+  iPhone; TestFlight.
 
 ### Follow-ups
-- Sign in once against a real site: enable `hivelog_api` on a dev site, give a user the
-  `hivelog_field_app` role, generate the OAuth keys, and use its `.ddev.site` address
-  (allowed over http; the simulator will need the site's certificate trusted if https).
+- Finish the in-app sign-in on `kragebaekgaard.ddev.site`: tap Sign in, type the test user's
+  password into the sheet, Allow. Then check the apiary count, a cold relaunch and Sign out.
 - Decide the GitHub home for the repo and the bundle id (`org.deburca.hivelog` is a
   placeholder) before 0209.
 - Backend release: the sign-out endpoint is new API surface, so a minor bump
