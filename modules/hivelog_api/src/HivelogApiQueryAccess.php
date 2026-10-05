@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Drupal\hivelog_api;
 
+use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Database\Query\AlterableInterface;
 use Drupal\Core\Database\Query\SelectInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\jsonapi\JsonApiFilter;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
@@ -80,13 +83,39 @@ class HivelogApiQueryAccess {
   }
 
   /**
+   * Says whether a request may filter by an entity type's data (JSON:API).
+   *
+   * For a request with a `filter` parameter JSON:API adds a condition that is
+   * always false unless a module vouches that filtering across the type is
+   * safe (hook_jsonapi_entity_filter_access()). HiveLog's types have no
+   * per-subset rule to name, so without this every filtered request on the
+   * versioned API came back empty, and the app could not ask for a hive's
+   * queen or inspections. What the hook asks is that the query is narrowed to
+   * viewable records by a `<type>_access` alter, which alter() does for
+   * exactly these types, so a filter can only ever pick among records the user
+   * may already see. It is said only on the versioned API: a request to plain
+   * `/jsonapi` keeps JSON:API's own default.
+   *
+   * @return \Drupal\Core\Access\AccessResultInterface[]
+   *   The access result for the "among all" subset.
+   */
+  public function filterAccess(EntityTypeInterface $entity_type): array {
+    $request = $this->requestStack->getCurrentRequest();
+    $narrowed = $request
+      && HivelogApiResources::isVersionedRequest($request)
+      && HivelogApiResources::isNarrowed($entity_type->id());
+    $result = $narrowed ? AccessResult::allowed() : AccessResult::neutral();
+    // The answer depends on which path the request came in on.
+    return [JsonApiFilter::AMONG_ALL => $result->addCacheContexts(['url.path'])];
+  }
+
+  /**
    * Gets the exposed entity type an access-checked entity query is for.
    */
   protected function exposedType(SelectInterface $query): ?string {
-    foreach (HivelogApiResources::RESOURCES as $resource) {
-      $type = explode('/', $resource)[0];
+    foreach (HivelogApiResources::narrowedTypes() as $type) {
       // Core tags a query that asked for an access check with "<type>_access".
-      if ($type !== 'file' && $query->hasTag($type . '_access') && $query->hasTag('entity_query_' . $type)) {
+      if ($query->hasTag($type . '_access') && $query->hasTag('entity_query_' . $type)) {
         return $type;
       }
     }

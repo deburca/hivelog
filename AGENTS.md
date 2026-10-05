@@ -470,6 +470,36 @@ entity types core can't name directly).
   (`HivelogApiValidationTest`). `HivelogApiNonExposedTypesTest` enables every
   submodule to prove inventory, products, components, sensors, API clients, AI
   providers and insights exist in plain JSON:API but 404 on the prefix.
+  **Filtering and the schema (task 0205).** (1) **Filters need a hook.** For any
+  request with a `filter` parameter, JSON:API adds a condition that is always
+  false unless a module vouches that filtering across the entity type is safe
+  (`hook_jsonapi_entity_filter_access()`); HiveLog's types had no such rule, so
+  every filtered request on the prefix came back empty for a beekeeper (only
+  `administer hivelog` got through) and the app could not ask for a hive's
+  queen or inspections. `hivelog_api_jsonapi_entity_filter_access()` answers
+  `AMONG_ALL: allowed` for the exposed types **on the versioned prefix only**
+  (`HivelogApiQueryAccess::filterAccess()`; cache context `url.path`), because
+  that is exactly JSON:API's stated condition: the query is narrowed to
+  viewable records by a `<type>_access` alter, which `HivelogApiQueryAccess`
+  does. A filter can therefore only pick among records the user may already
+  see; `HivelogApiFilterTest` proves it cannot probe another user's records
+  through a relationship (`filter[hive.name]`, `filter[hive.apiary.name]`),
+  that a filter through the owner matches only the user themself, and that
+  plain `/jsonapi` keeps JSON:API's default. A new exposed type is covered by
+  `HivelogApiResources::narrowedTypes()`. (2) **`GET /hivelog/api/v1/schema`**
+  (`SchemaController`, signed-in users) describes the writable fields of each
+  exposed type: `kind` (boolean, integer, number, text, long_text, date,
+  choice, reference, images, other), `label`, `required`, `multiple`, for a
+  choice its `options` (`value` and `label`, in the entity's order), and
+  `min` / `max` / `max_length` / `target`. JSON:API says nothing about allowed
+  values, and a form that hard-codes them goes stale when the module adds an
+  option, so the app builds its forms from this. It reads the entity field
+  definitions, so the lists are the ones the server validates against
+  (`HivelogApiSchemaTest` submits every offered option for every type and
+  expects it accepted, and checks every field is in the v1 contract).
+  Server-owned fields (`id`, `uuid`, `uid`, `created`, `changed`), computed and
+  read-only fields are left out. Labels follow the interface language; option
+  labels do not (they are untranslated strings in `baseFieldDefinitions()`).
 
 ### Routing, controllers and forms
 

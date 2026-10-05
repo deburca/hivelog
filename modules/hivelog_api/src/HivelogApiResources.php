@@ -73,6 +73,32 @@ class HivelogApiResources {
   }
 
   /**
+   * The entity types whose collection queries are narrowed to viewable ids.
+   *
+   * Every exposed type but `file`, which has its own access rules in core.
+   *
+   * @return string[]
+   *   Entity type IDs.
+   */
+  public static function narrowedTypes(): array {
+    $types = [];
+    foreach (self::RESOURCES as $resource) {
+      $type = explode('/', $resource)[0];
+      if ($type !== 'file') {
+        $types[] = $type;
+      }
+    }
+    return $types;
+  }
+
+  /**
+   * Whether a type's collection queries are narrowed to viewable ids.
+   */
+  public static function isNarrowed(string $entity_type_id): bool {
+    return in_array($entity_type_id, self::narrowedTypes(), TRUE);
+  }
+
+  /**
    * Whether a request arrived on the versioned prefix.
    *
    * Read from the request's own path, not from a flag set while routing: the

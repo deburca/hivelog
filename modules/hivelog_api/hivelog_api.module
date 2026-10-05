@@ -9,6 +9,8 @@
  */
 
 use Drupal\Core\Database\Query\AlterableInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Session\AccountInterface;
 
 /**
  * Implements hook_query_alter().
@@ -19,4 +21,14 @@ use Drupal\Core\Database\Query\AlterableInterface;
  */
 function hivelog_api_query_alter(AlterableInterface $query) {
   \Drupal::service('hivelog_api.query_access')->alter($query);
+}
+
+/**
+ * Implements hook_jsonapi_entity_filter_access().
+ *
+ * Lets the versioned API filter by the exposed types' fields; see
+ * HivelogApiQueryAccess::filterAccess() for why and for what makes it safe.
+ */
+function hivelog_api_jsonapi_entity_filter_access(EntityTypeInterface $entity_type, AccountInterface $account) {
+  return \Drupal::service('hivelog_api.query_access')->filterAccess($entity_type);
 }

@@ -20,6 +20,18 @@ hivelog_api.sign_out:
   requirements:
     _user_is_logged_in: 'TRUE'
 
+# What the app's forms offer (task 0205): each exposed type's writable fields
+# with their allowed values, labels and limits. Static facts, no user data.
+hivelog_api.schema:
+  path: '/hivelog/api/v1/schema'
+  defaults:
+    _controller: '\Drupal\hivelog_api\Controller\SchemaController::index'
+    _title: 'Field schema'
+    _format: json
+  methods: [GET]
+  requirements:
+    _user_is_logged_in: 'TRUE'
+
 # Computed views (task 0202): values no entity stores, each built by the same
 # service as the matching web page. Plain JSON, read-only, OAuth or session.
 hivelog_api.computed_alerts:

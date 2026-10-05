@@ -20,7 +20,7 @@ class TestRouteSubscriber extends RouteSubscriberBase {
    */
   protected function alterRoutes(RouteCollection $collection) {
     foreach ($collection->all() as $name => $route) {
-      if (str_starts_with($name, 'hivelog_api.computed_')) {
+      if (str_starts_with($name, 'hivelog_api.computed_') || $name === 'hivelog_api.schema') {
         $route->setOption('_auth', ['basic_auth', 'cookie']);
       }
     }
