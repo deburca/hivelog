@@ -8,7 +8,6 @@ use Defuse\Crypto\Crypto;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\Site\Settings;
-use Drupal\hivelog_api\HivelogApiResources;
 use Drupal\simple_oauth\Authentication\TokenAuthUserInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
