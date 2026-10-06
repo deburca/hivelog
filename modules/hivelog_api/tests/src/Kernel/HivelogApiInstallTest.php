@@ -143,11 +143,49 @@ class HivelogApiInstallTest extends KernelTestBase {
     }
     $this->assertEmpty(array_filter($permissions, fn($p) => str_starts_with($p, 'delete ')), 'No delete permission');
     $this->assertEmpty(array_filter($permissions, fn($p) => str_contains($p, 'inventory') || str_contains($p, 'product')));
-    $this->assertEmpty(array_filter($permissions, fn($p) => str_contains($p, 'sensor') || str_contains($p, 'ai provider')));
+    $this->assertEmpty(array_filter($permissions, fn($p) => str_contains($p, 'ai provider')));
+    // Sensors: the two permissions that view the user's own, and no other (task 0216).
+    $sensor = array_values(array_filter($permissions, fn($p) => str_contains($p, 'sensor')));
+    $this->assertEmpty(array_diff($sensor, ['view own sensor device', 'view own sensor reading']), 'Sensors are view-own only');
     $this->assertNotContains('administer hivelog', $permissions);
     foreach ($permissions as $permission) {
       $this->assertNotContains($permission, ['view any hive', 'edit any hive', 'add hive', 'add apiary']);
     }
+  }
+
+  /**
+   * Tests the sensor view permissions arrive when nanoprobe is installed later.
+   */
+  public function testInstallingNanoprobeLaterTopsUpTheRole(): void {
+    $role = Role::load(HivelogApiResources::SCOPE);
+    $this->assertFalse($role->hasPermission('view own sensor device'), 'No nanoprobe, no such permission to grant');
+
+    \Drupal::service('module_installer')->install(['nanoprobe']);
+
+    $role = Role::load(HivelogApiResources::SCOPE);
+    $this->assertTrue($role->hasPermission('view own sensor device'));
+    $this->assertTrue($role->hasPermission('view own sensor reading'));
+    $this->assertFalse($role->hasPermission('view any sensor device'));
+    $this->assertFalse($role->hasPermission('edit own sensor device'));
+    $this->assertFalse($role->hasPermission('add sensor device'));
+  }
+
+  /**
+   * Tests the update hook gives an existing role the sensor view permissions.
+   */
+  public function testUpdateAddsTheSensorPermissionsToAnExistingRole(): void {
+    \Drupal::service('module_installer')->install(['nanoprobe']);
+    $this->loadInstallFile();
+    $role = Role::load(HivelogApiResources::SCOPE);
+    $role->revokePermission('view own sensor device')->revokePermission('view own sensor reading')->save();
+    $role->grantPermission('view any apiary')->save();
+
+    hivelog_api_update_10002();
+
+    $role = Role::load(HivelogApiResources::SCOPE);
+    $this->assertTrue($role->hasPermission('view own sensor device'));
+    $this->assertTrue($role->hasPermission('view own sensor reading'));
+    $this->assertTrue($role->hasPermission('view any apiary'), 'A site\'s own grant is kept');
   }
 
   /**

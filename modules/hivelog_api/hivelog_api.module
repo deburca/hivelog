@@ -11,6 +11,8 @@
 use Drupal\Core\Database\Query\AlterableInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\hivelog_api\HivelogApiResources;
+use Drupal\user\Entity\Role;
 
 /**
  * Implements hook_query_alter().
@@ -31,4 +33,22 @@ function hivelog_api_query_alter(AlterableInterface $query) {
  */
 function hivelog_api_jsonapi_entity_filter_access(EntityTypeInterface $entity_type, AccountInterface $account) {
   return \Drupal::service('hivelog_api.query_access')->filterAccess($entity_type);
+}
+
+/**
+ * Implements hook_modules_installed().
+ *
+ * The field-app role holds the sensor view permissions only when `nanoprobe`
+ * defines them. If that module is installed after this one, grant them then,
+ * so the app's hive tiles work without a second step. Not during a
+ * configuration import, which brings its own role.
+ */
+function hivelog_api_modules_installed(array $modules, bool $is_syncing) {
+  if ($is_syncing || !in_array('nanoprobe', $modules, TRUE)) {
+    return;
+  }
+  \Drupal::moduleHandler()->loadInclude('hivelog_api', 'install');
+  if (Role::load(HivelogApiResources::SCOPE)) {
+    hivelog_api_sync_field_app_role();
+  }
 }

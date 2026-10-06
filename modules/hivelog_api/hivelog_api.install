@@ -18,7 +18,14 @@ use Drupal\user\Entity\Role;
  * This is the whole of what an app token can do (a token's roles are the
  * scope's roles intersected with the user's own, so it can only narrow). It
  * deliberately has no `delete` permission: the app deletes nothing in v1
- * (ADR-0107 §4), and no inventory, product or sensor permission either.
+ * (ADR-0107 §4), and no inventory or product permission either. The only
+ * sensor permissions are the two that *view* the user's own devices and
+ * readings (task 0216): a hive's at-a-glance tiles (weight, temperature, net
+ * weight) are built from them, and without them the app's hive page had no
+ * tiles for anyone. Sensors are still not on the API's allow-list, so the app
+ * can read them only as those computed tiles. They are granted only where the
+ * `nanoprobe` module defines them, and when it is installed later
+ * hivelog_api_modules_installed() tops the role up.
  * `access content` is needed to reference an uploaded file;
  * `grant simple_oauth codes` is the user's own permission to approve the
  * consent screen.
@@ -38,6 +45,8 @@ function hivelog_api_field_app_permissions(): array {
     'calendar action', 'hive action log', 'apiary action log',
   ];
   $permissions = ['access content', 'grant simple_oauth codes'];
+  $permissions[] = 'view own sensor device';
+  $permissions[] = 'view own sensor reading';
   foreach ($viewable as $type) {
     $permissions[] = 'view own ' . $type;
   }
@@ -222,4 +231,20 @@ function hivelog_api_update_10001() {
     $scope->save();
   }
   return t('Renamed the app to Vinculum on: @what.', ['@what' => $changed ? implode(', ', $changed) : 'nothing needed changing']);
+}
+
+/**
+ * Lets the field-app role view the user's own sensor devices and readings.
+ *
+ * Until 2.11.2 the role had no sensor permission, so the app's hive page got no
+ * stat tiles from `nanoprobe` (task 0216). Granting is additive, only for
+ * permissions that exist (a site without `nanoprobe` has none), and never
+ * revokes a change the site made.
+ */
+function hivelog_api_update_10002() {
+  hivelog_api_sync_field_app_role();
+  $has = Role::load(HivelogApiResources::SCOPE)->hasPermission('view own sensor device');
+  return t('Field-app role tops up: @what.', [
+    '@what' => $has ? 'it may now view the user\'s own sensor devices and readings' : 'nanoprobe is not installed, nothing to add',
+  ]);
 }
