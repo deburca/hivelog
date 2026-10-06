@@ -1,0 +1,27 @@
+{
+    "_hash": "eb49e8593085605a1347811f4f2535bc85e2a11bf4874dee42ad19679b2f3a67",
+    "patches": {
+        "drupal/geofield": [
+            {
+                "package": "drupal/geofield",
+                "description": "Convert geofield plugins to PHP attributes for Drupal 11",
+                "url": "patches/geofield-drupal11-attribute-discovery.patch",
+                "sha256": "e341a371775ddf3b207b8ddb46a3ac1af07f3e1e6eddc5fdc52d6d8c4fb19a99",
+                "depth": 1,
+                "extra": {
+                    "provenance": "root"
+                }
+            },
+            {
+                "package": "drupal/geofield",
+                "description": "Update geofield validation constraint metadata for Drupal 11",
+                "url": "patches/geofield-validator-compatibility.patch",
+                "sha256": "6ef6385eed58643b350d8447f9091bcb14ad95cc00e783b4b40ac236780eb7e0",
+                "depth": 1,
+                "extra": {
+                    "provenance": "root"
+                }
+            }
+        ]
+    }
+}

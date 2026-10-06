@@ -1,0 +1,2 @@
+# The demo site (task 0209) is not part of the module: keep it out of the Composer dist package.
+/demo export-ignore

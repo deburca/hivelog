@@ -66,6 +66,8 @@ Static index (in suggested execution order):
 - [[0211-ios-app-illustrations]] — a few AI-generated, wax-tinted illustrations for empty and first-run screens
 - [[0212-hivelog-api-write-compatibility-with-host-firewalls]] — found testing the live site: a shared host's firewall refused every write
 - [[0214-ios-app-illustrations-round-2]] — four more pictures for the remaining empty and failure screens
+- [[0215-demo-site-kit]] — a DDEV kit for the public demo site App Review needs
+- [[0216-hivelog-api-sensor-tiles-for-the-field-app]] — found walking the demo: the app's role had no sensor view permission, so no hive tiles
 
 ## Open questions
 - ~~Offline: outbox (A) or offline-first (B)?~~ Answered by [[0199-decide-mobile-offline-scope]]: A, with a client-side read cache. See the ADR's §4.

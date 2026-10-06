@@ -1,0 +1,12 @@
+name: hivelog-demo
+type: drupal11
+docroot: web
+php_version: "8.4"
+webserver_type: nginx-fpm
+database:
+    type: mariadb
+    version: "11.8"
+composer_version: "2"
+use_dns_when_possible: true
+# On a server, serve the public name over HTTPS (see README.md, "On a server"):
+# additional_fqdns: [demo.example.org]

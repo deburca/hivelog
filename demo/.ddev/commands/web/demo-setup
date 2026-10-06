@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+## Description: Build the demo site from scratch: install, modules, OAuth keys, reviewer account, seed data, reset baseline
+## Usage: demo-setup [--fresh]
+## Example: ddev demo-setup
+##
+## Run it once after `ddev start && ddev composer install`. With --fresh it drops an existing
+## site first. Passwords come from DEMO_ADMIN_PASSWORD / DEMO_REVIEWER_PASSWORD if set, else are
+## generated and written to .demo-secrets (not committed; `ddev demo-info` shows them).
+set -euo pipefail
+cd /var/www/html
+
+[ -d vendor ] || composer install --no-interaction
+
+installed() { drush status --field=bootstrap 2>/dev/null | grep -q Successful; }
+if installed && [ "${1:-}" != "--fresh" ]; then
+  echo "A site is already installed. Use 'ddev demo-setup --fresh' to rebuild it, or 'ddev demo-reset' to restore the baseline."
+  exit 1
+fi
+
+random() { local s; s=$(openssl rand -base64 96 | tr -dc 'A-HJ-NP-Za-km-z2-9'); echo "${s:0:${1:-20}}"; }
+ADMIN_PASSWORD="${DEMO_ADMIN_PASSWORD:-$(random 20)}"
+REVIEWER_PASSWORD="${DEMO_REVIEWER_PASSWORD:-$(random 16)}"
+
+mkdir -p private/oauth-keys baseline web/sites/default/files
+chmod u+w web/sites/default 2>/dev/null || true
+[ -f web/sites/default/settings.php ] && chmod u+w web/sites/default/settings.php 2>/dev/null || true
+
+echo "== Installing Drupal"
+drush site:install standard -y \
+  --account-name=admin --account-pass="$ADMIN_PASSWORD" --account-mail=admin@example.org \
+  --site-name="Vinculum demo" --site-mail=demo@example.org --locale=en
+# No self-registration: the only accounts are the ones made here.
+drush config:set user.settings register admin_only -y
+drush config:set system.date timezone.default Europe/Copenhagen -y
+
+echo "== Enabling HiveLog (with its API, sensors and the demo data module)"
+# In two steps: assimilate makes its demo records when it is enabled, and HiveLog's entity types
+# are not yet known if all four are enabled in one go.
+drush en -y hivelog
+drush en -y hivelog_api nanoprobe assimilate
+
+echo "== OAuth keys (outside the web root)"
+if [ ! -f private/oauth-keys/private.key ]; then
+  openssl genrsa -out private/oauth-keys/private.key 2048 2>/dev/null
+  openssl rsa -in private/oauth-keys/private.key -pubout -out private/oauth-keys/public.key 2>/dev/null
+  chmod 600 private/oauth-keys/*.key
+fi
+drush config:set simple_oauth.settings private_key /var/www/html/private/oauth-keys/private.key -y
+drush config:set simple_oauth.settings public_key /var/www/html/private/oauth-keys/public.key -y
+
+echo "== Reviewer account"
+drush user:create reviewer --mail=reviewer@example.org --password="$REVIEWER_PASSWORD"
+drush user:role:add hivelog_field_app reviewer
+
+echo "== Seeding the demo records"
+drush php:script scripts/seed.php
+
+drush cron
+drush cr
+
+echo "== Saving the baseline for demo-reset"
+rm -f baseline/db.sql.gz baseline/files.tar.gz
+drush sql:dump --gzip --result-file=/var/www/html/baseline/db.sql
+tar czf baseline/files.tar.gz -C web/sites/default files
+
+umask 077
+cat > .demo-secrets <<SECRETS
+DEMO_ADMIN_USER=admin
+DEMO_ADMIN_PASSWORD=$ADMIN_PASSWORD
+DEMO_REVIEWER_USER=reviewer
+DEMO_REVIEWER_PASSWORD=$REVIEWER_PASSWORD
+SECRETS
+echo
+echo "Done. 'ddev demo-info' shows the addresses and the review-notes values."

@@ -128,7 +128,10 @@ unseen.
   are labelled; reserve the *name and icon* in a short trademark note (a licence does not grant them);
   decide a contribution policy.
 
-### Demo site: design (not built yet; needs decision 1)
+### Demo site: built as a DDEV kit ([[0215-demo-site-kit]]); still to run on the owner's server
+The kit is in `demo/` of the HiveLog repository, tested locally (setup, reset, an end-to-end check
+through the real OAuth flow, and the app's own smoke test). What remains is the owner's server and
+its public address. The design below is what was built.
 - A throw-away HiveLog site: Drupal 11 with `hivelog`, `hivelog_api` (and its `simple_oauth`,
   keys outside the web root), `nanoprobe` and `assimilate`. Every setup step as a script in this
   repository (`demo/`), tested on a scratch DDEV project before it touches a host.

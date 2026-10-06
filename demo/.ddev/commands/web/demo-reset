@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+## Description: Put the demo site back to its saved baseline (database and uploaded files)
+## Usage: demo-reset
+## Example: ddev demo-reset
+##
+## Whatever a reviewer recorded disappears. Run from cron on a server (see README.md).
+set -euo pipefail
+cd /var/www/html
+[ -f baseline/db.sql.gz ] || { echo "No baseline yet: run 'ddev demo-setup' first."; exit 1; }
+drush sql:drop -y
+gunzip -c baseline/db.sql.gz | drush sql:cli
+find web/sites/default/files -mindepth 1 -delete 2>/dev/null || true
+tar xzf baseline/files.tar.gz -C web/sites/default
+drush cr
+echo "Demo site reset to its baseline."

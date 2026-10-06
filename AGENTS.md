@@ -411,7 +411,13 @@ entity types core can't name directly).
   earlier default on existing sites and leaves a label an administrator chose);
   the role (`hivelog_api_field_app_permissions()`) is the whole of what an app
   token can do — a token's roles are the scope's intersected with the user's
-  own, so it only narrows — and it has no `delete` permission. It does hold
+  own, so it only narrows — and it has no `delete` permission and no inventory or product
+  one. It holds just two sensor permissions, `view own sensor device` and
+  `view own sensor reading` (task 0216), granted only where `nanoprobe` defines them and topped up
+  by `hivelog_api_modules_installed()` if `nanoprobe` arrives later: the hive's stat tiles (weight,
+  temperature, net colony weight) are built from the sensors the user may view, and with none the
+  app's hive page had no tiles for anyone. Sensors are still not on the allow-list, so they are
+  readable only as those computed tiles. It does hold
   `edit own apiary|hive|queen`, because adding a child needs `update` on its
   parent (task 0133 / the parent-access constraint); that over-grant is
   documented in the install file. **Versioning:** the contract is pinned by
@@ -1005,6 +1011,21 @@ accessible.
   static IDs onto the new derived ones — task 0150 needed no equivalent
   update hook, since a derived plugin ID's *shape* never changed, only
   the `parent` value inside its unchanged definition.
+
+### The demo site (task 0215)
+
+`demo/` is **not module code**: a throw-away HiveLog site on DDEV for App Review, TestFlight and
+demonstrations of the Vinculum app (its own `composer.json`, `.ddev/`, `scripts/` and `README.md`),
+excluded from the Composer package by `.gitattributes`. `ddev demo-setup` builds it (Drupal 11,
+the released `hivelog/hivelog`, `hivelog_api`, `nanoprobe`, `assimilate`, OAuth keys outside the
+web root, a `reviewer` account that owns the invented records, a reset baseline); `ddev demo-reset`
+restores the baseline; `python3 demo/scripts/check.py <url>` checks it end to end through the real
+OAuth flow. It carries the two geofield patches in its own `patches/`, because the module's patch
+paths assume the module is already installed (a fresh project would fail), and it enables HiveLog
+in two steps because `assimilate`'s demo records need HiveLog's entity types to exist. The seed
+gives each hive its parts with weights (so *Net Colony Weight* is a number) and keeps every
+seasonal job in the future, so the demo opens with amber alerts and none overdue. Do not put
+real data on it: `assimilate` is development and demo only.
 
 ### Tests
 

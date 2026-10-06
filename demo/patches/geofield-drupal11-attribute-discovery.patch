@@ -1,0 +1,594 @@
+diff --git a/src/Attribute/GeofieldBackend.php b/src/Attribute/GeofieldBackend.php
+new file mode 100644
+--- /dev/null
++++ b/src/Attribute/GeofieldBackend.php
+@@ -0,0 +1,37 @@
++<?php
++
++declare(strict_types=1);
++
++namespace Drupal\geofield\Attribute;
++
++use Drupal\Component\Plugin\Attribute\Plugin;
++use Drupal\Core\StringTranslation\TranslatableMarkup;
++
++/**
++ * Defines a GeofieldBackend attribute.
++ *
++ * @ingroup geofield_api
++ */
++#[\Attribute(\Attribute::TARGET_CLASS)]
++class GeofieldBackend extends Plugin {
++
++  /**
++   * Constructs a GeofieldBackend attribute.
++   *
++   * @param string $id
++   *   The plugin ID.
++   * @param \Drupal\Core\StringTranslation\TranslatableMarkup $admin_label
++   *   The administrative label of the geofield backend.
++   * @param \Drupal\Core\StringTranslation\TranslatableMarkup $description
++   *   The description of the geofield backend.
++   * @param string|null $deriver
++   *   (optional) The deriver class.
++   */
++  public function __construct(
++    public readonly string $id,
++    public readonly TranslatableMarkup $admin_label = new TranslatableMarkup(''),
++    public readonly TranslatableMarkup $description = new TranslatableMarkup(''),
++    public readonly ?string $deriver = NULL,
++  ) {}
++
++}
+diff --git a/src/Attribute/GeofieldProximitySource.php b/src/Attribute/GeofieldProximitySource.php
+new file mode 100644
+--- /dev/null
++++ b/src/Attribute/GeofieldProximitySource.php
+@@ -0,0 +1,48 @@
++<?php
++
++declare(strict_types=1);
++
++namespace Drupal\geofield\Attribute;
++
++use Drupal\Component\Plugin\Attribute\Plugin;
++use Drupal\Core\StringTranslation\TranslatableMarkup;
++
++/**
++ * Defines a GeofieldProximitySource attribute.
++ *
++ * @see \Drupal\geofield\Plugin\GeofieldProximitySourceManager
++ * @see plugin_api
++ */
++#[\Attribute(\Attribute::TARGET_CLASS)]
++class GeofieldProximitySource extends Plugin {
++
++  /**
++   * Constructs a GeofieldProximitySource attribute.
++   *
++   * @param string $id
++   *   The plugin ID.
++   * @param \Drupal\Core\StringTranslation\TranslatableMarkup $label
++   *   The label of the plugin.
++   * @param \Drupal\Core\StringTranslation\TranslatableMarkup $description
++   *   A short description of the plugin.
++   * @param \Drupal\Core\StringTranslation\TranslatableMarkup|null $exposedDescription
++   *   (optional) A description to show in the exposed form.
++   * @param array $context
++   *   (optional) An array of the view handler plugins type (contexts) it
++   *   would work for. Possible values: 'filter', 'sort', 'field'.
++   * @param bool $exposedOnly
++   *   (optional) Whether the plugin should work only if exposed filter.
++   * @param string|null $deriver
++   *   (optional) The deriver class.
++   */
++  public function __construct(
++    public readonly string $id,
++    public readonly TranslatableMarkup $label = new TranslatableMarkup(''),
++    public readonly TranslatableMarkup $description = new TranslatableMarkup(''),
++    public readonly ?TranslatableMarkup $exposedDescription = NULL,
++    public readonly array $context = [],
++    public readonly bool $exposedOnly = FALSE,
++    public readonly ?string $deriver = NULL,
++  ) {}
++
++}
+diff -ruN --ex a/src/Plugin/Field/FieldFormatter/GeofieldDefaultFormatter.php b/src/Plugin/Field/FieldFormatter/GeofieldDefaultFormatter.php
+--- a/src/Plugin/Field/FieldFormatter/GeofieldDefaultFormatter.php	2026-01-10 12:58:50
++++ b/src/Plugin/Field/FieldFormatter/GeofieldDefaultFormatter.php	2026-05-31 18:14:27
+@@ -4,24 +4,25 @@
+ 
+ use Drupal\Component\Utility\Html;
+ use Drupal\Core\Field\FieldDefinitionInterface;
++use Drupal\Core\Field\Attribute\FieldFormatter;
+ use Drupal\Core\Field\FieldItemListInterface;
+ use Drupal\Core\Field\FormatterBase;
+ use Drupal\Core\Form\FormStateInterface;
+ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
++use Drupal\Core\StringTranslation\TranslatableMarkup;
+ use Drupal\geofield\GeoPHP\GeoPHPInterface;
+ use Symfony\Component\DependencyInjection\ContainerInterface;
+ 
+ /**
+  * Plugin implementation of the 'geofield_default' formatter.
+- *
+- * @FieldFormatter(
+- *   id = "geofield_default",
+- *   label = @Translation("Raw Output"),
+- *   field_types = {
+- *     "geofield"
+- *   }
+- * )
+  */
++#[FieldFormatter(
++  id: "geofield_default",
++  label: new TranslatableMarkup("Raw Output"),
++  field_types: [
++    "geofield",
++  ],
++)]
+ class GeofieldDefaultFormatter extends FormatterBase implements ContainerFactoryPluginInterface {
+ 
+   /**
+diff -ruN --ex a/src/Plugin/Field/FieldFormatter/LatLonFormatter.php b/src/Plugin/Field/FieldFormatter/LatLonFormatter.php
+--- a/src/Plugin/Field/FieldFormatter/LatLonFormatter.php	2026-01-10 12:58:50
++++ b/src/Plugin/Field/FieldFormatter/LatLonFormatter.php	2026-05-31 18:14:27
+@@ -2,21 +2,23 @@
+ 
+ namespace Drupal\geofield\Plugin\Field\FieldFormatter;
+ 
++use Drupal\Core\Field\Attribute\FieldFormatter;
++
+ use Drupal\Core\Field\FieldItemListInterface;
+ use Drupal\Core\Form\FormStateInterface;
++use Drupal\Core\StringTranslation\TranslatableMarkup;
+ use Drupal\geofield\DmsConverter;
+ 
+ /**
+  * Plugin implementation of the 'geofield_latlon' formatter.
+- *
+- * @FieldFormatter(
+- *   id = "geofield_latlon",
+- *   label = @Translation("Lat/Lon"),
+- *   field_types = {
+- *     "geofield"
+- *   }
+- * )
+  */
++#[FieldFormatter(
++  id: "geofield_latlon",
++  label: new TranslatableMarkup("Lat/Lon"),
++  field_types: [
++    "geofield",
++  ],
++)]
+ class LatLonFormatter extends GeofieldDefaultFormatter {
+ 
+   /**
+diff -ruN --ex a/src/Plugin/Field/FieldType/GeofieldItem.php b/src/Plugin/Field/FieldType/GeofieldItem.php
+--- a/src/Plugin/Field/FieldType/GeofieldItem.php	2026-01-10 12:58:50
++++ b/src/Plugin/Field/FieldType/GeofieldItem.php	2026-05-31 18:14:27
+@@ -4,23 +4,24 @@
+ 
+ use Drupal\Component\Plugin\Exception\PluginException;
+ use Drupal\Component\Render\FormattableMarkup;
++use Drupal\Core\Field\Attribute\FieldType;
+ use Drupal\Core\Field\FieldDefinitionInterface;
+ use Drupal\Core\Field\FieldItemBase;
+ use Drupal\Core\Field\FieldStorageDefinitionInterface;
+ use Drupal\Core\Form\FormStateInterface;
++use Drupal\Core\StringTranslation\TranslatableMarkup;
+ use Drupal\Core\TypedData\DataDefinition;
+ 
+ /**
+  * Plugin implementation of the 'geofield' field type.
+- *
+- * @FieldType(
+- *   id = "geofield",
+- *   label = @Translation("Geofield"),
+- *   description = @Translation("This field stores geospatial information."),
+- *   default_widget = "geofield_latlon",
+- *   default_formatter = "geofield_default"
+- * )
+  */
++#[FieldType(
++  id: "geofield",
++  label: new TranslatableMarkup("Geofield"),
++  description: new TranslatableMarkup("This field stores geospatial information."),
++  default_widget: "geofield_latlon",
++  default_formatter: "geofield_default",
++)]
+ class GeofieldItem extends FieldItemBase {
+ 
+   /**
+diff -ruN --ex a/src/Plugin/Field/FieldWidget/GeofieldBoundsWidget.php b/src/Plugin/Field/FieldWidget/GeofieldBoundsWidget.php
+--- a/src/Plugin/Field/FieldWidget/GeofieldBoundsWidget.php	2026-01-10 12:58:50
++++ b/src/Plugin/Field/FieldWidget/GeofieldBoundsWidget.php	2026-05-31 18:14:27
+@@ -2,20 +2,22 @@
+ 
+ namespace Drupal\geofield\Plugin\Field\FieldWidget;
+ 
++use Drupal\Core\Field\Attribute\FieldWidget;
++
+ use Drupal\Core\Field\FieldItemListInterface;
+ use Drupal\Core\Form\FormStateInterface;
++use Drupal\Core\StringTranslation\TranslatableMarkup;
+ 
+ /**
+  * Plugin implementation of the 'geofield_bounds' widget.
+- *
+- * @FieldWidget(
+- *   id = "geofield_bounds",
+- *   label = @Translation("Bounding Box"),
+- *   field_types = {
+- *     "geofield"
+- *   }
+- * )
+  */
++#[FieldWidget(
++  id: "geofield_bounds",
++  label: new TranslatableMarkup("Bounding Box"),
++  field_types: [
++    "geofield",
++  ],
++)]
+ class GeofieldBoundsWidget extends GeofieldBaseWidget {
+ 
+   /**
+diff -ruN --ex a/src/Plugin/Field/FieldWidget/GeofieldDefaultWidget.php b/src/Plugin/Field/FieldWidget/GeofieldDefaultWidget.php
+--- a/src/Plugin/Field/FieldWidget/GeofieldDefaultWidget.php	2026-01-10 12:58:50
++++ b/src/Plugin/Field/FieldWidget/GeofieldDefaultWidget.php	2026-05-31 18:14:27
+@@ -2,20 +2,22 @@
+ 
+ namespace Drupal\geofield\Plugin\Field\FieldWidget;
+ 
++use Drupal\Core\Field\Attribute\FieldWidget;
++
+ use Drupal\Core\Field\FieldItemListInterface;
+ use Drupal\Core\Form\FormStateInterface;
++use Drupal\Core\StringTranslation\TranslatableMarkup;
+ 
+ /**
+  * Widget implementation of the 'geofield_default' widget.
+- *
+- * @FieldWidget(
+- *   id = "geofield_default",
+- *   label = @Translation("Geofield (WKT)"),
+- *   field_types = {
+- *     "geofield"
+- *   }
+- * )
+  */
++#[FieldWidget(
++  id: "geofield_default",
++  label: new TranslatableMarkup("Geofield (WKT)"),
++  field_types: [
++    "geofield",
++  ],
++)]
+ class GeofieldDefaultWidget extends GeofieldBaseWidget {
+ 
+   /**
+diff -ruN --ex a/src/Plugin/Field/FieldWidget/GeofieldDmsWidget.php b/src/Plugin/Field/FieldWidget/GeofieldDmsWidget.php
+--- a/src/Plugin/Field/FieldWidget/GeofieldDmsWidget.php	2026-01-10 12:58:50
++++ b/src/Plugin/Field/FieldWidget/GeofieldDmsWidget.php	2026-05-31 18:14:27
+@@ -2,22 +2,24 @@
+ 
+ namespace Drupal\geofield\Plugin\Field\FieldWidget;
+ 
++use Drupal\Core\Field\Attribute\FieldWidget;
++
+ use Drupal\Core\Field\FieldItemListInterface;
+ use Drupal\Core\Form\FormStateInterface;
++use Drupal\Core\StringTranslation\TranslatableMarkup;
+ use Drupal\geofield\DmsConverter;
+ use Drupal\geofield\DmsPoint;
+ 
+ /**
+  * Plugin implementation of the 'geofield_dms' widget.
+- *
+- * @FieldWidget(
+- *   id = "geofield_dms",
+- *   label = @Translation("Degrees Minutes Seconds"),
+- *   field_types = {
+- *     "geofield"
+- *   }
+- * )
+  */
++#[FieldWidget(
++  id: "geofield_dms",
++  label: new TranslatableMarkup("Degrees Minutes Seconds"),
++  field_types: [
++    "geofield",
++  ],
++)]
+ class GeofieldDmsWidget extends GeofieldBaseWidget {
+ 
+   /**
+diff -ruN --ex a/src/Plugin/Field/FieldWidget/GeofieldLatLonWidget.php b/src/Plugin/Field/FieldWidget/GeofieldLatLonWidget.php
+--- a/src/Plugin/Field/FieldWidget/GeofieldLatLonWidget.php	2026-01-10 12:58:50
++++ b/src/Plugin/Field/FieldWidget/GeofieldLatLonWidget.php	2026-05-31 18:14:27
+@@ -2,20 +2,22 @@
+ 
+ namespace Drupal\geofield\Plugin\Field\FieldWidget;
+ 
++use Drupal\Core\Field\Attribute\FieldWidget;
++
+ use Drupal\Core\Field\FieldItemListInterface;
+ use Drupal\Core\Form\FormStateInterface;
++use Drupal\Core\StringTranslation\TranslatableMarkup;
+ 
+ /**
+  * Plugin implementation of the 'geofield_latlon' widget.
+- *
+- * @FieldWidget(
+- *   id = "geofield_latlon",
+- *   label = @Translation("Latitude/Longitude"),
+- *   field_types = {
+- *     "geofield"
+- *   }
+- * )
+  */
++#[FieldWidget(
++  id: "geofield_latlon",
++  label: new TranslatableMarkup("Latitude/Longitude"),
++  field_types: [
++    "geofield",
++  ],
++)]
+ class GeofieldLatLonWidget extends GeofieldBaseWidget {
+ 
+   /**
+diff -ruN --ex a/src/Plugin/GeofieldBackend/GeofieldBackendDefault.php b/src/Plugin/GeofieldBackend/GeofieldBackendDefault.php
+--- a/src/Plugin/GeofieldBackend/GeofieldBackendDefault.php	2026-01-10 12:58:50
++++ b/src/Plugin/GeofieldBackend/GeofieldBackendDefault.php	2026-05-31 18:14:27
+@@ -2,19 +2,21 @@
+ 
+ namespace Drupal\geofield\Plugin\GeofieldBackend;
+ 
++use Drupal\Core\StringTranslation\TranslatableMarkup;
++use Drupal\geofield\Attribute\GeofieldBackend;
++
+ use Drupal\geofield\Plugin\GeofieldBackendBase;
+ 
+ /**
+  * Default backend for Geofield.
+  *
+  * Definition of a default Geofield Backend for storing values in WKT Format.
+- *
+- * @GeofieldBackend(
+- *   id = "geofield_backend_default",
+- *   admin_label = @Translation("Default (WKT)"),
+- *   description = @Translation("Default Geofield Backend for storing values in WKT Format")
+- * )
+  */
++#[GeofieldBackend(
++  id: "geofield_backend_default",
++  admin_label: new TranslatableMarkup("Default (WKT)"),
++  description: new TranslatableMarkup("Default Geofield Backend for storing values in WKT Format"),
++)]
+ class GeofieldBackendDefault extends GeofieldBackendBase {
+ 
+   /**
+diff -ruN --ex a/src/Plugin/GeofieldBackend/GeofieldBackendPostgis.php b/src/Plugin/GeofieldBackend/GeofieldBackendPostgis.php
+--- a/src/Plugin/GeofieldBackend/GeofieldBackendPostgis.php	2026-01-10 12:58:50
++++ b/src/Plugin/GeofieldBackend/GeofieldBackendPostgis.php	2026-05-31 18:14:27
+@@ -2,17 +2,19 @@
+ 
+ namespace Drupal\geofield\Plugin\GeofieldBackend;
+ 
++use Drupal\Core\StringTranslation\TranslatableMarkup;
++use Drupal\geofield\Attribute\GeofieldBackend;
++
+ use Drupal\geofield\Plugin\GeofieldBackendBase;
+ 
+ /**
+  * PostgreSQL/PostGIS Backend for Geofield.
+- *
+- * @GeofieldBackend(
+- *   id = "geofield_backend_postgis",
+- *   admin_label = @Translation("PostGIS Geometry"),
+- *   description = @Translation("Geofield Backend storing values in EWKB Format, suitable for PostgreSQL/PostGIS (needs PostGis enabled)")
+- * )
+  */
++#[GeofieldBackend(
++  id: "geofield_backend_postgis",
++  admin_label: new TranslatableMarkup("PostGIS Geometry"),
++  description: new TranslatableMarkup("Geofield Backend storing values in EWKB Format, suitable for PostgreSQL/PostGIS (needs PostGis enabled)"),
++)]
+ class GeofieldBackendPostgis extends GeofieldBackendBase {
+ 
+   /**
+diff -ruN --ex a/src/Plugin/GeofieldBackendManager.php b/src/Plugin/GeofieldBackendManager.php
+--- a/src/Plugin/GeofieldBackendManager.php	2026-01-10 12:58:50
++++ b/src/Plugin/GeofieldBackendManager.php	2026-05-31 18:14:27
+@@ -5,6 +5,7 @@
+ use Drupal\Core\Cache\CacheBackendInterface;
+ use Drupal\Core\Extension\ModuleHandlerInterface;
+ use Drupal\Core\Plugin\DefaultPluginManager;
++use Drupal\geofield\Attribute\GeofieldBackend;
+ 
+ /**
+  * Defines the plugin manager Geofield backends.
+@@ -23,7 +24,7 @@
+    *   The module handler to invoke the alter hook with.
+    */
+   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler) {
+-    parent::__construct('Plugin/GeofieldBackend', $namespaces, $module_handler, 'Drupal\geofield\Plugin\GeofieldBackendPluginInterface', 'Drupal\geofield\Annotation\GeofieldBackend');
++    parent::__construct('Plugin/GeofieldBackend', $namespaces, $module_handler, 'Drupal\\geofield\\Plugin\\GeofieldBackendPluginInterface', GeofieldBackend::class, 'Drupal\\geofield\\Annotation\\GeofieldBackend');
+ 
+     $this->alterInfo('geofield');
+     $this->setCacheBackend($cache_backend, 'geofield_plugins');
+diff -ruN --ex a/src/Plugin/GeofieldProximitySource/ClientLocationOriginFilter.php b/src/Plugin/GeofieldProximitySource/ClientLocationOriginFilter.php
+--- a/src/Plugin/GeofieldProximitySource/ClientLocationOriginFilter.php	2026-01-10 12:58:50
++++ b/src/Plugin/GeofieldProximitySource/ClientLocationOriginFilter.php	2026-05-31 18:14:27
+@@ -4,22 +4,23 @@
+ 
+ use Drupal\Component\Render\FormattableMarkup;
+ use Drupal\Core\Form\FormStateInterface;
++use Drupal\Core\StringTranslation\TranslatableMarkup;
++use Drupal\geofield\Attribute\GeofieldProximitySource;
+ 
+ /**
+  * Defines 'Geofield Client Location Origin' plugin.
+  *
+  * @package Drupal\geofield\Plugin
+- *
+- * @GeofieldProximitySource(
+- *   id = "geofield_client_location_origin",
+- *   label = @Translation("Client Location Origin"),
+- *   description = @Translation("Gets the Client Location through the browser HTML5 Geolocation API."),
+- *   context = {
+- *     "filter",
+- *   },
+- *   exposedOnly = true
+- * )
+  */
++#[GeofieldProximitySource(
++  id: "geofield_client_location_origin",
++  label: new TranslatableMarkup("Client Location Origin"),
++  description: new TranslatableMarkup("Gets the Client Location through the browser HTML5 Geolocation API."),
++  context: [
++    "filter",
++  ],
++  exposedOnly: TRUE,
++)]
+ class ClientLocationOriginFilter extends ManualOriginDefault {
+ 
+   /**
+diff -ruN --ex a/src/Plugin/GeofieldProximitySource/ContextProximityFilter.php b/src/Plugin/GeofieldProximitySource/ContextProximityFilter.php
+--- a/src/Plugin/GeofieldProximitySource/ContextProximityFilter.php	2026-01-10 12:58:50
++++ b/src/Plugin/GeofieldProximitySource/ContextProximityFilter.php	2026-05-31 18:14:27
+@@ -3,6 +3,8 @@
+ namespace Drupal\geofield\Plugin\GeofieldProximitySource;
+ 
+ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
++use Drupal\Core\StringTranslation\TranslatableMarkup;
++use Drupal\geofield\Attribute\GeofieldProximitySource;
+ use Drupal\geofield\Plugin\GeofieldProximitySourceBase;
+ use Drupal\geofield\Plugin\GeofieldProximitySourceManager;
+ use Drupal\geofield\Plugin\views\argument\GeofieldProximityArgument;
+@@ -12,18 +14,17 @@
+  * Defines 'Geofield Context Filter' plugin.
+  *
+  * @package Drupal\geofield\Plugin
+- *
+- * @GeofieldProximitySource(
+- *   id = "geofield_context_filter",
+- *   label = @Translation("Context Filter (By context filter)"),
+- *   description = @Translation("Allow the contextual input of Origin as couple of Latitude and Longitude in decimal degrees."),
+- *   exposedDescription = @Translation("Contextual input of Origin as couple of Latitude and Longitude in decimal degrees."),
+- *   context = {
+- *     "sort",
+- *     "field",
+- *   },
+- * )
+  */
++#[GeofieldProximitySource(
++  id: "geofield_context_filter",
++  label: new TranslatableMarkup("Context Filter (By context filter)"),
++  description: new TranslatableMarkup("Allow the contextual input of Origin as couple of Latitude and Longitude in decimal degrees."),
++  exposedDescription: new TranslatableMarkup("Contextual input of Origin as couple of Latitude and Longitude in decimal degrees."),
++  context: [
++    "sort",
++    "field",
++  ],
++)]
+ class ContextProximityFilter extends GeofieldProximitySourceBase implements ContainerFactoryPluginInterface {
+ 
+   /**
+diff -ruN --ex a/src/Plugin/GeofieldProximitySource/ManualOriginDefault.php b/src/Plugin/GeofieldProximitySource/ManualOriginDefault.php
+--- a/src/Plugin/GeofieldProximitySource/ManualOriginDefault.php	2026-01-10 12:58:50
++++ b/src/Plugin/GeofieldProximitySource/ManualOriginDefault.php	2026-05-31 18:14:27
+@@ -4,21 +4,22 @@
+ 
+ use Drupal\Component\Render\FormattableMarkup;
+ use Drupal\Core\Form\FormStateInterface;
++use Drupal\Core\StringTranslation\TranslatableMarkup;
++use Drupal\geofield\Attribute\GeofieldProximitySource;
+ use Drupal\geofield\Plugin\GeofieldProximitySourceBase;
+ 
+ /**
+  * Defines 'Geofield Manual Origin' plugin.
+  *
+  * @package Drupal\geofield\Plugin
+- *
+- * @GeofieldProximitySource(
+- *   id = "geofield_manual_origin",
+- *   label = @Translation("Manual Origin (Default)"),
+- *   description = @Translation("Allow the Manual input of Origin as couple of Latitude and Longitude in decimal degrees."),
+- *   exposedDescription = @Translation("Manual input of Distance and Origin (as couple of Latitude and Longitude in decimal degrees.)"),
+- *   context = {},
+- * )
+  */
++#[GeofieldProximitySource(
++  id: "geofield_manual_origin",
++  label: new TranslatableMarkup("Manual Origin (Default)"),
++  description: new TranslatableMarkup("Allow the Manual input of Origin as couple of Latitude and Longitude in decimal degrees."),
++  exposedDescription: new TranslatableMarkup("Manual input of Distance and Origin (as couple of Latitude and Longitude in decimal degrees.)"),
++  context: [],
++)]
+ class ManualOriginDefault extends GeofieldProximitySourceBase {
+ 
+   /**
+diff -ruN --ex a/src/Plugin/GeofieldProximitySource/OriginFromProximityFilter.php b/src/Plugin/GeofieldProximitySource/OriginFromProximityFilter.php
+--- a/src/Plugin/GeofieldProximitySource/OriginFromProximityFilter.php	2026-01-10 12:58:50
++++ b/src/Plugin/GeofieldProximitySource/OriginFromProximityFilter.php	2026-05-31 18:14:27
+@@ -7,6 +7,8 @@
+ use Drupal\Core\Form\FormStateInterface;
+ use Drupal\Core\Logger\LoggerChannelTrait;
+ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
++use Drupal\Core\StringTranslation\TranslatableMarkup;
++use Drupal\geofield\Attribute\GeofieldProximitySource;
+ use Drupal\geofield\Plugin\GeofieldProximitySourceBase;
+ use Drupal\geofield\Plugin\GeofieldProximitySourceManager;
+ use Symfony\Component\DependencyInjection\ContainerInterface;
+@@ -15,18 +17,17 @@
+  * Defines 'Geofield Custom Origin' plugin.
+  *
+  * @package Drupal\geofield\Plugin
+- *
+- * @GeofieldProximitySource(
+- *   id = "geofield_origin_from_proximity_filter",
+- *   label = @Translation("Origin from Proximity Filter"),
+- *   description = @Translation("A sort and field plugin that points the Origin from an existing Geofield Proximity Filter."),
+- *   exposedDescription = @Translation("The origin is fixed from an existing Geofield Proximity Filter."),
+- *   context = {
+- *     "sort",
+- *     "field",
+- *   }
+- * )
+  */
++#[GeofieldProximitySource(
++  id: "geofield_origin_from_proximity_filter",
++  label: new TranslatableMarkup("Origin from Proximity Filter"),
++  description: new TranslatableMarkup("A sort and field plugin that points the Origin from an existing Geofield Proximity Filter."),
++  exposedDescription: new TranslatableMarkup("The origin is fixed from an existing Geofield Proximity Filter."),
++  context: [
++    "sort",
++    "field",
++  ],
++)]
+ class OriginFromProximityFilter extends GeofieldProximitySourceBase implements ContainerFactoryPluginInterface {
+ 
+   use LoggerChannelTrait;
+diff -ruN --ex a/src/Plugin/GeofieldProximitySourceManager.php b/src/Plugin/GeofieldProximitySourceManager.php
+--- a/src/Plugin/GeofieldProximitySourceManager.php	2026-01-10 12:58:50
++++ b/src/Plugin/GeofieldProximitySourceManager.php	2026-05-31 18:14:27
+@@ -9,6 +9,7 @@
+ use Drupal\Core\Form\FormStateInterface;
+ use Drupal\Core\Plugin\DefaultPluginManager;
+ use Drupal\Core\StringTranslation\StringTranslationTrait;
++use Drupal\geofield\Attribute\GeofieldProximitySource;
+ 
+ /**
+  * Provides the Geofield Proximity Source plugin manager.
+@@ -21,7 +22,7 @@
+    * {@inheritdoc}
+    */
+   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler) {
+-    parent::__construct('Plugin/GeofieldProximitySource', $namespaces, $module_handler, 'Drupal\geofield\Plugin\GeofieldProximitySourceInterface', 'Drupal\geofield\Annotation\GeofieldProximitySource');
++    parent::__construct('Plugin/GeofieldProximitySource', $namespaces, $module_handler, 'Drupal\\geofield\\Plugin\\GeofieldProximitySourceInterface', GeofieldProximitySource::class, 'Drupal\\geofield\\Annotation\\GeofieldProximitySource');
+ 
+     $this->alterInfo('geofield_geofield_proximity_source_info');
+     $this->setCacheBackend($cache_backend, 'geofield_geofield_proximity_source_plugins');

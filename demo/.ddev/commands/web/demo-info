@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+## Description: Show the demo site's addresses and the values for the App Store review notes
+## Usage: demo-info
+## Example: ddev demo-info
+set -euo pipefail
+cd /var/www/html
+[ -f .demo-secrets ] || { echo "No demo site yet: run 'ddev demo-setup'."; exit 1; }
+# shellcheck disable=SC1091
+source .demo-secrets
+URL="${DDEV_PRIMARY_URL}"
+cat <<INFO
+Site:               ${URL}
+HiveLog API:        ${URL}/hivelog/api/v1   (the discovery document)
+Admin login:        ${URL}/user/login   ${DEMO_ADMIN_USER} / ${DEMO_ADMIN_PASSWORD}
+
+For AppStore/en-GB/review_notes.txt:
+  {{DEMO_URL}}            ${DDEV_HOSTNAME}  (the address typed into the app; on a server, its public name)
+  {{REVIEWER_USERNAME}}   ${DEMO_REVIEWER_USER}
+  {{REVIEWER_PASSWORD}}   ${DEMO_REVIEWER_PASSWORD}
+INFO

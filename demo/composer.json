@@ -1,0 +1,86 @@
+{
+    "name": "hivelog/demo-site",
+    "description": "A throw-away HiveLog site for App Review and demonstrations (task 0209). Not part of the module: it is excluded from the module's package.",
+    "type": "project",
+    "license": "GPL-2.0-or-later",
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "https://packages.drupal.org/8"
+        }
+    ],
+    "require": {
+        "php": ">=8.3",
+        "composer/installers": "^2.3",
+        "cweagans/composer-patches": "^2.0",
+        "drupal/core-composer-scaffold": "^11.3",
+        "drupal/core-recommended": "^11.3",
+        "drupal/geofield": "^10.3",
+        "drupal/leaflet": "^10.4",
+        "drupal/simple_oauth": "^6.1",
+        "drush/drush": "^13.7",
+        "hivelog/hivelog": "^2.11"
+    },
+    "conflict": {
+        "drupal/drupal": "*"
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "config": {
+        "allow-plugins": {
+            "composer/installers": true,
+            "cweagans/composer-patches": true,
+            "drupal/core-composer-scaffold": true,
+            "php-http/discovery": true,
+            "symfony/runtime": true,
+            "tbachert/spi": true
+        },
+        "bin-dir": "vendor/bin",
+        "sort-packages": true,
+        "optimize-autoloader": true
+    },
+    "extra": {
+        "drupal-scaffold": {
+            "locations": {
+                "web-root": "web/"
+            }
+        },
+        "installer-paths": {
+            "web/core": [
+                "type:drupal-core"
+            ],
+            "web/libraries/{$name}": [
+                "type:drupal-library"
+            ],
+            "web/modules/contrib/{$name}": [
+                "type:drupal-module"
+            ],
+            "web/profiles/contrib/{$name}": [
+                "type:drupal-profile"
+            ],
+            "web/themes/contrib/{$name}": [
+                "type:drupal-theme"
+            ],
+            "drush/Commands/contrib/{$name}": [
+                "type:drupal-drush"
+            ],
+            "web/modules/custom/{$name}": [
+                "type:drupal-custom-module"
+            ],
+            "web/themes/custom/{$name}": [
+                "type:drupal-custom-theme"
+            ]
+        },
+        "patches": {
+            "drupal/geofield": {
+                "Convert geofield plugins to PHP attributes for Drupal 11": "patches/geofield-drupal11-attribute-discovery.patch",
+                "Update geofield validation constraint metadata for Drupal 11": "patches/geofield-validator-compatibility.patch"
+            }
+        },
+        "composer-patches": {
+            "ignore-dependency-patches": [
+                "hivelog/hivelog"
+            ]
+        }
+    }
+}

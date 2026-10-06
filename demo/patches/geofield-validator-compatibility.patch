@@ -1,0 +1,41 @@
+diff --git a/src/Plugin/Validation/Constraint/GeoConstraint.php b/src/Plugin/Validation/Constraint/GeoConstraint.php
+index df679fc..9b6e1b0 100644
+--- a/src/Plugin/Validation/Constraint/GeoConstraint.php
++++ b/src/Plugin/Validation/Constraint/GeoConstraint.php
+@@ -2,16 +2,18 @@
+ 
+ namespace Drupal\geofield\Plugin\Validation\Constraint;
+ 
++use Drupal\Core\StringTranslation\TranslatableMarkup;
++use Drupal\Core\Validation\Attribute\Constraint as ConstraintAttribute;
++
+ use Symfony\Component\Validator\Constraint;
+ 
+ /**
+  * Validation constraint for geospatial values.
+- *
+- * @Constraint(
+- *   id = "GeoType",
+- *   label = @Translation("Geo data valid for geofield type.", context = "Validation"),
+- * )
+  */
++#[ConstraintAttribute(
++  id: "GeoType",
++  label: new TranslatableMarkup("Geo data valid for geofield type.", [], ['context' => 'Validation']),
++)]
+ class GeoConstraint extends Constraint {
+ 
+   /**
+diff --git a/src/Plugin/Validation/Constraint/GeoConstraintValidator.php b/src/Plugin/Validation/Constraint/GeoConstraintValidator.php
+index 697d490..b5a9f7b 100644
+--- a/src/Plugin/Validation/Constraint/GeoConstraintValidator.php
++++ b/src/Plugin/Validation/Constraint/GeoConstraintValidator.php
+@@ -42,7 +42,7 @@ class GeoConstraintValidator extends ConstraintValidator implements ContainerInj
+   /**
+    * {@inheritdoc}
+    */
+-  public function validate($value, Constraint $constraint) {
++  public function validate($value, Constraint $constraint): void {
+     if (isset($value)) {
+       $valid_geometry = TRUE;
+ 

@@ -1,0 +1,18 @@
+# Everything generated: the site, its code, its secrets and its reset baseline.
+/web/
+/vendor/
+/drush/
+/private/
+/baseline/
+/.demo-secrets
+/.ddev/.*
+/.ddev/db_snapshots/
+/.ddev/mutagen/
+/.ddev/.gitignore
+# Scaffolding Drupal's composer plugin writes into the project root.
+/.editorconfig
+/.gitattributes
+/recipes/
+
+# The two geofield patches the demo carries (a global ignore of *.patch would hide them).
+!/patches/*.patch
