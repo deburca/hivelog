@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: backlog
+status: review
 priority: low
 project: "[[ios-field-app]]"
 area: app
@@ -39,14 +39,15 @@ So **four new pictures** cover five states: `mapEmpty`, `noQueen`, `serverTroubl
 and `updateApp`. That makes fourteen in all.
 
 ## Acceptance criteria
-- [ ] Concepts agreed (below); the four pictures made, reviewed against the 0211 checklist
+- [x] Concepts agreed (below); the four pictures made, reviewed against the 0211 checklist
       (one hand, one line weight, one colour in two strengths, fits the hexagon) and processed
-- [ ] `process.py` can draw a crown (and any one-off polyline) from the manifest, for `noQueen`
-- [ ] `Illustration` gains `mapEmpty`, `noQueen`, `serverTrouble`, `updateApp`; each used where
+- [x] `process.py` can draw a crown (and any one-off polyline) from the manifest, for `noQueen`
+- [x] `Illustration` gains `mapEmpty`, `noQueen`, `serverTrouble`, `updateApp`; each used where
       the survey says; the `.spot` size for `noQueen`
-- [ ] Hidden at accessibility text sizes and in landscape, as the others are (the same code)
-- [ ] Tests: every case still has its asset, size budget, inside the hexagon, centred
-- [ ] README's list of pictures updated; seen on a simulator and a phone
+- [x] Hidden at accessibility text sizes and in landscape, as the others are (the same code)
+- [x] Tests: every case still has its asset, size budget, inside the hexagon, centred
+- [x] README's list of pictures updated
+- [ ] Seen on a simulator and a phone
 
 ## Concepts
 All use the sheet's objects only (side and front bee, the three-box hive, a comb frame, a flower,
@@ -151,6 +152,36 @@ A manifest entry, no source file:
   entries, run `process.py`), `Resources/Illustrations`, `Illustration.swift`, the tests.
 - Before generating, decide whether four is enough or if the owner wants more states
   pictured; each extra one costs a generator round and a review.
+
+## What was built (app repo, branch `feature/0214-illustrations-round-2`)
+- **Three generated pictures, each right on the first try** (against 0211's several rounds: the
+  closed vocabulary, the model sheet and the "draw only what the scene names" lines worked): 
+  `mapEmpty` (a bee and a dashed loop; the bee sits on the loop's upper left, which reads as
+  "searching"), `serverTrouble` (the hive and an unlit lantern; a larger, plainer lantern than
+  `connect`'s, unlit as asked, same style), `updateApp` (two frames, the right one larger, a bee
+  on the left one). The prompts in this note were used as written. No correction was needed.
+- **`noQueen` drawn by the script**: `process.py`'s `composed()` now takes an optional source
+  (a blank canvas when absent) and a `polylines` list beside the hexagon; the manifest entry
+  has no source picture. It sits in the family in light and dark.
+- `Illustration` has four more cases (fourteen). Where each is used:
+  `mapEmpty` on the map's empty state; `noQueen` in the hive page's "no queen" card, the small
+  size, as "no inspections" does it; `ErrorView` chooses by what went wrong
+  (`Messages.illustration(forFailure:)`: cannot reach the server → `unreachable`, an answer the
+  app cannot read → `updateApp`, the server failed (5xx) or a catch-all → `serverTrouble`; a
+  refusal of the person, a firewall or a vanished record keep the badge); the connect screen's
+  picture follows why connecting failed (`AppModel.connectFailure`: not HiveLog or inconsistent
+  settings → `serverTrouble`, a server newer than the app → `updateApp`, otherwise the lit
+  lantern).
+- Tests (4 new, plus the existing picture tests which run over all fourteen): the failure to
+  picture mapping, the plain badge kept for the others, the connect screen's choice, the model
+  remembering and forgetting why connecting failed. Mac 227 tests pass. Sizes: the largest is
+  `updateApp` at 60 KB; the set is under the 600 KB budget.
+- Seen in the Mac render (`AssetRenderTests`, opt-in): the contact sheet of all fourteen and the
+  empty and failure screens, light and dark.
+
+### Not verified
+- On a simulator or a phone. These states are hard to reach with the dev site (a server that is
+  not HiveLog, a newer one, one that fails); the render and the unit tests cover them.
 
 ## Related
 - Project:: [[ios-field-app]]
