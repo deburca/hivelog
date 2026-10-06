@@ -83,8 +83,8 @@ Static index (in suggested execution order):
   key per site), or go through a relay service? Self-hosted installs
   make this awkward either way.
 - Is the app open source alongside the module, and who owns the App
-  Store listing? (Bundle id `org.deburca.hivelog` is a placeholder until decided; see
-  [[0204-ios-app-setup-and-sign-in]].)
+  Store listing? (The bundle id is decided: `nu.verdigris.vinculum`, listed as Vinculum;
+  see [[0209-ios-app-demo-server-and-app-store-release]]. Ownership and open source are not.)
 - Order relative to [[shared-apiaries-and-team-roles]]: ship the API
   first and adapt, or wait for the access-model change?
 

@@ -146,8 +146,8 @@ questions in the project.
 ### Follow-ups
 - Finish the in-app sign-in on `kragebaekgaard.ddev.site`: tap Sign in, type the test user's
   password into the sheet, Allow. Then check the apiary count, a cold relaunch and Sign out.
-- Decide the GitHub home for the repo and the bundle id (`org.deburca.hivelog` is a
-  placeholder) before 0209.
+- Decide the GitHub home for the repo and the bundle id (`org.deburca.hivelog` was a
+  placeholder) before 0209. The bundle id is now `nu.verdigris.vinculum` (see 0209).
 - Backend release: the sign-out endpoint is new API surface, so a minor bump
   (2.9.0) when you next release.
 
