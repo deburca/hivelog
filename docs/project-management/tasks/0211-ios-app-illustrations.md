@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: review
+status: done
 priority: low
 project: "[[ios-field-app]]"
 area: app
@@ -46,7 +46,7 @@ working screens. About ten images in all.
 - [x] Tests: every case has its asset, size budget held, wax tint contrast on both grounds,
       no colour outside the tokens (see Verification)
 - [x] README "Look and feel" gains an "Illustrations" section; licensing and provenance noted
-- [ ] Looked at on a physical phone
+- [x] Looked at on a physical phone (2026-10-06: "illustrations OK"; more of them wanted)
 
 ## Implementation notes
 
@@ -545,6 +545,14 @@ pictures are final (`noHives` is composed, see Round 8).
   the Mac render in light and dark, not yet on a phone with real empty data.
 - **Not seen yet:** the sign-in screen's picture, the "no inspections" card and the offline outbox
   (each needs a state the dev site is not in), landscape, and everything on a physical phone.
+
+### Seen on a phone (2026-10-06)
+The owner ran the app on a physical iPhone and found the illustrations good, and would like
+**more of them**. Screens that still show only the small hexagon badge, and so could carry one,
+are noted for a follow-up: the map with no positions, a failed load that is not "cannot reach
+the server", a scanner label the app does not recognise, a record in the outbox that needs
+attention, and a hive with no queen yet. The lessons above apply (objects from the sheet, at
+most two corrections, composite from pictures that pass).
 
 ### Follow-ups
 - `--bw-wax` in `beeswax`, if the website is to share the pictures (the module stays palette-free,

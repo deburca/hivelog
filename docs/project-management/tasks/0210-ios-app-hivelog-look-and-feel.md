@@ -29,7 +29,8 @@ Part of [[ios-field-app]].
       alerts and reporting, the forms, the outbox and the scanner)
 - [x] App icon, accent colour and launch screen in the same style
 - [x] Text stays readable: contrast checked in both modes
-- [ ] Looked at on a physical phone, and at the largest text sizes
+- [ ] Looked at on a physical phone, and at the largest text sizes *(a physical phone: yes,
+      2026-10-06, found fine; the largest text sizes were checked on the simulator only)*
 
 ## Implementation notes
 App-only; this repository's code does not change. The app repository's branch is

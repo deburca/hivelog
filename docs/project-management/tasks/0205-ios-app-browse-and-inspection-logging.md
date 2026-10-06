@@ -23,12 +23,14 @@ Part of [[ios-field-app]].
 - [x] Hive screen: active queen, last inspection, recent inspections
 - [x] New inspection form covering the inspection payload, with enum
       values loaded from the API rather than hard-coded in Swift
-- [ ] Camera and photo-library capture, uploaded to the inspection's
-      `images` field. **Library capture verified end to end on the simulator;
-      the camera button is there and compiles but has not been run (needs a
-      phone).**
+- [x] Camera and photo-library capture, uploaded to the inspection's
+      `images` field. Library capture verified end to end on the simulator;
+      **camera capture verified on a real iPhone (2026-10-06), against the live
+      site, after [[0212-hivelog-api-write-compatibility-with-host-firewalls]].**
 - [x] Server-side validation errors shown against the right field
-- [ ] Large tap targets; usable one-handed with gloves (manual check).
+- [ ] Large tap targets; usable one-handed with gloves (manual check). *On a real phone
+      (2026-10-06) the owner found the interface "very fat-finger friendly"; it has not been
+      tried with gloves on, so this stays open.*
       **Built for it (every control at least 56 points tall, whole rows are the
       target, choices are big buttons), but only a person with gloves on a real
       phone can tick this.**
