@@ -59,6 +59,7 @@ class DiscoveryController extends ControllerBase {
           'api_version' => HivelogApiResources::API_VERSION,
           'module_version' => $this->resources->moduleVersion(),
           'site_name' => (string) $site->get('name'),
+          'features' => HivelogApiResources::FEATURES,
           'oauth' => [
             'client_id' => HivelogApiResources::CLIENT_ID,
             'scope' => HivelogApiResources::SCOPE,

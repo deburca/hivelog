@@ -501,6 +501,27 @@ entity types core can't name directly).
   read-only fields are left out. Labels follow the interface language; option
   labels do not (they are untranslated strings in `baseFieldDefinitions()`).
 
+  **Hosts with a firewall (task 0212).** Some shared hosts run a firewall that answers
+  `403` before Drupal sees a request, for any content type it does not know: JSON:API's
+  `application/vnd.api+json` for a write, `application/octet-stream` for a photo upload,
+  and every `PATCH` and `PUT`. Such an app can read and sign in but not record anything,
+  and nothing in the app or the status report says why. On the versioned prefix, a `POST`
+  carrying an `Authorization` header may therefore be sent as `application/json`
+  (`HivelogApiWriteCompatibilitySubscriber`, before routing, relabels it as JSON:API's own
+  type) or, for a photo, as `multipart/form-data` with one file part (the same subscriber
+  relabels it as the raw upload, with the file's name as `Content-Disposition`, and
+  `HivelogApiInputStreamFileWriter` decorates `file.input_stream_file_writer` so core reads
+  the uploaded temp file where it would read `php://input`, which PHP leaves empty for a
+  multipart body). JSON:API then does all of what it does today: validation, access,
+  creating and attaching the file. It applies only to `POST`, only with an `Authorization`
+  header (a browser session gets nothing new, since another site's form can send
+  `multipart/form-data` but not that header), and not to the plain-JSON routes
+  (`computed/`, `schema`, `sign-out`) or to `/jsonapi`. The discovery document lists
+  `meta.hivelog_api.features` (`json_write`, `multipart_upload`), so a client uses the lenient
+  types only when offered; `api_version` stays 1. `PATCH` and `PUT` are not helped (the app
+  does not use them). Anything such a firewall does to a request's *content* cannot be
+  known until a real write is tried. `HivelogApiCompatibleWritesTest` covers it.
+
 ### Routing, controllers and forms
 
 ### Routing, controllers and forms

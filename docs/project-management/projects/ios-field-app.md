@@ -64,6 +64,7 @@ Static index (in suggested execution order):
 - [[0209-ios-app-demo-server-and-app-store-release]]
 - [[0210-ios-app-hivelog-look-and-feel]] — added after 0208: the web / beeswax look for the app
 - [[0211-ios-app-illustrations]] — a few AI-generated, wax-tinted illustrations for empty and first-run screens
+- [[0212-hivelog-api-write-compatibility-with-host-firewalls]] — found testing the live site: a shared host's firewall refused every write
 
 ## Open questions
 - ~~Offline: outbox (A) or offline-first (B)?~~ Answered by [[0199-decide-mobile-offline-scope]]: A, with a client-side read cache. See the ADR's §4.

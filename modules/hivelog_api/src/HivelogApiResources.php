@@ -39,6 +39,16 @@ class HivelogApiResources {
    */
   public const APP_NAME = 'Vinculum';
 
+  /**
+   * What the server tells a client it accepts beyond the JSON:API standard.
+   *
+   * `json_write`: a POST may be sent as `application/json`. `multipart_upload`:
+   * a photo may be sent as `multipart/form-data`. Both exist for hosts whose
+   * firewall refuses JSON:API's own types (task 0212). A client uses them only
+   * when listed, so an older server is still reached the standard way.
+   */
+  public const FEATURES = ['json_write', 'multipart_upload'];
+
   public const SCOPE = 'hivelog_field_app';
 
   public const REDIRECT_URI = 'hivelog://oauth/callback';

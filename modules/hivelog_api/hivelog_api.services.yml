@@ -46,6 +46,19 @@ services:
     tags:
       - { name: event_subscriber }
 
+  # Lets a write use the content types a shared host's firewall allows (task 0212).
+  hivelog_api.write_compatibility:
+    class: Drupal\hivelog_api\EventSubscriber\HivelogApiWriteCompatibilitySubscriber
+    tags:
+      - { name: event_subscriber }
+
+  # Gives core's upload handling the file of a relabelled multipart upload.
+  hivelog_api.input_stream_file_writer:
+    class: Drupal\hivelog_api\Upload\HivelogApiInputStreamFileWriter
+    decorates: file.input_stream_file_writer
+    arguments: ['@hivelog_api.input_stream_file_writer.inner', '@request_stack']
+    public: false
+
   # Narrows the API's access-checked collection queries to viewable records.
   hivelog_api.query_access:
     class: Drupal\hivelog_api\HivelogApiQueryAccess
