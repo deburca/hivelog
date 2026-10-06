@@ -140,8 +140,10 @@ questions in the project.
     showed the test user logged in; the sheet showed the login form), so someone has to type
     the test user's password into the sheet. I did not do that. On a phone the sheet normally
     shares Safari's cookies, but that is not confirmed.
-- **Not verified:** the app's own sign-in against the real site (see above); a physical
-  iPhone; TestFlight.
+- **Not verified:** TestFlight.
+- **Since then, verified (2026-10-06):** the app's own sign-in against a real site, on a
+  physical iPhone: signed in to the live site (`kragebaekgaard.dk`) through the OAuth sheet and
+  used it (see 0212). The sign-out and a cold relaunch on the phone were not separately noted.
 
 ### Follow-ups
 - Finish the in-app sign-in on `kragebaekgaard.ddev.site`: tap Sign in, type the test user's

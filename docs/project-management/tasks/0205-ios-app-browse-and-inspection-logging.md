@@ -113,7 +113,10 @@ Two things the app could not work without, found by trying to build it:
   span when there is only one pin.
 
 ### Not done
-- Gloves check; the camera on a real phone; a physical iPhone at all.
+- Gloves check; the camera on a real phone. (Since 2026-10-06 the app has been on a physical
+  iPhone against the live site, and **adding an inspection with photos works** there, after
+  [[0212-hivelog-api-write-compatibility-with-host-firewalls]]; whether those photos came from the
+  camera or the library, and use with gloves, were not noted.)
 - Editing or deleting an inspection (not in this task; the role has no delete).
 - Offline: this version needs a connection to open anything. The outbox and read cache
   are 0207.

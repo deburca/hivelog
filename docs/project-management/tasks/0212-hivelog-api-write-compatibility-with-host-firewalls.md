@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: review
+status: done
 priority: high
 project: "[[ios-field-app]]"
 area: app
@@ -51,7 +51,7 @@ through such a firewall without the beekeeper having to reconfigure the host. Pa
       reason is not done)
 - [x] Tests on both sides (`--group hivelog`; the app's Swift tests)
 - [x] `AGENTS.md` updated
-- [ ] Checked on the live site once it is deployed there (the user's phone)
+- [x] Checked on the live site once it is deployed there (the user's phone)
 
 ## Implementation notes
 
@@ -135,13 +135,17 @@ No.
   `application/octet-stream` upload still worked. Then the app's own client, through its
   smoke test, did the whole read and write path including a photo, using the features the
   server advertised.
-- **Not verified: the live site.** It needs a release (2.11.0, new API surface, so a minor
+- **Verified on the live site (2026-10-06):** with 2.11.0 deployed on `kragebaekgaard.dk` and the
+  app rebuilt from `main`, **adding inspections with photos from a real iPhone works**. So the
+  host's firewall lets `application/json` and a multipart JPEG through, and does not object to the
+  body. (Before 0212, every write there was refused: see Context.)
+- *Before that was tried, this read:* the live site was not verified. It needed a release (2.11.0, new API surface, so a minor
   bump) deployed there. Whether the host's firewall lets these requests through is not known
   until a real write is tried: the probes showed it accepts the content types, not what it does
   to the bodies (a multipart body holding a JPEG is the likeliest to be questioned). If it
   refuses even these, the remedy is the host's: ask for `/hivelog/api/` to be exempted.
-- The app change has not been run on a phone or the simulator; the client is covered by the
-  unit tests and by the smoke test against a real server.
+- The app change was covered by the unit tests and the smoke test against a real server, and
+  then run on a phone against the live site (above).
 
 ## Found while doing it
 - `drush uli vinculum_test` makes a login link for **uid 1**: in Drush 13 the argument is a path
