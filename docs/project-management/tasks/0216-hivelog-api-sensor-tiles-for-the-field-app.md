@@ -1,13 +1,13 @@
 ---
 type: task
 tags: [hivelog/task]
-status: review
+status: done
 priority: medium
 project: "[[ios-field-app]]"
 area: api
 created: 2026-10-06
 branch: feature/0215-demo-site-kit
-release:
+release: 2.11.2
 depends-on:
 blocked-by:
 ---
@@ -38,7 +38,7 @@ phone would have shown no sensor tiles, however many sensors they had.
       one's own tiles
 - [x] Tests that fail without the change; phpcs (CI's coder) and phpstan clean
 - [x] The demo seed gives the hives components with weights, so Net Colony Weight is a number
-- [ ] Released
+- [x] Released (2.11.2)
 
 ## Implementation notes
 - `hivelog_api.install`: `hivelog_api_field_app_permissions()` adds the two permissions; the role
