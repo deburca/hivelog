@@ -522,6 +522,24 @@ entity types core can't name directly).
   does not use them). Anything such a firewall does to a request's *content* cannot be
   known until a real write is tried. `HivelogApiCompatibleWritesTest` covers it.
 
+**Requirements: status-report entries and install checks (2.10.1, task 0213).** From
+Drupal 11.3 a procedural `hook_requirements()` marked `#[LegacyRequirementsHook]` is **skipped**,
+and Drupal 12 removes it. A submodule that reports on the status report or refuses an install
+therefore needs the new forms as well, or the check silently disappears (that is how
+`hivelog_api`'s "OAuth keys" entry went missing for a while, and what the same change protects in
+`assimilate`'s production guardrail): a **runtime** entry is an object-oriented hook,
+`#[Hook('runtime_requirements')]` in `src/Hook/` (`HivelogApiRequirements`,
+`AssimilateRequirementsHooks`); an **install-time** refusal is a class in
+`src/Install/Requirements/` implementing `InstallRequirementsInterface` with a static
+`getRequirements()` (`AssimilateRequirements`), which core loads *before the module is
+installed*, so it must be self-contained and use only core services. Keep the procedural
+function, marked, for Drupal before 11.3 (the `core_version_requirement` is `^11`), and take the
+severity from an enum-or-constant helper, because `REQUIREMENT_*` is deprecated from 11.2. **Test
+requirements the way Drupal asks for them**, not by calling the procedural function (which keeps
+passing after Drupal stops calling it): `drupal_check_module()` for an install check, and
+`system.manager`'s `listRequirements()` for the status report (`HivelogApiRequirementsTest`,
+`AssimilateRequirementsTest`).
+
 ### Routing, controllers and forms
 
 ### Routing, controllers and forms

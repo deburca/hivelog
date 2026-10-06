@@ -106,19 +106,29 @@ class ProductionGuardrailTest extends KernelTestBase {
   }
 
   /**
+   * A severity as 0 (OK), 1 (warning) or 2 (error), whether an enum or a constant.
+   */
+  protected function level(mixed $severity): int {
+    return $severity instanceof \BackedEnum ? $severity->value : (int) $severity;
+  }
+
+  /**
    * Tests `assimilate_requirements()`'s `runtime` phase reflects the guard.
+   *
+   * That function is the procedural hook for Drupal before 11.3 and is skipped
+   * from 11.3: AssimilateRequirementsTest covers what Drupal now runs.
    */
   public function testRuntimeRequirementsReflectGuardrailState(): void {
     \Drupal::moduleHandler()->loadInclude('assimilate', 'install');
 
     $requirements = assimilate_requirements('runtime');
     $this->assertArrayHasKey('assimilate_dev_only', $requirements);
-    $this->assertEquals(REQUIREMENT_WARNING, $requirements['assimilate_dev_only']['severity']);
+    $this->assertSame(1, $this->level($requirements['assimilate_dev_only']['severity']));
 
     Apiary::create(['name' => 'Real Apiary', 'ai_insights_enabled' => TRUE])->save();
 
     $requirements = assimilate_requirements('runtime');
-    $this->assertEquals(REQUIREMENT_ERROR, $requirements['assimilate_dev_only']['severity']);
+    $this->assertSame(2, $this->level($requirements['assimilate_dev_only']['severity']));
   }
 
   /**
@@ -133,7 +143,7 @@ class ProductionGuardrailTest extends KernelTestBase {
 
     $requirements = assimilate_requirements('install');
     $this->assertArrayHasKey('assimilate_production_guardrail', $requirements);
-    $this->assertEquals(REQUIREMENT_ERROR, $requirements['assimilate_production_guardrail']['severity']);
+    $this->assertSame(2, $this->level($requirements['assimilate_production_guardrail']['severity']));
   }
 
 }

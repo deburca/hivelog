@@ -20,8 +20,9 @@ use Drupal\Core\StringTranslation\TranslationInterface;
  * beekeeper who has opted an apiary into AI insights is exactly the
  * signal that this is a genuine, in-use site, not a sandbox.
  *
- * Consulted from two places: `assimilate_requirements()`'s `install`
- * phase (a `REQUIREMENT_ERROR` there is Drupal's own idiomatic way to
+ * Consulted from two places: the install-time `AssimilateRequirements` class
+ * (the legacy `assimilate_requirements()`'s `install` phase, before Drupal
+ * 11.3; an error there is Drupal's own idiomatic way to
  * refuse to let a module be installed at all — checked by both the
  * module-install UI and `drush pm:install` before `hook_install()` ever
  * runs, so this is a functional block, not a warning nobody reads), and
@@ -55,6 +56,20 @@ class ProductionGuardrail {
    *   from `assimilate_cron()`.
    */
   public function blockingReason(): ?TranslatableMarkup {
+    $count = $this->realApiaryCount();
+    if ($count === 0) {
+      return NULL;
+    }
+
+    return $this->t('This site has @count real apiary/apiaries with AI insights enabled — a sign of genuine use. Assimilate fabricates mock sensor data and must never run alongside real AI-insight data.', [
+      '@count' => $count,
+    ]);
+  }
+
+  /**
+   * Counts the apiaries with AI insights on, other than assimilate's own.
+   */
+  public function realApiaryCount(): int {
     $storage = $this->entityTypeManager->getStorage('apiary');
     $query = $storage->getQuery()
       ->accessCheck(FALSE)
@@ -65,14 +80,7 @@ class ProductionGuardrail {
       $query->condition('id', $demo_apiary_id, '<>');
     }
 
-    $ids = $query->execute();
-    if (empty($ids)) {
-      return NULL;
-    }
-
-    return $this->t('This site has @count real apiary/apiaries with AI insights enabled — a sign of genuine use. Assimilate fabricates mock sensor data and must never run alongside real AI-insight data.', [
-      '@count' => count($ids),
-    ]);
+    return count($query->execute());
   }
 
 }

@@ -5,8 +5,17 @@
  * Install, update and uninstall functions for the Assimilate module.
  */
 
+use Drupal\Core\Extension\Requirement\RequirementSeverity;
+use Drupal\Core\Hook\Attribute\LegacyRequirementsHook;
+
 /**
  * Implements hook_requirements().
+ *
+ * Only for Drupal versions before 11.3. From 11.3 the attribute below makes
+ * Drupal skip this function: the install phase is the class
+ * \Drupal\assimilate\Install\Requirements\AssimilateRequirements and the
+ * runtime phase is \Drupal\assimilate\Hook\AssimilateRequirementsHooks. Drupal 12
+ * removes this procedural hook altogether. Keep the three in step.
  *
  * The real guardrail against accidental production use (task 0107): the
  * `install` phase reports a `REQUIREMENT_ERROR` if any real apiary
@@ -27,6 +36,7 @@
  * itself is duplicated here, inline, using only core services that are
  * always available.
  */
+#[LegacyRequirementsHook]
 function assimilate_requirements($phase) {
   $requirements = [];
 
@@ -50,7 +60,7 @@ function assimilate_requirements($phase) {
         'title' => t('Assimilate: production guardrail'),
         'value' => t('@count real apiary/apiaries already have AI insights enabled.', ['@count' => $real_apiary_count]),
         'description' => t('Assimilate fabricates mock sensor data for demonstration purposes and must never run on a site with real AI-insight data. Disable AI insights on every real apiary first, or do not install this module here.'),
-        'severity' => REQUIREMENT_ERROR,
+        'severity' => _assimilate_requirement_severity('Error'),
       ];
     }
     return $requirements;
@@ -65,10 +75,29 @@ function assimilate_requirements($phase) {
       ? t('@count real apiary/apiaries have AI insights enabled — assimilate_cron() will not run until this is resolved.', ['@count' => $real_apiary_count])
       : t('No real apiary currently has AI insights enabled.'),
     'description' => t('Assimilate fabricates mock sensor data for demonstration purposes. It must never be enabled on a beekeeper\'s production site.'),
-    'severity' => $real_apiary_count > 0 ? REQUIREMENT_ERROR : REQUIREMENT_WARNING,
+    'severity' => _assimilate_requirement_severity($real_apiary_count > 0 ? 'Error' : 'Warning'),
   ];
 
   return $requirements;
+}
+
+/**
+ * A requirement severity in the form the running Drupal expects.
+ *
+ * Drupal 11.2 and later use an enum and deprecate the REQUIREMENT_* constants
+ * (removed in 12); earlier 11.x have only the constants.
+ *
+ * @param string $level
+ *   `Warning` or `Error`.
+ *
+ * @return mixed
+ *   A RequirementSeverity case, or the matching constant.
+ */
+function _assimilate_requirement_severity(string $level): mixed {
+  if (enum_exists(RequirementSeverity::class)) {
+    return constant(RequirementSeverity::class . '::' . $level);
+  }
+  return constant('REQUIREMENT_' . strtoupper($level));
 }
 
 /**
