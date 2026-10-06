@@ -1,13 +1,13 @@
 ---
 type: task
 tags: [hivelog/task]
-status: review
+status: done
 priority: medium
 project:
 area: install
 created: 2026-10-06
 branch: feature/0213-assimilate-requirements-hooks
-release:
+release: 2.11.1
 depends-on:
 blocked-by:
 ---
@@ -36,7 +36,7 @@ called `assimilate_requirements()` directly, which keeps passing after Drupal st
       list), and fail without the new classes
 - [x] `AGENTS.md` updated (the convention, for any later submodule)
 - [x] phpcs (CI's coder) and phpstan clean
-- [ ] Released (2.11.1)
+- [x] Released (2.11.1)
 
 ## Implementation notes
 - `Drupal\assimilate\Install\Requirements\AssimilateRequirements` (`InstallRequirementsInterface`,
