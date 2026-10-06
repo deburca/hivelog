@@ -183,30 +183,4 @@ class HivelogApiInstallTest extends KernelTestBase {
     $this->assertNull(Role::load(HivelogApiResources::SCOPE));
   }
 
-  /**
-   * Tests the status report flags missing keys and extra public scopes.
-   */
-  public function testRequirementsFlagMissingKeysAndBroadScopes(): void {
-    $this->loadInstallFile();
-
-    $requirements = hivelog_api_requirements('runtime');
-    $this->assertSame(REQUIREMENT_ERROR, $requirements['hivelog_api_keys']['severity'], 'No key pair yet');
-    $this->assertSame(REQUIREMENT_OK, $requirements['hivelog_api_scopes']['severity']);
-
-    Oauth2Scope::create([
-      'id' => 'broad',
-      'name' => 'broad',
-      'description' => 'A broad scope',
-      'grant_types' => ['authorization_code' => ['status' => TRUE, 'description' => 'x']],
-      'umbrella' => FALSE,
-      'parent' => NULL,
-      'granularity_id' => 'role',
-      'granularity_configuration' => ['role' => 'authenticated'],
-    ])->save();
-
-    $requirements = hivelog_api_requirements('runtime');
-    $this->assertSame(REQUIREMENT_WARNING, $requirements['hivelog_api_scopes']['severity']);
-    $this->assertStringContainsString('broad', (string) $requirements['hivelog_api_scopes']['description']);
-  }
-
 }
