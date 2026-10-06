@@ -7,7 +7,7 @@ project: "[[ios-field-app]]"
 area: app
 created: 2026-10-06
 branch: feature/0212-hivelog-api-write-compatibility-with-host-firewalls
-release:
+release: 2.11.0
 depends-on: ["[[0205-ios-app-browse-and-inspection-logging]]"]
 blocked-by:
 ---

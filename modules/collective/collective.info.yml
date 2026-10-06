@@ -3,6 +3,6 @@ type: module
 description: 'Structured hive/apiary context for HiveLog, gathered and served via a credentialed API. Optional; works from manually-logged data alone, richer if nanoprobe sensor data is also present. Pairs with the nexus module for AI-synthesised insights.'
 core_version_requirement: ^11
 package: Custom
-version: '2.10.1'
+version: '2.11.0'
 dependencies:
   - hivelog:hivelog
