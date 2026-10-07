@@ -26,6 +26,8 @@ Part of [[ios-field-app]].
 - [ ] Privacy policy and App Store privacy labels (photos, location)
 - [ ] Listing owner and open-source status decided (project open question; the bundle id is
       decided, see Implementation notes)
+- [ ] Name and logo: clearance search of the existing "Vinculum" filings done and a filing
+      strategy chosen (see "Trademark: the name and the logo"); a trademark attorney has looked at it
 - [ ] Submitted and approved
 
 ## Implementation notes
@@ -106,6 +108,7 @@ unseen.
    AI-generated, whose copyright status is unsettled (see 0211), which matters if a licence is
    applied to the repository.
 4. **The App Privacy answer** (above): confirm "Data Not Collected".
+5. **The name's second word, and what to file** (see "Trademark: the name and the logo").
 
 ### Licence facts, for the open-source decision (briefing 2026-10-06; undecided)
 - **The HiveLog module** is public and `GPL-2.0-or-later` (as a Drupal module it effectively has to be).
@@ -127,6 +130,87 @@ unseen.
   apiary and hive names, locations): scrub them and check the git history; decide how the AI images
   are labelled; reserve the *name and icon* in a short trademark note (a licence does not grant them);
   decide a contribution policy.
+
+### Trademark: the name and the logo (opened 2026-10-07; not started)
+**Problem.** A few trademarks for "Vinculum" are already filed by others. The idea was to add a
+second, Borg-related word to make ours unique and still relevant ("Vinculum" is the Borg's linking
+device, a Latin word meaning "bond"). This section records the reasoning so it is not re-derived;
+it is not legal advice, and nothing here has been searched or cleared.
+
+**What a second word does and does not do**
+- An office compares the *dominant, distinctive* part of a mark. A descriptive word added to it
+  (Hive, Bee, Apiary, Beekeeping) is normally disclaimed, so "Vinculum" stays the part that is compared
+  with the earlier filings: it adds nothing.
+- A second word helps only if it is distinctive in itself (coined, arbitrary or suggestive).
+- Whether the earlier filings matter at all depends on their **classes, countries and goods or
+  services**, not on the word. A "Vinculum" for accounting software or a medical device may not
+  conflict with a beekeeping app in classes 9 (software), 42 (software as a service) and 31 (bees);
+  a narrow specification of goods can be part of the filing. Unknown until the filings are read.
+
+**Borg risk.** Paramount owns the Star Trek terms; "Vinculum" is a real Latin word, but pairing it
+with Borg-specific words invites association with the franchise and an objection. **Avoid** "Borg",
+"Assimilate", "Unimatrix", "Locutus", "Resistance is futile", and anything that sounds like a
+character or species. The submodule names (`assimilate`, `nexus`, `collective`, `nanoprobe`) are
+internal and are not in the mark; do not market them with Borg references.
+
+**Candidates** (none searched or cleared):
+
+| Option | For | Against |
+|---|---|---|
+| **Vinculum Apis** | Latin "bond of the bee"; coined-sounding pair, no Paramount link; consistent with the Latin name | Not a Borg wink; "Apis" is used in the bee trade |
+| **Vinculum Collective** | Dictionary word that evokes both the Borg and a colony | Common and weak; probably disclaimed |
+| **Vinculum Hivemind** | Borg nod and bee metaphor | Likely crowded with existing "Hivemind" marks |
+| **Vinculum Drone** | Bee and Borg drone | Suggests UAVs: confuses a beekeeping app |
+
+**Recommendation:** **Vinculum Apis** as the word mark, and the logo filed separately as a
+figurative mark. A logo can coexist with similar word marks if its visual elements differ. A plain
+hexagon is hopeless to register (it is a generic shape, and a hive-cell hexagon is descriptive for
+this product), so the logo needs a distinctive element: the idea so far is a **bee hatching out of
+its brood cell**, or two linked hexagons (the *vinculum*, the link). Settle the logo before filing it.
+
+**Logo sketches (2026-10-07).** A supplied AI-generated bee-in-a-hexagon was judged unusable as the
+registered mark (generic and descriptive; unsettled ownership; flat-topped, where the app's hexagon
+points up). Two vector sketches of the distinctive ideas are in
+`docs/project-management/assets/logo-sketches/` (`make_sketches.py` writes them, `make_sheet.py` builds `logo-sketches-sheet.png`,
+which shows each at size, in one colour and two, and as an app-icon tile). They are plain geometry, to brief
+a designer with, not finished artwork:
+- **A, a bee leaves its cell** (`a-hatching-*.svg`): a bee in three-quarter view flies up and out of a
+  hexagonal cell, head first, wings up, with speed lines behind it; the cell wall is simply open
+  where it went through (the folded flaps of the first drafts were dropped as unnecessary detail). Drawn after a supplied AI picture of a bee leaving
+  a cell, which had more movement and positivity than the first sketch (the geometry is our own).
+  Charming and clearly "bee", but it is still a bee in a hexagon at heart, and the detail turns to
+  mush at 32 px.
+- **A (alternate), front view** (`a-front-*.svg`): the first sketch of the idea, a bee sitting head-up
+  in the cell with its head and antennae through the torn cap. Calmer; kept for comparison.
+- **B, linked hexagons** (`b-linked-*.svg`): two hexagon rings, one through the other, left over right at
+  the top crossing and right over left at the bottom. Simple, holds up at 32 px, works in one colour,
+  and ties directly to the name (*vinculum*, the link). Less obviously a bee app, which the store
+  listing, the name and the colours can carry (pine green and wax, the app's own).
+- **Leaning to B** as the registered logo: more distinctive, scales, and does not depend on a bee
+  illustration. A (the flying bee) could live on as a secondary mascot or an empty-state picture, or be the logo if
+  the owner values movement over scalability. The transparent
+  crossings are cut with masks, not a background-coloured halo, so B sits on any background.
+- Still to do: a designer redraws the chosen one (the sketches have a hairline at the crossing's
+  clip edge and unrefined proportions), and the figurative-mark search runs on the *redrawn* shape.
+
+**Steps**
+- [ ] Read the earlier "Vinculum" filings in TMview / EUIPO eSearch (and the UK IPO and USPTO if
+      the app will be sold there): owner, status, **classes (9, 42, 31)** and specification. Record
+      the ones that matter here.
+- [ ] Search the second-word candidates the same way ("Apis", "Collective", "Hivemind", "Drone" with
+      "Vinculum", and on their own in classes 9, 42 and 31).
+- [ ] Decide the mark: word, word plus second word, or logo only; which countries (the App Store
+      listing decides where the name is seen).
+- [ ] Settle the logo (hatching bee or linked hexagons; sketched, B preferred) before any figurative filing.
+- [ ] Have a trademark attorney review the choice and the specification of goods and services.
+- [ ] File; then add the symbol and a short trademark note to the repository and store text. A
+      licence does not grant the name or icon (see the licence facts above).
+- [ ] Check the App Store name is free in App Store Connect (it was reserved as "Vinculum"; a
+      second word may need the listing name or subtitle to change).
+
+**Not decided / not known:** which earlier filings exist and in which classes; the countries to file
+in; whether a conflict makes the plain name unusable and the second word a necessity rather than a
+nicety.
 
 ### Demo site: built as a DDEV kit ([[0215-demo-site-kit]]); still to run on the owner's server
 The kit is in `demo/` of the HiveLog repository, tested locally (setup, reset, an end-to-end check
