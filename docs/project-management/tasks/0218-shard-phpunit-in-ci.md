@@ -25,18 +25,23 @@ single process). The runs are independent, so the step can be split.
 - [x] That property is checked in CI (lint job), not trusted
 - [x] phpstan and the advisory functional tests no longer run once per shard
 - [x] `AGENTS.md` describes it and how to reproduce one shard
-- [ ] Observed on a real run: the shards finish in roughly equal time, and the whole run is
-      substantially faster than 28 to 35 minutes
+- [x] Observed on a real run: the whole run is substantially faster than 28 to 35 minutes (9.3)
+- [ ] Observed on `main` (the full PHP 8.3 / 8.4 / 8.5 matrix, 12 jobs)
 
 ## Implementation notes
 - `.github/scripts/shard-tests.py <module root> <i>/<n>` prints that shard's test files;
   `--check` proves the partition for 1 to 8 shards. It walks the tree for `*/tests/src/Kernel` and
   `/Unit` (skipping `demo`, `docs`, `vendor`, `.git`), as the old `find` did.
-- **Balancing is by estimated cost, not by file count or name:** test methods per file, doubled for a
-  class marked `#[RunTestsInSeparateProcesses]` (the `hivelog_api` kernel tests took about 2.8 s a
-  test against 1.3 s for the rest), and x 0.05 for a unit test (no Drupal). Files are dealt out
-  largest first to the lightest shard (a deterministic greedy fit). For four shards the estimate is
-  544 / 543 / 543 / 543 units, 31 to 35 files each.
+- **Balancing is by measured time, with an estimate as the fallback.** The first version used an
+  estimate (test methods per file, doubled for `#[RunTestsInSeparateProcesses]`, x 0.05 for a unit
+  test) and left shard 1 at 11.1 minutes of PHPUnit against 6.1 to 7.9 for the others, because the
+  estimate was wrong about which classes are slow (`DashboardTest` and `ListBuilderAccessFilterTest`
+  are heavy for their method count). Each shard now uploads its `junit.xml` (kept 14 days);
+  `update-test-times.py` turns them into `.github/scripts/test-times.json` (seconds per file, 131
+  files, 19.9 minutes of tests), and `shard-tests.py` deals the files out largest first to the
+  lightest shard, shard 1 starting with a 100 s head start for phpstan and the functional tests. A
+  file not in the JSON (a new test) uses the estimate, so the split is always complete; only the
+  balance drifts. Refresh the times after adding large tests.
 - Shards are matrix entries `'1/4'` ... `'4/4'`, so the count lives in one place per entry. phpstan
   runs in shard 1 of PHP 8.3 (it was once per run already); the functional step in shard 1 of each
   PHP version (it was once per PHP version).
@@ -49,10 +54,16 @@ single process). The runs are independent, so the step can be split.
 ## Verification
 - `shard-tests.py . --check`: 131 files, none lost or repeated for 1 to 8 shards.
 - PHPUnit accepts the file list: two unit files from different shards ran, 19 tests passed.
-- A real run: see below.
+- **Runs on the branch (PHP 8.3, 4 shards):** estimated weights, 14 minutes in total (shard PHPUnit
+  steps 11.1 / 6.2 / 6.1 / 7.9 min); measured weights, **9.3 minutes in total** (PHPUnit steps 5.5 / 7.6 /
+  5.3 / 7.1 min, jobs 6.4 to 8.8 min), against 28 to 35 before sharding. The split is not
+  perfectly even: junit counts test time, not each class's own setup, and the two slower shards
+  hold more of the separate-process classes.
 
 ## Not verified
-- The estimate's accuracy until the shards' real times are seen; the weights may need adjusting.
+- The full three-version matrix (12 jobs) until it runs on `main`.
+- Whether a second refresh of the times, now from a run with the measured split, evens the shards
+  further (likely a minute or two; not worth chasing yet).
 
 ## Related
 - Project:: 

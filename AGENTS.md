@@ -72,9 +72,11 @@ then runs, per matrix cell unless noted:
   is `PHP version x shard i/4`, and runs the files `.github/scripts/shard-tests.py <module> i/4`
   deals it: every `*/tests/src/Kernel` and `/Unit` directory under the module (core's and each
   submodule's, found by walking the tree, not a fixed path, so a new submodule's tests join a shard
-  by themselves), split by estimated cost (test methods, doubled for
-  `#[RunTestsInSeparateProcesses]`, nearly nothing for a unit test), largest first onto the lightest
-  shard. The lint job runs `shard-tests.py . --check`, which fails if any shard count from 1 to 8
+  by themselves), split by each file's measured time (`.github/scripts/test-times.json`, from the
+  `junit-*` artifacts each shard uploads; refresh it with `update-test-times.py` after adding large
+  tests; a new file without a time uses an estimate of 1.3 s a test method), largest first onto the
+  lightest shard, with shard 1 given a head start because it also runs phpstan and the functional
+  tests. The lint job runs `shard-tests.py . --check`, which fails if any shard count from 1 to 8
   would lose or repeat a test file, or if a file declares tests but is not named `*Test.php` (PHPUnit
   would never run it). Reproduce one shard locally with
   `phpunit -c web/core $(shard-tests.py web/modules/contrib/hivelog 2/4) --group hivelog`. phpstan
