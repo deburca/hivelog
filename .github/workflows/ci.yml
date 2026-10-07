@@ -1,17 +1,54 @@
 name: CI
 
+# What runs when (task 0217), because a full run is about 35 minutes:
+#   push to main            lint + PHPUnit/phpstan on PHP 8.3, 8.4 and 8.5. This is the gate
+#                           before a release is tagged.
+#   push to another branch  lint + PHPUnit/phpstan on PHP 8.3 only.
+#   push of docs/demo only  nothing (paths-ignore). A tag push does not run: branches only.
+#   release published       no tests; scripts/check-release.sh checks the versions match the
+#                           tag and that the commit's push run did not fail. The release
+#                           event comes after publishing, so it cannot gate anything.
+# A newer push to the same branch cancels the run it supersedes.
 on:
   push:
+    branches: ['**']
+    paths-ignore:
+      - 'docs/**'
+      - 'demo/**'
+      - '**.md'
+      - '.gitattributes'
   release:
     types: [published]
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'push' }}
+
 jobs:
+  # -----------------------------------------------------------------------
+  # release-check — what a published release gets instead of the test suite.
+  # -----------------------------------------------------------------------
+  release-check:
+    name: Release check
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Versions match the tag; the commit's CI did not fail
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: .github/scripts/check-release.sh "${{ github.event.release.tag_name }}" "${{ github.sha }}" "${{ github.repository }}"
+
   # -----------------------------------------------------------------------
   # lint — phpcs + phpstan, PHP 8.3 only (style/deprecation analysis is not
   # PHP-version-sensitive; running once avoids tripling lint minutes).
   # -----------------------------------------------------------------------
   lint:
     name: Lint (PHP 8.3)
+    if: github.event_name != 'release'
     runs-on: ubuntu-latest
 
     steps:
@@ -91,13 +128,15 @@ jobs:
   # -----------------------------------------------------------------------
   test:
     name: Test (PHP ${{ matrix.php-version }})
+    if: github.event_name != 'release'
     runs-on: ubuntu-latest
     needs: lint
 
     strategy:
       fail-fast: false
       matrix:
-        php-version: ['8.3', '8.4', '8.5']
+        # main, the gate before a release, runs every PHP version; other branches only 8.3.
+        php-version: ${{ fromJSON(github.ref == 'refs/heads/main' && '["8.3","8.4","8.5"]' || '["8.3"]') }}
 
     services:
       mysql:

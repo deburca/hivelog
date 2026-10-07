@@ -39,8 +39,17 @@ reintroduce the dependency without adding and documenting a concrete use.
 
 ## CI Pipeline
 
-A GitHub Actions workflow runs on every push and on every published release:
-`.github/workflows/ci.yml`. As of task 0137, local (`composer lint` /
+A GitHub Actions workflow, `.github/workflows/ci.yml`, runs the tests where they can still
+stop a release, and not otherwise (task 0217; a full run is about 35 minutes, 26 to 33 of them
+PHPUnit): a **push to `main`** runs lint and the test job on PHP 8.3, 8.4 and 8.5, and is the gate
+before a release is tagged; a push to **another branch** runs lint and PHP 8.3 only; a push that
+changes only `docs/`, `demo/`, `*.md` or `.gitattributes` runs **nothing** (`paths-ignore`), so a
+change to anything else, `.info.yml` files and the workflow itself included, does run; a **tag
+push** does not run (branches only); a newer push to the same branch cancels the run it supersedes;
+and a **published release** runs no tests, only `.github/scripts/check-release.sh` (every `.info.yml`
+carries the tag as its version, and the commit's push run did not fail), because the release event
+comes after publishing and cannot gate it. Wait for `main`'s run to go green *before* creating the
+release. As of task 0137, local (`composer lint` /
 `composer stan`) and CI checks read the exact same config files
 (`phpcs.xml.dist`, `phpstan.neon`) with no separate path/extension lists to
 drift out of sync — every `phpcs`/`phpstan` invocation, local or CI, covers
@@ -56,7 +65,7 @@ placeholder — mglaman/phpstan-drupal (needed for Drupal-aware analysis without
 a full scaffold) isn't installed in this job's isolated tool directory: real
 phpstan runs in the `test` job instead, where `drupal/core` is available.
 
-**`test` job (PHP 8.3 / 8.4 / 8.5 matrix):** builds a full `drupal/recommended-project`
+**`test` job (PHP 8.3 / 8.4 / 8.5 matrix on `main`; 8.3 only elsewhere):** builds a full `drupal/recommended-project`
 scaffold, installs the module via a Composer `path` repository (symlink:false),
 then runs, per matrix cell unless noted:
 - **PHPUnit kernel + unit (hard gate).** Test directories are discovered via
