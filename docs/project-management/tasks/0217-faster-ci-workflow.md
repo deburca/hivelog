@@ -56,7 +56,8 @@ comes from not running them where they gate nothing.
 - `check-release.sh` run by hand against the real 2.11.2 tag: all six versions pass and the commit's
   CI is found green; with the tag name changed to 2.11.3 it reports the three `.info.yml` files that
   differ and exits non-zero.
-- A real run: see below once the branch and `main` have run.
+- **A real branch push** (`ci/faster-workflow`): jobs were `Release check` (skipped), `Lint (PHP 8.3)` and
+  `Test (PHP 8.3)` only; no 8.4 or 8.5.
 
 ## Not verified
 - The release-check job inside Actions (the `release` event can only be tested by a release).
