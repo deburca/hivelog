@@ -7,7 +7,7 @@ project: "[[ios-field-app]]"
 area: ios
 created: 2026-10-07
 branch:
-release:
+release: 2.12.0
 depends-on: "[[0219-ios-app-map-zoom-and-hive-rows]]"
 blocked-by:
 ---

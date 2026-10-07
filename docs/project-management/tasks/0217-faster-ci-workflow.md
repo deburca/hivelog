@@ -33,7 +33,7 @@ comes from not running them where they gate nothing.
 - [x] A published release runs no tests: `release-check` verifies that every `.info.yml` carries the
       tag as its version and that the commit's push run has not failed
 - [x] `AGENTS.md` describes the new rules, including "wait for `main` to go green before releasing"
-- [ ] Observed on a real branch push and on `main`, and on the next release
+- [x] Observed on a real branch push, on `main`, and on a release (2.12.0: the release-check job ran and passed)
 - [ ] Sharding PHPUnit across parallel jobs (a separate follow-up; the biggest saving for code pushes)
 
 ## Implementation notes
