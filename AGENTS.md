@@ -68,10 +68,19 @@ phpstan runs in the `test` job instead, where `drupal/core` is available.
 **`test` job (PHP 8.3 / 8.4 / 8.5 matrix on `main`; 8.3 only elsewhere):** builds a full `drupal/recommended-project`
 scaffold, installs the module via a Composer `path` repository (symlink:false),
 then runs, per matrix cell unless noted:
-- **PHPUnit kernel + unit (hard gate).** Test directories are discovered via
-  `find "$MODULE_PATH" -type d -path '*/tests/src/Kernel'` (and `/Unit`), not
-  a fixed path — a submodule's own `tests/src/Kernel` is picked up
-  automatically.
+- **PHPUnit kernel + unit (hard gate), in 4 parallel shards (task 0218).** Each matrix cell
+  is `PHP version x shard i/4`, and runs the files `.github/scripts/shard-tests.py <module> i/4`
+  deals it: every `*/tests/src/Kernel` and `/Unit` directory under the module (core's and each
+  submodule's, found by walking the tree, not a fixed path, so a new submodule's tests join a shard
+  by themselves), split by estimated cost (test methods, doubled for
+  `#[RunTestsInSeparateProcesses]`, nearly nothing for a unit test), largest first onto the lightest
+  shard. The lint job runs `shard-tests.py . --check`, which fails if any shard count from 1 to 8
+  would lose or repeat a test file, or if a file declares tests but is not named `*Test.php` (PHPUnit
+  would never run it). Reproduce one shard locally with
+  `phpunit -c web/core $(shard-tests.py web/modules/contrib/hivelog 2/4) --group hivelog`. phpstan
+  runs in shard 1 of PHP 8.3 and the advisory functional tests in shard 1 of each PHP version. Each
+  shard rebuilds the Drupal scaffold (a few minutes), so more shards buy less than they cost; change
+  `n` in every `shard:` entry of the workflow if you do.
 - **phpstan (PHP 8.3 only, hard gate).** `phpstan analyse -c "$MODULE_PATH/phpstan.neon"`
   — the module's own config, so it covers `modules/` and reads
   `phpstan-baseline.neon` (the pre-existing level-2 findings — sum its

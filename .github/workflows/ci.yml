@@ -9,6 +9,7 @@ name: CI
 #                           tag and that the commit's push run did not fail. The release
 #                           event comes after publishing, so it cannot gate anything.
 # A newer push to the same branch cancels the run it supersedes.
+# The PHPUnit step is split into shards that run in parallel (task 0218): see the test job.
 on:
   push:
     branches: ['**']
@@ -106,6 +107,12 @@ jobs:
           # (nanoprobe, collective, nexus) recursively — see ADR-0098 §7.
           phpcs --warning-severity=0
 
+      - name: Test sharding — every test file lands in exactly one shard
+        # The shard script finds tests the way CI used to (every */tests/src/Kernel and
+        # */tests/src/Unit directory, core and submodules) and this proves no shard count
+        # loses or repeats one, and that no stray file declares tests PHPUnit would skip.
+        run: python3 .github/scripts/shard-tests.py . --check
+
       - name: phpstan — static analysis
         # phpstan requires drupal/core to be present in the same vendor tree —
         # Drupal base classes, interfaces, and traits are non-ignorable
@@ -127,7 +134,7 @@ jobs:
   # project's composer.json before running composer install.
   # -----------------------------------------------------------------------
   test:
-    name: Test (PHP ${{ matrix.php-version }})
+    name: Test (PHP ${{ matrix.php-version }}, shard ${{ matrix.shard }})
     if: github.event_name != 'release'
     runs-on: ubuntu-latest
     needs: lint
@@ -137,6 +144,10 @@ jobs:
       matrix:
         # main, the gate before a release, runs every PHP version; other branches only 8.3.
         php-version: ${{ fromJSON(github.ref == 'refs/heads/main' && '["8.3","8.4","8.5"]' || '["8.3"]') }}
+        # "i/n": this job runs shard i of n of the Kernel and Unit tests (.github/scripts/shard-tests.py).
+        # Each job rebuilds the Drupal scaffold, so more shards cost setup minutes for less test time;
+        # four brought a 26-33 minute PHPUnit step to under ten. To change n, change it in every entry.
+        shard: ['1/4', '2/4', '3/4', '4/4']
 
     services:
       mysql:
@@ -239,7 +250,7 @@ jobs:
           vendor/bin/drush en hivelog -y
           vendor/bin/drush cr
 
-      - name: PHPUnit — kernel + unit (hard gate)
+      - name: PHPUnit — kernel + unit, shard ${{ matrix.shard }} (hard gate)
         working-directory: drupal-project
         env:
           SIMPLETEST_DB: mysql://drupal:drupal@127.0.0.1:3306/drupal
@@ -249,17 +260,15 @@ jobs:
           # web/modules/contrib/hivelog/ depending on installer-paths config).
           MODULE_PATH=$(find web/modules -maxdepth 3 -name "hivelog.info.yml" | head -1 | xargs dirname)
           echo "Module installed at: $MODULE_PATH"
-          # Discover Kernel/Unit test directories in hivelog core AND every
-          # submodule (modules/nanoprobe, and later collective/locutus) —
-          # see ADR-0098 §7: a fixed path here would silently skip a
-          # submodule's tests.
-          KERNEL_PATHS=$(find "$MODULE_PATH" -type d -path '*/tests/src/Kernel')
-          UNIT_PATHS=$(find "$MODULE_PATH" -type d -path '*/tests/src/Unit')
-          echo "Kernel test dirs: $KERNEL_PATHS"
-          echo "Unit test dirs: $UNIT_PATHS"
+          # This shard's share of the Kernel/Unit tests in hivelog core AND every
+          # submodule (ADR-0098 §7: a fixed path would silently skip a submodule's
+          # tests). The script finds the test directories itself, and the lint job
+          # proves every file lands in exactly one shard.
+          TEST_FILES=$(python3 ../hivelog-module/.github/scripts/shard-tests.py "$MODULE_PATH" "${{ matrix.shard }}")
+          echo "Shard ${{ matrix.shard }}: $(echo $TEST_FILES | wc -w) test files"
           vendor/bin/phpunit \
             -c web/core \
-            $KERNEL_PATHS $UNIT_PATHS \
+            $TEST_FILES \
             --group hivelog \
             --testdox
 
@@ -272,7 +281,7 @@ jobs:
         # phpstan-baseline.neon (task 0137) absorbs those 440
         # pre-existing findings, so this is now a hard gate: it fails
         # only on a *new* finding, baselined or not.
-        if: matrix.php-version == '8.3'
+        if: matrix.php-version == '8.3' && startsWith(matrix.shard, '1/')
         working-directory: drupal-project
         run: |
           MODULE_PATH=$(find web/modules -maxdepth 3 -name "hivelog.info.yml" | head -1 | xargs dirname)
@@ -293,6 +302,8 @@ jobs:
             --error-format=github
 
       - name: PHPUnit — functional (allowed to fail until ChromeDriver stable)
+        # Once per PHP version, not once per shard.
+        if: startsWith(matrix.shard, '1/')
         working-directory: drupal-project
         continue-on-error: true
         env:
