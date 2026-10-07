@@ -30,7 +30,8 @@ row of an apiary's hive list and on a new header of the hive page.
       verdict
 - [x] A failed or missing verdict request leaves the list as it was (a server older than the endpoint answers 404)
 - [x] Server tests, app tests, checked on the simulator against the demo site
-- [ ] Released (server 2.12.0, app)
+- [x] Server released (2.12.0)
+- [ ] App released (a build with the tint)
 
 ## Implementation notes
 - **Server, `hivelog_api`:** `GET /hivelog/api/v1/computed/apiary/{apiary}/hive-insights`
