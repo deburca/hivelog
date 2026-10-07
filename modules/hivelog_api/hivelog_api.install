@@ -25,7 +25,9 @@ use Drupal\user\Entity\Role;
  * tiles for anyone. Sensors are still not on the API's allow-list, so the app
  * can read them only as those computed tiles. They are granted only where the
  * `nanoprobe` module defines them, and when it is installed later
- * hivelog_api_modules_installed() tops the role up.
+ * hivelog_api_modules_installed() tops the role up. The same goes for
+ * `view own hive insight` (task 0221, with `nexus`): the hive's latest insight, and the verdict
+ * that tints its badge, are read only through the computed insight endpoints.
  * `access content` is needed to reference an uploaded file;
  * `grant simple_oauth codes` is the user's own permission to approve the
  * consent screen.
@@ -47,6 +49,7 @@ function hivelog_api_field_app_permissions(): array {
   $permissions = ['access content', 'grant simple_oauth codes'];
   $permissions[] = 'view own sensor device';
   $permissions[] = 'view own sensor reading';
+  $permissions[] = 'view own hive insight';
   foreach ($viewable as $type) {
     $permissions[] = 'view own ' . $type;
   }
@@ -246,5 +249,20 @@ function hivelog_api_update_10002() {
   $has = Role::load(HivelogApiResources::SCOPE)->hasPermission('view own sensor device');
   return t('Field-app role tops up: @what.', [
     '@what' => $has ? 'it may now view the user\'s own sensor devices and readings' : 'nanoprobe is not installed, nothing to add',
+  ]);
+}
+
+/**
+ * Lets the field-app role view the user's own hive insights.
+ *
+ * Until 2.12.0 the role had no insight permission, so `computed/hive/{hive}/insight` always answered
+ * "nothing" for an app token, and the app never showed an insight (task 0221). Additive, only where
+ * `nexus` defines the permission, and never revoking a change the site made.
+ */
+function hivelog_api_update_10003() {
+  hivelog_api_sync_field_app_role();
+  $has = Role::load(HivelogApiResources::SCOPE)->hasPermission('view own hive insight');
+  return t('Field-app role tops up: @what.', [
+    '@what' => $has ? 'it may now view the user\'s own hive insights' : 'nexus is not installed, nothing to add',
   ]);
 }

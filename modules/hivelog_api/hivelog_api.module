@@ -39,12 +39,13 @@ function hivelog_api_jsonapi_entity_filter_access(EntityTypeInterface $entity_ty
  * Implements hook_modules_installed().
  *
  * The field-app role holds the sensor view permissions only when `nanoprobe`
- * defines them. If that module is installed after this one, grant them then,
- * so the app's hive tiles work without a second step. Not during a
+ * defines them, and the insight one only when `nexus` does. If either module is
+ * installed after this one, grant them then, so the app's hive tiles and insights
+ * work without a second step. Not during a
  * configuration import, which brings its own role.
  */
 function hivelog_api_modules_installed(array $modules, bool $is_syncing) {
-  if ($is_syncing || !in_array('nanoprobe', $modules, TRUE)) {
+  if ($is_syncing || !array_intersect(['nanoprobe', 'nexus'], $modules)) {
     return;
   }
   \Drupal::moduleHandler()->loadInclude('hivelog_api', 'install');

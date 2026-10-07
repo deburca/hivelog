@@ -6,6 +6,7 @@ namespace Drupal\Tests\hivelog_api\Kernel;
 
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\hivelog\Entity\CalendarAction;
+use Drupal\hivelog\Entity\Hive;
 use Drupal\hivelog\Entity\HiveComponent;
 use Drupal\hivelog\Entity\InventoryItem;
 use Drupal\hivelog\Entity\InventoryPurchase;
@@ -183,6 +184,51 @@ class HivelogApiComputedViewsTest extends HivelogApiKernelTestBase {
   }
 
   /**
+   * Tests an apiary's hive verdicts come in one answer, one entry per hive that has one (task 0221).
+   */
+  public function testApiaryHiveInsightsAreServedInOneAnswer(): void {
+    $second = Hive::create([
+      'name' => 'second hive',
+      'apiary' => $this->fixtures['my_apiary']->id(),
+      'status' => 'active',
+      'uid' => $this->me->id(),
+    ]);
+    $second->save();
+
+    $uuid = $this->fixtures['my_apiary']->uuid();
+    $response = $this->api('GET', "/hivelog/api/v1/computed/apiary/$uuid/hive-insights", NULL, $this->me);
+    $this->assertSame(200, $response['status'], $response['raw']);
+
+    $rows = array_column($response['body']['data'], NULL, 'hive');
+    $this->assertEqualsCanonicalizing(
+      [$this->fixtures['my_hive']->uuid(), $second->uuid()],
+      array_keys($rows),
+    );
+    $row = $rows[$this->fixtures['my_hive']->uuid()];
+    $this->assertSame('inspect_soon', $row['verdict']);
+    $this->assertSame('Inspect soon', $row['verdict_label']);
+    $this->assertFalse($row['stale']);
+    $this->assertSame('2026-10-01T08:00:00+00:00', $row['generated']);
+    $this->assertSame(2, $response['body']['meta']['count']);
+    // A badge needs the verdict, not the advice: that stays on the per-hive endpoint.
+    $this->assertArrayNotHasKey('recommendation', $row);
+  }
+
+  /**
+   * Tests another beekeeper's apiary is refused, its hives never listed, and an unknown one is missing.
+   */
+  public function testApiaryHiveInsightsRefuseForeignAndUnknownApiaries(): void {
+    $theirs = $this->fixtures['their_apiary']->uuid();
+    $path = "/hivelog/api/v1/computed/apiary/$theirs/hive-insights";
+    $this->assertSame(403, $this->api('GET', $path, NULL, $this->me)['status']);
+    $mine = $this->api('GET', $path, NULL, $this->them);
+    $this->assertSame(200, $mine['status']);
+    $this->assertSame([$this->fixtures['their_hive']->uuid()], array_column($mine['body']['data'], 'hive'));
+    $this->assertSame(404, $this->api('GET', '/hivelog/api/v1/computed/apiary/' . \Drupal::service('uuid')->generate() . '/hive-insights', NULL, $this->me)['status']);
+    $this->assertSame(401, $this->api('GET', $path)['status']);
+  }
+
+  /**
    * Tests another beekeeper's hive is refused, and an unknown one is missing.
    */
   public function testHiveEndpointsRefuseForeignAndUnknownHives(): void {
@@ -204,6 +250,7 @@ class HivelogApiComputedViewsTest extends HivelogApiKernelTestBase {
       '/hivelog/api/v1/computed/alerts',
       "/hivelog/api/v1/computed/hive/$uuid/stat-tiles",
       "/hivelog/api/v1/computed/hive/$uuid/insight",
+      '/hivelog/api/v1/computed/apiary/' . $this->fixtures['my_apiary']->uuid() . '/hive-insights',
     ];
     foreach ($paths as $path) {
       $this->assertSame(405, $this->api('POST', $path, [], $this->me)['status'], $path);

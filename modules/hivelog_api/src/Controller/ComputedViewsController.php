@@ -8,6 +8,7 @@ use Drupal\Core\Cache\CacheableJsonResponse;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\Hive;
 use Drupal\hivelog\HivelogAlertCollector;
 use Drupal\hivelog\HivelogCalendarChecklistBuilder;
@@ -113,6 +114,46 @@ class ComputedViewsController extends ControllerBase {
     $cache->setCacheMaxAge(300);
 
     return $this->respond(['data' => $insight ?: NULL], $cache);
+  }
+
+  /**
+   * The verdict of each hive's latest insight in an apiary, in one answer.
+   *
+   * For the hive list, which shows each hive's state at a glance: asking per hive would be a
+   * request per row. Each entry is the same insight the per-hive endpoint serves (the same hook,
+   * with its own access rules), cut down to what a badge needs. A hive the user may not view, or
+   * with no insight, is left out; a site with no insight module answers an empty list.
+   */
+  public function apiaryHiveInsights(Apiary $apiary): CacheableJsonResponse {
+    $cache = new CacheableMetadata();
+    $cache->addCacheContexts(['user']);
+    $cache->addCacheableDependency($apiary);
+
+    $storage = $this->entityTypeManager()->getStorage('hive');
+    $ids = $storage->getQuery()->accessCheck(TRUE)->condition('apiary', $apiary->id())->sort('id')->execute();
+    $cache->addCacheTags($this->entityTypeManager()->getDefinition('hive')->getListCacheTags());
+
+    $rows = [];
+    foreach ($storage->loadMultiple($ids) as $hive) {
+      /** @var \Drupal\hivelog\Entity\Hive $hive */
+      if (!$hive->access('view')) {
+        continue;
+      }
+      $insight = $this->moduleHandler()->invokeAll('hivelog_api_hive_insight', [$hive, $cache]);
+      if (!$insight) {
+        continue;
+      }
+      $rows[] = [
+        'hive' => $hive->uuid(),
+        'verdict' => $insight['verdict'] ?? NULL,
+        'verdict_label' => $insight['verdict_label'] ?? NULL,
+        'stale' => (bool) ($insight['stale'] ?? FALSE),
+        'generated' => $insight['generated'] ?? NULL,
+      ];
+    }
+    $cache->setCacheMaxAge(300);
+
+    return $this->respond(['data' => $rows, 'meta' => ['count' => count($rows)]], $cache);
   }
 
   /**

@@ -35,6 +35,10 @@ function hivelog_api_test_hivelog_hive_stat_tiles(Hive $hive) {
  * Implements hook_hivelog_api_hive_insight().
  */
 function hivelog_api_test_hivelog_api_hive_insight(Hive $hive, CacheableMetadata $cache) {
+  // With the real provider (nexus) enabled, its own insight is what a test is about.
+  if (\Drupal::moduleHandler()->moduleExists('nexus')) {
+    return [];
+  }
   $cache->addCacheTags(['hivelog_api_test']);
   return [
     'verdict' => 'inspect_soon',

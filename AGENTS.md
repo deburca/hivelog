@@ -437,7 +437,10 @@ entity types core can't name directly).
   by `hivelog_api_modules_installed()` if `nanoprobe` arrives later: the hive's stat tiles (weight,
   temperature, net colony weight) are built from the sensors the user may view, and with none the
   app's hive page had no tiles for anyone. Sensors are still not on the allow-list, so they are
-  readable only as those computed tiles. It does hold
+  readable only as those computed tiles. It likewise holds `view own hive insight` (task 0221,
+  granted only where `nexus` defines it, topped up on a later `nexus` install and by
+  `hivelog_api_update_10003()`): without it `computed/hive/{hive}/insight` always answered "nothing" for
+  an app token, so the app never showed an insight. It does hold
   `edit own apiary|hive|queen`, because adding a child needs `update` on its
   parent (task 0133 / the parent-access constraint); that over-grant is
   documented in the install file. **Versioning:** the contract is pinned by
@@ -457,7 +460,11 @@ entity types core can't name directly).
   (`hivelog.alert_collector`, `hivelog.stat_tile_builder`) and only turns the
   result into data. The insight comes from `hook_hivelog_api_hive_insight()`
   (`hivelog_api.api.php`, implemented by `nexus`), so `hivelog_api` never
-  depends on `nexus`; it returns `{"data": null}` when nothing provides one.
+  depends on `nexus`; it returns `{"data": null}` when nothing provides one. `GET
+  /computed/apiary/{apiary}/hive-insights` (task 0221) answers the verdict of every viewable hive's
+  latest insight in one request (`hive` UUID, `verdict`, `verdict_label`, `stale`, `generated`; a hive with
+  none is left out, and a site with no insight module gets an empty list), by calling the same hook per hive,
+  so the app can tint each hive's badge without a request per row; the advice stays on the per-hive endpoint.
   They need no `_auth` option: the OAuth provider is global, so a bearer token
   just works; the kernel tests opt in Basic Auth through the
   `hivelog_api_test` module instead.
@@ -1043,7 +1050,10 @@ restores the baseline; `python3 demo/scripts/check.py <url>` checks it end to en
 OAuth flow. It carries the two geofield patches in its own `patches/`, because the module's patch
 paths assume the module is already installed (a fresh project would fail), and it enables HiveLog
 in two steps because `assimilate`'s demo records need HiveLog's entity types to exist. The seed
-gives each hive its parts with weights (so *Net Colony Weight* is a number) and keeps every
+gives each hive an insight (inspect soon, all clear, and one three days old to show "out of date"), written
+directly with no AI provider (`nexus` and `collective` are enabled for the purpose), and `ddev demo-reset`
+runs `scripts/freshen.php` afterwards to set their timestamps and the sensor readings current again, since an
+insight is out of date after 48 hours and the baseline only gets older. The seed also gives each hive its parts with weights (so *Net Colony Weight* is a number) and keeps every
 seasonal job in the future, so the demo opens with amber alerts and none overdue. Do not put
 real data on it: `assimilate` is development and demo only.
 

@@ -71,3 +71,19 @@ hivelog_api.computed_hive_insight:
     parameters:
       hive:
         type: hivelog_api_uuid:hive
+
+# The verdict of every hive's latest insight in one apiary, in one request (task 0221): the app tints
+# each hive's badge by it, and asking hive by hive would be a request per row.
+hivelog_api.computed_apiary_hive_insights:
+  path: '/hivelog/api/v1/computed/apiary/{apiary}/hive-insights'
+  defaults:
+    _controller: '\Drupal\hivelog_api\Controller\ComputedViewsController::apiaryHiveInsights'
+    _title: 'Hive insights in an apiary'
+    _format: json
+  methods: [GET]
+  requirements:
+    _entity_access: 'apiary.view'
+  options:
+    parameters:
+      apiary:
+        type: hivelog_api_uuid:apiary

@@ -147,6 +147,9 @@ class HivelogApiInstallTest extends KernelTestBase {
     // Sensors: the two permissions that view the user's own, and no other (task 0216).
     $sensor = array_values(array_filter($permissions, fn($p) => str_contains($p, 'sensor')));
     $this->assertEmpty(array_diff($sensor, ['view own sensor device', 'view own sensor reading']), 'Sensors are view-own only');
+    // Insights: view own only (task 0221); they are machine-written and the app never edits them.
+    $insight = array_values(array_filter($permissions, fn($p) => str_contains($p, 'insight')));
+    $this->assertEmpty(array_diff($insight, ['view own hive insight']), 'Insights are view-own only');
     $this->assertNotContains('administer hivelog', $permissions);
     foreach ($permissions as $permission) {
       $this->assertNotContains($permission, ['view any hive', 'edit any hive', 'add hive', 'add apiary']);
@@ -168,6 +171,25 @@ class HivelogApiInstallTest extends KernelTestBase {
     $this->assertFalse($role->hasPermission('view any sensor device'));
     $this->assertFalse($role->hasPermission('edit own sensor device'));
     $this->assertFalse($role->hasPermission('add sensor device'));
+  }
+
+  /**
+   * Tests the insight view permission arrives when nexus is installed later, and the update hook adds it.
+   */
+  public function testInstallingNexusLaterTopsUpTheRole(): void {
+    $this->assertFalse(Role::load(HivelogApiResources::SCOPE)->hasPermission('view own hive insight'));
+
+    \Drupal::service('module_installer')->install(['nexus']);
+
+    $role = Role::load(HivelogApiResources::SCOPE);
+    $this->assertTrue($role->hasPermission('view own hive insight'));
+    $this->assertFalse($role->hasPermission('view any hive insight'));
+    $this->assertFalse($role->hasPermission('delete own hive insight'));
+
+    $this->loadInstallFile();
+    $role->revokePermission('view own hive insight')->save();
+    hivelog_api_update_10003();
+    $this->assertTrue(Role::load(HivelogApiResources::SCOPE)->hasPermission('view own hive insight'));
   }
 
   /**
