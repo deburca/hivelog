@@ -11,5 +11,6 @@ drush sql:drop -y
 gunzip -c baseline/db.sql.gz | drush sql:cli
 find web/sites/default/files -mindepth 1 -delete 2>/dev/null || true
 tar xzf baseline/files.tar.gz -C web/sites/default
+drush php:script scripts/freshen.php
 drush cr
 echo "Demo site reset to its baseline."

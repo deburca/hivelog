@@ -33,11 +33,11 @@ drush site:install standard -y \
 drush config:set user.settings register admin_only -y
 drush config:set system.date timezone.default Europe/Copenhagen -y
 
-echo "== Enabling HiveLog (with its API, sensors and the demo data module)"
+echo "== Enabling HiveLog (with its API, sensors, insights and the demo data module)"
 # In two steps: assimilate makes its demo records when it is enabled, and HiveLog's entity types
 # are not yet known if all four are enabled in one go.
 drush en -y hivelog
-drush en -y hivelog_api nanoprobe assimilate
+drush en -y hivelog_api nanoprobe assimilate collective nexus
 
 echo "== OAuth keys (outside the web root)"
 if [ ! -f private/oauth-keys/private.key ]; then

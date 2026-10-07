@@ -27,6 +27,7 @@ use Drupal\hivelog\Entity\InventoryItem;
 use Drupal\hivelog\Entity\InventoryPurchase;
 use Drupal\hivelog\Entity\Queen;
 use Drupal\hivelog\Entity\QueenObservation;
+use Drupal\nexus\Entity\HiveInsight;
 use Drupal\user\Entity\User;
 
 $reviewer = user_load_by_name('reviewer');
@@ -268,7 +269,25 @@ foreach ($parts as [$name, $kg, $bought, $price, $uses]) {
   }
 }
 
-// 7. A few sensor readings, so the hive page's stat tiles have something to show.
+// 7. A latest insight for each hive, so the app has something to tint its badges with: one
+// "inspect soon", one "all clear", and one that is out of date (nexus doubts an insight after 48
+// hours). They are written directly: no AI provider is configured, and none is called. The
+// timestamps are set again on every reset by freshen.php, or they would all go grey after two days.
+$apiary->set('ai_insights_enabled', TRUE);
+demo_save($apiary);
+foreach ([
+  [0, 'inspect_soon', 'Check the brood nest this week.', "- Brood pattern is only fair\n- Weight has been flat for five days", 'medium', 3],
+  [1, 'all_clear', 'No action needed; keep an eye on the stores.', "- Weight is rising steadily\n- Temperature is steady", 'high', 3],
+  [2, 'act_now', 'Possible queen trouble: inspect within two days.', "- No eggs seen at the last inspection", 'low', 3 * 24 * 3600],
+] as [$index, $verdict, $recommendation, $signals, $confidence, $age]) {
+  demo_save(HiveInsight::create([
+    'scope' => 'hive', 'apiary' => $apiary->id(), 'hive' => $hives[$index]->id(), 'verdict' => $verdict,
+    'recommendation' => $recommendation, 'signals' => $signals, 'confidence' => $confidence,
+    'generated' => time() - $age,
+  ]));
+}
+
+// 8. A few sensor readings, so the hive page's stat tiles have something to show.
 $generator = \Drupal::service('assimilate.mock_reading_generator');
 foreach (\Drupal::service('assimilate.demo_data_provisioner')->getDemoDevices() as $device) {
   for ($i = 0; $i < 4; $i++) {
@@ -277,4 +296,4 @@ foreach (\Drupal::service('assimilate.demo_data_provisioner')->getDemoDevices() 
 }
 
 \Drupal::service('account_switcher')->switchBack();
-printf("Seeded: 1 apiary, %d hives, %d queens, inspections, queen observations, hive components and seasonal jobs, owned by user %d.\n", count($hives), count($queens) + 1, $uid);
+printf("Seeded: 1 apiary, %d hives, %d queens, inspections, queen observations, hive components, seasonal jobs and an insight per hive, owned by user %d.\n", count($hives), count($queens) + 1, $uid);

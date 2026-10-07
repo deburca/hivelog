@@ -158,6 +158,14 @@ check(status == 200 and "hive_inspection" in json.dumps(schema), "the field sche
 first_hive = hives[0]["id"] if hives else None
 status, tiles = get(f"computed/hive/{first_hive}/stat-tiles") if first_hive else (0, {})
 check(status == 200, "a hive page's stat tiles answer")
+sensor_tiles = [t for t in (tiles.get("data", []) if status == 200 else []) if t.get("key", "").startswith("nanoprobe_")]
+check(len(sensor_tiles) >= 2, f"the hive page has its sensor tiles (the app's role may view the user's own sensors) ({len(sensor_tiles)})")
+apiary_id = apiaries[0]["id"] if apiaries else None
+status, verdicts = get(f"computed/apiary/{apiary_id}/hive-insights") if apiary_id else (0, {})
+rows = verdicts.get("data", []) if status == 200 else []
+check(status == 200 and len(rows) == 3, f"each hive has an insight verdict, in one request, for its badge ({len(rows)})")
+check(sum(1 for r in rows if r.get("stale")) == 1 and {"inspect_soon", "all_clear"} <= {r.get("verdict") for r in rows},
+      "the verdicts include inspect soon, all clear and one out of date")
 
 if "--write" in flags and first_hive:
     new_id = str(uuid.uuid4())

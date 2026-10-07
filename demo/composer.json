@@ -16,6 +16,7 @@
         "drupal/core-composer-scaffold": "^11.3",
         "drupal/core-recommended": "^11.3",
         "drupal/geofield": "^10.3",
+        "drupal/key": "^1.22",
         "drupal/leaflet": "^10.4",
         "drupal/simple_oauth": "^6.1",
         "drush/drush": "^13.7",
