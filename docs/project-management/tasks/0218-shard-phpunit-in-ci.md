@@ -26,7 +26,7 @@ single process). The runs are independent, so the step can be split.
 - [x] phpstan and the advisory functional tests no longer run once per shard
 - [x] `AGENTS.md` describes it and how to reproduce one shard
 - [x] Observed on a real run: the whole run is substantially faster than 28 to 35 minutes (9.3)
-- [ ] Observed on `main` (the full PHP 8.3 / 8.4 / 8.5 matrix, 12 jobs)
+- [x] Observed on `main` (the full PHP 8.3 / 8.4 / 8.5 matrix, 12 jobs): green in 10.3 minutes
 
 ## Implementation notes
 - `.github/scripts/shard-tests.py <module root> <i>/<n>` prints that shard's test files;
@@ -60,8 +60,11 @@ single process). The runs are independent, so the step can be split.
   perfectly even: junit counts test time, not each class's own setup, and the two slower shards
   hold more of the separate-process classes.
 
+- **On `main` (run 37608544787):** all 12 test jobs green on PHP 8.3, 8.4 and 8.5, **10.3 minutes in
+  total** (jobs 7.7 to 9.7 min; shard 1, with phpstan and the functional tests, was the quickest at 7.7
+  to 8.1, so its 100 s head start is a little generous: 30 to 40 s would even the shards out further).
+
 ## Not verified
-- The full three-version matrix (12 jobs) until it runs on `main`.
 - Whether a second refresh of the times, now from a run with the measured split, evens the shards
   further (likely a minute or two; not worth chasing yet).
 
