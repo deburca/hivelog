@@ -68,6 +68,9 @@ Static index (in suggested execution order):
 - [[0214-ios-app-illustrations-round-2]] — four more pictures for the remaining empty and failure screens
 - [[0215-demo-site-kit]] — a DDEV kit for the public demo site App Review needs
 - [[0216-hivelog-api-sensor-tiles-for-the-field-app]] — found walking the demo: the app's role had no sensor view permission, so no hive tiles
+- [[0219-ios-app-map-zoom-and-hive-rows]] — the map starts too close; a hive's row says too little
+- [[0220-ios-app-edit-delete-inspections-and-observations]] — field comments: no list of observations, and no way to edit or delete what was recorded
+- [[0221-ios-app-hive-insight-tint]] — a hive's badge tinted by its insight; and the app's role could not view insights at all
 
 ## Open questions
 - ~~Offline: outbox (A) or offline-first (B)?~~ Answered by [[0199-decide-mobile-offline-scope]]: A, with a client-side read cache. See the ADR's §4.
