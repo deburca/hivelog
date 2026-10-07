@@ -71,6 +71,7 @@ Static index (in suggested execution order):
 - [[0219-ios-app-map-zoom-and-hive-rows]] — the map starts too close; a hive's row says too little
 - [[0220-ios-app-edit-delete-inspections-and-observations]] — field comments: no list of observations, and no way to edit or delete what was recorded
 - [[0221-ios-app-hive-insight-tint]] — a hive's badge tinted by its insight; and the app's role could not view insights at all
+- [[0222-ios-app-one-tint-per-hive]] — the list and the hive page share one tint per hive
 
 ## Open questions
 - ~~Offline: outbox (A) or offline-first (B)?~~ Answered by [[0199-decide-mobile-offline-scope]]: A, with a client-side read cache. See the ADR's §4.
