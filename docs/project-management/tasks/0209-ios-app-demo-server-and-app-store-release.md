@@ -193,6 +193,44 @@ a designer with, not finished artwork:
 - Still to do: a designer redraws the chosen one (the sketches have a hairline at the crossing's
   clip edge and unrefined proportions), and the figurative-mark search runs on the *redrawn* shape.
 
+**The owner's own candidate: a bee leaving a point-up hexagon (2026-10-08).** The owner edited an
+AI-generated picture to keep the app's palette and the naive line style of the app's own images, and
+asked whether it could be a trademark. It is **a real candidate, with limits**, and it is more
+usable than the first supplied picture (the hexagon points up, as the app's does, and the style is the
+app's own). The picture's wordmark read "Viculum Apis", missing the **n**; the redraw says
+"Vinculum Apis".
+- *Can it register?* A logo needs to be distinctive, not original art. A drawn bee leaving a teal
+  cell, in this composition and palette, can qualify. The protection is **narrow**: bees and
+  hexagons are everywhere in the trade, so the registration would cover this rendering, not "a bee
+  in a hexagon", and a competitor's different bee in a different hexagon would probably not infringe.
+- *The name matters more than the picture.* The word mark gives the broad protection, and the
+  earlier "Vinculum" filings (above) are the real clearance question; a logo cannot fix a name
+  conflict. File the **word mark and the logo separately** (a combined mark protects less than
+  either alone), and file the logo in **black and white** so it covers any colour scheme (the mono
+  file is that version).
+- *Clearance.* Search figurative marks for bee and hexagon devices in classes 9 and 42 (and 31 and 44
+  if bees or beekeeping services are named in the specification) at EUIPO / TMview, the UK IPO, the
+  USPTO, and the app stores, on the **redrawn** shape.
+- *Ownership.* If the base picture is AI-generated, copyright in it is unsettled. Trademark rights come
+  from use and distinctiveness, not authorship, so that does not bar registration, but it weakens
+  a copyright claim against a copier. The redraw is geometry written in this repository
+  (`make_candidate.py`), so there is one owned, scalable source; keep the owner's edits and the original
+  picture on record. A designer's own redraw would settle it better.
+- *Lettering.* The name in the picture is a standard bold sans-serif. The lockup uses **live text** in a
+  generic stack as a placeholder; before filing or printing, draw custom lettering or set it in a font
+  whose licence permits a logo.
+- *Small sizes.* At 60 px it reads clearly (bee, hexagon, two colours); at 32 px it is still "a bee in
+  a green hexagon" but the stripes and antennae blur. Fine for the store icon and the launch screen,
+  weaker as a favicon; a simplified small-size version (no stripes, thicker outline) would fix it if wanted.
+- *Colours* (sampled from the picture): cell `#01736F`, wings and bands `#F0AA25`, outline `#111818`,
+  "Vinculum" `#317E64`, "Apis" `#FBB117`.
+- Files in `docs/project-management/assets/logo-sketches/`: `make_candidate.py` writes
+  `candidate-colour.svg` (transparent background), `candidate-mono.svg` (one ink, white paper fills) and
+  `candidate-lockup.svg` (mark above the name). It is a faithful trace of the owner's shapes, not a new
+  design. Not legal advice; an attorney reviews the choice and the specification of goods and services.
+- Choice still open between this (A, the owner's) and **B, linked hexagons**, which scales better and
+  ties to the name; this one has more warmth and fits the app's illustration style.
+
 **Steps**
 - [ ] Read the earlier "Vinculum" filings in TMview / EUIPO eSearch (and the UK IPO and USPTO if
       the app will be sold there): owner, status, **classes (9, 42, 31)** and specification. Record
