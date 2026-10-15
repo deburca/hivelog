@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\hivelog_api\Kernel;
 
+use Drupal\hivelog\Entity\HiveInspection;
 use Drupal\hivelog_api\EventSubscriber\HivelogApiWriteCompatibilitySubscriber;
 use Drupal\hivelog_api\HivelogApiResources;
 use Drupal\user\Entity\Role;
-use Drupal\user\Entity\User;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 /**
  * Tests writes sent as the content types a shared host's firewall allows.
@@ -212,11 +212,18 @@ class HivelogApiCompatibleWritesTest extends HivelogApiKernelTestBase {
   }
 
   /**
+   * An inspection as stored now, not as the entity cache remembers it.
+   */
+  protected function storedInspection(int|string $id): ?HiveInspection {
+    \Drupal::entityTypeManager()->getStorage('hive_inspection')->resetCache([$id]);
+    return HiveInspection::load($id);
+  }
+
+  /**
    * The stored notes of an inspection, read fresh.
    */
   protected function storedNotes(int|string $id): ?string {
-    $inspection = \Drupal::entityTypeManager()->getStorage('hive_inspection')->loadUnchanged($id);
-    return $inspection ? $inspection->get('notes')->value : NULL;
+    return $this->storedInspection($id)?->get('notes')->value;
   }
 
   /**
@@ -286,7 +293,7 @@ class HivelogApiCompatibleWritesTest extends HivelogApiKernelTestBase {
     ]);
     $response = $this->send($this->inspectionPath($mine->uuid()), 'application/json', $bad, $this->me, [], ['X-HTTP-Method-Override' => 'PATCH']);
     $this->assertContains($response['status'], [400, 422], $response['raw']);
-    $this->assertSame('2026-06-01', \Drupal::entityTypeManager()->getStorage('hive_inspection')->loadUnchanged($mine->id())->get('inspection_date')->value);
+    $this->assertSame('2026-06-01', $this->storedInspection($mine->id())->get('inspection_date')->value);
   }
 
   /**
