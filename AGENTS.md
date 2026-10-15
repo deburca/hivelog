@@ -578,6 +578,17 @@ entity types core can't name directly).
   The role may delete only its own inspections and queen observations (above), so any other delete is
   still a 403 through the override too; `HivelogApiCompatibleWritesTest` proves it.
 
+**OAuth key paths (found on the live host after 2.13.0).** Simple OAuth stores the *paths* of its key
+pair in `simple_oauth.settings` (`public_key`, `private_key`), not the keys. A physical path stopped
+being readable on the shared host after an upgrade and sign-in failed with "You need to set the OAuth2
+private key." (`AuthorizationServerFactory::getPrivateKey()` throws when `file_get_contents()` of the
+configured path gives nothing); `private://keys/private.key` worked, because Drupal resolves the stream
+itself. Configuration copied from DDEV to another host carries the DDEV *paths*, not the files, and
+fails the same way. Recommend `private://` paths (set per environment if config is exported, or
+overridden in `settings.php`) and a key pair generated on each environment; the README's "OAuth keys"
+section says so. HiveLog's status entry uses `is_readable()` on the stored value, which also works for
+a stream path. The demo kit keeps its keys in its own `private/` (generated, not committed).
+
 **Requirements: status-report entries and install checks (2.10.1, task 0213).** From
 Drupal 11.3 a procedural `hook_requirements()` marked `#[LegacyRequirementsHook]` is **skipped**,
 and Drupal 12 removes it. A submodule that reports on the status report or refuses an install

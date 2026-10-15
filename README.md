@@ -100,6 +100,45 @@ who may use the app, and generate Simple OAuth's key pair at
 status report warns until you do). The API is served under
 `/hivelog/api/v1`. It does not change JSON:API's site-wide settings.
 
+### OAuth keys: use `private://` paths on a shared host, and when moving configuration
+
+Simple OAuth keeps the **paths** to its key pair in configuration
+(`simple_oauth.settings`: `public_key` and `private_key`); the key **files** are not
+configuration. Two things follow.
+
+- **On a shared host, set the paths as `private://` rather than a physical path.**
+  A physical path (`/home/you/private/private.key`) is read by PHP exactly as written, and
+  may stop working: the folder moves in an upgrade or a redeploy, the host restricts which
+  directories PHP may open (`open_basedir`), or a permission changes. Sign-in then fails
+  with *"The authorization server encountered an unexpected condition which prevented it
+  from fulfilling the request: You need to set the OAuth2 private key."* (the file could not
+  be read). Drupal resolves a `private://` path itself, so it keeps working. It needs a
+  private file path in `settings.php` (`$settings['file_private_path'] = '../private';`,
+  outside the web root) with the keys in a folder there:
+
+  ```
+  drush simple-oauth:generate-keys private://keys
+  drush config:set simple_oauth.settings private_key private://keys/private.key
+  drush config:set simple_oauth.settings public_key private://keys/public.key
+  drush cr
+  ```
+
+  (and `chmod 600` on the private key file, wherever the private path puts it, so that
+  only the web server's user can read it).
+
+- **Copying configuration from one environment to another (for example DDEV to a live
+  site, with `drush config:export` and `config:import`) copies the paths, not the files.** A
+  path that is right on DDEV (`/var/www/html/private/private.key`) is wrong on the live
+  host, and sign-in fails with the same message. Use the **same `private://` value in every
+  environment** (each has its own private file path), generate a key pair **on each
+  environment**, and never put a private key into configuration or git. If you would rather
+  not export the paths at all, set them per environment in `settings.php`
+  (`$config['simple_oauth.settings']['private_key'] = 'private://keys/private.key';`).
+
+The status report entry **HiveLog API: OAuth keys** says *Missing* when either file cannot be
+read. Generating a new pair signs every app user out (they sign in again); the old files, if
+you still have them, avoid that.
+
 ## Installation
 
 Enable the module with Drush:
