@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\hivelog_api\Kernel;
 
+use Drupal\hivelog\Entity\HiveInspection;
 use Drupal\hivelog_api\EventSubscriber\HivelogApiWriteCompatibilitySubscriber;
 use Drupal\hivelog_api\HivelogApiResources;
+use Drupal\user\Entity\Role;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 /**
  * Tests writes sent as the content types a shared host's firewall allows.
@@ -20,7 +23,9 @@ use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
  * `application/octet-stream`, `PATCH` and `PUT` before Drupal saw the request
  * (task 0212). The API accepts `application/json` for a record and
  * `multipart/form-data` for a photo instead, for a request with an
- * `Authorization` header, on the versioned prefix only.
+ * `Authorization` header, on the versioned prefix only. An edit or a delete,
+ * which the same firewall refuses as `PATCH` and `DELETE`, is sent as a `POST`
+ * with `X-HTTP-Method-Override` (task 0220).
  */
 #[Group('hivelog')]
 #[RunTestsInSeparateProcesses]
@@ -42,12 +47,17 @@ class HivelogApiCompatibleWritesTest extends HivelogApiKernelTestBase {
    *   NULL to send no credentials.
    * @param \Symfony\Component\HttpFoundation\File\UploadedFile[] $files
    *   Uploaded files, as PHP would have parsed a multipart body.
+   * @param array<string, string> $headers
+   *   Extra request headers, by name (`X-HTTP-Method-Override`).
    *
    * @return array{status: int, body: array|null, raw: string}
    *   The response.
    */
-  protected function send(string $path, string $content_type, ?string $body, $user = NULL, array $files = []): array {
+  protected function send(string $path, string $content_type, ?string $body, $user = NULL, array $files = [], array $headers = []): array {
     $server = ['HTTP_ACCEPT' => 'application/vnd.api+json'];
+    foreach ($headers as $name => $value) {
+      $server['HTTP_' . strtoupper(str_replace('-', '_', $name))] = $value;
+    }
     if ($content_type !== '') {
       $server['CONTENT_TYPE'] = $content_type;
     }
@@ -182,12 +192,193 @@ class HivelogApiCompatibleWritesTest extends HivelogApiKernelTestBase {
   }
 
   /**
+   * An inspection's item path.
+   */
+  protected function inspectionPath(string $uuid): string {
+    return '/hivelog/api/v1/hive_inspection/hive_inspection/' . $uuid;
+  }
+
+  /**
+   * A PATCH document that sets an inspection's notes.
+   */
+  protected function notesJson(string $uuid, string $notes): string {
+    return json_encode([
+      'data' => [
+        'type' => 'hive_inspection--hive_inspection',
+        'id' => $uuid,
+        'attributes' => ['notes' => $notes],
+      ],
+    ]);
+  }
+
+  /**
+   * An inspection as stored now, not as the entity cache remembers it.
+   */
+  protected function storedInspection(int|string $id): ?HiveInspection {
+    \Drupal::entityTypeManager()->getStorage('hive_inspection')->resetCache([$id]);
+    return HiveInspection::load($id);
+  }
+
+  /**
+   * The stored notes of an inspection, read fresh.
+   */
+  protected function storedNotes(int|string $id): ?string {
+    return $this->storedInspection($id)?->get('notes')->value;
+  }
+
+  /**
+   * A beekeeper who may also delete their own inspections, with a side of records.
+   *
+   * The field-app role cannot delete, on purpose; this stands in for the
+   * permission a later phase may grant, to prove the override carries a DELETE
+   * all the way to JSON:API and its access checks.
+   *
+   * @return array{user: \Drupal\user\Entity\User, inspection: \Drupal\Core\Entity\ContentEntityInterface}
+   *   The user and their inspection.
+   */
+  protected function deleter(): array {
+    Role::create(['id' => 'inspection_deleter', 'label' => 'Inspection deleter'])
+      ->grantPermission('delete own hive inspection')
+      ->save();
+    $user = $this->beekeeper('deleter');
+    $user->addRole('inspection_deleter');
+    $user->save();
+    $side = $this->buildSide($user, 'deleter');
+    return ['user' => $user, 'inspection' => $side['deleter_inspection']];
+  }
+
+  /**
+   * A POST with the override header is an edit, as a PATCH would be.
+   */
+  public function testPatchViaOverrideEditsTheRecord(): void {
+    $inspection = $this->fixtures['my_inspection'];
+    $path = $this->inspectionPath($inspection->uuid());
+
+    // As the standard content type, and as the plain JSON a firewall allows.
+    $types = [
+      'application/vnd.api+json' => 'Edited A',
+      'application/json' => 'Edited B',
+      'application/json; charset=utf-8' => 'Edited C',
+    ];
+    foreach ($types as $type => $notes) {
+      $response = $this->send($path, $type, $this->notesJson($inspection->uuid(), $notes), $this->me, [], ['X-HTTP-Method-Override' => 'PATCH']);
+      $this->assertSame(200, $response['status'], $type . ': ' . $response['raw']);
+      $this->assertSame($notes, $this->storedNotes($inspection->id()));
+    }
+
+    // The method name is not case sensitive.
+    $lower = $this->send($path, 'application/json', $this->notesJson($inspection->uuid(), 'Edited D'), $this->me, [], ['X-HTTP-Method-Override' => 'patch']);
+    $this->assertSame(200, $lower['status'], $lower['raw']);
+    $this->assertSame('Edited D', $this->storedNotes($inspection->id()));
+  }
+
+  /**
+   * An override edit meets the same rules as a real PATCH.
+   */
+  public function testPatchViaOverrideKeepsAccessAndValidation(): void {
+    $theirs = $this->fixtures['their_inspection'];
+    $before = $this->storedNotes($theirs->id());
+    $foreign = $this->send($this->inspectionPath($theirs->uuid()), 'application/json', $this->notesJson($theirs->uuid(), 'Hijacked'), $this->me, [], ['X-HTTP-Method-Override' => 'PATCH']);
+    $this->assertContains($foreign['status'], [403, 404], $foreign['raw']);
+    $this->assertSame($before, $this->storedNotes($theirs->id()), 'Another beekeeper\'s record is not changed.');
+
+    // A rule the server enforces is a 422 with the field pointer, as for a real PATCH.
+    $mine = $this->fixtures['my_inspection'];
+    $bad = json_encode([
+      'data' => [
+        'type' => 'hive_inspection--hive_inspection',
+        'id' => $mine->uuid(),
+        'attributes' => ['inspection_date' => 'not a date'],
+      ],
+    ]);
+    $response = $this->send($this->inspectionPath($mine->uuid()), 'application/json', $bad, $this->me, [], ['X-HTTP-Method-Override' => 'PATCH']);
+    $this->assertContains($response['status'], [400, 422], $response['raw']);
+    $this->assertSame('2026-06-01', $this->storedInspection($mine->id())->get('inspection_date')->value);
+  }
+
+  /**
+   * A POST with the override header is a delete, and the role's ceiling still holds.
+   */
+  public function testDeleteViaOverrideObeysTheRole(): void {
+    // The field-app role cannot delete: a 403 (a DELETE refused), not a 405 (a POST nobody routes).
+    $mine = $this->fixtures['my_inspection'];
+    $refused = $this->send($this->inspectionPath($mine->uuid()), '', NULL, $this->me, [], ['X-HTTP-Method-Override' => 'DELETE']);
+    $this->assertSame(403, $refused['status'], $refused['raw']);
+    $this->assertNotNull(\Drupal::entityTypeManager()->getStorage('hive_inspection')->load($mine->id()));
+
+    // With the permission it is deleted, with no body and no content type.
+    $own = $this->deleter();
+    $response = $this->send($this->inspectionPath($own['inspection']->uuid()), '', NULL, $own['user'], [], ['X-HTTP-Method-Override' => 'DELETE']);
+    $this->assertSame(204, $response['status'], $response['raw']);
+    $this->assertNull(\Drupal::entityTypeManager()->getStorage('hive_inspection')->load($own['inspection']->id()));
+
+    // And never another beekeeper's, even with the permission.
+    $theirs = $this->fixtures['their_inspection'];
+    $foreign = $this->send($this->inspectionPath($theirs->uuid()), '', NULL, $own['user'], [], ['X-HTTP-Method-Override' => 'DELETE']);
+    $this->assertContains($foreign['status'], [403, 404], $foreign['raw']);
+    $this->assertNotNull(\Drupal::entityTypeManager()->getStorage('hive_inspection')->load($theirs->id()));
+  }
+
+  /**
+   * The override stands for PATCH and DELETE only, never for another method.
+   *
+   * A safe method (GET, HEAD, OPTIONS, TRACE) is refused by Drupal's own request
+   * sanitiser with a 400 before routing; any other name is reset to the plain
+   * POST by the subscriber, which no route answers. Either way nothing is edited.
+   */
+  public function testOverrideCannotStandForAnythingElse(): void {
+    $mine = $this->fixtures['my_inspection'];
+    $path = $this->inspectionPath($mine->uuid());
+    foreach (['GET', 'HEAD', 'OPTIONS', 'TRACE', 'PUT', 'POST', 'NONSENSE', ''] as $method) {
+      try {
+        $response = $this->send($path, 'application/json', $this->notesJson($mine->uuid(), 'Sneaky'), $this->me, [], ['X-HTTP-Method-Override' => $method]);
+        $this->assertContains($response['status'], [400, 404, 405, 415], "Override '$method': " . $response['raw']);
+      }
+      catch (BadRequestHttpException) {
+        // Drupal's sanitiser refused it, which is a 400 on a real site.
+      }
+      $this->assertNotSame('Sneaky', $this->storedNotes($mine->id()), "Override '$method' did not edit.");
+    }
+  }
+
+  /**
+   * Which requests the override applies to, and what it names.
+   */
+  public function testOverrideMethodRules(): void {
+    $make = function (string $path, ?string $override, bool $credentials = TRUE, string $method = 'POST'): Request {
+      $request = Request::create('http://localhost' . $path, $method);
+      if ($credentials) {
+        $request->headers->set('Authorization', 'Bearer abc');
+      }
+      if ($override !== NULL) {
+        $request->headers->set('X-HTTP-Method-Override', $override);
+      }
+      return $request;
+    };
+    $item = '/hivelog/api/v1/hive_inspection/hive_inspection/abc';
+    $named = fn(Request $r): ?string => HivelogApiWriteCompatibilitySubscriber::overrideMethod($r);
+
+    $this->assertSame('PATCH', $named($make($item, 'PATCH')));
+    $this->assertSame('DELETE', $named($make($item, 'DELETE')));
+    $this->assertSame('PATCH', $named($make($item, ' patch ')));
+    $this->assertNull($named($make($item, NULL)), 'No header, no override.');
+    $this->assertNull($named($make($item, 'PUT')));
+    $this->assertNull($named($make($item, 'GET')));
+    $this->assertNull($named($make($item, 'DELETE', FALSE)), 'No credentials in a header: no override.');
+    $this->assertNull($named($make('/jsonapi/hive_inspection/hive_inspection/abc', 'DELETE')), 'Not off the versioned prefix.');
+    $this->assertNull($named($make('/hivelog/api/v1/sign-out', 'DELETE')));
+    $this->assertNull($named($make('/hivelog/api/v1/schema', 'PATCH')));
+    $this->assertNull($named($make('/hivelog/api/v1/computed/alerts', 'DELETE')));
+    $this->assertNull($named($make($item, 'DELETE', TRUE, 'GET')), 'Only a real POST can be an override.');
+  }
+
+  /**
    * The discovery document lists what the server accepts.
    */
   public function testDiscoveryListsTheFeatures(): void {
     $response = $this->api('GET', '/hivelog/api/v1');
     $this->assertSame(200, $response['status']);
-    $this->assertSame(['json_write', 'multipart_upload'], $response['body']['meta']['hivelog_api']['features']);
+    $this->assertSame(['json_write', 'multipart_upload', 'method_override'], $response['body']['meta']['hivelog_api']['features']);
     $this->assertSame(HivelogApiResources::FEATURES, $response['body']['meta']['hivelog_api']['features']);
     $this->assertSame(1, $response['body']['meta']['hivelog_api']['api_version'], 'The contract version is unchanged.');
   }
