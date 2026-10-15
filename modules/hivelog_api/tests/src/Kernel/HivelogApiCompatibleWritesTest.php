@@ -7,7 +7,6 @@ namespace Drupal\Tests\hivelog_api\Kernel;
 use Drupal\hivelog\Entity\HiveInspection;
 use Drupal\hivelog_api\EventSubscriber\HivelogApiWriteCompatibilitySubscriber;
 use Drupal\hivelog_api\HivelogApiResources;
-use Drupal\user\Entity\Role;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -227,27 +226,6 @@ class HivelogApiCompatibleWritesTest extends HivelogApiKernelTestBase {
   }
 
   /**
-   * A beekeeper who may also delete their own inspections, with a side of records.
-   *
-   * The field-app role cannot delete, on purpose; this stands in for the
-   * permission a later phase may grant, to prove the override carries a DELETE
-   * all the way to JSON:API and its access checks.
-   *
-   * @return array{user: \Drupal\user\Entity\User, inspection: \Drupal\Core\Entity\ContentEntityInterface}
-   *   The user and their inspection.
-   */
-  protected function deleter(): array {
-    Role::create(['id' => 'inspection_deleter', 'label' => 'Inspection deleter'])
-      ->grantPermission('delete own hive inspection')
-      ->save();
-    $user = $this->beekeeper('deleter');
-    $user->addRole('inspection_deleter');
-    $user->save();
-    $side = $this->buildSide($user, 'deleter');
-    return ['user' => $user, 'inspection' => $side['deleter_inspection']];
-  }
-
-  /**
    * A POST with the override header is an edit, as a PATCH would be.
    */
   public function testPatchViaOverrideEditsTheRecord(): void {
@@ -300,23 +278,23 @@ class HivelogApiCompatibleWritesTest extends HivelogApiKernelTestBase {
    * A POST with the override header is a delete, and the role's ceiling still holds.
    */
   public function testDeleteViaOverrideObeysTheRole(): void {
-    // The field-app role cannot delete: a 403 (a DELETE refused), not a 405 (a POST nobody routes).
-    $mine = $this->fixtures['my_inspection'];
-    $refused = $this->send($this->inspectionPath($mine->uuid()), '', NULL, $this->me, [], ['X-HTTP-Method-Override' => 'DELETE']);
-    $this->assertSame(403, $refused['status'], $refused['raw']);
-    $this->assertNotNull(\Drupal::entityTypeManager()->getStorage('hive_inspection')->load($mine->id()));
+    $storage = \Drupal::entityTypeManager()->getStorage('hive_inspection');
 
-    // With the permission it is deleted, with no body and no content type.
-    $own = $this->deleter();
-    $response = $this->send($this->inspectionPath($own['inspection']->uuid()), '', NULL, $own['user'], [], ['X-HTTP-Method-Override' => 'DELETE']);
-    $this->assertSame(204, $response['status'], $response['raw']);
-    $this->assertNull(\Drupal::entityTypeManager()->getStorage('hive_inspection')->load($own['inspection']->id()));
+    // The role cannot delete a hive: a 403 (a DELETE refused), not a 405 (a POST nobody routes).
+    $hive = $this->send('/hivelog/api/v1/hive/hive/' . $this->fixtures['my_hive']->uuid(), '', NULL, $this->me, [], ['X-HTTP-Method-Override' => 'DELETE']);
+    $this->assertSame(403, $hive['status'], $hive['raw']);
 
-    // And never another beekeeper's, even with the permission.
+    // Never another beekeeper's inspection.
     $theirs = $this->fixtures['their_inspection'];
-    $foreign = $this->send($this->inspectionPath($theirs->uuid()), '', NULL, $own['user'], [], ['X-HTTP-Method-Override' => 'DELETE']);
+    $foreign = $this->send($this->inspectionPath($theirs->uuid()), '', NULL, $this->me, [], ['X-HTTP-Method-Override' => 'DELETE']);
     $this->assertContains($foreign['status'], [403, 404], $foreign['raw']);
-    $this->assertNotNull(\Drupal::entityTypeManager()->getStorage('hive_inspection')->load($theirs->id()));
+    $this->assertNotNull($storage->load($theirs->id()));
+
+    // Their own inspection is deleted, with no body and no content type.
+    $mine = $this->fixtures['my_inspection'];
+    $response = $this->send($this->inspectionPath($mine->uuid()), '', NULL, $this->me, [], ['X-HTTP-Method-Override' => 'DELETE']);
+    $this->assertSame(204, $response['status'], $response['raw']);
+    $this->assertNull($storage->load($mine->id()));
   }
 
   /**

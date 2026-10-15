@@ -92,12 +92,26 @@ class HivelogApiWriteTest extends HivelogApiKernelTestBase {
   }
 
   /**
-   * Tests the app role cannot delete: the app deletes nothing in v1.
+   * Tests the app deletes its own inspection, and nothing it must not (task 0220).
    */
-  public function testTheAppRoleCannotDelete(): void {
-    $uuid = $this->fixtures['my_inspection']->uuid();
-    $response = $this->api('DELETE', "/hivelog/api/v1/hive_inspection/hive_inspection/$uuid", NULL, $this->me);
-    $this->assertSame(403, $response['status']);
+  public function testTheAppRoleDeletesOnlyItsOwnLeafRecords(): void {
+    $storage = \Drupal::entityTypeManager()->getStorage('hive_inspection');
+
+    // Another beekeeper's inspection is refused, and stays.
+    $theirs = $this->fixtures['their_inspection'];
+    $foreign = $this->api('DELETE', "/hivelog/api/v1/hive_inspection/hive_inspection/{$theirs->uuid()}", NULL, $this->me);
+    $this->assertContains($foreign['status'], [403, 404]);
+    $this->assertNotNull($storage->load($theirs->id()));
+
+    // A hive is not a leaf: never, though it is the user's own.
+    $hive = $this->api('DELETE', "/hivelog/api/v1/hive/hive/{$this->fixtures['my_hive']->uuid()}", NULL, $this->me);
+    $this->assertSame(403, $hive['status']);
+
+    // Their own inspection goes.
+    $mine = $this->fixtures['my_inspection'];
+    $response = $this->api('DELETE', "/hivelog/api/v1/hive_inspection/hive_inspection/{$mine->uuid()}", NULL, $this->me);
+    $this->assertSame(204, $response['status'], $response['raw']);
+    $this->assertNull($storage->load($mine->id()));
   }
 
   /**

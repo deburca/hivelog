@@ -145,7 +145,7 @@ the other candidate and is not built for v1.
   deletes).
 
 Why A: the field-critical actions are all *creates of leaf records*, parents
-already exist, and the app deletes nothing, so there are no tombstones. B can
+already exist, and the app deletes nothing (in v1; from 2.13.0 only its own inspections and queen observations, task 0220), so there are no tombstones. B can
 be built on top later without changing the API shape A requires. The API
 requirements this implies (UUIDs, replay order, upload-at-replay for photos,
 422 not 500, serialised token refresh) are listed in 0199. One consequence for
