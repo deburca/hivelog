@@ -16,9 +16,14 @@ use Drupal\user\Entity\Role;
  * The permissions of the field-app role.
  *
  * This is the whole of what an app token can do (a token's roles are the
- * scope's roles intersected with the user's own, so it can only narrow). It
- * deliberately has no `delete` permission: the app deletes nothing in v1
- * (ADR-0107 §4), and no inventory or product permission either. The only
+ * scope's roles intersected with the user's own, so it can only narrow). Its
+ * only `delete` permissions are for the two leaf records the app records in the
+ * field, an inspection and a queen observation, and only the user's own
+ * (task 0220): neither has children, and deleting an inspection only detaches
+ * the action logs that pointed at it. Everything else is still undeletable by
+ * an app token (apiaries, hives, queens, calendar actions, action logs), and
+ * there is no inventory or product permission either. (Until 2.13.0 the role
+ * had no `delete` permission at all, ADR-0107 §4.) The only
  * sensor permissions are the two that *view* the user's own devices and
  * readings (task 0216): a hive's at-a-glance tiles (weight, temperature, net
  * weight) are built from them, and without them the app's hive page had no
@@ -60,6 +65,10 @@ function hivelog_api_field_app_permissions(): array {
   foreach (['hive inspection', 'queen observation', 'hive action log', 'apiary action log'] as $type) {
     $permissions[] = 'add ' . $type;
     $permissions[] = 'edit own ' . $type;
+  }
+  // The only deletes: a leaf record the person recorded themselves (task 0220).
+  foreach (['hive inspection', 'queen observation'] as $type) {
+    $permissions[] = 'delete own ' . $type;
   }
   return $permissions;
 }
@@ -264,5 +273,25 @@ function hivelog_api_update_10003() {
   $has = Role::load(HivelogApiResources::SCOPE)->hasPermission('view own hive insight');
   return t('Field-app role tops up: @what.', [
     '@what' => $has ? 'it may now view the user\'s own hive insights' : 'nexus is not installed, nothing to add',
+  ]);
+}
+
+/**
+ * Lets the field-app role delete the user's own inspections and queen observations.
+ *
+ * Until 2.13.0 the role held no `delete` permission at all, so the app could add and (with the
+ * method override) edit a record but not remove one (task 0220). This adds exactly two: `delete own
+ * hive inspection` and `delete own queen observation`. Additive, and it never revokes a change the
+ * site made. The access handlers still decide who may delete which record, as on the web.
+ */
+function hivelog_api_update_10004() {
+  hivelog_api_sync_field_app_role();
+  $role = Role::load(HivelogApiResources::SCOPE);
+  $granted = array_values(array_filter(
+    ['delete own hive inspection', 'delete own queen observation'],
+    fn(string $permission) => $role->hasPermission($permission),
+  ));
+  return t('Field-app role tops up: it may now @what.', [
+    '@what' => $granted ? 'delete the user\'s own inspections and queen observations' : 'not delete anything (the permissions are not defined)',
   ]);
 }

@@ -6,7 +6,7 @@ priority: medium
 project: "[[ios-field-app]]"
 area: ios
 created: 2026-10-07
-branch: feature/0220-method-override-for-patch-and-delete
+branch: feature/0220-delete-own-inspections-and-observations
 depends-on: "[[0212-hivelog-api-write-compatibility-with-host-firewalls]]"
 blocked-by:
 ---
@@ -17,7 +17,7 @@ From the owner's field comments:
 3. *Inspections:* you can add one, but not change or delete an existing one. What would that take?
 4. *Queen observations:* where can existing observations be seen? Can they be edited or deleted?
 
-This note answers both and sets out the work. **Progress (2026-10-15): server item 1 (the method override) is built on the branch above; nothing else is.** The app's side is tracked in the Vinculum repo's own vault (`docs/project-management`, tasks 0019 to 0031 and ADRs 0015 to 0020), where this task's items are split into steps.
+This note answers both and sets out the work. **Progress (2026-10-15): server item 1 (the method override) is merged (PR 142); item 2 (the delete permissions) and the photo findings are built on branch `feature/0220-delete-own-inspections-and-observations`; the app is not started.** The app's side is tracked in the Vinculum repo's own vault (`docs/project-management`, tasks 0019 to 0031 and ADRs 0015 to 0020), where this task's items are split into steps.
 
 **Probe of the live host (2026-10-15, `kragebaekgaard.dk`):** its firewall refuses `PATCH`, `PUT` **and `DELETE`** (so the open question below is answered: it does block `DELETE`) and lets a `POST` with `X-HTTP-Method-Override` through. Symfony already honours that header on any POST, so the work was to narrow it to `PATCH` and `DELETE` with credentials in a header, relax the content type for them, and advertise `method_override`.
 
@@ -52,7 +52,7 @@ This note answers both and sets out the work. **Progress (2026-10-15): server it
    access handlers already apply the web's rule (an owner or member), so the API grants nothing the
    web does not.
 3. **Orphaned photos** on a deleted inspection or observation: check whether the web's delete leaves
-   the files and do the same (or clean up), so the two surfaces agree.
+   the files and do the same (or clean up), so the two surfaces agree. **Checked (2026-10-15):** the web and the API both go through the entity's own delete, and both leave the file, permanent and unused (Drupal only makes an unused file temporary if the site sets `make_unused_managed_files_temporary`, off by default). Removing a photo by detaching it behaves the same. `HivelogApiLeafDeleteTest` pins both. No clean-up was added: that would be a site-wide policy, not the app's.
 4. Release (a new permission and a feature flag: 2.12.0).
 
 **App, the larger part:**
@@ -83,7 +83,7 @@ This note answers both and sets out the work. **Progress (2026-10-15): server it
   *delete* second.
 
 ## Acceptance criteria
-- [ ] The three server items above, with kernel tests, released (item 1 done on the branch, with tests; items 2 and 3 not started)
+- [ ] The three server items above, with kernel tests, released (item 1 merged; items 2 and 3 done on the branch, with tests; release not yet)
 - [ ] The app lists a queen's observations and opens one
 - [ ] The app edits an inspection and an observation, photos included
 - [ ] The app deletes an inspection and an observation, with confirmation

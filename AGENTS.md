@@ -431,8 +431,17 @@ entity types core can't name directly).
   earlier default on existing sites and leaves a label an administrator chose);
   the role (`hivelog_api_field_app_permissions()`) is the whole of what an app
   token can do — a token's roles are the scope's intersected with the user's
-  own, so it only narrows — and it has no `delete` permission and no inventory or product
-  one. It holds just two sensor permissions, `view own sensor device` and
+  own, so it only narrows — and its only `delete` permissions are `delete own hive inspection` and
+  `delete own queen observation` (task 0220; `hivelog_api_update_10004()` adds them on an existing
+  site and never revokes a site's change): leaf records with no children, whose delete the access
+  handlers decide as on the web (an apiary's owner may delete any inspection in it, a member only
+  their own). Apiaries, hives, queens, calendar actions and action logs stay undeletable, and it has
+  no inventory or product permission. A delete's photos are left as the web leaves them (the files
+  stay, permanent and unused, unless the site turns on Drupal's
+  `make_unused_managed_files_temporary`), and removing a photo is a `PATCH` of the record's `images`
+  relationship, which leaves the file likewise; a refusal for want of permission is a bare 403 with
+  an empty `detail`, while a BLOCK refusal (a record with children) carries the reason.
+  `HivelogApiLeafDeleteTest` covers it. It holds just two sensor permissions, `view own sensor device` and
   `view own sensor reading` (task 0216), granted only where `nanoprobe` defines them and topped up
   by `hivelog_api_modules_installed()` if `nanoprobe` arrives later: the hive's stat tiles (weight,
   temperature, net colony weight) are built from the sensors the user may view, and with none the
@@ -566,8 +575,8 @@ entity types core can't name directly).
   and the method reset to the plain `POST` they really are (and Drupal's `RequestSanitizer` already
   answers 400 to an override to a safe method). Off the prefix (`/jsonapi`) nothing changes. Listed as
   the `method_override` feature in the discovery document, so a client uses it only when offered.
-  The role still holds no `delete` permission (task 0220's next item), so a delete is a 403 until it does;
-  `HivelogApiCompatibleWritesTest` proves the override with a test-only role that may delete.
+  The role may delete only its own inspections and queen observations (above), so any other delete is
+  still a 403 through the override too; `HivelogApiCompatibleWritesTest` proves it.
 
 **Requirements: status-report entries and install checks (2.10.1, task 0213).** From
 Drupal 11.3 a procedural `hook_requirements()` marked `#[LegacyRequirementsHook]` is **skipped**,

@@ -449,8 +449,10 @@ class HivelogApiAccessParityTest extends HivelogApiKernelTestBase {
   public function testRecordsWithBlockingChildrenAreNotDeletable(): void {
     foreach (['owner', 'admin'] as $label) {
       foreach (['apiary', 'hive'] as $type) {
-        $status = $this->api('DELETE', $this->path($type, $this->trees['owner'][$type]), NULL, $this->actors[$label])['status'];
-        $this->assertSame(403, $status, "$label deleting an owner's $type that has children");
+        $response = $this->api('DELETE', $this->path($type, $this->trees['owner'][$type]), NULL, $this->actors[$label]);
+        $this->assertSame(403, $response['status'], "$label deleting an owner's $type that has children");
+        // The server's reason (what the web shows) travels in the error, for a client to show.
+        $this->assertNotSame('', trim((string) ($response['body']['errors'][0]['detail'] ?? '')), "$label: the refusal says why");
       }
     }
   }
@@ -498,7 +500,8 @@ class HivelogApiAccessParityTest extends HivelogApiKernelTestBase {
    *
    * Independent of the web matrix: this is the role the app's token carries.
    * It creates inspections, observations and action reports; it cannot create
-   * an apiary, hive, queen or calendar action, and deletes nothing. It can
+   * an apiary, hive, queen or calendar action, and deletes only its own
+   * inspections and observations (task 0220). It can
    * edit the parents it adds children under (the documented over-grant).
    */
   public function testTheFieldAppRoleCeiling(): void {
@@ -515,9 +518,12 @@ class HivelogApiAccessParityTest extends HivelogApiKernelTestBase {
         "App cannot create $type"
       );
     }
-    foreach (self::LEAF_TYPES as $type) {
-      $leaf = $tree[$type];
-      $this->assertSame(403, $this->api('DELETE', $this->path($type, $leaf), NULL, $app)['status'], "App cannot delete $type");
+    // Deletes (task 0220): the two leaf records it records itself, nothing else.
+    foreach (['hive_inspection', 'queen_observation'] as $type) {
+      $this->assertSame(204, $this->api('DELETE', $this->path($type, $tree[$type]), NULL, $app)['status'], "App deletes its own $type");
+    }
+    foreach (['hive_action_log', 'apiary_action_log', 'calendar_action', 'queen', 'hive', 'apiary'] as $type) {
+      $this->assertSame(403, $this->api('DELETE', $this->path($type, $tree[$type]), NULL, $app)['status'], "App cannot delete $type");
     }
   }
 

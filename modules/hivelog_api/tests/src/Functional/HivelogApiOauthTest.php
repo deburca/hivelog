@@ -151,7 +151,9 @@ class HivelogApiOauthTest extends BrowserTestBase {
     $this->assertSame(HivelogApiResources::REDIRECT_URI, $consumer->get('redirect')->value);
     $role = Role::load(HivelogApiResources::SCOPE);
     $this->assertNotNull($role);
-    $this->assertEmpty(array_filter($role->getPermissions(), fn($p) => str_starts_with($p, 'delete ')), 'No delete permission');
+    $deletes = array_values(array_filter($role->getPermissions(), fn($p) => str_starts_with($p, 'delete ')));
+    sort($deletes);
+    $this->assertSame(['delete own hive inspection', 'delete own queen observation'], $deletes, 'Only the two leaf deletes');
 
     // A beekeeper who holds only the field-app role, and another one.
     $me = $this->drupalCreateUser([], 'oauth_me');

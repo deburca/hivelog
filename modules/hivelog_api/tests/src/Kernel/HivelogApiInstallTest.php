@@ -141,7 +141,10 @@ class HivelogApiInstallTest extends KernelTestBase {
     foreach (['view own hive', 'add hive inspection', 'add queen observation', 'edit own hive action log'] as $wanted) {
       $this->assertContains($wanted, $permissions);
     }
-    $this->assertEmpty(array_filter($permissions, fn($p) => str_starts_with($p, 'delete ')), 'No delete permission');
+    // Deletes: the user's own inspections and queen observations, and nothing else (task 0220).
+    $deletes = array_values(array_filter($permissions, fn($p) => str_starts_with($p, 'delete ')));
+    sort($deletes);
+    $this->assertSame(['delete own hive inspection', 'delete own queen observation'], $deletes, 'Only the two leaf deletes');
     $this->assertEmpty(array_filter($permissions, fn($p) => str_contains($p, 'inventory') || str_contains($p, 'product')));
     $this->assertEmpty(array_filter($permissions, fn($p) => str_contains($p, 'ai provider')));
     // Sensors: the two permissions that view the user's own, and no other (task 0216).
@@ -154,6 +157,28 @@ class HivelogApiInstallTest extends KernelTestBase {
     foreach ($permissions as $permission) {
       $this->assertNotContains($permission, ['view any hive', 'edit any hive', 'add hive', 'add apiary']);
     }
+  }
+
+  /**
+   * Tests the update hook gives an existing role the two delete permissions, and never takes one away.
+   */
+  public function testUpdateAddsTheLeafDeletePermissionsToAnExistingRole(): void {
+    $this->loadInstallFile();
+    $role = Role::load(HivelogApiResources::SCOPE);
+    // A role from before 2.13.0, plus a permission a site added itself.
+    $role->revokePermission('delete own hive inspection')->revokePermission('delete own queen observation');
+    $role->grantPermission('view any hive');
+    $role->save();
+    $this->assertFalse(Role::load(HivelogApiResources::SCOPE)->hasPermission('delete own hive inspection'));
+
+    hivelog_api_update_10004();
+
+    $role = Role::load(HivelogApiResources::SCOPE);
+    $this->assertTrue($role->hasPermission('delete own hive inspection'));
+    $this->assertTrue($role->hasPermission('delete own queen observation'));
+    $this->assertFalse($role->hasPermission('delete any hive inspection'));
+    $this->assertFalse($role->hasPermission('delete own hive'), 'Nothing but the two leaves');
+    $this->assertTrue($role->hasPermission('view any hive'), 'A site\'s own addition is kept');
   }
 
   /**
