@@ -551,9 +551,23 @@ entity types core can't name directly).
   `multipart/form-data` but not that header), and not to the plain-JSON routes
   (`computed/`, `schema`, `sign-out`) or to `/jsonapi`. The discovery document lists
   `meta.hivelog_api.features` (`json_write`, `multipart_upload`), so a client uses the lenient
-  types only when offered; `api_version` stays 1. `PATCH` and `PUT` are not helped (the app
-  does not use them). Anything such a firewall does to a request's *content* cannot be
-  known until a real write is tried. `HivelogApiCompatibleWritesTest` covers it.
+  types only when offered; `api_version` stays 1. Anything such a firewall does to a request's
+  *content* cannot be known until a real write is tried. `HivelogApiCompatibleWritesTest` covers it.
+
+  **Edits and deletes through the same firewall (task 0220).** The firewall also refuses `PATCH`,
+  `PUT` and `DELETE` outright (probed on the live host, 2026-10-15, which also showed a `POST`
+  carrying an override header passes). On the versioned prefix, a `POST` with an `Authorization`
+  header and `X-HTTP-Method-Override: PATCH` or `DELETE` (any case) is therefore run as that method:
+  the same subscriber relabels an `application/json` body as JSON:API's type, then sets the request's
+  method, so routing, JSON:API, access, validation and the field-app role's ceiling all treat it as the
+  real `PATCH` or `DELETE` and grant nothing more. Symfony would honour the header on *any* POST for any
+  method, so on the versioned prefix the subscriber narrows it: any other value, a request without
+  `Authorization`, and the plain-JSON routes (`computed/`, `schema`, `sign-out`) have the header removed
+  and the method reset to the plain `POST` they really are (and Drupal's `RequestSanitizer` already
+  answers 400 to an override to a safe method). Off the prefix (`/jsonapi`) nothing changes. Listed as
+  the `method_override` feature in the discovery document, so a client uses it only when offered.
+  The role still holds no `delete` permission (task 0220's next item), so a delete is a 403 until it does;
+  `HivelogApiCompatibleWritesTest` proves the override with a test-only role that may delete.
 
 **Requirements: status-report entries and install checks (2.10.1, task 0213).** From
 Drupal 11.3 a procedural `hook_requirements()` marked `#[LegacyRequirementsHook]` is **skipped**,

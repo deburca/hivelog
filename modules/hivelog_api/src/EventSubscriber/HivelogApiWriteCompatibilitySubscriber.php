@@ -27,6 +27,17 @@ use Symfony\Component\HttpKernel\KernelEvents;
  * read `php://input`, which PHP leaves empty for a multipart body). JSON:API then
  * does everything it always does with the request.
  *
+ * The same firewalls refuse `PATCH`, `PUT` and `DELETE` outright, so an edit
+ * or a delete is sent as a `POST` with `X-HTTP-Method-Override: PATCH` or
+ * `DELETE` (task 0220). Symfony would honour that header on any POST for any
+ * method; on the versioned prefix it is narrowed here to exactly those two
+ * methods and, like the other leniencies, to a request with an `Authorization`
+ * header. Everything else is reset to the plain POST it really is, so the
+ * override can never reach `PUT`, `GET` or a plain-JSON route, nor a browser
+ * session. JSON:API then runs the request as the method it names: its access
+ * checks, validation and the app role's ceiling are untouched, so the override
+ * grants nothing a real `PATCH` or `DELETE` would not.
+ *
  * Only a request with an `Authorization` header is touched, so a browser
  * session gets nothing new: a form on another site can send
  * `multipart/form-data`, but cannot set that header.
@@ -49,6 +60,16 @@ class HivelogApiWriteCompatibilitySubscriber implements EventSubscriberInterface
   protected const PLAIN_ROUTES = ['computed/', 'schema', 'sign-out'];
 
   /**
+   * The request header that names the method a POST stands for.
+   */
+  public const OVERRIDE_HEADER = 'X-HTTP-Method-Override';
+
+  /**
+   * The only methods a POST may stand for.
+   */
+  public const OVERRIDE_METHODS = ['PATCH', 'DELETE'];
+
+  /**
    * {@inheritdoc}
    */
   public static function getSubscribedEvents(): array {
@@ -58,10 +79,17 @@ class HivelogApiWriteCompatibilitySubscriber implements EventSubscriberInterface
   }
 
   /**
+   * The method a request really arrived with, before any override.
+   */
+  protected static function realMethod(Request $request): string {
+    return strtoupper((string) $request->server->get('REQUEST_METHOD', 'GET'));
+  }
+
+  /**
    * Whether a request is one this subscriber may rewrite.
    */
   public static function applies(Request $request): bool {
-    if (!$request->isMethod('POST') || !$request->headers->has('Authorization')) {
+    if (self::realMethod($request) !== 'POST' || !$request->headers->has('Authorization')) {
       return FALSE;
     }
     if (!HivelogApiResources::isVersionedRequest($request)) {
@@ -77,7 +105,22 @@ class HivelogApiWriteCompatibilitySubscriber implements EventSubscriberInterface
   }
 
   /**
-   * Rewrites the request's content type, or turns an upload into a raw one.
+   * The method a request asks to be treated as, if that is allowed.
+   *
+   * @return string|null
+   *   `PATCH` or `DELETE` for a request that applies and names one of them,
+   *   otherwise NULL (no override, or one that is not allowed).
+   */
+  public static function overrideMethod(Request $request): ?string {
+    if (!self::applies($request)) {
+      return NULL;
+    }
+    $named = strtoupper(trim((string) $request->headers->get(self::OVERRIDE_HEADER, '')));
+    return in_array($named, self::OVERRIDE_METHODS, TRUE) ? $named : NULL;
+  }
+
+  /**
+   * Rewrites the request's content type and method, or turns an upload into a raw one.
    */
   public function onRequest(RequestEvent $event): void {
     // A sub-request (an error page) carries the original server variables.
@@ -85,6 +128,19 @@ class HivelogApiWriteCompatibilitySubscriber implements EventSubscriberInterface
       return;
     }
     $request = $event->getRequest();
+    if (!HivelogApiResources::isVersionedRequest($request) || self::realMethod($request) !== 'POST') {
+      return;
+    }
+    $override = self::overrideMethod($request);
+    if (!$override) {
+      // Symfony reads the header on any POST, for any method: on the versioned
+      // API only the two allowed ones, with credentials in a header, count.
+      // Resetting the method also drops one something earlier has cached.
+      if ($request->headers->has(self::OVERRIDE_HEADER)) {
+        $request->headers->remove(self::OVERRIDE_HEADER);
+        $request->setMethod('POST');
+      }
+    }
     if (!self::applies($request)) {
       return;
     }
@@ -92,11 +148,14 @@ class HivelogApiWriteCompatibilitySubscriber implements EventSubscriberInterface
     if ($type === 'application/json') {
       $request->headers->set('Content-Type', 'application/vnd.api+json');
     }
-    elseif ($type === 'multipart/form-data') {
+    elseif ($type === 'multipart/form-data' && !$override) {
       $response = $this->convertUpload($request);
       if ($response) {
         $event->setResponse($response);
       }
+    }
+    if ($override) {
+      $request->setMethod($override);
     }
   }
 

@@ -1,12 +1,12 @@
 ---
 type: task
 tags: [hivelog/task]
-status: backlog
+status: in-progress
 priority: medium
 project: "[[ios-field-app]]"
 area: ios
 created: 2026-10-07
-branch:
+branch: feature/0220-method-override-for-patch-and-delete
 depends-on: "[[0212-hivelog-api-write-compatibility-with-host-firewalls]]"
 blocked-by:
 ---
@@ -17,7 +17,9 @@ From the owner's field comments:
 3. *Inspections:* you can add one, but not change or delete an existing one. What would that take?
 4. *Queen observations:* where can existing observations be seen? Can they be edited or deleted?
 
-This note answers both and sets out the work. **Nothing is built yet.**
+This note answers both and sets out the work. **Progress (2026-10-15): server item 1 (the method override) is built on the branch above; nothing else is.** The app's side is tracked in the Vinculum repo's own vault (`docs/project-management`, tasks 0019 to 0031 and ADRs 0015 to 0020), where this task's items are split into steps.
+
+**Probe of the live host (2026-10-15, `kragebaekgaard.dk`):** its firewall refuses `PATCH`, `PUT` **and `DELETE`** (so the open question below is answered: it does block `DELETE`) and lets a `POST` with `X-HTTP-Method-Override` through. Symfony already honours that header on any POST, so the work was to narrow it to `PATCH` and `DELETE` with credentials in a header, relax the content type for them, and advertise `method_override`.
 
 ## What is true today
 - **Observations are not listed anywhere.** The hive page asks for the queen's latest three
@@ -81,7 +83,7 @@ This note answers both and sets out the work. **Nothing is built yet.**
   *delete* second.
 
 ## Acceptance criteria
-- [ ] The three server items above, with kernel tests, released
+- [ ] The three server items above, with kernel tests, released (item 1 done on the branch, with tests; items 2 and 3 not started)
 - [ ] The app lists a queen's observations and opens one
 - [ ] The app edits an inspection and an observation, photos included
 - [ ] The app deletes an inspection and an observation, with confirmation

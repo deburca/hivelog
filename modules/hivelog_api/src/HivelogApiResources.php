@@ -44,10 +44,13 @@ class HivelogApiResources {
    *
    * `json_write`: a POST may be sent as `application/json`. `multipart_upload`:
    * a photo may be sent as `multipart/form-data`. Both exist for hosts whose
-   * firewall refuses JSON:API's own types (task 0212). A client uses them only
-   * when listed, so an older server is still reached the standard way.
+   * firewall refuses JSON:API's own types (task 0212). `method_override`: an
+   * edit or a delete may be sent as a POST with `X-HTTP-Method-Override: PATCH`
+   * or `DELETE`, for a host whose firewall refuses those methods (task 0220). A
+   * client uses them only when listed, so an older server is still reached the
+   * standard way.
    */
-  public const FEATURES = ['json_write', 'multipart_upload'];
+  public const FEATURES = ['json_write', 'multipart_upload', 'method_override'];
 
   public const SCOPE = 'hivelog_field_app';
 
