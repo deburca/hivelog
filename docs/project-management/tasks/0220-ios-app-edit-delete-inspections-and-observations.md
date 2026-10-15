@@ -7,6 +7,7 @@ project: "[[ios-field-app]]"
 area: ios
 created: 2026-10-07
 branch: feature/0220-delete-own-inspections-and-observations
+release: 2.13.0
 depends-on: "[[0212-hivelog-api-write-compatibility-with-host-firewalls]]"
 blocked-by:
 ---
@@ -17,7 +18,7 @@ From the owner's field comments:
 3. *Inspections:* you can add one, but not change or delete an existing one. What would that take?
 4. *Queen observations:* where can existing observations be seen? Can they be edited or deleted?
 
-This note answers both and sets out the work. **Progress (2026-10-15): server item 1 (the method override) is merged (PR 142); item 2 (the delete permissions) and the photo findings are built on branch `feature/0220-delete-own-inspections-and-observations`; the app is not started.** The app's side is tracked in the Vinculum repo's own vault (`docs/project-management`, tasks 0019 to 0031 and ADRs 0015 to 0020), where this task's items are split into steps.
+This note answers both and sets out the work. **Progress (2026-10-15): the three server items are merged (PRs 142 and 143) and prepared for release 2.13.0 ([[2.13.0]]); the app's side is built in the Vinculum repository (edit, delete, photos and the observations list, all merged) and waits on this release for its live-host check.** The app's side is tracked in the Vinculum repo's own vault (`docs/project-management`, tasks 0019 to 0031 and ADRs 0015 to 0020), where this task's items are split into steps.
 
 **Probe of the live host (2026-10-15, `kragebaekgaard.dk`):** its firewall refuses `PATCH`, `PUT` **and `DELETE`** (so the open question below is answered: it does block `DELETE`) and lets a `POST` with `X-HTTP-Method-Override` through. Symfony already honours that header on any POST, so the work was to narrow it to `PATCH` and `DELETE` with credentials in a header, relax the content type for them, and advertise `method_override`.
 
@@ -83,7 +84,7 @@ This note answers both and sets out the work. **Progress (2026-10-15): server it
   *delete* second.
 
 ## Acceptance criteria
-- [ ] The three server items above, with kernel tests, released (item 1 merged; items 2 and 3 done on the branch, with tests; release not yet)
+- [x] The three server items above, with kernel tests (merged; released in [[2.13.0]] once tagged)
 - [ ] The app lists a queen's observations and opens one
 - [ ] The app edits an inspection and an observation, photos included
 - [ ] The app deletes an inspection and an observation, with confirmation
