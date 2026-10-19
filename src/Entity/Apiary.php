@@ -67,24 +67,44 @@ class Apiary extends ContentEntityBase implements EntityChangedInterface, Entity
    * Checks whether the given account is a member of this apiary.
    *
    * A member is either the apiary owner or a user listed in the
-   * beekeepers field.
+   * apiary_memberships field with any role (owner, editor, viewer).
    *
    * @param \Drupal\Core\Session\AccountInterface $account
    *   The user account to check.
    *
    * @return bool
-   *   TRUE if the account is the apiary owner or an approved beekeeper.
+   *   TRUE if the account is the apiary owner or an approved member.
    */
   public function isApiaryMember(AccountInterface $account): bool {
     if ((int) $this->getOwnerId() === (int) $account->id()) {
       return TRUE;
     }
-    foreach ($this->get('beekeepers') as $item) {
-      if ((int) $item->target_id === (int) $account->id()) {
+    foreach ($this->get('apiary_memberships') as $item) {
+      /** @var \Drupal\hivelog\Entity\ApiaryMembership|null $membership */
+      $membership = $item->entity;
+      if ($membership && (int) $membership->getMember()->id() === (int) $account->id()) {
         return TRUE;
       }
     }
     return FALSE;
+  }
+
+  /**
+   * Gets this apiary's members with their roles.
+   *
+   * @return \Drupal\hivelog\Entity\ApiaryMembership[]
+   *   The membership entities, indexed by numeric key.
+   */
+  public function getApiaryMembers(): array {
+    $members = [];
+    foreach ($this->get('apiary_memberships') as $item) {
+      /** @var \Drupal\hivelog\Entity\ApiaryMembership|null $membership */
+      $membership = $item->entity;
+      if ($membership) {
+        $members[] = $membership;
+      }
+    }
+    return $members;
   }
 
   /**
@@ -212,10 +232,10 @@ class Apiary extends ContentEntityBase implements EntityChangedInterface, Entity
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
-    $fields['beekeepers'] = BaseFieldDefinition::create('entity_reference')
-      ->setLabel(t('Beekeepers'))
-      ->setDescription(t('Users who are approved to manage hives and record inspections in this apiary. The apiary owner always has full access and does not need to be listed here.'))
-      ->setSetting('target_type', 'user')
+    $fields['apiary_memberships'] = BaseFieldDefinition::create('entity_reference')
+      ->setLabel(t('Members'))
+      ->setDescription(t('Users who are members of this apiary, each with a specific role (owner, editor, viewer). The apiary owner always has full access.'))
+      ->setSetting('target_type', 'apiary_membership')
       ->setCardinality(FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED)
       ->setDisplayOptions('form', [
         'type' => 'entity_reference_autocomplete',
@@ -230,7 +250,7 @@ class Apiary extends ContentEntityBase implements EntityChangedInterface, Entity
 
     $fields['visibility'] = BaseFieldDefinition::create('list_string')
       ->setLabel(t('Visibility'))
-      ->setDescription(t('Controls whether non-members can view this apiary and its hives. Private apiaries are only visible to the owner and approved beekeepers.'))
+      ->setDescription(t('Controls whether non-members can view this apiary and its hives. Private apiaries are only visible to the owner and approved members.'))
       ->setRequired(TRUE)
       ->setDefaultValue('private')
       ->setSetting('allowed_values', [

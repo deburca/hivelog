@@ -40,3 +40,7 @@ services:
   hivelog.orphan_fixer:
     class: Drupal\hivelog\Delete\HivelogOrphanFixer
     arguments: ['@entity_type.manager', '@hivelog.orphan_finder', '@hivelog.delete_dependency_executor', '@logger.channel.hivelog']
+
+  hivelog.apiary_member_manager:
+    class: Drupal\hivelog\Form\ApiaryMemberManagerForm
+    arguments: ['@entity_type.manager']

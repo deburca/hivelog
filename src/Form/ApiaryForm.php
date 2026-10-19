@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\hivelog\Form;
 
 use Drupal\Core\Entity\ContentEntityForm;
@@ -11,6 +13,29 @@ use Drupal\Core\Form\FormStateInterface;
 class ApiaryForm extends ContentEntityForm {
 
   use HivelogEntityFormTrait;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function form(array $form, FormStateInterface $form_state) {
+    $form = parent::form($form, $form_state);
+
+    // Embed the member management section on edit pages.
+    if (!$this->entity->isNew()) {
+      /** @var \Drupal\hivelog\ApiaryMemberManagerForm $member_manager */
+      $member_manager = \Drupal::service('hivelog.apiary_member_manager');
+      $build = $member_manager->render($this->entity->id());
+      if ($build) {
+        $form['members'] = [
+          '#type' => 'container',
+          '#attributes' => ['class' => ['js-hivelog-members']],
+          '#weight' => 100,
+        ] + $build;
+      }
+    }
+
+    return $form;
+  }
 
   /**
    * {@inheritdoc}

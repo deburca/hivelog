@@ -1000,6 +1000,127 @@ function hivelog_update_10031(&$sandbox) {
 }
 
 /**
+ * Installs ApiaryMembership and migrates beekeepers → memberships.
+ *
+ * Creates the ApiaryMembership entity type, adds the apiary_memberships
+ * reference field to Apiary (replacing beekeepers), and migrates each
+ * existing beekeeper row into a membership with role = viewer.  The old
+ * beekeepers field is then removed.  Every membership gets uid set to
+ * whoever performed the update hook run — the system user (uid 1)
+ * unless a beekeeper clicked "Update available information".
+ */
+function hivelog_update_10032(&$sandbox) {
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+
+  // --- Install the ApiaryMembership entity type. ---
+  if (!$entity_definition_update_manager->getEntityType('apiary_membership')) {
+    $membership_type = $entity_type_manager->getDefinition('apiary_membership');
+    $entity_definition_update_manager->installEntityType($membership_type);
+  }
+
+  // Add a database-level unique index on (apiary, account) to enforce the
+  // one-row-per-pair invariant at the storage layer. The preSave guard
+  // provides a friendly message; this is the backstop against race
+  // conditions and direct SQL writes.
+  $schema = \Drupal::database()->schema();
+  if (!$schema->indexExists('hivelog_apiary_membership', 'apiary_account_unique')) {
+    $schema->addUniqueIndex(
+      'hivelog_apiary_membership',
+      ['apiary_value', 'account_value'],
+      'apiary_account_unique'
+    );
+  }
+
+  // Migrate beekeepers to memberships BEFORE removing the field.
+  $query = \Drupal::entityQuery('apiary')
+    ->condition('beekeepers.value', NULL, '!=');
+  $nids = $query->execute();
+
+  if ($nids) {
+    /** @var \Drupal\hivelog\Entity\ApiaryInterface[] $apiaries */
+    $apiaries = \Drupal::entityTypeManager()
+      ->getStorage('apiary')
+      ->loadMultiple($nids);
+
+    foreach ($apiaries as $apiary) {
+      /** @var \Drupal\Core\Field\FieldItemInterface[] $beekeepers */
+      $beekeepers = $apiary->get('beekeepers')->getValue();
+      if (empty($beekeepers)) {
+        continue;
+      }
+
+      foreach ($beekeepers as $item) {
+        $uid = (int) $item['target_id'];
+        $user = \Drupal\user\Entity\User::load($uid);
+        if (!$user) {
+          continue;
+        }
+
+        // Skip the apiary owner (they always have access via uid).
+        if ($uid === (int) $apiary->getOwnerId()) {
+          continue;
+        }
+
+        // Check if a membership already exists for this user.
+        $existing = \Drupal::entityQuery('apiary_membership')
+          ->condition('account', $uid)
+          ->condition('apiary', $apiary->id())
+          ->accessCheck(FALSE)
+          ->execute();
+
+        if (!$existing) {
+          /** @var \Drupal\hivelog\Entity\ApiaryMembership $membership */
+          $membership = \Drupal::entityTypeManager()
+            ->getStorage('apiary_membership')
+            ->create([
+              'apiary' => $apiary->id(),
+              'account' => $uid,
+              'role' => 'viewer',
+            ]);
+          $membership->save();
+        }
+      }
+
+      // Clear the beekeepers field on this apiary.
+      $apiary->set('beekeepers', []);
+      $apiary->save();
+    }
+  }
+
+  // --- Remove the old beekeepers field, then install apiary_memberships. ---
+  if ($entity_definition_update_manager->getFieldStorageDefinition('apiary', 'beekeepers')) {
+    $entity_definition_update_manager->uninstallFieldStorageDefinition(
+      $entity_definition_update_manager->getFieldStorageDefinition('apiary', 'beekeepers')
+    );
+  }
+
+  // Install apiary_memberships if it does not already exist.
+  $storage_exists = \Drupal::entityTypeManager()
+    ->getStorage('entity_field.storage')
+    ->loadByProperties(['entity_type' => 'apiary', 'field_name' => 'apiary_memberships']);
+  if (!reset($storage_exists)) {
+    $fields = \Drupal\hivelog\Entity\Apiary::baseFieldDefinitions(
+      $entity_type_manager->getDefinition('apiary')
+    );
+
+    foreach (['name', 'location', 'geolocation', 'notes', 'visibility',
+      'ai_insights_enabled', 'uid', 'created', 'changed'] as $existing) {
+      unset($fields[$existing]);
+    }
+
+    $entity_definition_update_manager->installFieldStorageDefinition(
+      'apiary_memberships',
+      'apiary',
+      'hivelog',
+      $fields['apiary_memberships']
+    );
+  }
+
+  return t('Installed ApiaryMembership entity type and migrated beekeepers to memberships.');
+}
+
+/**
  * Removes all traces of the cbr_number field from Drupal's tracking stores.
  *
  * The normal EntityDefinitionUpdateManager::uninstallFieldStorageDefinition()

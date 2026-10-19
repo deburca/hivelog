@@ -277,6 +277,25 @@ final class HivelogDeleteDependencyRegistry {
       'treatment' => self::WARN,
       'manage' => NULL,
     ],
+    // ADR-0108 (task 0223) — apiary membership rows live outside the main
+    // inventory table so they can be numbered independently.
+    [
+      'adr_row' => '0108-1',
+      'parent' => 'apiary',
+      'child' => 'apiary_membership',
+      'field' => 'apiary',
+      'treatment' => self::CASCADE,
+      'manage' => NULL,
+    ],
+    [
+      'adr_row' => '0108-2',
+      'parent' => 'user',
+      'child' => 'apiary_membership',
+      'field' => 'account',
+      'treatment' => self::CASCADE,
+      'manage' => NULL,
+    ],
+
     // ADR-0106 §4 (task 0163) — not part of ADR-0103's own inventory
     // table (rows 1-28 above), hence the '0106-N' adr_row style rather
     // than a bare number.

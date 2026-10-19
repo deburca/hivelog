@@ -135,11 +135,17 @@ that ADR.
   [[0192-sales-and-batch-adr]] (resolves the ADR prerequisite on
   [[0046-real-sales-ledger]]) → [[0193-honey-batch-entity]] →
   [[0194-public-batch-provenance-page]].
-- **[[shared-apiaries-and-team-roles]]** (F, medium, largest and riskiest) —
-  [[0189-apiary-membership-access-adr]] →
-  [[0190-apiary-member-entity-and-ui]] →
-  [[0191-membership-aware-access-handlers]]. Touches every access check;
-  may need a major version bump.
+- **[[shared-apiaries-and-team-roles]]** (F, medium, largest — Layer 2: membership roles) —
+   [[0189-apiary-membership-access-adr]] →
+   [[0223-apiary-membership-entity-and-ui]] →
+   [[0224-permission-granularity-by-role]] →
+   [[0191-membership-aware-access-handlers]]. Touches every access check;
+   may need a major version bump.
+
+- **[[hivelog-commerce-submodule]]** (F-1, medium — Layer 1: commerce entitlement) —
+   [[0225-hivelog-entitlement-interface]] →
+   [[0226-hivecount-quota-enforcement]]. Separate repository; no core dependency on commerce.
+   Enables SaaS / hosted deployment where subscribers auto-get apiaries.
 ## Completed projects
 [[mobile-ux-improvements]], [[action-button-consistency]],
 [[breadcrumb-consistency]], [[page-structure-consistency]],
@@ -155,14 +161,9 @@ review and dropped; its other task
 ([[0002-breadcrumb-queen-canonical]]) was already satisfied by existing code.
 ## Decision gate
 **45 accepted · 1 proposed.** Nothing blocks execution.
-[[0057-dashboard-information-architecture]] and
-[[0060-visual-identity-in-site-theme]] were accepted in body `## Status` all
-along but were missing the `status:` frontmatter field Dataview reads — now
-added.
-The one proposed ADR is [[0083-ai-assisted-apiary-insights]], deliberately
-under-specified as a future-phase umbrella. It has since been overtaken in
-practice: [[0100-nexus-in-process-ai-synthesis]] records it as *partially*
-superseded, and the insights feature shipped via
+[[0083-ai-assisted-apiary-insights]], deliberately under-specified as a
+future-phase umbrella, has since been overtaken in practice: [[0100-nexus-in-process-ai-synthesis]]
+records it as *partially* superseded, and the insights feature shipped via
 [[0087-ai-insights-hosting-and-privacy-model]] /
 [[0088-ai-insights-implementation]] / ADR-0100. Worth deciding whether it
 should now read `superseded`.
@@ -186,14 +187,16 @@ Two backlog tasks belong to no project: [[0003-apiary-map-marker-clustering]]
    [[qr-hive-labels]] → [[data-export-and-printable-records]] →
    [[treatment-register]] → [[sensor-event-detection]], then
    [[weather-aware-inspection-planning]], [[colony-lifecycle-events]],
-   [[honey-sales-and-batch-provenance]] and
-   [[shared-apiaries-and-team-roles]].
+   [[honey-sales-and-batch-provenance]],
+   [[shared-apiaries-and-team-roles]] and
+   [[hivelog-commerce-submodule]].
 ## Current state
 ```mermaid
 flowchart LR
   Rel(["2.4.0 released<br/>2026-10-02"])
-  Survey(["market survey<br/>2026-10-04"]) --> Plan["8 planning projects<br/>tasks 0174–0197"]
+  Survey(["market survey<br/>2026-10-04"]) --> Plan["9 planning projects<br/>tasks 0174–0226"]
   Plan --> B["B QR labels"] --> A["A export"] --> D["D treatments"] --> H["H sensor events"]
+  S["F Shared apiaries"] --> M["M1 Commerce submodule"]
   T79["0079 pilot hardware<br/>in-progress, unblocked"] --> Sensors(["sensor-data-collection<br/>chain complete"])
   T26["0026 refinements<br/>idle"] --> Decide{{"add items<br/>or close"}}
 ```
