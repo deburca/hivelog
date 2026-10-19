@@ -12,7 +12,7 @@ use Drupal\hivelog\Entity\HiveActionLog;
 use Drupal\hivelog\Entity\HiveInspection;
 use Drupal\hivelog\Entity\InventoryItem;
 use Drupal\hivelog\Entity\InventoryPurchase;
-use Drupal\user\Entity\Role;
+use Drupal\user\Entity\User;
 
 /**
  * Implements hook_uninstall().
@@ -1052,7 +1052,7 @@ function hivelog_update_10032(&$sandbox) {
 
       foreach ($beekeepers as $item) {
         $uid = (int) $item['target_id'];
-        $user = \Drupal\user\Entity\User::load($uid);
+        $user = User::load($uid);
         if (!$user) {
           continue;
         }
@@ -1100,12 +1100,13 @@ function hivelog_update_10032(&$sandbox) {
     ->getStorage('entity_field.storage')
     ->loadByProperties(['entity_type' => 'apiary', 'field_name' => 'apiary_memberships']);
   if (!reset($storage_exists)) {
-    $fields = \Drupal\hivelog\Entity\Apiary::baseFieldDefinitions(
+    $fields = Apiary::baseFieldDefinitions(
       $entity_type_manager->getDefinition('apiary')
     );
 
     foreach (['name', 'location', 'geolocation', 'notes', 'visibility',
-      'ai_insights_enabled', 'uid', 'created', 'changed'] as $existing) {
+      'ai_insights_enabled', 'uid', 'created', 'changed',
+    ] as $existing) {
       unset($fields[$existing]);
     }
 

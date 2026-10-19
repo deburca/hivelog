@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\hivelog\Tests\Kernel;
 
-use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\ApiaryMembership;
 use Drupal\KernelTests\KernelTestBase;
 
@@ -17,6 +17,8 @@ class ApiaryMembershipTest extends KernelTestBase {
 
   /**
    * Modules to install.
+   *
+   * @var string[]
    */
   protected static $modules = [
     'api',
@@ -64,7 +66,7 @@ class ApiaryMembershipTest extends KernelTestBase {
     $user1 = $this->createUser();
 
     // Create the apiary entity.
-    $apiary = \Drupal\hivelog\Entity\Apiary::create([
+    $apiary = Apiary::create([
       'name' => 'Test Apiary',
       'uid' => $this->currentUser()->id(),
     ]);
@@ -102,7 +104,7 @@ class ApiaryMembershipTest extends KernelTestBase {
     $user2 = $this->createUser();
 
     // Create the apiary.
-    $apiary = \Drupal\hivelog\Entity\Apiary::create([
+    $apiary = Apiary::create([
       'name' => 'Test Apiary',
       'uid' => $this->currentUser()->id(),
     ]);
@@ -127,7 +129,7 @@ class ApiaryMembershipTest extends KernelTestBase {
     $m2->save();
 
     // Reload the apiary with fresh field data.
-    $apiary = \Drupal\hivelog\Entity\Apiary::load($apiary->id());
+    $apiary = Apiary::load($apiary->id());
 
     $members = $apiary->getApiaryMembers();
     $this->assertCount(2, $members);
@@ -148,7 +150,7 @@ class ApiaryMembershipTest extends KernelTestBase {
     $member = $this->createUser();
 
     // Create the apiary.
-    $apiary = \Drupal\hivelog\Entity\Apiary::create([
+    $apiary = Apiary::create([
       'name' => 'Test Apiary',
       'uid' => $this->currentUser()->id(),
     ]);
@@ -168,7 +170,7 @@ class ApiaryMembershipTest extends KernelTestBase {
     $m->save();
 
     // Reload the apiary.
-    $apiary = \Drupal\hivelog\Entity\Apiary::load($apiary->id());
+    $apiary = Apiary::load($apiary->id());
 
     // The member is now recognized as an apiary member.
     $this->assertTrue($apiary->isApiaryMember($member));

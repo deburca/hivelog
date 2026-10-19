@@ -9,7 +9,7 @@ namespace Drupal\hivelog;
  *
  * Not exposed as a collection route — membership management is done inline on
  * the parent apiary's edit form (see ApiaryForm) and canonical page. The list
- builder exists only so the entity system has a valid handler registered.
+ * builder exists only so the entity system has a valid handler registered.
  */
 class ApiaryMembershipListBuilder extends HivelogListBuilder {
 

@@ -16,6 +16,8 @@ class ApiaryMemberManagerForm extends ControllerBase {
 
   /**
    * The entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
   protected $entityTypeManager;
 
