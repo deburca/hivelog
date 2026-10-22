@@ -143,10 +143,13 @@ class ApiaryMembershipForm extends ContentEntityForm {
    * are managed.
    */
   protected function cancelUrl(): Url {
-    return Url::fromRoute('entity.apiary.edit_form', [
-      'apiary' => $this->entity->get('apiary')->target_id
-      ?? $this->getRouteMatch()->getRawParameter('apiary'),
-    ], ['fragment' => 'members']);
+    $apiary_id = $this->entity->get('apiary')->target_id
+      ?? $this->getRouteMatch()->getRawParameter('apiary');
+    return Url::fromRoute(
+      'entity.apiary.edit_form',
+      ['apiary' => $apiary_id],
+      ['fragment' => 'members']
+    );
   }
 
 }
