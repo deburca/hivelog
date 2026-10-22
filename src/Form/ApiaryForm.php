@@ -37,11 +37,36 @@ class ApiaryForm extends ContentEntityForm {
   public function form(array $form, FormStateInterface $form_state) {
     $form = parent::form($form, $form_state);
 
-    // Embed the member management section on edit pages.
+    // Group the flat list of fields. `#group` on a `details` element moves
+    // the field into it at render time, so no field is re-parented and form
+    // values keep their parents. Submodules (collective's AI-insights
+    // disclosure) join a group by naming it.
+    $groups = [
+      'hivelog_details' => [$this->t('Details'), -20, ['name', 'location', 'notes']],
+      'hivelog_map' => [$this->t('Map'), -10, ['geolocation']],
+      'hivelog_settings' => [$this->t('Settings'), 0, ['visibility', 'ai_insights_enabled', 'uid']],
+    ];
+    foreach ($groups as $key => [$title, $weight, $fields]) {
+      $form[$key] = [
+        '#type' => 'details',
+        '#title' => $title,
+        '#open' => TRUE,
+        '#weight' => $weight,
+      ];
+      foreach ($fields as $field) {
+        if (isset($form[$field])) {
+          $form[$field]['#group'] = $key;
+        }
+      }
+    }
+
+    // Embed the member management section on edit pages, after the buttons
+    // (EntityForm gives the actions a weight of 100) so that saving the
+    // apiary is not lost among the member controls.
     if (!$this->entity->isNew()) {
       $build = $this->memberManager->render($this->entity->id());
       if ($build) {
-        $form['members'] = $build + ['#weight' => 100];
+        $form['members'] = $build + ['#weight' => 200];
       }
     }
 
