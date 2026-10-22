@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: in-progress
+status: done
 priority: high
 project: "[[shared-apiaries-and-team-roles]]"
 area: entity
@@ -25,7 +25,9 @@ one user and one role (`owner` / `editor` / `viewer`).
       user), `role` (list_string: owner/editor/viewer)
 - [x] Base table `hivelog_apiary_membership`; unique key on `(apiary, account)`
         enforced by preSave guard + database unique index via update hook
-- [x] Reference field `apiary_memberships` added to Apiary, replacing `beekeepers`
+- [x] `beekeepers` replaced by membership rows (an `apiary_memberships` reference
+      field was added first but never populated; `hivelog_update_10034` removes it and
+      `Apiary::getApiaryMembers()` queries the rows)
 - [x] Update hook (`hivelog_update_10032`) migrates existing beekeepers →
       memberships (all as viewer role) and removes old field
 - [x] Delete-dependency rows (0108-1: apiary → apiary_membership CASCADE,
@@ -34,11 +36,11 @@ one user and one role (`owner` / `editor` / `viewer`).
       list current members with role editor and remove button, owner cannot be
       removed as last owner
 - [x] Permissions in hivelog.permissions.yml (add / edit own/any / delete own/any)
-- [ ] Tests run clean on DDEV (await CI after merge)
-- [ ] `AGENTS.md` updated if entity types, routes, services, hooks or conventions changed
-- [ ] phpcs clean; phpstan clean; kernel tests pass (`--group hivelog`)
-- [ ] `AGENTS.md` updated if entity types, routes, services, hooks or conventions changed
-- [ ] phpcs clean; phpstan clean; kernel tests pass (`--group hivelog`)
+- [x] Tests run clean on DDEV and CI (main's run after PR #147: PHP 8.3, 8.4, 8.5 all green)
+- [x] `AGENTS.md` updated if entity types, routes, services, hooks or conventions changed
+- [x] phpcs clean; phpstan clean; kernel tests pass (`--group hivelog`)
+- Not in scope here: enforcing the three roles in the access handlers (task
+  [[0224-permission-granularity-by-role]]).
 
 ## Implementation notes
 - **Entity definition**: extends `ContentEntityBase`, uses `[#[ContentEntityType]`
@@ -76,4 +78,4 @@ one user and one role (`owner` / `editor` / `viewer`).
 ## Related
 - Project:: [[shared-apiaries-and-team-roles]]
 - Decisions:: [[0108-apiary-membership-entity-and-roles]]
-- Commits::
+- Commits:: PR #147 (merge f38d777)
