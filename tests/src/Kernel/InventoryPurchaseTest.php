@@ -59,6 +59,7 @@ class InventoryPurchaseTest extends KernelTestBase {
     $this->installEntitySchema('user');
     $this->installEntitySchema('file');
     $this->installEntitySchema('apiary');
+    $this->installEntitySchema('apiary_membership');
     $this->installEntitySchema('inventory_item');
     $this->installEntitySchema('inventory_purchase');
     $this->installSchema('file', ['file_usage']);

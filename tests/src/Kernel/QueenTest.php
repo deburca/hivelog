@@ -54,6 +54,7 @@ class QueenTest extends KernelTestBase {
     $this->installEntitySchema('user');
     $this->installEntitySchema('file');
     $this->installEntitySchema('apiary');
+    $this->installEntitySchema('apiary_membership');
     $this->installEntitySchema('hive');
     $this->installEntitySchema('hive_inspection');
     $this->installEntitySchema('queen');

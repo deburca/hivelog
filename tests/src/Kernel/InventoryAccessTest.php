@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\Tests\hivelog\Kernel;
 
 use Drupal\hivelog\Entity\Apiary;
+use Drupal\hivelog\Entity\ApiaryMembership;
 use Drupal\hivelog\Entity\InventoryItem;
 use Drupal\hivelog\Entity\InventoryPurchase;
 use Drupal\KernelTests\KernelTestBase;
@@ -79,6 +80,7 @@ class InventoryAccessTest extends KernelTestBase {
     $this->installEntitySchema('user');
     $this->installEntitySchema('file');
     $this->installEntitySchema('apiary');
+    $this->installEntitySchema('apiary_membership');
     $this->installEntitySchema('inventory_item');
     $this->installEntitySchema('inventory_purchase');
     $this->installSchema('file', ['file_usage']);
@@ -113,9 +115,13 @@ class InventoryAccessTest extends KernelTestBase {
       'name' => 'Test Apiary',
       'uid' => $this->owner->id(),
       'visibility' => 'private',
-      'beekeepers' => [$this->beekeeper->id()],
     ]);
     $this->apiary->save();
+    ApiaryMembership::create([
+      'apiary' => $this->apiary->id(),
+      'account' => $this->beekeeper->id(),
+      'role' => 'editor',
+    ])->save();
 
     $this->item = InventoryItem::create([
       'apiary' => $this->apiary->id(),

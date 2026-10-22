@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\Tests\hivelog_api\Kernel;
 
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\hivelog\Entity\ApiaryMembership;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\ApiaryActionLog;
 use Drupal\hivelog\Entity\CalendarAction;
@@ -126,7 +127,11 @@ class HivelogApiAccessParityTest extends HivelogApiKernelTestBase {
     $this->trees['outsider'] = $this->tree($this->actors['outsider']);
 
     // The member belongs to the owner's apiary but does not own it.
-    $this->trees['owner']['apiary']->set('beekeepers', [$this->actors['member']->id()])->save();
+    ApiaryMembership::create([
+      'apiary' => $this->trees['owner']['apiary']->id(),
+      'account' => $this->actors['member']->id(),
+      'role' => 'viewer',
+    ])->save();
     foreach (array_keys(self::TYPES) as $type) {
       \Drupal::entityTypeManager()->getStorage($type)->resetCache();
       \Drupal::entityTypeManager()->getAccessControlHandler($type)->resetCache();

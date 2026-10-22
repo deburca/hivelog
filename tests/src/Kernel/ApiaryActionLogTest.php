@@ -58,6 +58,7 @@ class ApiaryActionLogTest extends KernelTestBase {
     $this->installEntitySchema('user');
     $this->installEntitySchema('file');
     $this->installEntitySchema('apiary');
+    $this->installEntitySchema('apiary_membership');
     $this->installEntitySchema('hive');
     $this->installEntitySchema('calendar_action');
     $this->installEntitySchema('hive_action_log');

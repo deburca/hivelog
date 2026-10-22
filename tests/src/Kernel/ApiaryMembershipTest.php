@@ -2,35 +2,53 @@
 
 declare(strict_types=1);
 
-namespace Drupal\hivelog\Tests\Kernel;
+namespace Drupal\Tests\hivelog\Kernel;
 
+use Drupal\Core\Entity\EntityStorageException;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\ApiaryMembership;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\Tests\user\Traits\UserCreationTrait;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
- * Tests the ApiaryMembership entity and its migration from beekeepers.
- *
- * @group hivelog
+ * Tests the ApiaryMembership entity and Apiary's member lookups.
  */
+#[Group('hivelog')]
+#[RunTestsInSeparateProcesses]
 class ApiaryMembershipTest extends KernelTestBase {
 
+  use UserCreationTrait;
+
   /**
-   * Modules to install.
-   *
-   * @var string[]
+   * {@inheritdoc}
    */
   protected static $modules = [
-    'api',
-    'base_field',
-    'date',
-    'entity',
-    'field',
-    'hivelog',
     'system',
     'user',
-    'views',
+    'field',
+    'datetime',
+    'options',
+    'file',
+    'image',
+    'geofield',
+    'hivelog',
   ];
+
+  /**
+   * The apiary under test, owned by $this->owner.
+   *
+   * @var \Drupal\hivelog\Entity\Apiary
+   */
+  protected Apiary $apiary;
+
+  /**
+   * The apiary's owner.
+   *
+   * @var \Drupal\user\UserInterface
+   */
+  protected $owner;
 
   /**
    * {@inheritdoc}
@@ -38,147 +56,108 @@ class ApiaryMembershipTest extends KernelTestBase {
   protected function setUp(): void {
     parent::setUp();
 
+    $this->installEntitySchema('user');
+    $this->installEntitySchema('file');
     $this->installEntitySchema('apiary');
-    // ApiaryMembership schema is installed by the update hook.
+    $this->installEntitySchema('apiary_membership');
+
+    // Skip uid 1 so the owner and members are ordinary accounts.
+    $this->createUser();
+    $this->owner = $this->createUser();
+    $this->apiary = Apiary::create([
+      'name' => 'Test Apiary',
+      'uid' => $this->owner->id(),
+    ]);
+    $this->apiary->save();
   }
 
   /**
-   * Tests that the apiary_memberships field exists on Apiary.
+   * Creates a membership through the entity API.
    */
-  public function testApiaryField(): void {
-    $storage = $this->container->get('entity_field.storage');
-    $fields = $storage->loadByProperties([
-      'entity_type' => 'apiary',
-      'field_name' => 'apiary_memberships',
+  protected function addMember(int|string $account_id, string $role): ApiaryMembership {
+    $membership = ApiaryMembership::create([
+      'apiary' => $this->apiary->id(),
+      'account' => $account_id,
+      'role' => $role,
     ]);
-    $this->assertNotFalse(reset($fields) ?: FALSE, 'apiary_memberships field exists on Apiary.');
+    $membership->save();
+    return $membership;
+  }
+
+  /**
+   * Tests that Apiary no longer carries a stored memberships field.
+   */
+  public function testNoStoredMembershipsField(): void {
+    $definitions = $this->container->get('entity_field.manager')
+      ->getBaseFieldDefinitions('apiary');
+    $this->assertArrayNotHasKey('apiary_memberships', $definitions);
+  }
+
+  /**
+   * Tests that a new membership records the current user as its creator.
+   */
+  public function testCreatorIsSet(): void {
+    $this->setCurrentUser($this->owner);
+    $membership = $this->addMember($this->createUser()->id(), 'viewer');
+    $this->assertEquals($this->owner->id(), $membership->get('uid')->target_id);
   }
 
   /**
    * Tests that duplicate apiary-user memberships are prevented.
    */
   public function testDuplicateGuard(): void {
-    // Install the entity type and schema via the update hook.
-    $this->installEntitySchema('apiary_membership');
-    $storage = $this->container->get('entity_storage')->load('apiary_membership');
+    $user = $this->createUser();
+    $this->addMember($user->id(), 'viewer');
 
-    /** @var \Drupal\user\UserInterface $user1 */
-    $user1 = $this->createUser();
-
-    // Create the apiary entity.
-    $apiary = Apiary::create([
-      'name' => 'Test Apiary',
-      'uid' => $this->currentUser()->id(),
-    ]);
-    $apiary->save();
-
-    // First membership succeeds.
-    /** @var \Drupal\hivelog\Entity\ApiaryMembership $membership */
-    $membership = ApiaryMembership::create([
-      'apiary' => $apiary->id(),
-      'account' => $user1->id(),
-      'role' => 'viewer',
-    ]);
-    $membership->save();
-    $this->assertTrue(TRUE, 'First membership saved successfully.');
-
-    // Second membership with same apiary-user pair throws.
-    $this->expectException(\InvalidArgumentException::class);
-    ApiaryMembership::create([
-      'apiary' => $apiary->id(),
-      'account' => $user1->id(),
-      'role' => 'editor',
-    ])->save();
+    // The storage wraps the entity's backstop exception.
+    $this->expectException(EntityStorageException::class);
+    $this->expectExceptionMessage('already exists');
+    $this->addMember($user->id(), 'editor');
   }
 
   /**
-   * Tests that getApiaryMembers() returns memberships correctly.
+   * Tests that getApiaryMembers() returns the apiary's memberships only.
    */
   public function testGetApiaryMembers(): void {
-    // Install the apiary_memberships field and entity schema.
-    $this->installEntitySchema('apiary_membership');
+    $this->addMember($this->createUser()->id(), 'editor');
+    $this->addMember($this->createUser()->id(), 'viewer');
 
-    /** @var \Drupal\user\UserInterface $user1 */
-    $user1 = $this->createUser();
-    /** @var \Drupal\user\UserInterface $user2 */
-    $user2 = $this->createUser();
-
-    // Create the apiary.
-    $apiary = Apiary::create([
-      'name' => 'Test Apiary',
-      'uid' => $this->currentUser()->id(),
-    ]);
-    $apiary->save();
-
-    // Add memberships directly to storage (bypassing preSave for this test).
-    $storage = $this->container->get('entity_storage')->load('apiary_membership');
-    /** @var \Drupal\hivelog\Entity\ApiaryMembership $m1 */
-    $m1 = $storage->create([
-      'apiary' => $apiary->id(),
-      'account' => $user1->id(),
-      'role' => 'editor',
-    ]);
-    $m1->save();
-
-    /** @var \Drupal\hivelog\Entity\ApiaryMembership $m2 */
-    $m2 = $storage->create([
-      'apiary' => $apiary->id(),
-      'account' => $user2->id(),
+    $other = Apiary::create(['name' => 'Other', 'uid' => $this->owner->id()]);
+    $other->save();
+    ApiaryMembership::create([
+      'apiary' => $other->id(),
+      'account' => $this->createUser()->id(),
       'role' => 'viewer',
-    ]);
-    $m2->save();
+    ])->save();
 
-    // Reload the apiary with fresh field data.
-    $apiary = Apiary::load($apiary->id());
-
-    $members = $apiary->getApiaryMembers();
+    $members = $this->apiary->getApiaryMembers();
     $this->assertCount(2, $members);
-
     $roles = array_map(fn(ApiaryMembership $m): string => $m->getRole(), $members);
     $this->assertContains('editor', $roles);
     $this->assertContains('viewer', $roles);
   }
 
   /**
-   * Tests that isApiaryMember() works with memberships.
+   * Tests that isApiaryMember() recognises the owner and members only.
    */
   public function testIsApiaryMember(): void {
-    // Install the apiary_memberships field and entity schema.
-    $this->installEntitySchema('apiary_membership');
-
-    /** @var \Drupal\user\UserInterface $member */
     $member = $this->createUser();
+    $outsider = $this->createUser();
+    $this->addMember($member->id(), 'viewer');
 
-    // Create the apiary.
-    $apiary = Apiary::create([
-      'name' => 'Test Apiary',
-      'uid' => $this->currentUser()->id(),
-    ]);
-    $apiary->save();
+    $this->assertTrue($this->apiary->isApiaryMember($this->owner));
+    $this->assertTrue($this->apiary->isApiaryMember($member));
+    $this->assertFalse($this->apiary->isApiaryMember($outsider));
+  }
 
-    // The apiary owner is always a member.
-    $this->assertTrue($apiary->isApiaryMember($this->currentUser()));
-
-    // Add the external user as a member.
-    $storage = $this->container->get('entity_storage')->load('apiary_membership');
-    /** @var \Drupal\hivelog\Entity\ApiaryMembership $m */
-    $m = $storage->create([
-      'apiary' => $apiary->id(),
-      'account' => $member->id(),
-      'role' => 'viewer',
-    ]);
-    $m->save();
-
-    // Reload the apiary.
-    $apiary = Apiary::load($apiary->id());
-
-    // The member is now recognized as an apiary member.
-    $this->assertTrue($apiary->isApiaryMember($member));
-
-    // A non-member user is not recognized.
-    /** @var \Drupal\user\UserInterface $non_member */
-    $non_member = $this->createUser();
-    $this->assertFalse($apiary->isApiaryMember($non_member));
+  /**
+   * Tests that membership URLs carry the apiary the routes need.
+   */
+  public function testUrlsIncludeApiary(): void {
+    $membership = $this->addMember($this->createUser()->id(), 'viewer');
+    $parameters = $membership->toUrl('delete-form')->getRouteParameters();
+    $this->assertEquals($this->apiary->id(), $parameters['apiary']);
+    $this->assertEquals($membership->id(), $parameters['apiary_membership']);
   }
 
 }

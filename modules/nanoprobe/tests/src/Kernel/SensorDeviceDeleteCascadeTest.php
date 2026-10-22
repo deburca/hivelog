@@ -50,6 +50,7 @@ class SensorDeviceDeleteCascadeTest extends KernelTestBase {
     $this->installEntitySchema('user');
     $this->installEntitySchema('file');
     $this->installEntitySchema('apiary');
+    $this->installEntitySchema('apiary_membership');
     $this->installEntitySchema('sensor_device');
     $this->installEntitySchema('sensor_reading');
     $this->installEntitySchema('sensor_reading_daily');

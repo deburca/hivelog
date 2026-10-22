@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\Tests\nexus\Kernel;
 
 use Drupal\hivelog\Entity\Apiary;
+use Drupal\hivelog\Entity\ApiaryMembership;
 use Drupal\hivelog\Entity\Hive;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\nexus\Entity\HiveInsight;
@@ -59,6 +60,7 @@ class HiveInsightTest extends KernelTestBase {
     $this->installEntitySchema('user');
     $this->installEntitySchema('file');
     $this->installEntitySchema('apiary');
+    $this->installEntitySchema('apiary_membership');
     $this->installEntitySchema('hive');
     $this->installEntitySchema('hive_insight');
     $this->installSchema('file', ['file_usage']);
@@ -254,9 +256,13 @@ class HiveInsightTest extends KernelTestBase {
       'name' => 'Access Test Apiary',
       'uid' => $owner->id(),
       'visibility' => 'private',
-      'beekeepers' => [$beekeeper->id()],
     ]);
     $apiary->save();
+    ApiaryMembership::create([
+      'apiary' => $apiary->id(),
+      'account' => $beekeeper->id(),
+      'role' => 'editor',
+    ])->save();
 
     $hive = Hive::create([
       'name' => 'Access Test Hive',

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\Tests\nanoprobe\Kernel;
 
 use Drupal\hivelog\Entity\Apiary;
+use Drupal\hivelog\Entity\ApiaryMembership;
 use Drupal\hivelog\Entity\Hive;
 use Drupal\nanoprobe\Controller\SensorDeviceController;
 use Drupal\nanoprobe\Entity\SensorDevice;
@@ -74,6 +75,7 @@ class SensorDeviceControllerTest extends KernelTestBase {
     $this->installEntitySchema('user');
     $this->installEntitySchema('file');
     $this->installEntitySchema('apiary');
+    $this->installEntitySchema('apiary_membership');
     $this->installEntitySchema('hive');
     $this->installEntitySchema('sensor_device');
     $this->installSchema('file', ['file_usage']);
@@ -107,9 +109,13 @@ class SensorDeviceControllerTest extends KernelTestBase {
       'name' => 'Test Apiary',
       'uid' => $this->owner->id(),
       'visibility' => 'private',
-      'beekeepers' => [$this->viewOnlyMember->id()],
     ]);
     $this->apiary->save();
+    ApiaryMembership::create([
+      'apiary' => $this->apiary->id(),
+      'account' => $this->viewOnlyMember->id(),
+      'role' => 'viewer',
+    ])->save();
 
     $hive = Hive::create([
       'name' => 'Test Hive',
