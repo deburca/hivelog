@@ -10,7 +10,6 @@ use Drupal\Component\Utility\Html;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Url;
 use Drupal\hivelog\Entity\ApiaryMembership;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Renders the member management section on an apiary's edit page.
@@ -40,13 +39,6 @@ class ApiaryMemberManagerForm extends ControllerBase {
   }
 
   /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    return new static($container->get('entity_type.manager'), $container->get('renderer'));
-  }
-
-  /**
    * Builds the member management render array for an apiary.
    *
    * @param int|string $apiary_id
@@ -61,7 +53,7 @@ class ApiaryMemberManagerForm extends ControllerBase {
     /** @var \Drupal\hivelog\Entity\Apiary $apiary */
     $apiary = $this->entityTypeManager->getStorage('apiary')->load($apiary_id);
 
-    if (!$apiary || !\Drupal::currentUser()->hasPermission('edit own apiary')) {
+    if (!$apiary || !$this->currentUser()->hasPermission('edit own apiary')) {
       return [];
     }
 

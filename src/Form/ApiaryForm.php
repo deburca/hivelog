@@ -6,6 +6,7 @@ namespace Drupal\hivelog\Form;
 
 use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Form\FormStateInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Form handler for Apiary add/edit forms.
@@ -15,6 +16,22 @@ class ApiaryForm extends ContentEntityForm {
   use HivelogEntityFormTrait;
 
   /**
+   * Builds the Members section shown on the edit form.
+   *
+   * @var \Drupal\hivelog\Form\ApiaryMemberManagerForm
+   */
+  protected $memberManager;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    $form = parent::create($container);
+    $form->memberManager = $container->get('hivelog.apiary_member_manager');
+    return $form;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function form(array $form, FormStateInterface $form_state) {
@@ -22,9 +39,7 @@ class ApiaryForm extends ContentEntityForm {
 
     // Embed the member management section on edit pages.
     if (!$this->entity->isNew()) {
-      /** @var \Drupal\hivelog\ApiaryMemberManagerForm $member_manager */
-      $member_manager = \Drupal::service('hivelog.apiary_member_manager');
-      $build = $member_manager->render($this->entity->id());
+      $build = $this->memberManager->render($this->entity->id());
       if ($build) {
         $form['members'] = $build + ['#weight' => 100];
       }

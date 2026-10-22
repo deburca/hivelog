@@ -58,10 +58,12 @@ class ApiaryMembershipForm extends ContentEntityForm {
     $form['apiary']['#access'] = FALSE;
     $form['uid']['#access'] = FALSE;
 
-    if ($this->entity->isNew()) {
+    /** @var \Drupal\hivelog\Entity\ApiaryMembership $membership */
+    $membership = $this->entity;
+    if ($membership->isNew()) {
       $apiary = $this->getRouteMatch()->getParameter('apiary');
       if ($apiary) {
-        $this->entity->set('apiary', $apiary);
+        $membership->set('apiary', $apiary);
       }
     }
     else {
@@ -81,6 +83,7 @@ class ApiaryMembershipForm extends ContentEntityForm {
    * {@inheritdoc}
    */
   public function buildEntity(array $form, FormStateInterface $form_state) {
+    /** @var \Drupal\hivelog\Entity\ApiaryMembership $entity */
     $entity = parent::buildEntity($form, $form_state);
 
     // The apiary widget is hidden (#access FALSE) on the add form, so its
@@ -101,6 +104,7 @@ class ApiaryMembershipForm extends ContentEntityForm {
   public function validateForm(array &$form, FormStateInterface $form_state) {
     parent::validateForm($form, $form_state);
 
+    /** @var \Drupal\hivelog\Entity\ApiaryMembership $entity */
     $entity = $this->buildEntity($form, $form_state);
     if (!$entity->isNew() || $entity->get('apiary')->isEmpty() || $entity->get('account')->isEmpty()) {
       return;
@@ -143,7 +147,9 @@ class ApiaryMembershipForm extends ContentEntityForm {
    * are managed.
    */
   protected function cancelUrl(): Url {
-    $apiary_id = $this->entity->get('apiary')->target_id
+    /** @var \Drupal\hivelog\Entity\ApiaryMembership $membership */
+    $membership = $this->entity;
+    $apiary_id = $membership->get('apiary')->target_id
       ?? $this->getRouteMatch()->getRawParameter('apiary');
     return Url::fromRoute(
       'entity.apiary.edit_form',
