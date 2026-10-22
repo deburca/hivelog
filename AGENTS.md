@@ -1073,7 +1073,13 @@ accessible.
   `aria-haspopup` / `role="menu"` / `aria-expanded` — those promise a menu
   keyboard model, or a state, that CSS alone can't deliver truthfully (see
   ADR-0104's accessibility amendment, including the one known gap: no
-  Escape-to-dismiss). Injected into
+  Escape-to-dismiss). Under the same narrow / no-hover query the strip is
+  folded behind a Menu button (task 0229), again CSS only: a visually
+  hidden checkbox (`#hivelog-app-nav-toggle`) and its label are the first
+  two children of the render array, ahead of the items, because the
+  `:checked ~ .hivelog-app-nav__item` selector only reaches later siblings;
+  code that walks `build()`'s children must skip the `toggle` and
+  `toggle_label` keys. Injected into
   `page.content` via `hivelog_preprocess_page()` (task 0105; not a
   placed block or `hook_page_top()` — see that hook's own docblock in
   `hivelog.module`).

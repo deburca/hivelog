@@ -535,4 +535,21 @@ class ApiaryCalendarChecklistTest extends KernelTestBase {
     $this->assertStringNotContainsString('title', $reset_url);
   }
 
+  /**
+   * Tests the timing kind and the styled Status cell of an unreported row.
+   */
+  public function testPendingTimingKindAndStatusCell(): void {
+    $builder = \Drupal::service('hivelog.calendar_checklist_builder');
+
+    $this->assertSame('upcoming', $builder->pendingActionTimingKind(20, 22, 10));
+    $this->assertSame('due', $builder->pendingActionTimingKind(20, 22, 21));
+    $this->assertSame('due', $builder->pendingActionTimingKind(20, NULL, 20));
+    $this->assertSame('overdue', $builder->pendingActionTimingKind(20, 22, 23));
+
+    $cell = $builder->pendingStatusCell('Unreported <b>', 20, 22, 23);
+    $this->assertStringContainsString('hivelog-timing--overdue', $cell);
+    $this->assertStringContainsString('>Overdue<', $cell);
+    $this->assertStringContainsString('Unreported &lt;b&gt;', $cell, 'The status label is escaped.');
+  }
+
 }

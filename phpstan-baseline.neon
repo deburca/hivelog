@@ -277,12 +277,6 @@ parameters:
 			path: src/Controller/ApiaryController.php
 
 		-
-			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:getActiveQueen\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: src/Controller/ApiaryController.php
-
-		-
 			message: '#^Unsafe usage of new static\(\)\.$#'
 			identifier: new.static
 			count: 1

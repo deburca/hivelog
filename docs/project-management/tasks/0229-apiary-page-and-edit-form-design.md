@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: in-progress
+status: done
 priority: medium
 project: "[[shared-apiaries-and-team-roles]]"
 area: theme
@@ -29,11 +29,14 @@ checked from screenshots the owner sends.
       with its disclosure)
 - [x] Members section sits inside the Access tab, not after the Save / Cancel buttons
 - [x] Map opens on Denmark when the apiary has no location yet
-- [ ] Navigation strip is collapsed behind a menu button on narrow screens
-- [ ] Hive rows show more than breed / temperament / status
-- [ ] Overdue calendar items stand out from upcoming ones
-- [ ] phpcs clean; phpstan clean; kernel tests pass (`--group hivelog`)
-- [ ] `AGENTS.md` updated if conventions changed
+- [x] Navigation strip is collapsed behind a menu button on narrow screens (CSS-only
+      checkbox toggle, under the existing narrow / no-hover query)
+- [x] Hive rows show more than breed / temperament / status (Queen: year, colour, breed
+      or "No queen"; Last inspection date or "Never")
+- [x] Overdue calendar items stand out from upcoming ones (the timing word sits in a
+      span, `hivelog-timing--overdue` / `--due`, shared by the apiary and hive pages)
+- [x] phpcs clean; phpstan clean; kernel tests pass (`--group hivelog`)
+- [x] `AGENTS.md` updated if conventions changed
 
 ## Implementation notes
 - Edit form tabs are `details` elements with `#group` inside a `vertical_tabs` element,

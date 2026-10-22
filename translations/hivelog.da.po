@@ -2693,3 +2693,9 @@ msgstr "Kort"
 #: modules/contrib/hivelog/src/Form/ApiaryForm.php
 msgid "AI insights"
 msgstr "AI-indsigt"
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php
+msgid "Last inspection"
+msgstr "Seneste eftersyn"
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php
+msgid "No queen"
+msgstr "Ingen dronning"

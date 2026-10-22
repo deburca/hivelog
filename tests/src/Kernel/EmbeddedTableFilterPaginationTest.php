@@ -749,4 +749,43 @@ class EmbeddedTableFilterPaginationTest extends KernelTestBase {
     $this->assertStringNotContainsString('Calm Hive', $html);
   }
 
+  /**
+   * Tests the hives table shows the queen and the last inspection date.
+   */
+  public function testApiaryHiveTableShowsQueenAndLastInspection(): void {
+    $apiary = Apiary::create(['name' => 'Detail Apiary']);
+    $apiary->save();
+
+    $with_queen = Hive::create(['name' => 'With Queen', 'apiary' => $apiary->id(), 'status' => 'active']);
+    $with_queen->save();
+    Queen::create([
+      'name' => 'Q1',
+      'hive' => $with_queen->id(),
+      'queen_year' => 2025,
+      'breed' => 'buckfast',
+      'status' => 'active',
+    ])->save();
+    HiveInspection::create(['hive' => $with_queen->id(), 'inspection_date' => '2026-05-01'])->save();
+    HiveInspection::create(['hive' => $with_queen->id(), 'inspection_date' => '2026-06-11'])->save();
+
+    Hive::create(['name' => 'Bare Hive', 'apiary' => $apiary->id(), 'status' => 'active'])->save();
+
+    $this->pushRequestWithQuery([]);
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(ApiaryController::class);
+    $build = $controller->view($apiary);
+
+    $props = $build['hives_table']['#props'];
+    $this->assertSame(['Name', 'Queen', 'Last inspection', 'Temperament', 'Status', 'Operations'], $props['headers']);
+    $cells = [];
+    foreach ($props['rows'] as $row) {
+      $cells[strip_tags((string) $row['cells'][0])] = $row['cells'];
+    }
+    $this->assertStringContainsString('2025', $cells['With Queen'][1]);
+    $this->assertStringContainsString('Buckfast', $cells['With Queen'][1]);
+    $this->assertSame('2026-06-11', $cells['With Queen'][2], 'The latest inspection date, not the first.');
+    $this->assertSame('No queen', $cells['Bare Hive'][1]);
+    $this->assertSame('Never', $cells['Bare Hive'][2]);
+  }
+
 }

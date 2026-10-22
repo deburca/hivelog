@@ -214,6 +214,16 @@
   }
 }
 
+/*
+ * Task 0229: the Menu toggle (a checkbox and its label, see
+ * HivelogAppNavBuilder::build()) exists only where the strip is folded —
+ * the narrow / no-hover layout below. Everywhere else it is not rendered.
+ */
+.hivelog-app-nav__toggle,
+.hivelog-app-nav__toggle-label {
+  display: none;
+}
+
 @media (max-width: 768px), (hover: none) {
   /* No hover/focus to gate on at touch width, or on any width where the
    * primary input can't hover (task 0165) — stack primary items and
@@ -263,5 +273,50 @@
     width: 1px;
     height: auto;
     align-self: stretch;
+  }
+
+  /*
+   * Task 0229: folded by default; the Menu label opens it. The checkbox is
+   * visually hidden but stays focusable, so the keyboard can open the menu
+   * and the label shows the focus ring. `display: none` on the items takes a
+   * closed menu's links out of the tab order, which is right when they are
+   * not visible.
+   */
+  .hivelog-app-nav__toggle {
+    display: block;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    opacity: 0;
+  }
+
+  .hivelog-app-nav__toggle-label {
+    display: inline-block;
+    align-self: flex-start;
+    padding: 0.25rem 0.75rem;
+    border: 1px solid var(--hivelog-border);
+    border-radius: 4px;
+    background: var(--hivelog-surface-2);
+    color: var(--hivelog-ink);
+    font-size: 0.875rem;
+    cursor: pointer;
+  }
+
+  .hivelog-app-nav__toggle-label::before {
+    content: "\2630\00a0";
+  }
+
+  .hivelog-app-nav__toggle:focus-visible + .hivelog-app-nav__toggle-label {
+    outline: 2px solid var(--hivelog-btn-primary-border);
+    outline-offset: 2px;
+  }
+
+  .hivelog-app-nav__item {
+    display: none;
+  }
+
+  .hivelog-app-nav__toggle:checked ~ .hivelog-app-nav__item {
+    display: block;
   }
 }
