@@ -234,13 +234,25 @@ pair. Manages team access: owner has full control, editor can edit all hives and
 inspections but not delete the apiary or manage members, viewer gets read-only
 access plus the ability to delete their own inspections and queen observations.
 Replaces the legacy `beekeepers` field (a bare user reference with no role).
-The apiary canonical page shows memberships; add/edit/delete is via an inline
-section on the Apiary edit form (`ApiaryMemberManagerForm`). A migration hook
+The membership rows are the source of truth: `Apiary::getApiaryMembers()` and
+`isApiaryMember()` query `apiary_membership` by its `apiary` field (a membership
+points at the apiary, so Apiary has no stored members field;
+`hivelog_update_10034` removes the unused `apiary_memberships` storage an
+earlier 10032 installed). **The three roles are not enforced yet**: the access
+handlers ask only "is this user a member", so a viewer currently has an
+editor's access (task 0224). The apiary canonical page shows the members, with
+a Manage members link, only to people who can edit the apiary; add/edit/delete
+is via a headed Members section on the Apiary edit form
+(`ApiaryMemberManagerForm`, built on `hivelog:entity-table`). A migration hook
 (`hivelog_update_10032`) converts existing beekeepers rows to memberships with
 role = `viewer`. Delete-dependency rows 0108-1/0108-2 use CASCADE so deleting
-an apiary removes its memberships automatically. No collection or canonical
-route — managed inline; add/edit/delete routes exist only for the embedded form's
-operations links.
+an apiary removes its memberships automatically. No collection route and no
+routed canonical page; the add/edit/delete routes are nested under the apiary
+(`/hivelog/apiary/{apiary}/membership/...`), so membership URLs always need the
+`apiary` parameter (`ApiaryMembership::urlRouteParameters()` supplies it) and
+`ApiaryAccessTrait::resolveApiary()` resolves a membership to its apiary. Adding
+a member needs the `add apiary membership` permission; editing and removing need
+`edit own apiary`, and the access handler then allows only the apiary's owner.
 
 **Inventory, products and yields** (ADR-0027, ADR-0034) — each catalog type
 is scoped to one `Apiary`; the "recipe" (`CalendarActionItemRequirement`/
