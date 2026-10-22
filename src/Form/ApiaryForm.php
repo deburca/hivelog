@@ -67,7 +67,8 @@ class ApiaryForm extends ContentEntityForm {
       }
     }
 
-    // Members belong with the other access settings, after them: the form
+    // Members belong with the other access settings, after them, as a child
+    // of that tab (a form item has no #group processing of its own): the form
     // display gives visibility weight 6 and owner weight 8, and a display's
     // weights are re-applied after form(), so this follows those rather than
     // re-weighting the fields. The section is only there once the apiary
@@ -75,7 +76,7 @@ class ApiaryForm extends ContentEntityForm {
     if (!$this->entity->isNew()) {
       $build = $this->memberManager->render($this->entity->id());
       if ($build) {
-        $form['members'] = $build + ['#group' => 'hivelog_access', '#weight' => 9];
+        $form['hivelog_access']['members'] = $build + ['#weight' => 9];
       }
     }
 

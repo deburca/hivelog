@@ -76,7 +76,6 @@ class ApiaryFormLayoutTest extends KernelTestBase {
       'geolocation' => 'hivelog_map',
       'visibility' => 'hivelog_access',
       'uid' => 'hivelog_access',
-      'members' => 'hivelog_access',
       'ai_insights_enabled' => 'hivelog_ai',
     ];
     foreach ($expected as $field => $tab) {
@@ -91,8 +90,23 @@ class ApiaryFormLayoutTest extends KernelTestBase {
     $form = $this->editForm();
 
     $this->assertLessThan($form['uid']['#weight'], $form['visibility']['#weight']);
-    $this->assertLessThan($form['members']['#weight'], $form['uid']['#weight']);
-    $this->assertSame('Members', (string) $form['members']['heading']['title']['#value']);
+    $members = $form['hivelog_access']['members'];
+    $this->assertLessThan($members['#weight'], $form['uid']['#weight']);
+    $this->assertSame('Members', (string) $members['#title']);
+    $this->assertSame('item', $members['#type'], 'Titled like the other settings, not as a page section.');
+  }
+
+  /**
+   * Tests that the Members item renders its title and Add button in the tabs.
+   */
+  public function testMembersRenderInsideTheAccessTab(): void {
+    $form = $this->editForm();
+
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($form['hivelog_tabs']);
+    $this->assertStringContainsString('Members', $html);
+    $this->assertStringContainsString('Add a member', $html);
+    $this->assertStringContainsString('id="members"', $html, 'The #members anchor exists.');
+    $this->assertStringNotContainsString('<h2', $html, 'No page-level heading inside the tabs.');
   }
 
   /**
@@ -102,7 +116,7 @@ class ApiaryFormLayoutTest extends KernelTestBase {
     $this->setCurrentUser($this->createUser(['add apiary']));
     $form = \Drupal::service('entity.form_builder')->getForm(Apiary::create([]), 'add');
 
-    $this->assertArrayNotHasKey('members', $form);
+    $this->assertArrayNotHasKey('members', $form['hivelog_access']);
     $this->assertSame('hivelog_details', $form['name']['#group']);
     $this->assertSame('hivelog_access', $form['visibility']['#group']);
   }

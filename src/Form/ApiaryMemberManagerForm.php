@@ -57,40 +57,17 @@ class ApiaryMemberManagerForm extends ControllerBase {
       return [];
     }
 
-    // A plain container with the same heading row the apiary page's own
-    // sections use, not a fieldset: themes style a fieldset legend as a form
-    // label, and it was easy to mistake for part of the Owner field above.
+    // A form item, so the title and description look exactly like the other
+    // settings on the edit form (Visibility, Owner) rather than like a page
+    // section; a big page-level heading inside a tab was out of place.
     $build = [
-      '#type' => 'container',
-      '#attributes' => ['class' => ['hivelog-members'], 'id' => 'members'],
-      'heading' => [
-        '#type' => 'container',
-        '#attributes' => ['class' => ['hivelog-list-heading']],
-        'title' => [
-          '#type' => 'html_tag',
-          '#tag' => 'h2',
-          '#value' => $this->t('Members'),
-          '#attributes' => ['class' => ['hivelog-list-heading__title']],
-        ],
-        // The scoped-add route is a page of its own: an inline form would
-        // conflict with this (the apiary) form's submit handler.
-        'add' => [
-          '#type' => 'component',
-          '#component' => 'hivelog:button',
-          '#props' => [
-            'label' => (string) $this->t('Add a member'),
-            'url' => Url::fromRoute('hivelog.apiary_membership.add', ['apiary' => $apiary_id])->toString(),
-            'variant' => 'primary',
-            'extra_classes' => 'hivelog-list-heading__action',
-          ],
-        ],
-      ],
-      'description' => [
-        '#type' => 'html_tag',
-        '#tag' => 'p',
-        '#value' => $this->t('People who can access this apiary and its hives.'),
-        '#attributes' => ['class' => ['description']],
-      ],
+      '#type' => 'item',
+      '#title' => $this->t('Members'),
+      '#description' => $this->t('People who can access this apiary and its hives.'),
+      // A form item renders no attributes of its own, so the anchor the
+      // "Manage members" link and Cancel return to goes on a wrapper.
+      '#prefix' => '<div id="members" class="hivelog-members">',
+      '#suffix' => '</div>',
       '#attached' => ['library' => ['hivelog/buttons']],
     ];
 
@@ -150,6 +127,19 @@ class ApiaryMemberManagerForm extends ControllerBase {
         'rows' => $rows,
         'empty_message' => (string) $this->t('No members yet.'),
       ],
+    ];
+
+    // The scoped-add route is a page of its own: an inline form would
+    // conflict with this (the apiary) form's submit handler.
+    $build['add'] = [
+      '#type' => 'component',
+      '#component' => 'hivelog:button',
+      '#props' => [
+        'label' => (string) $this->t('Add a member'),
+        'url' => Url::fromRoute('hivelog.apiary_membership.add', ['apiary' => $apiary_id])->toString(),
+        'variant' => 'primary',
+      ],
+      '#weight' => 10,
     ];
 
     return $build;
