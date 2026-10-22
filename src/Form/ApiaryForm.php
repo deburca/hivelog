@@ -37,6 +37,12 @@ class ApiaryForm extends ContentEntityForm {
   public function form(array $form, FormStateInterface $form_state) {
     $form = parent::form($form, $form_state);
 
+    // The shared entity-form spacing, as on the Hive form: breathing room
+    // between the settings inside each tab.
+    $form['#prefix'] = '<div class="hivelog-entity-form">';
+    $form['#suffix'] = '</div>';
+    $form['#attached']['library'][] = 'hivelog/forms';
+
     // Vertical tabs, one per concern. `#group` on a `details` element moves
     // the field into it at render time, so no field is re-parented and form
     // values keep their parents. Submodules (collective's AI-insights

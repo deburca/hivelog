@@ -84,6 +84,16 @@ class ApiaryFormLayoutTest extends KernelTestBase {
   }
 
   /**
+   * Tests that the form takes the shared entity-form spacing.
+   */
+  public function testFormUsesTheSharedSpacing(): void {
+    $form = $this->editForm();
+
+    $this->assertStringContainsString('hivelog-entity-form', $form['#prefix']);
+    $this->assertContains('hivelog/forms', $form['#attached']['library']);
+  }
+
+  /**
    * Tests that visibility, owner and members follow one another.
    */
   public function testAccessSettingsAreInOrder(): void {
