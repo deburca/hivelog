@@ -59,36 +59,39 @@ class ApiaryFormLayoutTest extends KernelTestBase {
   }
 
   /**
-   * Tests that the fields are grouped into Details, Map and Settings.
+   * Tests that the fields are grouped into vertical tabs.
    */
-  public function testFieldsAreGrouped(): void {
+  public function testFieldsAreGroupedIntoTabs(): void {
     $form = $this->editForm();
 
-    foreach (['hivelog_details', 'hivelog_map', 'hivelog_settings'] as $group) {
-      $this->assertSame('details', $form[$group]['#type'], "$group is a details element.");
+    $this->assertSame('vertical_tabs', $form['hivelog_tabs']['#type']);
+    foreach (['hivelog_details', 'hivelog_map', 'hivelog_access', 'hivelog_ai'] as $tab) {
+      $this->assertSame('details', $form[$tab]['#type'], "$tab is a details element.");
+      $this->assertSame('hivelog_tabs', $form[$tab]['#group'], "$tab is a vertical tab.");
     }
     $expected = [
       'name' => 'hivelog_details',
       'location' => 'hivelog_details',
       'notes' => 'hivelog_details',
       'geolocation' => 'hivelog_map',
-      'visibility' => 'hivelog_settings',
-      'ai_insights_enabled' => 'hivelog_settings',
-      'uid' => 'hivelog_settings',
+      'visibility' => 'hivelog_access',
+      'uid' => 'hivelog_access',
+      'members' => 'hivelog_access',
+      'ai_insights_enabled' => 'hivelog_ai',
     ];
-    foreach ($expected as $field => $group) {
-      $this->assertSame($group, $form[$field]['#group'], "$field sits in $group.");
+    foreach ($expected as $field => $tab) {
+      $this->assertSame($tab, $form[$field]['#group'], "$field sits in $tab.");
     }
   }
 
   /**
-   * Tests that the Members section follows the form buttons.
+   * Tests that visibility, owner and members follow one another.
    */
-  public function testMembersFollowTheButtons(): void {
+  public function testAccessSettingsAreInOrder(): void {
     $form = $this->editForm();
 
-    $this->assertArrayHasKey('members', $form);
-    $this->assertGreaterThan($form['actions']['#weight'], $form['members']['#weight']);
+    $this->assertLessThan($form['uid']['#weight'], $form['visibility']['#weight']);
+    $this->assertLessThan($form['members']['#weight'], $form['uid']['#weight']);
     $this->assertSame('Members', (string) $form['members']['heading']['title']['#value']);
   }
 
@@ -101,6 +104,7 @@ class ApiaryFormLayoutTest extends KernelTestBase {
 
     $this->assertArrayNotHasKey('members', $form);
     $this->assertSame('hivelog_details', $form['name']['#group']);
+    $this->assertSame('hivelog_access', $form['visibility']['#group']);
   }
 
   /**

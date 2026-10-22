@@ -24,10 +24,11 @@ The pane that Claude drives cannot load the site's stylesheets, so anything visu
 checked from screenshots the owner sends.
 
 ## Acceptance criteria
-- [ ] Edit form is grouped into Details (name, location, notes), Map and Settings
-      (visibility, AI insights with its disclosure, owner)
-- [ ] Members section comes after the Save / Cancel buttons
-- [ ] Map opens on Denmark when the apiary has no location yet
+- [x] Edit form is split into vertical tabs: Details (name, location, notes), Map,
+      Access (visibility, owner, members, in that order) and AI insights (the checkbox
+      with its disclosure)
+- [x] Members section sits inside the Access tab, not after the Save / Cancel buttons
+- [x] Map opens on Denmark when the apiary has no location yet
 - [ ] Navigation strip is collapsed behind a menu button on narrow screens
 - [ ] Hive rows show more than breed / temperament / status
 - [ ] Overdue calendar items stand out from upcoming ones
@@ -35,9 +36,12 @@ checked from screenshots the owner sends.
 - [ ] `AGENTS.md` updated if conventions changed
 
 ## Implementation notes
-- Edit form grouping uses `details` elements with `#group`, so no field is moved or
-  re-parented. The `collective` module's AI-insights disclosure joins the Settings group
-  and stays visible: it is the consent text for that checkbox.
+- Edit form tabs are `details` elements with `#group` inside a `vertical_tabs` element,
+  so no field is moved or re-parented. The `collective` module's AI-insights disclosure
+  joins the AI insights tab and stays visible: it is the consent text for that checkbox.
+  The form display re-applies its own field weights after `form()` runs, so ordering
+  inside a tab follows the field definitions' form weights (visibility 6, owner 8) and
+  the Members section is weighted 9 to follow them.
 - The Leaflet widget reads its start position from `map_position`, not the `center` key
   the field definition used to set, which is why the map opened on 0,0. A site that has
   saved its own form display for Apiary keeps that display's settings.

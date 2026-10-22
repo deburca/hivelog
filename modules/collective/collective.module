@@ -44,8 +44,8 @@ function collective_form_alter(array &$form, FormStateInterface $form_state, $fo
 
   $form['ai_insights_enabled_disclosure'] = [
     '#type' => 'container',
-    // Stay beside the checkbox when core groups the form's fields.
-    '#group' => isset($form['hivelog_settings']) ? 'hivelog_settings' : NULL,
+    // Stay beside the checkbox when core groups the form's fields into tabs.
+    '#group' => isset($form['hivelog_ai']) ? 'hivelog_ai' : NULL,
     '#attributes' => ['class' => ['collective-ai-insights-disclosure']],
     '#weight' => ($form['ai_insights_enabled']['#weight'] ?? 7) + 0.5,
     'text' => [
