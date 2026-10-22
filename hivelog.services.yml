@@ -43,4 +43,4 @@ services:
 
   hivelog.apiary_member_manager:
     class: Drupal\hivelog\Form\ApiaryMemberManagerForm
-    arguments: ['@entity_type.manager']
+    arguments: ['@entity_type.manager', '@renderer']

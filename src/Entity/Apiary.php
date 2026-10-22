@@ -66,8 +66,8 @@ class Apiary extends ContentEntityBase implements EntityChangedInterface, Entity
   /**
    * Checks whether the given account is a member of this apiary.
    *
-   * A member is either the apiary owner or a user listed in the
-   * apiary_memberships field with any role (owner, editor, viewer).
+   * A member is either the apiary owner or a user with an
+   * ApiaryMembership row for this apiary, in any role (owner, editor, viewer).
    *
    * @param \Drupal\Core\Session\AccountInterface $account
    *   The user account to check.
@@ -79,10 +79,9 @@ class Apiary extends ContentEntityBase implements EntityChangedInterface, Entity
     if ((int) $this->getOwnerId() === (int) $account->id()) {
       return TRUE;
     }
-    foreach ($this->get('apiary_memberships') as $item) {
-      /** @var \Drupal\hivelog\Entity\ApiaryMembership|null $membership */
-      $membership = $item->entity;
-      if ($membership && (int) $membership->getMember()->id() === (int) $account->id()) {
+    foreach ($this->getApiaryMembers() as $membership) {
+      $member = $membership->getMember();
+      if ($member && (int) $member->id() === (int) $account->id()) {
         return TRUE;
       }
     }
@@ -96,14 +95,18 @@ class Apiary extends ContentEntityBase implements EntityChangedInterface, Entity
    *   The membership entities, indexed by numeric key.
    */
   public function getApiaryMembers(): array {
-    $members = [];
-    foreach ($this->get('apiary_memberships') as $item) {
-      /** @var \Drupal\hivelog\Entity\ApiaryMembership|null $membership */
-      $membership = $item->entity;
-      if ($membership) {
-        $members[] = $membership;
-      }
+    // Memberships point at the apiary, not the other way round, so the
+    // membership rows are the source of truth.
+    if ($this->isNew()) {
+      return [];
     }
+    $storage = \Drupal::entityTypeManager()->getStorage('apiary_membership');
+    $ids = $storage->getQuery()
+      ->condition('apiary', $this->id())
+      ->sort('id')
+      ->accessCheck(FALSE)
+      ->execute();
+    $members = array_values($storage->loadMultiple($ids));
     return $members;
   }
 
@@ -227,22 +230,6 @@ class Apiary extends ContentEntityBase implements EntityChangedInterface, Entity
         'weight' => 4,
         'settings' => [
           'rows' => 4,
-        ],
-      ])
-      ->setDisplayConfigurable('form', TRUE)
-      ->setDisplayConfigurable('view', TRUE);
-
-    $fields['apiary_memberships'] = BaseFieldDefinition::create('entity_reference')
-      ->setLabel(t('Members'))
-      ->setDescription(t('Users who are members of this apiary, each with a specific role (owner, editor, viewer). The apiary owner always has full access.'))
-      ->setSetting('target_type', 'apiary_membership')
-      ->setCardinality(FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED)
-      ->setDisplayOptions('form', [
-        'type' => 'entity_reference_autocomplete',
-        'weight' => 5,
-        'settings' => [
-          'match_operator' => 'CONTAINS',
-          'size' => 60,
         ],
       ])
       ->setDisplayConfigurable('form', TRUE)

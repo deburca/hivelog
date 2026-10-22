@@ -26,11 +26,7 @@ class ApiaryForm extends ContentEntityForm {
       $member_manager = \Drupal::service('hivelog.apiary_member_manager');
       $build = $member_manager->render($this->entity->id());
       if ($build) {
-        $form['members'] = [
-          '#type' => 'container',
-          '#attributes' => ['class' => ['js-hivelog-members']],
-          '#weight' => 100,
-        ] + $build;
+        $form['members'] = $build + ['#weight' => 100];
       }
     }
 

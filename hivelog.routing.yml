@@ -966,7 +966,7 @@ hivelog.apiary_membership.add:
   path: '/hivelog/apiary/{apiary}/membership/add'
   defaults:
     _entity_form: 'apiary_membership.add'
-    _title: 'Add member'
+    _title_callback: '\Drupal\hivelog\Form\ApiaryMembershipForm::addTitle'
   requirements:
     _permission: 'add apiary membership+administer hivelog'
     _entity_access: 'apiary.update'
@@ -980,9 +980,9 @@ entity.apiary_membership.edit_form:
   path: '/hivelog/apiary/{apiary}/membership/{apiary_membership}/edit'
   defaults:
     _entity_form: 'apiary_membership.edit'
-    _title_callback: '\Drupal\hivelog\Form\ApiaryMembershipForm::title'
+    _title_callback: '\Drupal\hivelog\Form\ApiaryMembershipForm::editTitle'
   requirements:
-    _permission: 'administer hivelog'
+    _permission: 'edit own apiary+administer hivelog'
     _entity_access: 'apiary_membership.update'
   options:
     parameters:
@@ -995,9 +995,9 @@ entity.apiary_membership.delete_form:
   path: '/hivelog/apiary/{apiary}/membership/{apiary_membership}/delete'
   defaults:
     _entity_form: 'apiary_membership.delete'
-    _title_callback: '\Drupal\hivelog\Form\ApiaryMembershipForm::title'
+    _title: 'Remove member'
   requirements:
-    _permission: 'administer hivelog'
+    _permission: 'edit own apiary+administer hivelog'
     _entity_access: 'apiary_membership.delete'
   options:
     parameters:

@@ -1002,8 +1002,7 @@ function hivelog_update_10031(&$sandbox) {
 /**
  * Installs ApiaryMembership and migrates beekeepers → memberships.
  *
- * Creates the ApiaryMembership entity type, adds the apiary_memberships
- * reference field to Apiary (replacing beekeepers), and migrates each
+ * Creates the ApiaryMembership entity type and migrates each
  * existing beekeeper row into a membership with role = viewer.  The old
  * beekeepers field is then removed.  Every membership gets uid set to
  * whoever performed the update hook run — the system user (uid 1)
@@ -1088,37 +1087,34 @@ function hivelog_update_10032(&$sandbox) {
     }
   }
 
-  // --- Remove the old beekeepers field, then install apiary_memberships. ---
+  // --- Remove the old beekeepers field. ---
+  // (An apiary_memberships reference field on Apiary used to be installed
+  // here; memberships point at the apiary, so it was never populated and
+  // hivelog_update_10034() removes it.)
   if ($entity_definition_update_manager->getFieldStorageDefinition('apiary', 'beekeepers')) {
     $entity_definition_update_manager->uninstallFieldStorageDefinition(
       $entity_definition_update_manager->getFieldStorageDefinition('apiary', 'beekeepers')
     );
   }
 
-  // Install apiary_memberships if it does not already exist.
-  $storage_exists = \Drupal::entityTypeManager()
-    ->getStorage('entity_field.storage')
-    ->loadByProperties(['entity_type' => 'apiary', 'field_name' => 'apiary_memberships']);
-  if (!reset($storage_exists)) {
-    $fields = Apiary::baseFieldDefinitions(
-      $entity_type_manager->getDefinition('apiary')
-    );
-
-    foreach (['name', 'location', 'geolocation', 'notes', 'visibility',
-      'ai_insights_enabled', 'uid', 'created', 'changed',
-    ] as $existing) {
-      unset($fields[$existing]);
-    }
-
-    $entity_definition_update_manager->installFieldStorageDefinition(
-      'apiary_memberships',
-      'apiary',
-      'hivelog',
-      $fields['apiary_memberships']
-    );
-  }
-
   return t('Installed ApiaryMembership entity type and migrated beekeepers to memberships.');
+}
+
+/**
+ * Removes the unused apiary_memberships reference field from Apiary.
+ *
+ * Memberships reference the apiary, so the membership rows are the source of
+ * truth and this field was never populated. Sites that ran an earlier
+ * hivelog_update_10032() have its storage installed; others have nothing to
+ * remove.
+ */
+function hivelog_update_10034(&$sandbox) {
+  $manager = \Drupal::entityDefinitionUpdateManager();
+  $definition = $manager->getFieldStorageDefinition('apiary_memberships', 'apiary');
+  if ($definition) {
+    $manager->uninstallFieldStorageDefinition($definition);
+  }
+  return t('Removed the unused apiary_memberships field from Apiary.');
 }
 
 /**

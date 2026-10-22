@@ -14,6 +14,7 @@ use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\hivelog\ApiaryMembershipAccessControlHandler;
+use Drupal\hivelog\ApiaryMembershipListBuilder;
 use Drupal\hivelog\Form\HivelogEntityDeleteForm;
 use Drupal\hivelog\Form\ApiaryMembershipForm;
 use Drupal\hivelog\HivelogEntityStorage;
@@ -77,8 +78,10 @@ class ApiaryMembership extends ContentEntityBase implements EntityChangedInterfa
     parent::preSave($storage);
 
     // Ensure uid (owner) is set on insert for the entity system to work.
-    if ($this->isNew() && !$this->get('uid')->entity) {
-      $this->set('uid', \Drupal::currentUser());
+    // Set the id, not the AccountProxy: an entity reference needs an id or a
+    // real entity, and the proxy is neither.
+    if ($this->isNew() && $this->get('uid')->isEmpty()) {
+      $this->set('uid', \Drupal::currentUser()->id());
     }
 
     // Guard against duplicate apiary-user memberships (backstop for
@@ -91,10 +94,21 @@ class ApiaryMembership extends ContentEntityBase implements EntityChangedInterfa
         ->execute();
       if ($existing) {
         throw new \InvalidArgumentException(
-          t('A membership for this apiary and user already exists.')
+          (string) t('A membership for this apiary and user already exists.')
         );
       }
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * The link templates are nested under the apiary, so every URL needs it.
+   */
+  protected function urlRouteParameters($rel) {
+    $parameters = parent::urlRouteParameters($rel);
+    $parameters['apiary'] = $this->get('apiary')->target_id;
+    return $parameters;
   }
 
   /**
