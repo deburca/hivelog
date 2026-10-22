@@ -12,6 +12,7 @@ use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
 use Drupal\hivelog\Entity\Apiary;
+use Drupal\hivelog\Entity\ApiaryMembership;
 use Drupal\hivelog\Form\HivelogCalendarFilterForm;
 use Drupal\hivelog\Form\HivelogFullCalendarFilterForm;
 use Drupal\hivelog\Form\HivelogHiveFilterForm;
@@ -137,6 +138,103 @@ class ApiaryController extends ControllerBase {
   }
 
   /**
+   * Builds the summary section shown at the top of an apiary page.
+   *
+   * @param \Drupal\hivelog\Entity\Apiary $apiary
+   *   The apiary.
+   *
+   * @return array
+   *   A render array: a heading and a label/value table.
+   */
+  protected function buildSummary(Apiary $apiary): array {
+    $empty = (string) $this->t('—');
+    $text = function (string $field) use ($apiary, $empty): array {
+      $value = trim((string) $apiary->get($field)->value);
+      return ['#plain_text' => $value !== '' ? $value : $empty];
+    };
+    $label = fn(string $field): string => (string) $apiary->get($field)->getFieldDefinition()->getLabel();
+
+    $visibility = $apiary->get('visibility')->value;
+    $visibility_label = $apiary->get('visibility')->getSetting('allowed_values')[$visibility] ?? $visibility;
+
+    $rows = [
+      [$label('location'), $text('location')],
+      [$label('visibility'), ['#plain_text' => (string) $visibility_label]],
+      [(string) $this->t('Your role'), ['#plain_text' => $this->currentUserRole($apiary)]],
+    ];
+
+    // Who the members are is for people who manage the apiary, as with the
+    // membership access handler (owners only see the rows).
+    $cache_tags = $apiary->getCacheTags();
+    if ($apiary->access('update', $this->currentUser)) {
+      $members = [];
+      foreach ($apiary->getApiaryMembers() as $membership) {
+        $member = $membership->getMember();
+        if ($member) {
+          $members[] = $member->getDisplayName() . ' (' . (ApiaryMembership::ROLES[$membership->getRole()] ?? $membership->getRole()) . ')';
+        }
+      }
+      $rows[] = [
+        (string) $this->t('Members'),
+        [
+          'summary' => ['#plain_text' => $members ? implode(', ', $members) : $empty],
+          'manage' => [
+            '#type' => 'link',
+            '#title' => $this->t('Manage members'),
+            '#url' => $apiary->toUrl('edit-form', ['fragment' => 'members']),
+            '#prefix' => ' ',
+          ],
+        ],
+      ];
+      $cache_tags[] = 'apiary_membership_list';
+    }
+    $rows[] = [$label('notes'), $text('notes')];
+
+    return [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['hivelog-detail-section', 'hivelog-apiary-section']],
+      'heading' => [
+        '#type' => 'html_tag',
+        '#tag' => 'h2',
+        '#value' => $this->t('Details'),
+      ],
+      'table' => [
+        '#type' => 'table',
+        '#rows' => array_map(
+          fn(array $row): array => [['data' => ['#plain_text' => $row[0]]], ['data' => $row[1]]],
+          $rows
+        ),
+        '#attributes' => ['class' => ['hivelog-detail-table', 'hivelog-apiary-table']],
+        '#attached' => ['library' => ['hivelog/tables']],
+      ],
+      '#cache' => [
+        'tags' => $cache_tags,
+        'contexts' => ['user', 'user.permissions'],
+      ],
+    ];
+  }
+
+  /**
+   * Names the current user's relationship to an apiary, for the summary.
+   */
+  protected function currentUserRole(Apiary $apiary): string {
+    if ($this->currentUser->hasPermission('administer hivelog')) {
+      return (string) $this->t('Administrator');
+    }
+    $uid = (int) $this->currentUser->id();
+    if ((int) $apiary->getOwnerId() === $uid) {
+      return ApiaryMembership::ROLES['owner'];
+    }
+    foreach ($apiary->getApiaryMembers() as $membership) {
+      $member = $membership->getMember();
+      if ($member && (int) $member->id() === $uid) {
+        return ApiaryMembership::ROLES[$membership->getRole()] ?? $membership->getRole();
+      }
+    }
+    return (string) $this->t('Visitor');
+  }
+
+  /**
    * Displays an apiary with its hives.
    */
   public function view(Apiary $apiary) {
@@ -147,6 +245,10 @@ class ApiaryController extends ControllerBase {
     // were the two canonical pages that had no page-owned button group at
     // all, relying entirely on the Navigation module's top bar.
     $build['actions'] = $this->buildActions($apiary);
+
+    // Summary of the apiary itself (location, visibility, the viewer's role,
+    // members): the page otherwise opens straight onto its hives.
+    $build['summary'] = $this->buildSummary($apiary) + ['#weight' => -5];
 
     // "At a glance" stat tiles — optional submodules only; hivelog core
     // contributes none of its own here. See hivelog.api.php's

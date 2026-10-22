@@ -2624,3 +2624,63 @@ msgstr "Dronningobservationen er blevet opdateret."
 #: modules/contrib/hivelog/src/Plugin/EntityReferenceSelection/ApiaryScopedSelection.php:38
 msgid "Hivelog: scoped to one apiary"
 msgstr "Hivelog: afgrænset til én bigård"
+#: modules/contrib/hivelog/src/Form/ApiaryMemberManagerForm.php
+msgid "Members"
+msgstr "Medlemmer"
+#: modules/contrib/hivelog/src/Form/ApiaryMemberManagerForm.php
+msgid "Member"
+msgstr "Medlem"
+#: modules/contrib/hivelog/src/Form/ApiaryMemberManagerForm.php
+msgid "Add a member"
+msgstr "Tilføj medlem"
+#: modules/contrib/hivelog/src/Form/ApiaryMemberManagerForm.php
+msgid "No members yet."
+msgstr "Ingen medlemmer endnu."
+#: modules/contrib/hivelog/src/Form/ApiaryMemberManagerForm.php
+msgid "People who can access this apiary and its hives."
+msgstr "Personer, der har adgang til denne bigård og dens bistader."
+#: modules/contrib/hivelog/src/Form/ApiaryMemberManagerForm.php
+msgid "Add member to @apiary"
+msgstr "Tilføj medlem til @apiary"
+#: modules/contrib/hivelog/src/Form/ApiaryMemberManagerForm.php
+msgid "Edit role of @member"
+msgstr "Redigér rolle for @member"
+#: modules/contrib/hivelog/src/Form/ApiaryMemberManagerForm.php
+msgid "Remove member"
+msgstr "Fjern medlem"
+#: modules/contrib/hivelog/src/Form/ApiaryMemberManagerForm.php
+msgid "Start typing a username"
+msgstr "Begynd at skrive et brugernavn"
+#: modules/contrib/hivelog/src/Form/ApiaryMemberManagerForm.php
+msgid "Viewer: can see the apiary, its hives and inspections, and delete their own. Editor: can also add and edit hives and inspections. Owner: full control, including members."
+msgstr "Viewer: kan se bigården, dens bistader og eftersyn og slette sine egne. Editor: kan også tilføje og redigere bistader og eftersyn. Owner: fuld kontrol, herunder medlemmer."
+#: modules/contrib/hivelog/src/Form/ApiaryMemberManagerForm.php
+msgid "Account"
+msgstr "Konto"
+#: modules/contrib/hivelog/src/Form/ApiaryMemberManagerForm.php
+msgid "The user who has this membership."
+msgstr "Brugeren, der har dette medlemskab."
+#: modules/contrib/hivelog/src/Form/ApiaryMemberManagerForm.php
+msgid "The role granted to this member within the apiary."
+msgstr "Den rolle, medlemmet har i bigården."
+#: modules/contrib/hivelog/src/Form/ApiaryMemberManagerForm.php
+msgid "Membership has been created."
+msgstr "Medlemskabet er blevet oprettet."
+#: modules/contrib/hivelog/src/Form/ApiaryMemberManagerForm.php
+msgid "Membership has been updated."
+msgstr "Medlemskabet er blevet opdateret."
+#: modules/contrib/hivelog/src/Form/ApiaryMemberManagerForm.php
+msgid "This user is already a member of this apiary."
+msgstr "Denne bruger er allerede medlem af bigården."
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php
+msgid "Your role"
+msgstr "Din rolle"
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php
+msgid "Manage members"
+msgstr "Administrer medlemmer"
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php
+msgid "Administrator"
+msgstr "Administrator"
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php
+msgid "Visitor"
+msgstr "Gæst"
