@@ -65,6 +65,7 @@ class InventoryCostReportTest extends KernelTestBase {
     $this->installEntitySchema('user');
     $this->installEntitySchema('file');
     $this->installEntitySchema('apiary');
+    $this->installEntitySchema('apiary_membership');
     $this->installEntitySchema('hive');
     $this->installEntitySchema('calendar_action');
     $this->installEntitySchema('calendar_action_item_requirement');

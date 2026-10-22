@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\Tests\nanoprobe\Kernel;
 
 use Drupal\Core\Form\FormState;
+use Drupal\hivelog\Entity\ApiaryMembership;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\Hive;
 use Drupal\nanoprobe\Controller\SensorDeviceController;
@@ -64,6 +65,7 @@ class SensorDeviceManagementUiTest extends KernelTestBase {
     $this->installEntitySchema('user');
     $this->installEntitySchema('file');
     $this->installEntitySchema('apiary');
+    $this->installEntitySchema('apiary_membership');
     $this->installEntitySchema('hive');
     $this->installEntitySchema('sensor_device');
     $this->installSchema('file', ['file_usage']);
@@ -252,8 +254,11 @@ class SensorDeviceManagementUiTest extends KernelTestBase {
     $viewer = User::create(['name' => 'viewer', 'mail' => 'viewer@example.com']);
     $viewer->addRole('device_viewer');
     $viewer->save();
-    $this->apiary->set('beekeepers', [$viewer->id()]);
-    $this->apiary->save();
+    ApiaryMembership::create([
+      'apiary' => $this->apiary->id(),
+      'account' => $viewer->id(),
+      'role' => 'viewer',
+    ])->save();
     \Drupal::currentUser()->setAccount($viewer);
 
     $build = \Drupal::entityTypeManager()->getListBuilder('sensor_device')->render();
@@ -320,8 +325,11 @@ class SensorDeviceManagementUiTest extends KernelTestBase {
     $viewer = User::create(['name' => 'panel-viewer', 'mail' => 'panel-viewer@example.com']);
     $viewer->addRole('no_add');
     $viewer->save();
-    $this->apiary->set('beekeepers', [$viewer->id()]);
-    $this->apiary->save();
+    ApiaryMembership::create([
+      'apiary' => $this->apiary->id(),
+      'account' => $viewer->id(),
+      'role' => 'viewer',
+    ])->save();
     \Drupal::currentUser()->setAccount($viewer);
 
     $build = \Drupal::service('nanoprobe.sensor_panel_builder')->buildHivePanel($this->hive);

@@ -58,6 +58,7 @@ class CalendarActionItemRequirementTest extends KernelTestBase {
     $this->installEntitySchema('user');
     $this->installEntitySchema('file');
     $this->installEntitySchema('apiary');
+    $this->installEntitySchema('apiary_membership');
     $this->installEntitySchema('calendar_action');
     $this->installEntitySchema('inventory_item');
     $this->installEntitySchema('calendar_action_item_requirement');

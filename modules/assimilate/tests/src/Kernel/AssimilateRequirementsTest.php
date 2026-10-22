@@ -51,6 +51,7 @@ class AssimilateRequirementsTest extends KernelTestBase {
     $this->installEntitySchema('user');
     $this->installEntitySchema('file');
     $this->installEntitySchema('apiary');
+    $this->installEntitySchema('apiary_membership');
     $this->installSchema('file', ['file_usage']);
     require_once $this->root . '/core/includes/install.inc';
   }

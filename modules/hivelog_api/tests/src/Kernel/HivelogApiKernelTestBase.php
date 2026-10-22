@@ -72,7 +72,7 @@ abstract class HivelogApiKernelTestBase extends KernelTestBase {
     $this->installSchema('file', ['file_usage']);
     $this->installConfig(['system', 'user', 'jsonapi']);
     foreach ([
-      'user', 'file', 'consumer', 'oauth2_token', 'apiary', 'hive', 'hive_inspection', 'queen',
+      'user', 'file', 'consumer', 'oauth2_token', 'apiary', 'apiary_membership', 'hive', 'hive_inspection', 'queen',
       'queen_observation', 'calendar_action', 'hive_action_log', 'apiary_action_log',
       'inventory_item', 'inventory_purchase', 'product', 'calendar_action_item_requirement',
       'calendar_action_product_yield', 'hive_component',

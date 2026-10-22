@@ -957,3 +957,51 @@ entity.calendar_action_product_yield.delete_form:
     parameters:
       calendar_action_product_yield:
         type: entity:calendar_action_product_yield
+
+# Apiary membership routes (managed inline on the parent apiary edit page).
+# No collection or canonical route — member list and add-member are embedded
+# into ApiaryForm via ApiaryMemberManagerForm::render().  Edit/delete links
+# in that list go to these routes because a standalone CRUD flow is needed.
+hivelog.apiary_membership.add:
+  path: '/hivelog/apiary/{apiary}/membership/add'
+  defaults:
+    _entity_form: 'apiary_membership.add'
+    _title_callback: '\Drupal\hivelog\Form\ApiaryMembershipForm::addTitle'
+  requirements:
+    _permission: 'add apiary membership+administer hivelog'
+    _entity_access: 'apiary.update'
+    _entity_create_access: 'apiary_membership'
+  options:
+    parameters:
+      apiary:
+        type: entity:apiary
+
+entity.apiary_membership.edit_form:
+  path: '/hivelog/apiary/{apiary}/membership/{apiary_membership}/edit'
+  defaults:
+    _entity_form: 'apiary_membership.edit'
+    _title_callback: '\Drupal\hivelog\Form\ApiaryMembershipForm::editTitle'
+  requirements:
+    _permission: 'edit own apiary+administer hivelog'
+    _entity_access: 'apiary_membership.update'
+  options:
+    parameters:
+      apiary:
+        type: entity:apiary
+      apiary_membership:
+        type: entity:apiary_membership
+
+entity.apiary_membership.delete_form:
+  path: '/hivelog/apiary/{apiary}/membership/{apiary_membership}/delete'
+  defaults:
+    _entity_form: 'apiary_membership.delete'
+    _title: 'Remove member'
+  requirements:
+    _permission: 'edit own apiary+administer hivelog'
+    _entity_access: 'apiary_membership.delete'
+  options:
+    parameters:
+      apiary:
+        type: entity:apiary
+      apiary_membership:
+        type: entity:apiary_membership

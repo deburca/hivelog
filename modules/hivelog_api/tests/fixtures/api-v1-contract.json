@@ -1,7 +1,6 @@
 {
     "apiary--apiary": {
         "ai_insights_enabled": "attribute",
-        "beekeepers": "relationship",
         "changed": "attribute",
         "created": "attribute",
         "drupal_internal__id": "attribute",

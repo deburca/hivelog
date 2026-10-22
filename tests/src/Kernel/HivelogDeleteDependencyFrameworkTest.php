@@ -77,6 +77,7 @@ class HivelogDeleteDependencyFrameworkTest extends KernelTestBase {
     // actually creates — so every core child type needs its schema
     // installed, not just the ones this test's own fixtures touch.
     $this->installEntitySchema('apiary');
+    $this->installEntitySchema('apiary_membership');
     $this->installEntitySchema('hive');
     $this->installEntitySchema('hive_inspection');
     $this->installEntitySchema('hive_action_log');

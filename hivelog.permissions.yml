@@ -257,3 +257,15 @@ delete own harvest yield:
   title: 'Delete own harvest yield records'
 delete any harvest yield:
   title: 'Delete any harvest yield record'
+
+# Apiary membership permissions (ADR-0108, task 0223).
+add apiary membership:
+  title: 'Add a member to an apiary'
+edit own apiary membership:
+  title: 'Edit own apiary members'
+edit any apiary membership:
+  title: 'Edit any apiary membership'
+delete own apiary membership:
+  title: 'Delete own apiary membership'
+delete any apiary membership:
+  title: 'Delete any apiary membership'

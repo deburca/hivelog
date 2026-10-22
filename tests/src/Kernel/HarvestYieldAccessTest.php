@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\Tests\hivelog\Kernel;
 
 use Drupal\hivelog\Entity\Apiary;
+use Drupal\hivelog\Entity\ApiaryMembership;
 use Drupal\hivelog\Entity\CalendarAction;
 use Drupal\hivelog\Entity\HarvestYield;
 use Drupal\hivelog\Entity\Hive;
@@ -75,6 +76,7 @@ class HarvestYieldAccessTest extends KernelTestBase {
     $this->installEntitySchema('user');
     $this->installEntitySchema('file');
     $this->installEntitySchema('apiary');
+    $this->installEntitySchema('apiary_membership');
     $this->installEntitySchema('hive');
     $this->installEntitySchema('calendar_action');
     $this->installEntitySchema('hive_action_log');
@@ -109,9 +111,13 @@ class HarvestYieldAccessTest extends KernelTestBase {
       'name' => 'Test Apiary',
       'uid' => $this->owner->id(),
       'visibility' => 'private',
-      'beekeepers' => [$this->beekeeper->id()],
     ]);
     $this->apiary->save();
+    ApiaryMembership::create([
+      'apiary' => $this->apiary->id(),
+      'account' => $this->beekeeper->id(),
+      'role' => 'editor',
+    ])->save();
 
     $hive = Hive::create([
       'name' => 'Test Hive',

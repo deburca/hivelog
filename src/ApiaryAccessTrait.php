@@ -20,6 +20,7 @@ trait ApiaryAccessTrait {
    *
    * Traverses the entity reference chain:
    * - Apiary: returns itself.
+   * - ApiaryMembership: apiary_membership → apiary directly.
    * - Hive: hive → apiary.
    * - HiveInspection: inspection → hive → apiary.
    * - Queen: queen → hive → apiary (hive may be NULL).
@@ -61,6 +62,12 @@ trait ApiaryAccessTrait {
     }
 
     $entity_type = $entity->getEntityTypeId();
+
+    // ApiaryMembership → apiary directly.
+    if ($entity_type === 'apiary_membership') {
+      // @phpstan-ignore-next-line
+      return $entity->get('apiary')->entity;
+    }
 
     // Hive → apiary.
     // @phpstan-ignore-next-line

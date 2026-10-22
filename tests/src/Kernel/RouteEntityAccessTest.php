@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\Tests\hivelog\Kernel;
 
 use Drupal\Core\Session\AnonymousUserSession;
+use Drupal\hivelog\Entity\ApiaryMembership;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\ApiaryActionLog;
 use Drupal\hivelog\Entity\CalendarAction;
@@ -121,6 +122,7 @@ class RouteEntityAccessTest extends KernelTestBase {
     $this->installEntitySchema('user');
     $this->installEntitySchema('file');
     $this->installEntitySchema('apiary');
+    $this->installEntitySchema('apiary_membership');
     $this->installEntitySchema('hive');
     $this->installEntitySchema('hive_inspection');
     $this->installEntitySchema('queen');
@@ -154,6 +156,10 @@ class RouteEntityAccessTest extends KernelTestBase {
       $permissions[] = 'delete own ' . $phrase;
       $permissions[] = 'add ' . $phrase;
     }
+
+    // Membership has only an "add" permission of this shape; managing
+    // members otherwise rides on 'edit own apiary'.
+    $permissions[] = 'add apiary membership';
 
     $role = Role::create(['id' => 'beekeeper', 'label' => 'Beekeeper']);
     foreach ($permissions as $permission) {
@@ -276,6 +282,16 @@ class RouteEntityAccessTest extends KernelTestBase {
     ]);
     $product->save();
     $this->fixtures['product'] = $product;
+
+    $member = User::create(['name' => 'fixture_member', 'mail' => 'fixture_member@example.com']);
+    $member->save();
+    $membership = ApiaryMembership::create([
+      'apiary' => $apiary->id(),
+      'account' => $member->id(),
+      'role' => 'viewer',
+    ]);
+    $membership->save();
+    $this->fixtures['apiary_membership'] = $membership;
 
     $requirement = CalendarActionItemRequirement::create([
       'calendar_action' => $calendar_action->id(),
@@ -456,6 +472,9 @@ class RouteEntityAccessTest extends KernelTestBase {
     'hivelog.inventory_item.add',
     'hivelog.inventory_purchase.add',
     'hivelog.product.add',
+    'hivelog.apiary_membership.add',
+    'entity.apiary_membership.edit_form',
+    'entity.apiary_membership.delete_form',
   ];
 
   /**
@@ -539,8 +558,11 @@ class RouteEntityAccessTest extends KernelTestBase {
     $beekeeper->save();
 
     $apiary = $this->fixtures['apiary'];
-    $apiary->set('beekeepers', [$beekeeper->id()]);
-    $apiary->save();
+    ApiaryMembership::create([
+      'apiary' => $apiary->id(),
+      'account' => $beekeeper->id(),
+      'role' => 'editor',
+    ])->save();
 
     $etm = \Drupal::entityTypeManager();
     foreach (array_keys($this->fixtures) as $entity_type_id) {

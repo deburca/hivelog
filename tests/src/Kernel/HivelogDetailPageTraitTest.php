@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\Tests\hivelog\Kernel;
 
 use Drupal\hivelog\Controller\QueenController;
+use Drupal\hivelog\Entity\ApiaryMembership;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\Hive;
 use Drupal\hivelog\Entity\Queen;
@@ -75,6 +76,7 @@ class HivelogDetailPageTraitTest extends KernelTestBase {
     $this->installEntitySchema('user');
     $this->installEntitySchema('file');
     $this->installEntitySchema('apiary');
+    $this->installEntitySchema('apiary_membership');
     $this->installEntitySchema('hive');
     $this->installEntitySchema('queen');
 
@@ -160,8 +162,11 @@ class HivelogDetailPageTraitTest extends KernelTestBase {
     $editor = User::create(['name' => 'editor', 'mail' => 'editor@example.com']);
     $editor->addRole('edit_only');
     $editor->save();
-    $this->apiary->set('beekeepers', [$editor->id()]);
-    $this->apiary->save();
+    ApiaryMembership::create([
+      'apiary' => $this->apiary->id(),
+      'account' => $editor->id(),
+      'role' => 'editor',
+    ])->save();
 
     $this->setCurrentUser($editor);
     $build = $this->buildActions();

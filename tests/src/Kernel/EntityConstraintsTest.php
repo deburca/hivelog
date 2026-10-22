@@ -76,7 +76,7 @@ class EntityConstraintsTest extends KernelTestBase {
   protected function setUp(): void {
     parent::setUp();
     foreach ([
-      'user', 'file', 'apiary', 'hive', 'hive_inspection', 'queen', 'queen_observation', 'calendar_action',
+      'user', 'file', 'apiary', 'apiary_membership', 'hive', 'hive_inspection', 'queen', 'queen_observation', 'calendar_action',
       'hive_action_log', 'apiary_action_log', 'inventory_item', 'inventory_purchase', 'product',
       'calendar_action_item_requirement', 'calendar_action_product_yield', 'hive_component',
     ] as $type) {

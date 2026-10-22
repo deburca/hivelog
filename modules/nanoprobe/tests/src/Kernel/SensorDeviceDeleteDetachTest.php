@@ -50,6 +50,7 @@ class SensorDeviceDeleteDetachTest extends KernelTestBase {
     $this->installEntitySchema('user');
     $this->installEntitySchema('file');
     $this->installEntitySchema('apiary');
+    $this->installEntitySchema('apiary_membership');
     $this->installEntitySchema('hive');
     $this->installEntitySchema('sensor_device');
     $this->installSchema('file', ['file_usage']);

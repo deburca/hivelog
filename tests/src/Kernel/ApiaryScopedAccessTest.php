@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\Tests\hivelog\Kernel;
 
 use Drupal\hivelog\Entity\Apiary;
+use Drupal\hivelog\Entity\ApiaryMembership;
 use Drupal\hivelog\Entity\ApiaryActionLog;
 use Drupal\hivelog\Entity\CalendarAction;
 use Drupal\hivelog\Entity\Hive;
@@ -130,6 +131,7 @@ class ApiaryScopedAccessTest extends KernelTestBase {
     $this->installEntitySchema('user');
     $this->installEntitySchema('file');
     $this->installEntitySchema('apiary');
+    $this->installEntitySchema('apiary_membership');
     $this->installEntitySchema('hive');
     $this->installEntitySchema('hive_inspection');
     $this->installEntitySchema('queen');
@@ -194,9 +196,13 @@ class ApiaryScopedAccessTest extends KernelTestBase {
       'name' => 'Test Apiary',
       'uid' => $this->owner->id(),
       'visibility' => 'private',
-      'beekeepers' => [$this->beekeeper->id()],
     ]);
     $this->apiary->save();
+    ApiaryMembership::create([
+      'apiary' => $this->apiary->id(),
+      'account' => $this->beekeeper->id(),
+      'role' => 'editor',
+    ])->save();
 
     $this->hive = Hive::create([
       'name' => 'Test Hive',
@@ -954,8 +960,11 @@ class ApiaryScopedAccessTest extends KernelTestBase {
     $this->assertFalse($apiaryActionLogA->access('update', $userB), 'Non-member userB cannot edit apiary action log.');
 
     // --- Phase 2: add userB as a beekeeper on the apiary. ---
-    $apiaryA->set('beekeepers', [$userB->id()]);
-    $apiaryA->save();
+    ApiaryMembership::create([
+      'apiary' => $apiaryA->id(),
+      'account' => $userB->id(),
+      'role' => 'editor',
+    ])->save();
 
     // Reset entity storage and access static caches so Phase 1 results
     // are not reused and entity references resolve the updated apiary.

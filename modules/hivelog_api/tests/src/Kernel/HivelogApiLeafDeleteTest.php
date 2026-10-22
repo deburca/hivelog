@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\Tests\hivelog_api\Kernel;
 
 use Drupal\file\Entity\File;
+use Drupal\hivelog\Entity\ApiaryMembership;
 use Drupal\hivelog\Entity\HiveInspection;
 use Drupal\hivelog\Entity\Queen;
 use Drupal\hivelog\Entity\QueenObservation;
@@ -73,7 +74,11 @@ class HivelogApiLeafDeleteTest extends HivelogApiKernelTestBase {
    */
   public function testOwnerDeletesAnyMemberOnlyTheirOwn(): void {
     $member = $this->beekeeper('member');
-    $this->fixtures['my_apiary']->set('beekeepers', [$member->id()])->save();
+    ApiaryMembership::create([
+      'apiary' => $this->fixtures['my_apiary']->id(),
+      'account' => $member->id(),
+      'role' => 'viewer',
+    ])->save();
     $storage = \Drupal::entityTypeManager()->getStorage('hive_inspection');
 
     $byMember = $this->inspectionBy($member->id());

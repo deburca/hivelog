@@ -11,7 +11,7 @@ here. When the module is installed into a Drupal site it lands at
 module-relative (e.g. `src/`, `css/`, `components/`, `tests/`).
 
 The module provides a beekeeping activity logger. Core (this repo's own
-`src/`) defines 16 content entity types; three of the five optional
+`src/`) defines 17 content entity types; three of the five optional
 submodules under `modules/` add 6 more between them (the other two,
 `assimilate` and `hivelog_api`, add none) — see "Content entities" and "Submodules" below. Apiaries, hives and inspections form a strict
 parent–child hierarchy; queens are tracked separately and linked to the hive
@@ -227,6 +227,20 @@ row with `status: pending`) until a beekeeper reports it `done` or `ignored`:
   reports on. The apiary-scoped sibling of `HiveActionLog`, for
   apiary-scoped actions; deliberately has no `inspection` field (linking an
   inspection is inherently hive-scoped).
+
+**Apiary memberships** (ADR-0108) — scoped to one `Apiary`; links a user to an
+apiary with a role (`owner`, `editor`, or `viewer`). One row per apiary-user
+pair. Manages team access: owner has full control, editor can edit all hives and
+inspections but not delete the apiary or manage members, viewer gets read-only
+access plus the ability to delete their own inspections and queen observations.
+Replaces the legacy `beekeepers` field (a bare user reference with no role).
+The apiary canonical page shows memberships; add/edit/delete is via an inline
+section on the Apiary edit form (`ApiaryMemberManagerForm`). A migration hook
+(`hivelog_update_10032`) converts existing beekeepers rows to memberships with
+role = `viewer`. Delete-dependency rows 0108-1/0108-2 use CASCADE so deleting
+an apiary removes its memberships automatically. No collection or canonical
+route — managed inline; add/edit/delete routes exist only for the embedded form's
+operations links.
 
 **Inventory, products and yields** (ADR-0027, ADR-0034) — each catalog type
 is scoped to one `Apiary`; the "recipe" (`CalendarActionItemRequirement`/

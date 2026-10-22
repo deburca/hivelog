@@ -56,6 +56,7 @@ class SensorDeviceDeleteBlockTest extends KernelTestBase {
     $this->installEntitySchema('user');
     $this->installEntitySchema('file');
     $this->installEntitySchema('apiary');
+    $this->installEntitySchema('apiary_membership');
     $this->installEntitySchema('sensor_device');
     // Every one of hivelog core's own apiary-rooted BLOCK/CASCADE/WARN
     // rows is deliberately NOT installed here — this test's fixtures
