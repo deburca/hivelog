@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\Tests\hivelog\Kernel;
 
 use Drupal\hivelog\Entity\Apiary;
+use Drupal\hivelog\Entity\ApiaryMembership;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\user\Traits\UserCreationTrait;
 use PHPUnit\Framework\Attributes\Group;
@@ -141,6 +142,23 @@ class ApiaryFormLayoutTest extends KernelTestBase {
     $this->assertEqualsWithDelta(55.9, $settings['map_position']['center']['lat'], 1.0);
     $this->assertEqualsWithDelta(10.5, $settings['map_position']['center']['lon'], 2.0);
     $this->assertArrayNotHasKey('center', $settings, 'The widget ignores a bare center key.');
+  }
+
+  /**
+   * Tests the add-member form takes the shared spacing and button styles.
+   */
+  public function testMemberFormUsesTheSharedSpacing(): void {
+    $owner = $this->createUser(['edit own apiary', 'add apiary membership']);
+    $this->setCurrentUser($owner);
+    $apiary = Apiary::create(['name' => 'Test Apiary', 'uid' => $owner->id()]);
+    $apiary->save();
+    $membership = ApiaryMembership::create(['apiary' => $apiary->id()]);
+
+    $form = \Drupal::service('entity.form_builder')->getForm($membership, 'add');
+
+    $this->assertStringContainsString('hivelog-entity-form', $form['#prefix']);
+    $this->assertContains('hivelog/forms', $form['#attached']['library']);
+    $this->assertArrayHasKey('cancel', $form['actions']);
   }
 
 }

@@ -53,6 +53,13 @@ class ApiaryMembershipForm extends ContentEntityForm {
   public function form(array $form, FormStateInterface $form_state) {
     $form = parent::form($form, $form_state);
 
+    // The shared entity-form spacing and button styles, as on the Hive and
+    // apiary forms. The library also brings in the button styles the Cancel
+    // action needs; without it Cancel rendered as a bare link.
+    $form['#prefix'] = '<div class="hivelog-entity-form">';
+    $form['#suffix'] = '</div>';
+    $form['#attached']['library'][] = 'hivelog/forms';
+
     // The apiary comes from the route and the creator is set on save, so
     // neither is ever asked for.
     $form['apiary']['#access'] = FALSE;
