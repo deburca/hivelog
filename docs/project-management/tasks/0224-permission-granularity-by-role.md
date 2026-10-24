@@ -38,6 +38,73 @@ identically. The three roles map to distinct permission sets:
 \** Viewer can delete their own inspections.
 \*** Viewer can delete their own observations.
 
+## Decisions (2026-10-24)
+Recorded from the owner's review of this task after 0223 shipped. They supersede the
+role table above where they differ; the table is kept only until the open questions
+below are answered and it can be rewritten.
+
+1. **The `viewer` role is a misnomer.** The role is active, not read-only: it adds and
+   edits inspections and queen observations. It will be renamed (name still to be
+   chosen; see Open questions). Renaming a stored `list_string` value needs an update
+   hook that rewrites existing rows, not just a new allowed value.
+2. **Only the owner manages members.** Members, of any role, cannot add, edit or remove
+   members. (Already how 0223 behaves; it stays.)
+3. **Queens, calendar actions and hive components are owner-only.**
+4. **Submodule areas are owner-only** (sensors, insights and the like).
+
+## Open questions
+Answer these before the role table is rewritten and the handlers are changed. Each is
+marked with what it blocks.
+
+**Roles**
+1. Do we keep three roles (owner, editor, renamed viewer) or two (owner and the renamed
+   role)? With queens, calendar, components and submodules all owner-only, it is not
+   clear what an editor can do that the renamed role cannot. *Blocks the whole table.*
+2. What is the renamed role called? *Blocks the update hook, UI strings, translations.*
+3. Is the apiary's `uid` owner the same as a membership with role `owner`? Today the
+   membership access handler only checks the `uid` owner, so a member given role `owner`
+   cannot manage members. Are co-owners allowed, and may they manage members?
+
+**What the renamed role may do**
+4. Hives: may it add, edit or delete hives, or only view them?
+5. Inspections and queen observations: may it edit and delete other people's, or only its
+   own? (The API today lets a member delete only their own.)
+6. Calendar: the calendar *actions* (the plan) are owner-only, but may the renamed role
+   *report* them (done or ignored) through the hive and apiary action logs? That is the
+   everyday way people tick off jobs. *Blocks the calendar handlers.*
+7. Inventory, products, purchases, usage and yields: owner-only too? Note that reporting a
+   job as done can write inventory usage and harvest yield as a side effect, so a log
+   permission without an inventory permission would conflict.
+
+**Owner-only areas: hidden or read-only?**
+8. For queens, calendar, components, inventory and the submodule panels, does "owner-only"
+   mean the renamed role cannot *change* them but still sees them, or cannot see them at
+   all? The hive page shows queen details, components, empty weight and net colony
+   weight, so hiding them would change that page. *Blocks list builders and page panels.*
+9. "Such as": are there other core areas beyond queens, calendar and components that
+   should be owner-only? (Apiary edit and delete are already owner-only.)
+10. Submodules: owner-only to *manage* sensors and providers, but may members see the
+    readings, stat tiles and insights for their apiary?
+
+**A technical conflict to resolve**
+11. Creating an inspection needs `update` on its hive, and a queen observation needs
+    `update` on its queen, because of the parent-access constraint (task 0133 and
+    `HivelogParentAccess`). If members may not edit hives or queens, they cannot add
+    inspections or observations. Do we introduce a separate "contribute" level that the
+    constraint accepts for those two child types, or allow `update` on the parent?
+    *Blocks the constraint and the API.*
+
+**Existing data and rollout**
+12. `hivelog_update_10032` migrated every old beekeeper to `viewer`, and before roles are
+    enforced they could edit everything. Which role should existing members get, and
+    should an update hook do it? Enforcing roles will otherwise change what they can do.
+13. Public apiaries: does a non-member with the "own" permission stay view-only?
+14. Do roles *add to* the site permissions (a member needs both the apiary role and the
+    site permission), or replace them? The task assumes the former.
+15. The API field-app role holds broad permissions (including `edit own apiary|hive|queen`).
+    Should it be narrowed once roles exist, and how should app tokens for non-owners be
+    checked?
+
 ## Acceptance criteria
 - [ ] New permissions defined in `hivelog.permissions.yml`:
       - `edit own apiary` (replaces current meaning — now owner-only)
