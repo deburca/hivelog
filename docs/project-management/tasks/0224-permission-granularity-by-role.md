@@ -48,57 +48,61 @@ below are answered and it can be rewritten.
    "the member role" below). The old `viewer` and `editor` values go. The member role is
    active, not read-only. Renaming stored role values needs an update hook that rewrites
    existing rows.
-2. **The apiary owner and the membership with role `owner` are the same thing.** That makes
-   ownership transferable from owner to owner. It follows that **access comes only from
-   the current membership, never from having created a record**: a previous owner or
-   member keeps no right to edit or delete what they created while they held a role.
-   (This replaces the creator-based "delete own" rules.)
-3. **Only the owner manages members.** The member role cannot add, edit or remove members.
+2. **Owners are the memberships with role `owner`, and there can be several at once.**
+   Ownership is handed over like this: owner A adds B with role `owner`; at some later time
+   (immediately, or six months on) B removes A. Access therefore comes from the current
+   membership alone, never from the apiary's `uid` field and never from having created a
+   record. A previous owner or member keeps no right to edit or delete what they created
+   while they held a role. This replaces the creator-based "delete own" rules.
+3. **Only owners manage members.** The member role cannot add, edit or remove members.
 
-**What the owner can do:** everything, including add, edit and delete hives.
+**What an owner can do:** everything, including add, edit and delete hives.
 
 **What the member role can do**
-4. **Hives:** edit (not add, not delete).
-5. **Queens:** edit (write access to edit a queen).
+4. **Hives:** edit, which includes moving an existing hive from one apiary to another. It
+   cannot add or delete a hive.
+5. **Queens:** edit. Only an owner creates a queen record (and deletes one); the member role
+   then attaches that queen to an existing hive by editing it.
 6. **Inspections and queen observations:** full access, add, edit and delete, any record in
-   the apiary. (With 4 and 5 this also settles the parent-access conflict: creating an
+   the apiary. With 4 and 5 this also settles the parent-access conflict: creating an
    inspection needs `update` on its hive and an observation needs `update` on its queen,
-   and the member role has both.)
+   and the member role has both.
 7. **Calendar:** can report jobs as done or ignored. Calendar *actions* (the plan) are
    owner-only.
-8. **Inventory:** the member role does the day-to-day work, so it has whatever inventory
-   permissions that work needs (see open question 6). Inventory items, purchases and
-   products are otherwise owner-only.
+8. **Inventory:** only an owner adds purchases, because that spends money and the owner
+   should carry that responsibility. The member role can use items in stock, single-use
+   items included. Inventory items and products are otherwise owner-only.
 9. **Sensor readings:** every member sees them.
 
-**Owner-only means:** the owner has read, write and delete; the member role has read only.
+**Owner-only means:** an owner has read, write and delete; the member role has read only.
 Owner-only areas, so far: calendar actions and their requirement and yield estimates, hive
 components, queen creation and deletion, inventory items, purchases and products, the
 apiary's own settings, and the submodules' management screens (sensors, providers).
 
 ## Core areas to consider
 These are all the core entity types and areas, so nothing is missed. The last column is a
-proposed default, for confirmation, built from the decisions above.
+proposed default for confirmation, built from the decisions above.
 
-| Area | Proposed owner | Proposed member role |
+| Area | Owner | Member role |
 |---|---|---|
-| Apiary (name, location, visibility, AI toggle, owner) | read, write, delete | read |
+| Apiary (name, location, visibility, AI toggle) | read, write, delete | read |
 | Apiary membership | read, write, delete | none |
-| Hive | add, edit, delete | read, edit |
+| Hive | add, edit, delete | read, edit, move to another apiary |
 | Hive inspection | full | full |
-| Queen | add, edit, delete | read, edit |
+| Queen | add, edit, delete | read, edit (attach to a hive) |
 | Queen observation | full | full |
 | Calendar action (the plan) | full | read |
-| Hive and apiary action logs (reporting a job) | full | add, edit, delete? (Q5) |
+| Hive and apiary action logs (reporting a job) | full | report; edit or delete? (Q4) |
 | Calendar action item requirement and product yield (estimates) | full | read |
 | Hive component | full | read |
-| Inventory item, purchase, product | full | read |
-| Inventory usage and harvest yield (written when a log is reported) | full | written by the reporting form (Q6) |
-| Reports: per-apiary inventory cost report, combined financial report | read | read? (Q9) |
+| Inventory item and product | full | read |
+| Inventory purchase | add, edit, delete | read |
+| Inventory usage and harvest yield | full | use items in stock (Q5) |
+| Reports: per-apiary inventory cost report, combined financial report | read | read? (Q8) |
 | Dashboard and "needs attention" alerts, full calendar page | read | read |
 | Sensor devices (nanoprobe) | full | read |
 | Sensor readings and daily rollups | read | read (all members) |
-| Hive insights (nexus) | read | read? (Q10) |
+| Hive insights (nexus) | read | read? (Q9) |
 | API clients and AI providers (site-wide, not apiary-scoped) | administrators only | none |
 | Photos and files attached to records | follow the record | follow the record |
 
@@ -108,50 +112,66 @@ Only what is still undecided. Each says what it blocks.
 **Roles and ownership**
 1. What is the member role called? (Suggested: Contributor.) *Blocks the update hook, UI
    text and translations.*
-2. When ownership is transferred, what happens to the previous owner: removed, or kept as
-   a member? Decision 2 says they keep no rights over what they created, which suggests
-   removed. Is there a transfer action, and is it one owner at a time, so that `apiary.uid`
-   and the one `owner` membership are always the same person? *Blocks the owner field,
-   the members UI and the migration.*
-3. The apiary owner field is editable today. Under decision 2 it should change the
-   `owner` membership with it (or the owner field becomes the transfer action). Which?
+2. With several owners, what is `apiary.uid` for? Access must not use it. Options: keep it
+   as "created by" for history only, or drop the owner field from the form. Today about
+   seven places read the owner (`getOwnerId()`: the access trait, `Apiary::isApiaryMember()`,
+   the apiary page summary and the two site-level handlers), plus lists and the API that
+   narrow by owner. An update hook must also create an `owner` membership for every
+   existing apiary's current owner, or those owners lose access the moment access moves to
+   memberships. *Blocks the access trait, the owner field and the migration.*
+3. May any owner remove any other owner? In the handover, B removes A; but equally A could
+   remove B. Is that acceptable, and may an owner remove themselves? The existing guard
+   (the last owner cannot be removed) stays. Does anything else need guarding, such as a
+   confirmation, or a notification to the owner being removed?
 
-**What the member role may do**
-4. Queens: it can edit a queen but not add or delete one. Replacing a queen is ordinary
-   beekeeping (a new queen goes in, the old one becomes inactive). Is adding the new queen
-   owner-only, or may the member role add queens too? And may it move a queen to another
-   hive, or change a hive's apiary (moving a hive to another apiary)?
-5. Calendar logs: reporting a job creates a log. May the member role also *edit or delete*
-   a log it (or anyone) has already reported, or only create one?
-6. Inventory: what exactly does the day-to-day work need? Reading items and products is
-   covered. Reporting a job as done writes inventory usage and harvest yield as a side
-   effect; I propose the reporting form may write those even though the member role has no
-   inventory write access. Does it also need to **add a purchase** (buying sugar
-   mid-season) or edit usage afterwards?
-7. Hive components: read-only for the member role, but adding or removing a super is
-   day-to-day work and changes the net colony weight. Keep it owner-only?
-8. Hive fields: should some hive or queen fields stay owner-only even though the member
-   role can edit the record, for example a queen's purchase cost and purchase date?
+**Moving a hive between apiaries**
+4. Moving a hive moves more than the hive record, and several rules forbid mixing apiaries
+   (a hive's components must use items from its own apiary; its action logs must refer to
+   calendar actions of its own apiary; sensors and insights are scoped to it). What
+   happens to its components, its logs, its sensors and its insights: block the move while
+   any exist, carry them over and re-link them, or detach them? And what role is needed in
+   the *target* apiary: member role or owner? Today creating or moving a record under an
+   apiary needs the right to edit that apiary, which only an owner has. *Blocks the
+   parent-access rule and the hive form.*
 
-**Visibility**
-9. Money: may the member role see prices and costs (product price, purchase amounts,
-   the inventory cost and financial reports, a queen's purchase cost)?
-10. Insights (nexus): do all members see the AI insight and the hive's verdict, like
-    sensor readings? And may they see the apiary's AI-insights setting?
+**Queens**
+5. May the member role also *remove* a queen from a hive (a dead queen), or only attach one?
+   Attaching a new queen automatically retires the previous one (existing behaviour), so
+   confirm the member role may trigger that.
+
+**Calendar and inventory**
+6. Calendar logs: may the member role also edit or delete a log that was already reported,
+   or only create one?
+7. Using stock: the model has `consumable` items (usage is recorded) and `durable` items
+   (bought once, depreciate; no usage). Is "single-use items" the same as consumable? And
+   does using stock happen only when a job is reported (the form writes the usage), or must
+   the member role also record usage that is not tied to a job ("fed 5 kg of sugar")? The
+   second needs a new screen, because usage has no screen of its own today.
+8. Money: may the member role see prices and costs (product price, purchase amounts, the
+   inventory cost and financial reports, a queen's purchase cost)?
+
+**Other areas**
+9. Insights (nexus): do all members see the AI insight and a hive's verdict, like sensor
+   readings? And may they see the apiary's AI-insights setting?
+10. Hive components: read-only for the member role, but adding or removing a super is
+    day-to-day work and changes the net colony weight. Keep it owner-only?
+11. Should some fields stay owner-only on records the member role can edit, for example a
+    queen's purchase cost and purchase date?
 
 **Rollout**
-11. Existing members: all were migrated to `viewer`, and tests and the UI have created
-    some `editor` rows. Both map to the member role. Confirm, and note that existing
-    members will lose rights they had before roles (adding hives and queens, editing the
-    calendar plan, managing inventory).
-12. Do roles add to the site permissions (a member needs the apiary role *and* the site
-    permission), or replace them? I assume add. A related question: with roles doing the
-    work, do the per-entity "own" permissions stay?
-13. Public apiaries: a non-member with the site permission stays view-only (default)?
-14. The API's field-app role holds broad permissions. Should it be narrowed, and should
+12. Existing members: all were migrated to `viewer`, and tests and the UI have created some
+    `editor` rows. Both map to the member role. Confirm, and note that existing members
+    will lose rights they had before roles (adding hives and queens, editing the calendar
+    plan, managing inventory).
+13. Do roles add to the site permissions (a member needs the apiary role *and* the site
+    permission), or replace them? I assume add. With roles doing the work, do the
+    per-entity "own" permissions stay?
+14. Public apiaries: a non-member with the site permission stays view-only (default)?
+15. The API's field-app role holds broad permissions. Should it be narrowed, and should
     app tokens follow these roles through the same handlers (default: yes)?
-15. This changes what existing members can do, so it is a behaviour change on upgrade.
-    Is it a minor or a major release, and does it need a note in the upgrade notes?
+16. This changes what existing members can do and moves access off the owner field, so it
+    is a behaviour change on upgrade. Is it a minor or a major release, and does it need
+    upgrade notes?
 
 ## Acceptance criteria
 - [ ] New permissions defined in `hivelog.permissions.yml`:
