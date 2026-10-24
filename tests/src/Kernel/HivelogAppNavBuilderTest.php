@@ -222,7 +222,7 @@ class HivelogAppNavBuilderTest extends KernelTestBase {
     $this->loginAdmin();
 
     $build = \Drupal::service('hivelog.app_nav_builder')->build();
-    $top_level_keys = array_keys(array_filter($build, fn($k) => is_string($k) && !str_starts_with((string) $k, '#'), ARRAY_FILTER_USE_KEY));
+    $top_level_keys = array_keys(array_filter($build, fn($k) => is_string($k) && !str_starts_with((string) $k, '#') && !str_starts_with((string) $k, 'toggle'), ARRAY_FILTER_USE_KEY));
 
     // The separator between `records` and `inventory` moved into
     // Apiaries' own submenu (task 0148) — the top level has no
@@ -416,7 +416,8 @@ class HivelogAppNavBuilderTest extends KernelTestBase {
     $build = \Drupal::service('hivelog.app_nav_builder')->build();
 
     foreach ($build as $key => $wrapper) {
-      if (!is_string($key) || str_starts_with($key, '#')) {
+      // Items only: not '#' properties, nor the Menu toggle's two elements.
+      if (!is_string($key) || str_starts_with($key, '#') || str_starts_with($key, 'toggle')) {
         continue;
       }
       $this->assertArrayNotHasKey('aria-current', $wrapper['link']['#attributes'], "Item '$key' must not be marked active.");
@@ -581,6 +582,24 @@ class HivelogAppNavBuilderTest extends KernelTestBase {
     $routes = array_map(fn(array $item) => $item['url']->isRouted() ? $item['url']->getRouteName() : '', $items);
     $this->assertNotContains('entity.hive_action_log.collection', $routes);
     $this->assertNotContains('entity.apiary_action_log.collection', $routes);
+  }
+
+  /**
+   * Tests the strip carries a CSS-only Menu toggle, ahead of every item.
+   *
+   * The checkbox's `~` selector only reaches items that follow it, and the
+   * label has to name it.
+   */
+  public function testStripHasMenuToggleBeforeItsItems(): void {
+    $this->loginAdmin();
+
+    $build = \Drupal::service('hivelog.app_nav_builder')->build();
+    $keys = array_values(array_filter(array_keys($build), fn($k) => is_string($k) && !str_starts_with($k, '#')));
+
+    $this->assertSame(['toggle', 'toggle_label'], array_slice($keys, 0, 2));
+    $this->assertSame('checkbox', $build['toggle']['#attributes']['type']);
+    $this->assertSame($build['toggle']['#attributes']['id'], $build['toggle_label']['#attributes']['for']);
+    $this->assertSame('Menu', (string) $build['toggle_label']['#value']);
   }
 
 }

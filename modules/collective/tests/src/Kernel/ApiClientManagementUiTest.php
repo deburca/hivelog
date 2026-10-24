@@ -142,9 +142,23 @@ class ApiClientManagementUiTest extends KernelTestBase {
     $form = \Drupal::service('entity.form_builder')->getForm($apiary, 'edit');
 
     $this->assertArrayHasKey('ai_insights_enabled_disclosure', $form);
-    $rendered = \Drupal::service('renderer')->renderInIsolation($form['ai_insights_enabled_disclosure']);
+    // The disclosure is grouped into the AI insights tab, so it renders with the tabs.
+    $rendered = \Drupal::service('renderer')->renderInIsolation($form['hivelog_tabs']);
     $this->assertStringContainsString('API client', (string) $rendered);
     $this->assertStringContainsString('Never shared', (string) $rendered);
+  }
+
+  /**
+   * Tests the disclosure stays beside the checkbox in the AI insights tab.
+   */
+  public function testDisclosureJoinsTheAiInsightsTab(): void {
+    $apiary = Apiary::create(['name' => 'Test Apiary']);
+    $apiary->save();
+
+    $form = \Drupal::service('entity.form_builder')->getForm($apiary, 'edit');
+
+    $this->assertSame('hivelog_ai', $form['ai_insights_enabled']['#group']);
+    $this->assertSame('hivelog_ai', $form['ai_insights_enabled_disclosure']['#group']);
   }
 
   /**

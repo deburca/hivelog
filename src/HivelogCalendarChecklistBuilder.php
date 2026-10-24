@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\hivelog;
 
+use Drupal\Component\Utility\Html;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
@@ -267,15 +268,64 @@ class HivelogCalendarChecklistBuilder {
    *   "Upcoming", "Due now", or "Overdue".
    */
   public function pendingActionTimingLabel(int $week_start, $week_end, int $current_week): TranslatableMarkup {
+    return match ($this->pendingActionTimingKind($week_start, $week_end, $current_week)) {
+      'upcoming' => $this->t('Upcoming'),
+      'overdue' => $this->t('Overdue'),
+      default => $this->t('Due now'),
+    };
+  }
+
+  /**
+   * Classifies an unreported calendar action's timing versus the current week.
+   *
+   * The machine-readable counterpart of `pendingActionTimingLabel()`, used
+   * to style the label ("overdue" is the one that needs noticing).
+   *
+   * @param int $week_start
+   *   The calendar action's start week.
+   * @param int|string|null $week_end
+   *   The calendar action's end week, or NULL/empty for a single week.
+   * @param int $current_week
+   *   The current ISO week number to compare against.
+   *
+   * @return string
+   *   One of `upcoming`, `due` or `overdue`.
+   */
+  public function pendingActionTimingKind(int $week_start, $week_end, int $current_week): string {
     $effective_end = ($week_end !== NULL && $week_end !== '') ? (int) $week_end : $week_start;
 
     if ($current_week < $week_start) {
-      return $this->t('Upcoming');
+      return 'upcoming';
     }
     if ($current_week > $effective_end) {
-      return $this->t('Overdue');
+      return 'overdue';
     }
-    return $this->t('Due now');
+    return 'due';
+  }
+
+  /**
+   * Builds the Status cell of an unreported row, timing label included.
+   *
+   * The timing sits in a span carrying its kind, so overdue and due-now
+   * rows can stand out from upcoming ones. The table component prints
+   * cells as raw HTML, so both parts are escaped here.
+   *
+   * @param string $status_label
+   *   The row's status label, e.g. "Unreported".
+   * @param int $week_start
+   *   The calendar action's start week.
+   * @param int|string|null $week_end
+   *   The calendar action's end week, or NULL/empty for a single week.
+   * @param int $current_week
+   *   The current ISO week number to compare against.
+   *
+   * @return string
+   *   HTML for the cell.
+   */
+  public function pendingStatusCell(string $status_label, int $week_start, $week_end, int $current_week): string {
+    $kind = $this->pendingActionTimingKind($week_start, $week_end, $current_week);
+    $label = $this->pendingActionTimingLabel($week_start, $week_end, $current_week);
+    return Html::escape($status_label) . ' (<span class="hivelog-timing hivelog-timing--' . $kind . '">' . Html::escape((string) $label) . '</span>)';
   }
 
   /**

@@ -13,6 +13,7 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\ApiaryMembership;
+use Drupal\hivelog\Entity\Hive;
 use Drupal\hivelog\Form\HivelogCalendarFilterForm;
 use Drupal\hivelog\Form\HivelogFullCalendarFilterForm;
 use Drupal\hivelog\Form\HivelogHiveFilterForm;
@@ -215,6 +216,37 @@ class ApiaryController extends ControllerBase {
   }
 
   /**
+   * Summarises a hive's active queen for the hives table.
+   *
+   * The queen's marking year and colour and breed, whichever are recorded;
+   * "No queen" when none is installed.
+   *
+   * @param \Drupal\hivelog\Entity\Hive $hive
+   *   The hive.
+   *
+   * @return string
+   *   Plain text (not yet escaped).
+   */
+  protected function queenSummary(Hive $hive): string {
+    $queen = $hive->getActiveQueen();
+    if (!$queen) {
+      return (string) $this->t('No queen');
+    }
+    $parts = [];
+    $year = $queen->get('queen_year')->value;
+    $colour = $queen->get('queen_colour')->value;
+    if ($year) {
+      $colour_label = $colour ? ($queen->get('queen_colour')->getSetting('allowed_values')[$colour] ?? $colour) : '';
+      $parts[] = $colour_label ? "$year ($colour_label)" : (string) $year;
+    }
+    $breed = $queen->get('breed')->value;
+    if ($breed) {
+      $parts[] = (string) ($queen->get('breed')->getSetting('allowed_values')[$breed] ?? $breed);
+    }
+    return $parts ? implode(' · ', $parts) : '—';
+  }
+
+  /**
    * Names the current user's relationship to an apiary, for the summary.
    */
   protected function currentUserRole(Apiary $apiary): string {
@@ -335,11 +367,28 @@ class ApiaryController extends ControllerBase {
 
     $header = [
       $this->t('Name'),
-      $this->t('Breed'),
+      $this->t('Queen'),
+      $this->t('Last inspection'),
       $this->t('Temperament'),
       $this->t('Status'),
       $this->t('Operations'),
     ];
+
+    // One aggregate query for the whole page, not one per hive.
+    $last_inspections = [];
+    if ($hives) {
+      $result = $this->entityTypeManager
+        ->getStorage('hive_inspection')
+        ->getAggregateQuery()
+        ->accessCheck(TRUE)
+        ->condition('hive', array_keys($hives), 'IN')
+        ->aggregate('inspection_date', 'MAX')
+        ->groupBy('hive')
+        ->execute();
+      foreach ($result as $row) {
+        $last_inspections[(int) $row['hive']] = $row['inspection_date_max'];
+      }
+    }
 
     $rows = [];
     foreach ($hives as $hive) {
@@ -357,12 +406,12 @@ class ApiaryController extends ControllerBase {
           ],
         ],
       ];
-      $queen = $hive->getActiveQueen();
-      $breed = $queen ? $queen->get('breed')->value : NULL;
+      $last_inspection = $last_inspections[(int) $hive->id()] ?? NULL;
       $rows[] = [
         'cells' => [
           $hive->toLink()->toString(),
-          $breed ? $queen->get('breed')->getSetting('allowed_values')[$breed] ?? $breed : '',
+          Html::escape($this->queenSummary($hive)),
+          Html::escape($last_inspection ? (string) $last_inspection : (string) $this->t('Never')),
           $hive->get('temperament')->value ? $hive->get('temperament')->getSetting('allowed_values')[$hive->get('temperament')->value] ?? $hive->get('temperament')->value : '',
           $hive->get('status')->getSetting('allowed_values')[$hive->get('status')->value] ?? $hive->get('status')->value,
           $this->renderer->renderInIsolation($actions),
@@ -381,6 +430,8 @@ class ApiaryController extends ControllerBase {
           : $this->t('No hives have been added to this apiary yet.')),
       ],
       '#weight' => 12,
+      // The queen and last-inspection columns change with those records.
+      '#cache' => ['tags' => ['queen_list', 'hive_inspection_list']],
     ];
 
     $build['hives_pager'] = [
@@ -504,8 +555,7 @@ class ApiaryController extends ControllerBase {
 
       $status_display = (string) ($status_labels[$status] ?? $status);
       if ($status === 'pending' && $show_timing) {
-        $timing = $this->calendarChecklistBuilder->pendingActionTimingLabel((int) $week_start, $week_end, $current_week);
-        $status_display = (string) $this->t('@status (@timing)', ['@status' => $status_display, '@timing' => $timing]);
+        $status_display = $this->calendarChecklistBuilder->pendingStatusCell($status_display, (int) $week_start, $week_end, $current_week);
       }
 
       if ($status === 'pending') {

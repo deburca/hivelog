@@ -150,6 +150,35 @@ class HivelogAppNavBuilder {
       }
     }
 
+    // Task 0229: where the strip would take a third of a phone's first screen
+    // it is folded behind a Menu button. CSS only (hivelog ships no
+    // JavaScript, ADR-0104): a visually hidden checkbox and the label that
+    // toggles it; both are hidden at widths and on devices where the strip
+    // is not folded. They come first so the checkbox's `~` sibling selector
+    // reaches every item.
+    $toggle = [
+      'toggle' => [
+        '#type' => 'html_tag',
+        '#tag' => 'input',
+        '#attributes' => [
+          'type' => 'checkbox',
+          'id' => 'hivelog-app-nav-toggle',
+          'class' => ['hivelog-app-nav__toggle'],
+        ],
+        '#weight' => -2,
+      ],
+      'toggle_label' => [
+        '#type' => 'html_tag',
+        '#tag' => 'label',
+        '#value' => $this->t('Menu'),
+        '#attributes' => [
+          'for' => 'hivelog-app-nav-toggle',
+          'class' => ['hivelog-app-nav__toggle-label'],
+        ],
+        '#weight' => -1,
+      ],
+    ];
+
     return [
       // A very low weight, not the usual small integers this codebase
       // uses for page-section ordering elsewhere (e.g.
@@ -181,7 +210,7 @@ class HivelogAppNavBuilder {
         // makes the output path-dependent").
         'contexts' => ['url.path', 'user.permissions'],
       ],
-    ] + $rendered_items;
+    ] + $toggle + $rendered_items;
   }
 
   /**

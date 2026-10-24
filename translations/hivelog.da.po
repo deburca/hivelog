@@ -2684,3 +2684,18 @@ msgstr "Administrator"
 #: modules/contrib/hivelog/src/Controller/ApiaryController.php
 msgid "Visitor"
 msgstr "Gæst"
+#: modules/contrib/hivelog/src/Form/ApiaryForm.php
+msgid "Access"
+msgstr "Adgang"
+#: modules/contrib/hivelog/src/Form/ApiaryForm.php
+msgid "Map"
+msgstr "Kort"
+#: modules/contrib/hivelog/src/Form/ApiaryForm.php
+msgid "AI insights"
+msgstr "AI-indsigt"
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php
+msgid "Last inspection"
+msgstr "Seneste eftersyn"
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php
+msgid "No queen"
+msgstr "Ingen dronning"

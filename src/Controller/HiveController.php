@@ -342,8 +342,7 @@ class HiveController extends ControllerBase {
 
       $status_display = (string) ($status_labels[$status] ?? $status);
       if ($status === 'pending' && $show_timing) {
-        $timing = $this->calendarChecklistBuilder->pendingActionTimingLabel((int) $week_start, $week_end, $current_week);
-        $status_display = (string) $this->t('@status (@timing)', ['@status' => $status_display, '@timing' => $timing]);
+        $status_display = $this->calendarChecklistBuilder->pendingStatusCell($status_display, (int) $week_start, $week_end, $current_week);
       }
 
       if ($status === 'pending') {

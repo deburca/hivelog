@@ -166,3 +166,19 @@
     opacity: 0.6;
   }
 }
+
+/*
+ * The timing of an unreported calendar action, inside the Status cell
+ * (HivelogCalendarChecklistBuilder::pendingStatusCell()). The word stays in
+ * the text, so colour is never the only cue; this makes "Overdue" and
+ * "Due now" stand out from "Upcoming".
+ */
+.hivelog-timing--overdue {
+  color: var(--hivelog-critical);
+  font-weight: 600;
+}
+
+.hivelog-timing--due {
+  color: var(--hivelog-warning);
+  font-weight: 600;
+}

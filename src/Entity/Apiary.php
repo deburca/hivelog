@@ -189,9 +189,17 @@ class Apiary extends ContentEntityBase implements EntityChangedInterface, Entity
           'map' => [
             'leaflet_map' => 'OSM Mapnik',
             'height' => 300,
-            'center' => ['lat' => 55.0, 'lon' => 10.0],
             'auto_center' => TRUE,
-            'zoom' => 6,
+            // Where an apiary with no location yet starts: Denmark. (The
+            // widget reads `map_position`; a bare `center` key is ignored.)
+            'map_position' => [
+              'force' => FALSE,
+              'center' => ['lat' => 55.9, 'lon' => 10.5],
+              'zoom' => 7,
+              'minZoom' => 1,
+              'maxZoom' => 18,
+              'zoomFiner' => 0,
+            ],
           ],
           'input' => [
             'show' => FALSE,
