@@ -54,6 +54,7 @@
         "uid": "relationship"
     },
     "hive_action_log--hive_action_log": {
+        "apiary": "relationship",
         "calendar_action": "relationship",
         "changed": "attribute",
         "created": "attribute",
@@ -68,6 +69,7 @@
     },
     "hive_inspection--hive_inspection": {
         "action_taken": "attribute",
+        "apiary": "relationship",
         "brood_pattern": "attribute",
         "changed": "attribute",
         "created": "attribute",
@@ -113,6 +115,7 @@
     },
     "queen_observation--queen_observation": {
         "active": "attribute",
+        "apiary": "relationship",
         "changed": "attribute",
         "created": "attribute",
         "drupal_internal__id": "attribute",
