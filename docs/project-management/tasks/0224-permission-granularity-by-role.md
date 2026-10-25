@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: backlog
+status: review
 priority: high
 project: "[[shared-apiaries-and-team-roles]]"
 area: routing
@@ -74,34 +74,34 @@ Nothing in inventory, prices or insights is hidden from a novice.
   rewritten when a hive moves, and the move dialog (sensors, components and their stock and cost).
 
 ## Acceptance criteria
-- [ ] `ApiaryMembership::ROLES` is `owner` / `keeper` / `novice` with labels, and the member form shows
+- [x] `ApiaryMembership::ROLES` is `owner` / `keeper` / `novice` with labels, and the member form shows
       the three roles with one-line descriptions. `hivelog_update_NNNN` rewrites `viewer` to `novice`
       and `editor` to `keeper`
-- [ ] The same hook, or a sibling, creates an `owner` membership for each apiary's current `uid` owner
+- [x] The same hook, or a sibling, creates an `owner` membership for each apiary's current `uid` owner
       if it has none, and is safe to run twice
-- [ ] `ApiaryAccessTrait` gets a cached `getMemberRole()` (one query per apiary and user per request)
+- [x] `ApiaryAccessTrait` gets a cached `getMemberRole()` (one query per apiary and user per request)
       and `roleAtLeast()`; `Apiary::isApiaryMember()` and an `isOwner()` use memberships, not `uid`
-- [ ] A new apiary-level operation for "may write in this apiary" (beekeeper and above) is used by
+- [x] A new apiary-level operation for "may write in this apiary" (beekeeper and above) is used by
       the scoped add routes (`hivelog.hive.add`, calendar action, action log, inventory item,
       purchase, product, hive component) and by `HivelogParentAccess`; apiary `update` stays
       owner-only (it is the edit form). Today those routes use `apiary.update`, which only owners pass
-- [ ] All 17 core and 6 submodule `*AccessControlHandler`s use the role (view: any role; create, edit,
+- [x] All 17 core and 6 submodule `*AccessControlHandler`s use the role (view: any role; create, edit,
       delete: beekeeper; membership, apiary update and delete: owner); the creator-based delete rules
       (`checkApiaryMemberDeleteAccess()`) are removed
-- [ ] Membership rules: owners only, owners may remove owners, the last owner is protected (in the
+- [x] Membership rules: owners only, owners may remove owners, the last owner is protected (in the
       form and in the entity). The apiary form no longer shows the owner field, and the apiary page
       summary shows owners from memberships
-- [ ] Delete-dependency and BLOCK gates still pass for owners (deleting an apiary is owner-only)
-- [ ] The API goes through the handlers; `HivelogApiAccessParityTest` gets owner, beekeeper, novice
+- [x] Delete-dependency and BLOCK gates still pass for owners (deleting an apiary is owner-only)
+- [x] The API goes through the handlers; `HivelogApiAccessParityTest` gets owner, beekeeper, novice
       and non-member cases; `hivelog_api` contract unchanged unless a field is renamed
-- [ ] `RouteEntityAccessTest` and the other access tests get a role matrix for every entity type:
+- [x] `RouteEntityAccessTest` and the other access tests get a role matrix for every entity type:
       site admin, owner, beekeeper, novice, non-member (private), non-member (public); existing
       fixtures are updated (former `editor` rows become `keeper`, `viewer` rows `novice`)
-- [ ] Cache contexts are right on every access result (`user`, and the apiary and its memberships as
+- [x] Cache contexts are right on every access result (`user`, and the apiary and its memberships as
       cache dependencies) so one user's role is never served to another
-- [ ] Danish translations for the role labels and descriptions; upgrade notes for the major release
-- [ ] `AGENTS.md` updated (roles, ownership, the new operation, uid history-only, update hooks)
-- [ ] phpcs clean; phpstan clean; kernel tests pass (`--group hivelog`)
+- [x] Danish translations for the role labels and descriptions; upgrade notes for the major release
+- [x] `AGENTS.md` updated (roles, ownership, the new operation, uid history-only, update hooks)
+- [x] phpcs clean; phpstan clean; kernel tests pass (`--group hivelog`)
 
 ## Implementation notes
 - The role lookup runs on every access check, so query memberships once per apiary and user per
