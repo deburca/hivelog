@@ -69,6 +69,25 @@ and will be folded into one table once the open questions are answered.
    "detach a queen" means; the inspection-usage feature; site permissions; the API role;
    the release type.
 
+## Decisions, round 6 (2026-10-25)
+5. **The apiary's `uid` becomes history only** ("created by"). It is removed from the edit
+   form and never grants access. An update hook creates an `owner` membership for every
+   existing apiary's current owner (otherwise they lose access when access moves to
+   memberships). Every place that reads the owner for access (`getOwnerId()` in the access
+   trait, `Apiary::isApiaryMember()`, the apiary page summary, lists and the API's query
+   narrowing) switches to memberships.
+6. **Moving a hive between apiaries asks what to do about its sensors.** The mover needs
+   beekeeper rights in the target apiary (decision 10 of round 4: the permission to add a
+   hive there). When the hive has sensors, the move offers three outcomes: **move the
+   sensors with the hive**, **detach the sensors first and then move**, or **cancel**. What
+   to do about the hive's components is still open (question 1 below). Queens go with the
+   hive.
+7. **History is kept by stamping the apiary on records.** An `apiary` field, written when
+   the record is created, is added to inspections, queen observations, hive action logs,
+   inventory usage, harvest yields and hive insights, and an update hook fills in existing
+   rows from each hive's current apiary. Members of the old apiary keep seeing what was
+   written under their apiary; members of the new apiary see the hive's full history.
+
 ## Decisions (2026-10-24)
 Recorded from the owner's review of this task after 0223 shipped. They supersede the
 role table above wherever they differ; that table stays only until the open questions
