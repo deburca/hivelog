@@ -88,6 +88,25 @@ and will be folded into one table once the open questions are answered.
    rows from each hive's current apiary. Members of the old apiary keep seeing what was
    written under their apiary; members of the new apiary see the hive's full history.
 
+## Decisions, round 7 (2026-10-25)
+8. **The owner role is the beekeeper role plus extras.** An owner can do everything a
+   beekeeper can; the extras are only user and ownership management (members, owners),
+   the apiary's own settings (name, visibility, the AI-insights toggle) and deleting the
+   apiary. Implemented as ordered roles, so there is no separate rule list for owners.
+9. **Beekeepers may add inventory purchases.** The owner-only purchase rule from round 3 is
+   dropped; nothing about inventory is owner-only any more.
+10. **Detaching a queen marks her inactive and keeps her link to the hive**, as replacement
+    does today, so the hive's history is intact and she stays under "View all Queens".
+11. **The move dialog covers components as it does sensors:** for each of the hive's
+    components and sensors the user chooses to move them with the hive, or detach them
+    before moving; the dialog can also be cancelled. How "move components with the hive"
+    works for inventory stock is still open (question 1 below).
+12. **Questions made moot by the three-role model** (a beekeeper has every right except the
+    owner extras, and a novice reads everything): editing and deleting reported calendar
+    logs, seeing prices and costs, insights (all members read them), components such as
+    supers, and owner-only fields on records. Member role rights: beekeeper = all of these,
+    novice = read.
+
 ## Decisions (2026-10-24)
 Recorded from the owner's review of this task after 0223 shipped. They supersede the
 role table above wherever they differ; that table stays only until the open questions
