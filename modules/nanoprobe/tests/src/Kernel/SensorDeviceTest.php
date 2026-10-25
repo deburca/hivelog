@@ -299,7 +299,7 @@ class SensorDeviceTest extends KernelTestBase {
     ApiaryMembership::create([
       'apiary' => $apiary->id(),
       'account' => $beekeeper->id(),
-      'role' => 'editor',
+      'role' => 'keeper',
     ])->save();
 
     $hive = Hive::create([
@@ -324,9 +324,9 @@ class SensorDeviceTest extends KernelTestBase {
 
     $this->assertTrue($device->access('update', $beekeeper));
 
-    // Delete is owner-only, regardless of who created the device.
+    // A beekeeper deletes as an owner does (task 0224), whoever created the device.
     $this->assertTrue($device->access('delete', $owner));
-    $this->assertFalse($device->access('delete', $beekeeper));
+    $this->assertTrue($device->access('delete', $beekeeper));
 
     // Public apiary: an outsider with the "own" permission can view.
     // The device/hive objects above already resolved and cached their

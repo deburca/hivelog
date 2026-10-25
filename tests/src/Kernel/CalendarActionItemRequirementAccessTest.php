@@ -111,7 +111,7 @@ class CalendarActionItemRequirementAccessTest extends KernelTestBase {
     ApiaryMembership::create([
       'apiary' => $this->apiary->id(),
       'account' => $this->beekeeper->id(),
-      'role' => 'editor',
+      'role' => 'keeper',
     ])->save();
 
     $calendar_action = CalendarAction::create([
@@ -177,11 +177,10 @@ class CalendarActionItemRequirementAccessTest extends KernelTestBase {
   }
 
   /**
-   * Tests that a beekeeper cannot delete their own requirement (owner-only).
+   * Tests that a beekeeper can delete a requirement.
    */
-  public function testBeekeeperCannotDeleteOwnRequirement(): void {
-    // $this->requirement was created with uid = beekeeper.
-    $this->assertFalse($this->requirement->access('delete', $this->beekeeper));
+  public function testBeekeeperCanDeleteRequirement(): void {
+    $this->assertTrue($this->requirement->access('delete', $this->beekeeper));
   }
 
   /**

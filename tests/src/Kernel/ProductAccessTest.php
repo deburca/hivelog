@@ -107,7 +107,7 @@ class ProductAccessTest extends KernelTestBase {
     ApiaryMembership::create([
       'apiary' => $this->apiary->id(),
       'account' => $this->beekeeper->id(),
-      'role' => 'editor',
+      'role' => 'keeper',
     ])->save();
 
     $this->product = Product::create([
@@ -156,10 +156,10 @@ class ProductAccessTest extends KernelTestBase {
   }
 
   /**
-   * Tests that a beekeeper cannot delete a product (owner-only).
+   * Tests that a beekeeper can delete a product.
    */
-  public function testBeekeeperCannotDeleteProduct(): void {
-    $this->assertFalse($this->product->access('delete', $this->beekeeper));
+  public function testBeekeeperCanDeleteProduct(): void {
+    $this->assertTrue($this->product->access('delete', $this->beekeeper));
   }
 
   /**

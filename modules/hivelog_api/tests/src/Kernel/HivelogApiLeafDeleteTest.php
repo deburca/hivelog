@@ -70,33 +70,43 @@ class HivelogApiLeafDeleteTest extends HivelogApiKernelTestBase {
   }
 
   /**
-   * An apiary's owner may delete any inspection in it; a member only their own.
+   * An owner and a beekeeper may delete any inspection in the apiary; a novice none.
+   *
+   * What a user may delete follows their current role, not who recorded the
+   * inspection (task 0224).
    */
-  public function testOwnerDeletesAnyMemberOnlyTheirOwn(): void {
-    $member = $this->beekeeper('member');
-    ApiaryMembership::create([
-      'apiary' => $this->fixtures['my_apiary']->id(),
-      'account' => $member->id(),
-      'role' => 'viewer',
-    ])->save();
+  public function testOwnerAndBeekeeperDeleteAnyNoviceNone(): void {
+    $keeper = $this->beekeeper('keeper_member');
+    $novice = $this->beekeeper('novice_member');
+    foreach ([['keeper', $keeper], ['novice', $novice]] as [$role, $user]) {
+      ApiaryMembership::create([
+        'apiary' => $this->fixtures['my_apiary']->id(),
+        'account' => $user->id(),
+        'role' => $role,
+      ])->save();
+    }
     $storage = \Drupal::entityTypeManager()->getStorage('hive_inspection');
+    $delete = fn($inspection, $user) => $this->api('DELETE', $this->path('hive_inspection', $inspection->uuid()), NULL, $user);
 
-    $byMember = $this->inspectionBy($member->id());
+    // A novice cannot delete the owner's, nor one they recorded themselves.
     $byOwner = $this->inspectionBy($this->me->id(), '2026-06-11');
-
-    // The member cannot delete the owner's, and can delete their own.
-    $refused = $this->api('DELETE', $this->path('hive_inspection', $byOwner->uuid()), NULL, $member);
-    $this->assertSame(403, $refused['status'], $refused['raw']);
+    $byNovice = $this->inspectionBy($novice->id(), '2026-06-12');
+    $this->assertSame(403, $delete($byOwner, $novice)['status']);
+    $this->assertSame(403, $delete($byNovice, $novice)['status']);
     $this->assertNotNull($storage->load($byOwner->id()));
-    $mine = $this->api('DELETE', $this->path('hive_inspection', $byMember->uuid()), NULL, $member);
-    $this->assertSame(204, $mine['status'], $mine['raw']);
-    $this->assertNull($storage->load($byMember->id()));
+    $this->assertNotNull($storage->load($byNovice->id()));
 
-    // The owner can delete what a member recorded in their apiary.
-    $byMemberAgain = $this->inspectionBy($member->id(), '2026-06-12');
-    $owner = $this->api('DELETE', $this->path('hive_inspection', $byMemberAgain->uuid()), NULL, $this->me);
+    // A beekeeper deletes what the owner and a novice recorded.
+    $response = $delete($byOwner, $keeper);
+    $this->assertSame(204, $response['status'], $response['raw']);
+    $this->assertNull($storage->load($byOwner->id()));
+    $this->assertSame(204, $delete($byNovice, $keeper)['status']);
+
+    // The owner deletes what a beekeeper recorded.
+    $byKeeper = $this->inspectionBy($keeper->id(), '2026-06-13');
+    $owner = $delete($byKeeper, $this->me);
     $this->assertSame(204, $owner['status'], $owner['raw']);
-    $this->assertNull($storage->load($byMemberAgain->id()));
+    $this->assertNull($storage->load($byKeeper->id()));
   }
 
   /**

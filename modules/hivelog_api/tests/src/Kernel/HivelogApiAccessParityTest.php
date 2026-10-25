@@ -130,7 +130,7 @@ class HivelogApiAccessParityTest extends HivelogApiKernelTestBase {
     ApiaryMembership::create([
       'apiary' => $this->trees['owner']['apiary']->id(),
       'account' => $this->actors['member']->id(),
-      'role' => 'viewer',
+      'role' => 'keeper',
     ])->save();
     foreach (array_keys(self::TYPES) as $type) {
       \Drupal::entityTypeManager()->getStorage($type)->resetCache();
@@ -484,8 +484,42 @@ class HivelogApiAccessParityTest extends HivelogApiKernelTestBase {
     $this->assertSame(200, $patch('hive_inspection', $inspection, ['notes' => 'By a member']));
     $this->assertSame(403, $patch('apiary', $apiary, ['name' => 'Renamed']), 'A member cannot rename the apiary');
     $this->assertSame(201, $create('hive_inspection'));
-    $this->assertContains($create('hive'), [403, 422]);
-    $this->assertContains($create('calendar_action'), [403, 422]);
+    // A beekeeper may add structure to the apiary (a hive, a calendar action).
+    $this->assertSame(201, $create('hive'));
+    $this->assertSame(201, $create('calendar_action'));
+  }
+
+  /**
+   * Tests a novice can read through the API but write nothing.
+   */
+  public function testNoviceMemberIsReadOnlyThroughTheApi(): void {
+    $member = $this->actors['member'];
+    $owner_tree = $this->trees['owner'];
+    $memberships = \Drupal::entityTypeManager()->getStorage('apiary_membership')
+      ->loadByProperties(['apiary' => $owner_tree['apiary']->id(), 'account' => $member->id()]);
+    $membership = reset($memberships);
+    $this->assertInstanceOf(ApiaryMembership::class, $membership);
+    $membership->set('role', 'novice')->save();
+    foreach (array_keys(self::TYPES) as $type) {
+      \Drupal::entityTypeManager()->getStorage($type)->resetCache();
+      \Drupal::entityTypeManager()->getAccessControlHandler($type)->resetCache();
+    }
+
+    $inspection = $owner_tree['hive_inspection'];
+    $this->assertSame(200, $this->api('GET', $this->path('hive', $owner_tree['hive']), NULL, $member)['status']);
+    $patch = $this->api('PATCH', $this->path('hive_inspection', $inspection), [
+      'data' => [
+        'type' => 'hive_inspection--hive_inspection',
+        'id' => $inspection->uuid(),
+        'attributes' => ['notes' => 'By a novice'],
+      ],
+    ], $member);
+    $this->assertSame(403, $patch['status']);
+    $this->assertContains(
+      $this->api('POST', $this->path('hive_inspection'), $this->createDocument('hive_inspection', $owner_tree), $member)['status'],
+      [403, 422]
+    );
+    $this->assertSame(403, $this->api('DELETE', $this->path('hive_inspection', $inspection), NULL, $member)['status']);
   }
 
   /**
