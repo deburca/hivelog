@@ -31,7 +31,7 @@ class QueenObservationAccessControlHandler extends EntityAccessControlHandler {
 
     switch ($operation) {
       case 'view':
-        return $this->checkApiaryViewAccess($apiary, $account, 'view any queen observation', 'view own queen observation');
+        return $this->checkRecordViewAccess($entity, $account, 'view any queen observation', 'view own queen observation');
 
       case 'update':
         return $this->checkApiaryEditAccess($apiary, $account, 'edit any queen observation', 'edit own queen observation');

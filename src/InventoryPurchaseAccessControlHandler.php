@@ -8,6 +8,7 @@ use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\EntityAccessControlHandler;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\hivelog\Entity\InventoryPurchase;
 
 /**
  * Access control handler for Inventory Purchase entities.
@@ -27,6 +28,12 @@ class InventoryPurchaseAccessControlHandler extends EntityAccessControlHandler {
    * {@inheritdoc}
    */
   protected function checkAccess(EntityInterface $entity, $operation, AccountInterface $account) {
+    // A purchase a hive move wrote (task 0231) is a transfer record: it stays
+    // as written, for everyone, so the two apiaries' stock cannot drift apart.
+    if (in_array($operation, ['update', 'delete'], TRUE) && $entity instanceof InventoryPurchase && $entity->get('transfer')->value) {
+      return AccessResult::forbidden('A purchase recorded by a hive move cannot be changed or removed.')->addCacheableDependency($entity);
+    }
+
     if ($account->hasPermission('administer hivelog')) {
       return AccessResult::allowed()->cachePerPermissions();
     }

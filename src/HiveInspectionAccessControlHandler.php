@@ -31,7 +31,7 @@ class HiveInspectionAccessControlHandler extends EntityAccessControlHandler {
 
     switch ($operation) {
       case 'view':
-        return $this->checkApiaryViewAccess($apiary, $account, 'view any hive inspection', 'view own hive inspection');
+        return $this->checkRecordViewAccess($entity, $account, 'view any hive inspection', 'view own hive inspection');
 
       case 'update':
         return $this->checkApiaryEditAccess($apiary, $account, 'edit any hive inspection', 'edit own hive inspection');

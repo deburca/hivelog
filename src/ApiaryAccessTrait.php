@@ -33,7 +33,8 @@ trait ApiaryAccessTrait {
    * - CalendarActionItemRequirement: calendar_action_item_requirement →
    *   calendar_action → apiary.
    * - HiveComponent: hive_component → hive → apiary.
-   * - InventoryUsage: inventory_usage → hive_action_log → hive → apiary,
+   * - InventoryUsage: inventory_usage → item → apiary (the item's apiary,
+   *   which a hive move leaves alone),
    *   or → apiary_action_log → apiary directly (exactly one is set).
    * - Product: product → apiary directly.
    * - CalendarActionProductYield: calendar_action_product_yield →
@@ -57,6 +58,46 @@ trait ApiaryAccessTrait {
    *   The parent apiary, or NULL if the chain is broken.
    */
   protected function resolveApiary(EntityInterface $entity): ?Apiary {
+    // A history record carries the apiary it was written under (task 0231),
+    // which wins over the apiary its hive is in now: moving a hive does not
+    // rewrite history, and writing to a record stays with that apiary.
+    $stamped = $this->stampedApiary($entity);
+    return $stamped ?? $this->resolveCurrentApiary($entity);
+  }
+
+  /**
+   * The apiary a history record was written under, if it carries one.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity.
+   *
+   * @return \Drupal\hivelog\Entity\Apiary|null
+   *   The stamped apiary, or NULL for a type that is not stamped or a record
+   *   with no stamp.
+   */
+  protected function stampedApiary(EntityInterface $entity): ?Apiary {
+    $stamped_types = ['hive_inspection', 'queen_observation', 'hive_action_log', 'hive_insight'];
+    if (!in_array($entity->getEntityTypeId(), $stamped_types, TRUE)) {
+      return NULL;
+    }
+    // @phpstan-ignore-next-line
+    $apiary = $entity->hasField('apiary') ? $entity->get('apiary')->entity : NULL;
+    return $apiary instanceof Apiary ? $apiary : NULL;
+  }
+
+  /**
+   * Resolves the apiary a record belongs to NOW, through its hive.
+   *
+   * For a record that was written under another apiary before its hive moved,
+   * this is the hive's apiary today, whose members may read the record.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity to resolve the apiary from.
+   *
+   * @return \Drupal\hivelog\Entity\Apiary|null
+   *   The apiary, or NULL if the chain is broken.
+   */
+  protected function resolveCurrentApiary(EntityInterface $entity): ?Apiary {
     if ($entity instanceof Apiary) {
       return $entity;
     }
@@ -153,18 +194,13 @@ trait ApiaryAccessTrait {
       return $hive ? $hive->get('apiary')->entity : NULL;
     }
 
-    // InventoryUsage → hive_action_log → hive → apiary, or →
-    // apiary_action_log → apiary directly.
+    // InventoryUsage → its item → apiary. The item's apiary never changes,
+    // unlike the hive of the log that caused the usage (task 0231), so usage
+    // stays with the apiary whose stock it used.
     if ($entity_type === 'inventory_usage') {
       // @phpstan-ignore-next-line
-      $hive_action_log = $entity->get('hive_action_log')->entity;
-      if ($hive_action_log) {
-        $hive = $hive_action_log->get('hive')->entity;
-        return $hive ? $hive->get('apiary')->entity : NULL;
-      }
-      // @phpstan-ignore-next-line
-      $apiary_action_log = $entity->get('apiary_action_log')->entity;
-      return $apiary_action_log ? $apiary_action_log->get('apiary')->entity : NULL;
+      $item = $entity->get('item')->entity;
+      return $item ? $item->get('apiary')->entity : NULL;
     }
 
     // Product → apiary directly.
@@ -181,18 +217,12 @@ trait ApiaryAccessTrait {
       return $calendar_action ? $calendar_action->get('apiary')->entity : NULL;
     }
 
-    // HarvestYield → hive_action_log → hive → apiary, or →
-    // apiary_action_log → apiary directly.
+    // HarvestYield → its product → apiary (the product's apiary never changes
+    // when a hive moves, task 0231).
     if ($entity_type === 'harvest_yield') {
       // @phpstan-ignore-next-line
-      $hive_action_log = $entity->get('hive_action_log')->entity;
-      if ($hive_action_log) {
-        $hive = $hive_action_log->get('hive')->entity;
-        return $hive ? $hive->get('apiary')->entity : NULL;
-      }
-      // @phpstan-ignore-next-line
-      $apiary_action_log = $entity->get('apiary_action_log')->entity;
-      return $apiary_action_log ? $apiary_action_log->get('apiary')->entity : NULL;
+      $product = $entity->get('product')->entity;
+      return $product ? $product->get('apiary')->entity : NULL;
     }
 
     // SensorDevice → apiary directly (scope = apiary), or → hive →
@@ -283,6 +313,35 @@ trait ApiaryAccessTrait {
       ->cachePerUser()
       ->addCacheableDependency($apiary)
       ->addCacheTags(['apiary_membership_list']);
+  }
+
+  /**
+   * Checks view access to a history record, as its writer or its hive's apiary.
+   *
+   * A record keeps the apiary it was written under (task 0231), so after its
+   * hive moves, members of the old apiary still read what was written under
+   * theirs, and members of the hive's apiary now read the hive's whole history.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The record.
+   * @param \Drupal\Core\Session\AccountInterface $account
+   *   The user account.
+   * @param string $any_permission
+   *   The "any" permission (site-wide override).
+   * @param string $own_permission
+   *   The "own" permission.
+   *
+   * @return \Drupal\Core\Access\AccessResult
+   *   The access result.
+   */
+  protected function checkRecordViewAccess(EntityInterface $entity, AccountInterface $account, string $any_permission, string $own_permission): AccessResult {
+    $written_under = $this->resolveApiary($entity);
+    $access = $this->checkApiaryViewAccess($written_under, $account, $any_permission, $own_permission);
+    $current = $this->resolveCurrentApiary($entity);
+    if ($current && (!$written_under || (int) $current->id() !== (int) $written_under->id())) {
+      $access = $access->orIf($this->checkApiaryViewAccess($current, $account, $any_permission, $own_permission));
+    }
+    return $access;
   }
 
   /**

@@ -30,6 +30,13 @@ class HivelogSameApiaryConstraintValidator extends ConstraintValidator {
     }
     $sibling = $entity->get($constraint->against)->entity;
     $sibling_apiary = $sibling ? $this->apiaryId($sibling) : NULL;
+    // A history record is judged against the apiary it was written under
+    // (task 0231), not the one its hive is in now, so a log that outlived a
+    // hive move can still be edited. A record being created has no stamp yet
+    // and is judged against the hive's apiary.
+    if ($sibling_apiary !== NULL && $entity->getEntityTypeId() === 'hive_action_log' && !$entity->get('apiary')->isEmpty()) {
+      $sibling_apiary = (int) $entity->get('apiary')->target_id;
+    }
     if ($sibling_apiary === NULL) {
       return;
     }

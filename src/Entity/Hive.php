@@ -306,6 +306,9 @@ class Hive extends ContentEntityBase implements EntityChangedInterface, EntityOw
     // Parent-access: the same rule the scoped add route applies (task 0133),
     // enforced for every caller, not only the web form (tasks 0198/0200).
     $fields['apiary']->addConstraint('HivelogParentAccess');
+    // Changing the apiary of a hive that has parts attached goes through the
+    // move dialog (task 0231), not a direct edit.
+    $fields['apiary']->addConstraint('HivelogHiveMovedViaDialog');
 
     return $fields;
   }

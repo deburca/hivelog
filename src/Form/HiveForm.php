@@ -4,6 +4,7 @@ namespace Drupal\hivelog\Form;
 
 use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
 
 /**
  * Form handler for Hive add/edit forms.
@@ -54,6 +55,21 @@ class HiveForm extends ContentEntityForm {
         'fields' => ['notes', 'images'],
       ],
     ];
+
+    // The apiary of a saved hive changes through the move dialog, which asks
+    // what happens to its components and sensors and never rewrites history;
+    // editing the field here would skip all of that.
+    if (!$this->entity->isNew() && isset($form['apiary'])) {
+      $form['apiary']['#disabled'] = TRUE;
+      $form['apiary_move'] = [
+        '#type' => 'link',
+        '#title' => $this->t('Move to another apiary'),
+        '#url' => Url::fromRoute('hivelog.hive.move', ['hive' => $this->entity->id()]),
+        '#access' => $this->entity->access('update'),
+        '#weight' => $form['apiary']['#weight'] ?? 0,
+        '#group' => 'hive_overview',
+      ];
+    }
 
     foreach ($sections as $section_key => $section) {
       $form[$section_key] = [

@@ -249,6 +249,17 @@ class InventoryPurchase extends ContentEntityBase implements EntityChangedInterf
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
+    // Written by a hive move (task 0231), never by hand: the target apiary
+    // gets a positive row for the components that arrived and the source a
+    // negative one for what left, at the original unit price, so both
+    // apiaries' stock and cost reports stay right. Not editable or deletable.
+    $fields['transfer'] = BaseFieldDefinition::create('boolean')
+      ->setLabel(t('Recorded by a hive move'))
+      ->setDescription(t('Set on the two records a hive move writes for components that move with it.'))
+      ->setDefaultValue(FALSE)
+      ->setReadOnly(TRUE)
+      ->setDisplayConfigurable('view', TRUE);
+
     $fields['uid']
       ->setLabel(t('Owner'))
       ->setDescription(t('The user who recorded this purchase.'))

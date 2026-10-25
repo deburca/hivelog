@@ -8,6 +8,7 @@ use Drupal\Core\Entity\Attribute\ContentEntityType;
 use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityChangedInterface;
 use Drupal\Core\Entity\EntityChangedTrait;
+use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
@@ -70,6 +71,7 @@ class HiveActionLog extends ContentEntityBase implements EntityChangedInterface,
 
   use EntityChangedTrait;
   use EntityOwnerTrait;
+  use ApiaryStampTrait;
 
   /**
    * {@inheritdoc}
@@ -92,6 +94,23 @@ class HiveActionLog extends ContentEntityBase implements EntityChangedInterface,
    */
   public static function getDefaultYear(FieldableEntityInterface $entity, FieldDefinitionInterface $definition): int {
     return (int) date('Y');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function preSave(EntityStorageInterface $storage) {
+    parent::preSave($storage);
+    $this->stampApiary($storage);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function computeApiaryStamp(): int|string|NULL {
+    /** @var \Drupal\hivelog\Entity\Hive|null $hive */
+    $hive = $this->get('hive')->entity;
+    return $hive ? $hive->get('apiary')->target_id : NULL;
   }
 
   /**
@@ -235,6 +254,8 @@ class HiveActionLog extends ContentEntityBase implements EntityChangedInterface,
       ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
+
+    $fields['apiary'] = static::apiaryStampField();
 
     $fields['created'] = BaseFieldDefinition::create('created')
       ->setLabel(t('Created'))

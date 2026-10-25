@@ -1005,3 +1005,16 @@ entity.apiary_membership.delete_form:
         type: entity:apiary
       apiary_membership:
         type: entity:apiary_membership
+
+hivelog.hive.move:
+  path: '/hivelog/hive/{hive}/move'
+  defaults:
+    _form: '\Drupal\hivelog\Form\HiveMoveForm'
+    _title_callback: '\Drupal\hivelog\Form\HiveMoveForm::title'
+  requirements:
+    _permission: 'edit own hive+administer hivelog'
+    _entity_access: 'hive.update'
+  options:
+    parameters:
+      hive:
+        type: entity:hive

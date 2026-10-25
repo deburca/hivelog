@@ -2714,3 +2714,51 @@ msgstr "Bigårdens sidste ejer kan ikke få en anden rolle. Tilføj først en an
 #: modules/contrib/hivelog/src/Entity/ApiaryMembership.php
 msgid "The last owner of an apiary cannot be given another role."
 msgstr "Bigårdens sidste ejer kan ikke få en anden rolle."
+#: modules/contrib/hivelog/src/Form/HiveMoveForm.php
+msgid "Move @hive to another apiary"
+msgstr "Flyt @hive til en anden bigård"
+#: modules/contrib/hivelog/src/Form/HiveMoveForm.php
+msgid "There is no other apiary you are a beekeeper or owner in, so this hive cannot be moved."
+msgstr "Der er ingen anden bigård, hvor du er biavler eller ejer, så bistaden kan ikke flyttes."
+#: modules/contrib/hivelog/src/Form/HiveMoveForm.php
+msgid "Records already written are not changed: the hive keeps its history, and the apiary it is leaving keeps what was written there. New records will belong to the new apiary. The hive's queens go with it."
+msgstr "Allerede skrevne poster ændres ikke: bistaden beholder sin historik, og bigården, den forlader, beholder det, der er skrevet der. Nye poster hører til den nye bigård. Bistadens dronninger følger med."
+#: modules/contrib/hivelog/src/Form/HiveMoveForm.php
+msgid "Move to"
+msgstr "Flyt til"
+#: modules/contrib/hivelog/src/Form/HiveMoveForm.php
+msgid "- Choose an apiary -"
+msgstr "- Vælg en bigård -"
+#: modules/contrib/hivelog/src/Form/HiveMoveForm.php
+msgid "On this hive: @items"
+msgstr "På denne bistade: @items"
+#: modules/contrib/hivelog/src/Form/HiveMoveForm.php
+msgid "Move hive"
+msgstr "Flyt bistade"
+#: modules/contrib/hivelog/src/Form/HiveMoveForm.php
+msgid "You cannot move a hive to that apiary."
+msgstr "Du kan ikke flytte en bistade til den bigård."
+#: modules/contrib/hivelog/src/Form/HiveMoveForm.php
+msgid "Hive @hive has been moved to @apiary."
+msgstr "Bistaden @hive er flyttet til @apiary."
+#: modules/contrib/hivelog/src/Form/HiveForm.php
+msgid "Move to another apiary"
+msgstr "Flyt til en anden bigård"
+#: modules/contrib/hivelog/src/HiveMover.php
+msgid "Components"
+msgstr "Komponenter"
+#: modules/contrib/hivelog/src/HiveMover.php
+msgid "Move them with the hive, with their cost (a matching item and purchase in the new apiary, and a matching deduction in this one)"
+msgstr "Flyt dem med bistaden, med deres pris (en tilsvarende vare og et indkøb i den nye bigård og et tilsvarende fradrag i denne)"
+#: modules/contrib/hivelog/src/HiveMover.php
+msgid "Detach them from the hive first, then move it (they stay in this apiary)"
+msgstr "Fjern dem fra bistaden først og flyt den derefter (de bliver i denne bigård)"
+#: modules/contrib/hivelog/src/HiveMover.php
+msgid "Moved with hive @hive from @from to @to."
+msgstr "Flyttet med bistaden @hive fra @from til @to."
+#: modules/contrib/hivelog/src/HiveMover.php
+msgid "Transfer out"
+msgstr "Overført ud"
+#: modules/contrib/hivelog/src/HiveMover.php
+msgid "Transfer in"
+msgstr "Overført ind"

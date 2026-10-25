@@ -1234,3 +1234,76 @@ function _hivelog_cleanup_cbr_field($entity_definition_update_manager) {
 
   \Drupal::logger('hivelog')->notice('Cleaned up cbr_number field tracking directly during uninstall.');
 }
+
+/**
+ * Stamps the apiary on inspections, queen observations and hive action logs.
+ *
+ * Task 0231. These records reached their apiary through their hive, so a hive
+ * moving to another apiary would have taken its whole history with it. Each now
+ * carries the apiary it was written under (set when created, never changed).
+ * Installs the new `apiary` field on the three types and fills it in for
+ * existing rows from the hive's current apiary (a queen observation: its queen's
+ * hive's). Safe to run twice: only rows with no stamp are filled.
+ */
+function hivelog_update_10036(&$sandbox) {
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $update_manager = \Drupal::entityDefinitionUpdateManager();
+  $database = \Drupal::database();
+  $filled = 0;
+
+  foreach ([
+    'hive_inspection' => 'hive',
+    'queen_observation' => 'queen',
+    'hive_action_log' => 'hive',
+  ] as $type => $parent_field) {
+    $definition = $entity_type_manager->getDefinition($type);
+    if (!$update_manager->getFieldStorageDefinition('apiary', $type)) {
+      $fields = $definition->getClass()::baseFieldDefinitions($definition);
+      $update_manager->installFieldStorageDefinition('apiary', $type, 'hivelog', $fields['apiary']);
+    }
+
+    $storage = $entity_type_manager->getStorage($type);
+    $table = $definition->getBaseTable();
+    $ids = $database->select($table, 't')
+      ->fields('t', ['id'])
+      ->isNull('t.apiary')
+      ->execute()
+      ->fetchCol();
+    foreach (array_chunk($ids, 100) as $chunk) {
+      foreach ($storage->loadMultiple($chunk) as $entity) {
+        $parent = $entity->get($parent_field)->entity;
+        $hive = $type === 'queen_observation' ? ($parent ? $parent->get('hive')->entity : NULL) : $parent;
+        $apiary_id = $hive ? $hive->get('apiary')->target_id : NULL;
+        if ($apiary_id) {
+          // A direct update: saving would change the record's changed time.
+          $database->update($table)
+            ->fields(['apiary' => $apiary_id])
+            ->condition('id', $entity->id())
+            ->execute();
+          $filled++;
+        }
+      }
+      $storage->resetCache($chunk);
+    }
+  }
+
+  return t('Stamped the apiary on @count history record(s).', ['@count' => $filled]);
+}
+
+/**
+ * Adds the `transfer` flag to inventory purchases.
+ *
+ * Task 0231. A hive move that carries components writes a positive purchase in
+ * the target apiary and a negative one in the source, flagged so they cannot be
+ * edited or removed afterwards.
+ */
+function hivelog_update_10037(&$sandbox) {
+  $update_manager = \Drupal::entityDefinitionUpdateManager();
+  if ($update_manager->getFieldStorageDefinition('transfer', 'inventory_purchase')) {
+    return t('The transfer flag already exists.');
+  }
+  $definition = \Drupal::entityTypeManager()->getDefinition('inventory_purchase');
+  $fields = $definition->getClass()::baseFieldDefinitions($definition);
+  $update_manager->installFieldStorageDefinition('transfer', 'inventory_purchase', 'hivelog', $fields['transfer']);
+  return t('Added the transfer flag to inventory purchases.');
+}

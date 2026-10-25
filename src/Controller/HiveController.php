@@ -153,6 +153,15 @@ class HiveController extends ControllerBase {
     // were the two canonical pages that had no page-owned button group at
     // all, relying entirely on the Navigation module's top bar.
     $build['actions'] = $this->buildActions($hive);
+    // A saved hive changes apiary through its move dialog (task 0231).
+    if ($hive->access('update') && !empty($build['actions']['#props']['buttons'])) {
+      $edit_position = 1;
+      array_splice($build['actions']['#props']['buttons'], $edit_position, 0, [[
+        'label' => (string) $this->t('Move to another apiary'),
+        'url' => Url::fromRoute('hivelog.hive.move', ['hive' => $hive->id()])->toString(),
+      ]
+]);
+    }
 
     // "At a glance" stat tiles — optional submodules only (e.g. nexus's
     // AI Insight, nanoprobe's per-sensor vitals); hivelog core

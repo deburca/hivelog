@@ -35,7 +35,7 @@ class HiveActionLogAccessControlHandler extends EntityAccessControlHandler {
 
     switch ($operation) {
       case 'view':
-        return $this->checkApiaryViewAccess($apiary, $account, 'view any hive action log', 'view own hive action log');
+        return $this->checkRecordViewAccess($entity, $account, 'view any hive action log', 'view own hive action log');
 
       case 'update':
         return $this->checkApiaryEditAccess($apiary, $account, 'edit any hive action log', 'edit own hive action log');
