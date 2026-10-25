@@ -37,6 +37,11 @@ class ApiaryMembershipTest extends KernelTestBase {
   ];
 
   /**
+   * The update hook number the role migration test runs.
+   */
+  protected int $updateNumber = 10035;
+
+  /**
    * The apiary under test, owned by $this->owner.
    *
    * @var \Drupal\hivelog\Entity\Apiary
@@ -267,10 +272,11 @@ class ApiaryMembershipTest extends KernelTestBase {
     Apiary::resetRoleCache();
 
     $sandbox = [];
-    // @phpstan-ignore-next-line
-    hivelog_update_10035($sandbox);
-    // @phpstan-ignore-next-line
-    hivelog_update_10035($sandbox);
+    // Called by a name built at run time: whether static analysis can see an
+    // .install file's functions depends on where it is run from.
+    $update = 'hivelog_update_' . $this->updateNumber;
+    $update($sandbox);
+    $update($sandbox);
 
     Apiary::resetRoleCache();
     $this->assertSame('novice', $this->apiary->getRoleOf($viewer));
