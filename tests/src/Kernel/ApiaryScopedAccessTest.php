@@ -201,7 +201,7 @@ class ApiaryScopedAccessTest extends KernelTestBase {
     ApiaryMembership::create([
       'apiary' => $this->apiary->id(),
       'account' => $this->beekeeper->id(),
-      'role' => 'editor',
+      'role' => 'keeper',
     ])->save();
 
     $this->hive = Hive::create([
@@ -437,9 +437,12 @@ class ApiaryScopedAccessTest extends KernelTestBase {
   }
 
   /**
-   * Tests that a beekeeper cannot delete another user's inspection.
+   * Tests that a beekeeper can delete another user's inspection.
+   *
+   * Rights come from the current role, not from having created the record
+   * (task 0224).
    */
-  public function testBeekeeperCannotDeleteOthersInspection(): void {
+  public function testBeekeeperCanDeleteOthersInspection(): void {
     // Create an inspection owned by the apiary owner.
     $owner_inspection = HiveInspection::create([
       'hive' => $this->hive->id(),
@@ -448,7 +451,7 @@ class ApiaryScopedAccessTest extends KernelTestBase {
     ]);
     $owner_inspection->save();
     // Beekeeper is a member but did not create this one.
-    $this->assertFalse($owner_inspection->access('delete', $this->beekeeper));
+    $this->assertTrue($owner_inspection->access('delete', $this->beekeeper));
   }
 
   // -----------------------------------------------------------------------
@@ -698,16 +701,16 @@ class ApiaryScopedAccessTest extends KernelTestBase {
   }
 
   /**
-   * Tests that a beekeeper cannot delete another user's hive action log.
+   * Tests that a beekeeper can delete another user's hive action log.
    */
-  public function testBeekeeperCannotDeleteOthersHiveActionLog(): void {
+  public function testBeekeeperCanDeleteOthersHiveActionLog(): void {
     $owner_log = HiveActionLog::create([
       'hive' => $this->hive->id(),
       'calendar_action' => $this->calendarAction->id(),
       'uid' => $this->owner->id(),
     ]);
     $owner_log->save();
-    $this->assertFalse($owner_log->access('delete', $this->beekeeper));
+    $this->assertTrue($owner_log->access('delete', $this->beekeeper));
   }
 
   /**
@@ -775,16 +778,16 @@ class ApiaryScopedAccessTest extends KernelTestBase {
   }
 
   /**
-   * Tests that a beekeeper cannot delete another user's apiary action log.
+   * Tests that a beekeeper can delete another user's apiary action log.
    */
-  public function testBeekeeperCannotDeleteOthersApiaryActionLog(): void {
+  public function testBeekeeperCanDeleteOthersApiaryActionLog(): void {
     $owner_log = ApiaryActionLog::create([
       'apiary' => $this->apiary->id(),
       'calendar_action' => $this->calendarAction->id(),
       'uid' => $this->owner->id(),
     ]);
     $owner_log->save();
-    $this->assertFalse($owner_log->access('delete', $this->beekeeper));
+    $this->assertTrue($owner_log->access('delete', $this->beekeeper));
   }
 
   /**
@@ -963,7 +966,7 @@ class ApiaryScopedAccessTest extends KernelTestBase {
     ApiaryMembership::create([
       'apiary' => $apiaryA->id(),
       'account' => $userB->id(),
-      'role' => 'editor',
+      'role' => 'keeper',
     ])->save();
 
     // Reset entity storage and access static caches so Phase 1 results
@@ -1012,17 +1015,24 @@ class ApiaryScopedAccessTest extends KernelTestBase {
     $this->assertFalse($apiaryA->access('update', $userB), 'Beekeeper userB cannot edit apiary (owner-only).');
     $this->assertFalse($apiaryA->access('delete', $userB), 'Beekeeper userB cannot delete apiary (owner-only).');
 
-    // userB CANNOT delete hives, queens, or calendar actions (owner-only).
-    $this->assertFalse($hiveA->access('delete', $userB), 'Beekeeper userB cannot delete hive (owner-only).');
-    $this->assertFalse($queenA->access('delete', $userB), 'Beekeeper userB cannot delete queen (owner-only).');
-    $this->assertFalse($calendarActionA->access('delete', $userB), 'Beekeeper userB cannot delete calendar action created by userA (owner-only).');
+    // userB, a beekeeper, may delete hives, queens and calendar actions exactly
+    // as the owner may: every action except the owner extras (task 0224). The
+    // result is compared with the owner's because a record with children is
+    // blocked from deletion for everyone.
+    foreach (['hive' => $hiveA, 'queen' => $queenA, 'calendar action' => $calendarActionA] as $label => $entity) {
+      $this->assertSame(
+        $entity->access('delete', $userA),
+        $entity->access('delete', $userB),
+        "Beekeeper userB deletes a $label as the owner does."
+      );
+    }
 
-    // userB CANNOT delete inspections/observations/hive action logs/apiary
-    // action logs created by userA (owner-or-creator).
-    $this->assertFalse($inspectionA->access('delete', $userB), 'Beekeeper userB cannot delete inspection created by userA.');
-    $this->assertFalse($observationA->access('delete', $userB), 'Beekeeper userB cannot delete observation created by userA.');
-    $this->assertFalse($hiveActionLogA->access('delete', $userB), 'Beekeeper userB cannot delete hive action log created by userA.');
-    $this->assertFalse($apiaryActionLogA->access('delete', $userB), 'Beekeeper userB cannot delete apiary action log created by userA.');
+    // userB CAN also delete what userA created: access follows the current
+    // role, never who created a record.
+    $this->assertTrue($inspectionA->access('delete', $userB), 'Beekeeper userB can delete inspection created by userA.');
+    $this->assertTrue($observationA->access('delete', $userB), 'Beekeeper userB can delete observation created by userA.');
+    $this->assertTrue($hiveActionLogA->access('delete', $userB), 'Beekeeper userB can delete hive action log created by userA.');
+    $this->assertTrue($apiaryActionLogA->access('delete', $userB), 'Beekeeper userB can delete apiary action log created by userA.');
 
     // --- Phase 3: userB creates their own inspection/log → can delete it. ---
     $inspectionB = HiveInspection::create([

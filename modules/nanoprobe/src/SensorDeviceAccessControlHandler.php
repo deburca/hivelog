@@ -53,7 +53,7 @@ class SensorDeviceAccessControlHandler extends EntityAccessControlHandler {
         return $this->checkApiaryEditAccess($apiary, $account, 'edit any sensor device', 'edit own sensor device');
 
       case 'delete':
-        return $this->checkApiaryOwnerDeleteAccess($apiary, $account, 'delete any sensor device', 'delete own sensor device');
+        return $this->checkApiaryDeleteAccess($apiary, $account, 'delete any sensor device', 'delete own sensor device');
     }
 
     return AccessResult::neutral();

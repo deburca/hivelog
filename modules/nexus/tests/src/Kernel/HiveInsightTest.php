@@ -261,7 +261,7 @@ class HiveInsightTest extends KernelTestBase {
     ApiaryMembership::create([
       'apiary' => $apiary->id(),
       'account' => $beekeeper->id(),
-      'role' => 'editor',
+      'role' => 'keeper',
     ])->save();
 
     $hive = Hive::create([
@@ -287,9 +287,9 @@ class HiveInsightTest extends KernelTestBase {
     $this->assertTrue($insight->access('view', $beekeeper));
     $this->assertFalse($insight->access('view', $outsider));
 
-    // Delete is owner-only.
+    // A beekeeper may delete, as an owner may (task 0224).
     $this->assertTrue($insight->access('delete', $owner));
-    $this->assertFalse($insight->access('delete', $beekeeper));
+    $this->assertTrue($insight->access('delete', $beekeeper));
 
     // Public apiary: an outsider with the "own" permission can view.
     // The insight/hive objects above already resolved and cached their

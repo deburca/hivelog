@@ -37,7 +37,7 @@ class QueenObservationAccessControlHandler extends EntityAccessControlHandler {
         return $this->checkApiaryEditAccess($apiary, $account, 'edit any queen observation', 'edit own queen observation');
 
       case 'delete':
-        return $this->checkApiaryMemberDeleteAccess($apiary, $entity, $account, 'delete any queen observation', 'delete own queen observation');
+        return $this->checkApiaryDeleteAccess($apiary, $account, 'delete any queen observation', 'delete own queen observation');
     }
 
     return AccessResult::neutral();

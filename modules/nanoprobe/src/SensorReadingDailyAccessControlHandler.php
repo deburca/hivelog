@@ -42,7 +42,7 @@ class SensorReadingDailyAccessControlHandler extends EntityAccessControlHandler 
         return $this->checkApiaryViewAccess($apiary, $account, 'view any sensor reading', 'view own sensor reading');
 
       case 'delete':
-        return $this->checkApiaryOwnerDeleteAccess($apiary, $account, 'delete any sensor reading', 'delete own sensor reading');
+        return $this->checkApiaryDeleteAccess($apiary, $account, 'delete any sensor reading', 'delete own sensor reading');
     }
 
     return AccessResult::neutral();

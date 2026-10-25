@@ -181,7 +181,7 @@ class SensorReadingTest extends KernelTestBase {
     ApiaryMembership::create([
       'apiary' => $apiary->id(),
       'account' => $beekeeper->id(),
-      'role' => 'editor',
+      'role' => 'keeper',
     ])->save();
 
     $hive = Hive::create([
@@ -212,9 +212,9 @@ class SensorReadingTest extends KernelTestBase {
     $this->assertTrue($reading->access('view', $beekeeper));
     $this->assertFalse($reading->access('view', $outsider));
 
-    // Delete is owner-only.
+    // A beekeeper may delete, as an owner may (task 0224).
     $this->assertTrue($reading->access('delete', $owner));
-    $this->assertFalse($reading->access('delete', $beekeeper));
+    $this->assertTrue($reading->access('delete', $beekeeper));
 
     // No add/edit permission exists at all for this entity type.
     $this->assertFalse($reading->access('update', $beekeeper));

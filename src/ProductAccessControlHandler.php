@@ -53,13 +53,13 @@ class ProductAccessControlHandler extends EntityAccessControlHandler implements 
       case 'delete':
         $access = $is_admin
           ? AccessResult::allowed()->cachePerPermissions()
-          : $this->checkApiaryOwnerDeleteAccess($apiary, $account, 'delete any product', 'delete own product');
+          : $this->checkApiaryDeleteAccess($apiary, $account, 'delete any product', 'delete own product');
         return $this->blockDelete($access, $entity);
 
       case 'delete_route':
         return $is_admin
           ? AccessResult::allowed()->cachePerPermissions()
-          : $this->checkApiaryOwnerDeleteAccess($apiary, $account, 'delete any product', 'delete own product');
+          : $this->checkApiaryDeleteAccess($apiary, $account, 'delete any product', 'delete own product');
     }
 
     return AccessResult::neutral();

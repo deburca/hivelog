@@ -63,12 +63,28 @@ class ApiaryMembership extends ContentEntityBase implements EntityChangedInterfa
   use EntityChangedTrait;
 
   /**
-   * Allowed role values: owner, editor, viewer.
+   * Allowed role values: owner, keeper, novice (task 0224).
+   *
+   * Labels are the English source strings; the member form and the
+   * translations show them. `keeper` is "Beekeeper": the key avoids a clash
+   * with the Drupal site role `beekeeper` that permissions and tests use.
    */
   const ROLES = [
     'owner' => 'Owner',
-    'editor' => 'Editor',
-    'viewer' => 'Viewer',
+    'keeper' => 'Beekeeper',
+    'novice' => 'Novice',
+  ];
+
+  /**
+   * The roles ordered by what they may do; a higher rank includes a lower.
+   *
+   * Novice (read) < keeper (every action except user, owner and apiary
+   * settings management) < owner (everything).
+   */
+  const ROLE_RANK = [
+    'novice' => 1,
+    'keeper' => 2,
+    'owner' => 3,
   ];
 
   /**
@@ -98,6 +114,63 @@ class ApiaryMembership extends ContentEntityBase implements EntityChangedInterfa
         );
       }
     }
+
+    // An apiary always keeps an owner: the last owner cannot be demoted
+    // (the form says so first; this is the backstop for other callers).
+    if (!$this->isNew() && $this->getRole() !== 'owner' && $this->isLastOwner(TRUE)) {
+      throw new \InvalidArgumentException(
+        (string) t('The last owner of an apiary cannot be given another role.')
+      );
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function postSave(EntityStorageInterface $storage, $update = TRUE) {
+    parent::postSave($storage, $update);
+    Apiary::resetRoleCache();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function postDelete(EntityStorageInterface $storage, array $entities) {
+    parent::postDelete($storage, $entities);
+    Apiary::resetRoleCache();
+  }
+
+  /**
+   * Whether this is the only owner membership of its apiary.
+   *
+   * @param bool $stored
+   *   TRUE to ask whether the STORED row is the apiary's only owner (a
+   *   membership being demoted is still `owner` in storage while its new
+   *   value is not), FALSE to ask about the current values.
+   *
+   * @return bool
+   *   TRUE if this membership is, or in storage was, the apiary's only owner.
+   */
+  public function isLastOwner(bool $stored = FALSE): bool {
+    $apiary_id = $this->get('apiary')->target_id;
+    if (!$apiary_id) {
+      return FALSE;
+    }
+    if ($stored) {
+      $original = $this->original ?? NULL;
+      if (!$original || $original->get('role')->value !== 'owner') {
+        return FALSE;
+      }
+    }
+    elseif ($this->getRole() !== 'owner') {
+      return FALSE;
+    }
+    $owners = \Drupal::entityQuery('apiary_membership')
+      ->condition('apiary', $apiary_id)
+      ->condition('role', 'owner')
+      ->accessCheck(FALSE)
+      ->execute();
+    return count($owners) <= 1;
   }
 
   /**
@@ -112,10 +185,31 @@ class ApiaryMembership extends ContentEntityBase implements EntityChangedInterfa
   }
 
   /**
+   * Gets the translated label of a role.
+   *
+   * `ROLES` holds the English source strings (like every list in this module,
+   * option labels are untranslated); this is for text a person reads.
+   *
+   * @param string $role
+   *   The role key: `owner`, `keeper` or `novice`.
+   *
+   * @return \Drupal\Core\StringTranslation\TranslatableMarkup
+   *   The label.
+   */
+  public static function roleLabel(string $role): TranslatableMarkup {
+    return match ($role) {
+      'owner' => new TranslatableMarkup('Owner'),
+      'keeper' => new TranslatableMarkup('Beekeeper'),
+      'novice' => new TranslatableMarkup('Novice'),
+      default => new TranslatableMarkup('@role', ['@role' => $role]),
+    };
+  }
+
+  /**
    * Gets this membership's role value.
    *
    * @return string
-   *   The role ('owner', 'editor', or 'viewer').
+   *   The role ('owner', 'keeper' or 'novice').
    */
   public function getRole(): string {
     return $this->get('role')->value;
@@ -169,7 +263,7 @@ class ApiaryMembership extends ContentEntityBase implements EntityChangedInterfa
       ->setLabel(t('Role'))
       ->setDescription(t('The role granted to this member within the apiary.'))
       ->setRequired(TRUE)
-      ->setDefaultValue('viewer')
+      ->setDefaultValue('novice')
       ->setSetting('allowed_values', self::ROLES)
       ->setDisplayOptions('form', ['type' => 'options_select', 'weight' => 2])
       ->setDisplayConfigurable('form', TRUE);

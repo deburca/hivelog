@@ -37,7 +37,7 @@ class HiveInspectionAccessControlHandler extends EntityAccessControlHandler {
         return $this->checkApiaryEditAccess($apiary, $account, 'edit any hive inspection', 'edit own hive inspection');
 
       case 'delete':
-        return $this->checkApiaryMemberDeleteAccess($apiary, $entity, $account, 'delete any hive inspection', 'delete own hive inspection');
+        return $this->checkApiaryDeleteAccess($apiary, $account, 'delete any hive inspection', 'delete own hive inspection');
     }
 
     return AccessResult::neutral();

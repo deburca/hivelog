@@ -16,7 +16,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * Used by task 0141's six parent-side access control handlers (Apiary,
  * Hive, Queen, CalendarAction, InventoryItem, Product) — each already
  * grants `delete` to the owner via
- * `ApiaryAccessTrait::checkApiaryOwnerDeleteAccess()`; `blockDelete()`
+ * `ApiaryAccessTrait::checkApiaryDeleteAccess()`; `blockDelete()`
  * forbids that otherwise-allowed result while any BLOCK row registered
  * against the entity still has children, via
  * `HivelogDeleteDependencyCounter::blockingAccessResult()`.

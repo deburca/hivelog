@@ -288,7 +288,7 @@ class RouteEntityAccessTest extends KernelTestBase {
     $membership = ApiaryMembership::create([
       'apiary' => $apiary->id(),
       'account' => $member->id(),
-      'role' => 'viewer',
+      'role' => 'novice',
     ]);
     $membership->save();
     $this->fixtures['apiary_membership'] = $membership;
@@ -457,21 +457,16 @@ class RouteEntityAccessTest extends KernelTestBase {
   }
 
   /**
-   * Routes gated by `apiary.update`, owner-only unlike every child type.
+   * Routes only an owner may open, whatever else a beekeeper can do.
    *
-   * Unlike every child type's own `update`, `apiary.update` is owner-only
-   * (`ApiaryAccessControlHandler`: "Only apiary owner can edit the apiary
-   * itself"). A mere beekeeper member is correctly denied on these; see
+   * The apiary's own settings and deletion, and member management (task
+   * 0224): a beekeeper can add a hive, a calendar action, inventory and so
+   * on (`apiary.write`), but not these. See
    * `testBeekeeperMemberDeniedOnApiaryOwnerOnlyRoutes()`.
    */
   protected const APIARY_OWNER_ONLY_ROUTES = [
     'entity.apiary.edit_form',
-    'hivelog.hive.add',
-    'hivelog.calendar_action.add',
-    'hivelog.apiary_action_log.add',
-    'hivelog.inventory_item.add',
-    'hivelog.inventory_purchase.add',
-    'hivelog.product.add',
+    'entity.apiary.delete_form',
     'hivelog.apiary_membership.add',
     'entity.apiary_membership.edit_form',
     'entity.apiary_membership.delete_form',
@@ -518,13 +513,8 @@ class RouteEntityAccessTest extends KernelTestBase {
   /**
    * Tests a beekeeper member (not owner) is denied on apiary-owner-only routes.
    *
-   * A beekeeper member can already edit every child entity in the apiary
-   * (hives, inspections, queens, …) but not the apiary itself, nor add
-   * new apiary-direct structure (a hive, a calendar action, inventory,
-   * products) — that stays owner-only, matching
-   * `ApiaryAccessControlHandler::checkAccess()`'s existing
-   * `update`/`delete` restriction and `HiveAccessControlHandler`'s
-   * owner-only `delete`.
+   * A beekeeper does everything in the apiary except the owner extras: the
+   * apiary's own edit form and deletion, and managing members.
    */
   public function testBeekeeperMemberDeniedOnApiaryOwnerOnlyRoutes(): void {
     $beekeeper = $this->addBeekeeperMemberToFixtureApiary();
@@ -547,12 +537,46 @@ class RouteEntityAccessTest extends KernelTestBase {
   }
 
   /**
+   * Tests a novice reads everything in the apiary and changes nothing.
+   *
+   * Every hivelog entity route is a read (canonical) or a write (add, edit,
+   * delete); a novice may open only the reads.
+   */
+  public function testNoviceMemberIsReadOnly(): void {
+    $novice = $this->addBeekeeperMemberToFixtureApiary('novice');
+
+    $access_manager = \Drupal::service('access_manager');
+    $checked = 0;
+    foreach ($this->hivelogRoutes() as $name => $route) {
+      $entity_params = $this->entityParameterNames($route);
+      if (!$entity_params) {
+        continue;
+      }
+      $is_read = str_ends_with($name, '.canonical');
+      $is_write = (bool) preg_match('/\.(add|add_form|edit_form|delete_form)$/', $name);
+      if (!$is_read && !$is_write) {
+        continue;
+      }
+      $route_params = [];
+      foreach ($entity_params as $param_name) {
+        $route_params[$param_name] = $this->fixtures[$param_name]->id();
+      }
+      $allowed = $access_manager->checkNamedRoute($name, $route_params, $novice);
+      $this->assertSame($is_read, $allowed, $is_read
+        ? "A novice must be able to read '$name'."
+        : "A novice must be denied the write route '$name'.");
+      $checked++;
+    }
+    $this->assertGreaterThan(10, $checked, 'The loop must actually cover routes.');
+  }
+
+  /**
    * Adds a fresh beekeeper-role user as a member of the fixture apiary.
    *
    * Resets storage/access caches so the membership change is seen by
    * subsequently loaded fixture entities.
    */
-  protected function addBeekeeperMemberToFixtureApiary(): User {
+  protected function addBeekeeperMemberToFixtureApiary(string $role = 'keeper'): User {
     $beekeeper = User::create(['name' => 'beekeeper', 'mail' => 'beekeeper@example.com']);
     $beekeeper->addRole('beekeeper');
     $beekeeper->save();
@@ -561,7 +585,7 @@ class RouteEntityAccessTest extends KernelTestBase {
     ApiaryMembership::create([
       'apiary' => $apiary->id(),
       'account' => $beekeeper->id(),
-      'role' => 'editor',
+      'role' => $role,
     ])->save();
 
     $etm = \Drupal::entityTypeManager();

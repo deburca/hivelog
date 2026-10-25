@@ -46,13 +46,13 @@ class HiveAccessControlHandler extends EntityAccessControlHandler implements Ent
       case 'delete':
         $access = $is_admin
           ? AccessResult::allowed()->cachePerPermissions()
-          : $this->checkApiaryOwnerDeleteAccess($apiary, $account, 'delete any hive', 'delete own hive');
+          : $this->checkApiaryDeleteAccess($apiary, $account, 'delete any hive', 'delete own hive');
         return $this->blockDelete($access, $entity);
 
       case 'delete_route':
         return $is_admin
           ? AccessResult::allowed()->cachePerPermissions()
-          : $this->checkApiaryOwnerDeleteAccess($apiary, $account, 'delete any hive', 'delete own hive');
+          : $this->checkApiaryDeleteAccess($apiary, $account, 'delete any hive', 'delete own hive');
     }
 
     return AccessResult::neutral();

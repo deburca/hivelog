@@ -111,7 +111,7 @@ class CalendarActionProductYieldAccessTest extends KernelTestBase {
     ApiaryMembership::create([
       'apiary' => $this->apiary->id(),
       'account' => $this->beekeeper->id(),
-      'role' => 'editor',
+      'role' => 'keeper',
     ])->save();
 
     $calendar_action = CalendarAction::create([
@@ -177,11 +177,11 @@ class CalendarActionProductYieldAccessTest extends KernelTestBase {
   }
 
   /**
-   * Tests that a beekeeper cannot delete their own yield (owner-only).
+   * Tests that a beekeeper can delete a yield.
    */
-  public function testBeekeeperCannotDeleteOwnYield(): void {
+  public function testBeekeeperCanDeleteYield(): void {
     // $this->yield was created with uid = beekeeper.
-    $this->assertFalse($this->yield->access('delete', $this->beekeeper));
+    $this->assertTrue($this->yield->access('delete', $this->beekeeper));
   }
 
   /**

@@ -50,13 +50,13 @@ class CalendarActionAccessControlHandler extends EntityAccessControlHandler impl
       case 'delete':
         $access = $is_admin
           ? AccessResult::allowed()->cachePerPermissions()
-          : $this->checkApiaryOwnerDeleteAccess($apiary, $account, 'delete any calendar action', 'delete own calendar action');
+          : $this->checkApiaryDeleteAccess($apiary, $account, 'delete any calendar action', 'delete own calendar action');
         return $this->blockDelete($access, $entity);
 
       case 'delete_route':
         return $is_admin
           ? AccessResult::allowed()->cachePerPermissions()
-          : $this->checkApiaryOwnerDeleteAccess($apiary, $account, 'delete any calendar action', 'delete own calendar action');
+          : $this->checkApiaryDeleteAccess($apiary, $account, 'delete any calendar action', 'delete own calendar action');
     }
 
     return AccessResult::neutral();

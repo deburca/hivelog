@@ -41,7 +41,7 @@ class InventoryPurchaseAccessControlHandler extends EntityAccessControlHandler {
         return $this->checkApiaryEditAccess($apiary, $account, 'edit any inventory purchase', 'edit own inventory purchase');
 
       case 'delete':
-        return $this->checkApiaryMemberDeleteAccess($apiary, $entity, $account, 'delete any inventory purchase', 'delete own inventory purchase');
+        return $this->checkApiaryDeleteAccess($apiary, $account, 'delete any inventory purchase', 'delete own inventory purchase');
     }
 
     return AccessResult::neutral();

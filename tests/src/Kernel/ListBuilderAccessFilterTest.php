@@ -174,7 +174,7 @@ class ListBuilderAccessFilterTest extends KernelTestBase {
     ApiaryMembership::create([
       'apiary' => $this->apiary->id(),
       'account' => $this->beekeeper->id(),
-      'role' => 'editor',
+      'role' => 'keeper',
     ])->save();
     $this->fixtures['apiary'] = $this->apiary;
 

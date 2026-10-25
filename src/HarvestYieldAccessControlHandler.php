@@ -42,7 +42,7 @@ class HarvestYieldAccessControlHandler extends EntityAccessControlHandler {
         return $this->checkApiaryEditAccess($apiary, $account, 'edit any harvest yield', 'edit own harvest yield');
 
       case 'delete':
-        return $this->checkApiaryMemberDeleteAccess($apiary, $entity, $account, 'delete any harvest yield', 'delete own harvest yield');
+        return $this->checkApiaryDeleteAccess($apiary, $account, 'delete any harvest yield', 'delete own harvest yield');
     }
 
     return AccessResult::neutral();

@@ -357,8 +357,12 @@ class EntityConstraintsTest extends KernelTestBase {
     $inspection = HiveInspection::create(['hive' => $mine['hive']->id(), 'inspection_date' => '2026-06-01']);
     $inspection->save();
 
-    // The hive now belongs to someone else; I can no longer update it.
-    $mine['apiary']->set('uid', $this->them->id())->save();
+    // I am no longer a member of the apiary; I can no longer update the hive.
+    $memberships = \Drupal::entityTypeManager()->getStorage('apiary_membership')
+      ->loadByProperties(['apiary' => $mine['apiary']->id(), 'account' => $this->me->id()]);
+    foreach ($memberships as $membership) {
+      $membership->delete();
+    }
     $this->assertFalse(Hive::load($mine['hive']->id())->access('update'));
 
     $inspection = HiveInspection::load($inspection->id());

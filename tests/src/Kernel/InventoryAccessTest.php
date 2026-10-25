@@ -120,7 +120,7 @@ class InventoryAccessTest extends KernelTestBase {
     ApiaryMembership::create([
       'apiary' => $this->apiary->id(),
       'account' => $this->beekeeper->id(),
-      'role' => 'editor',
+      'role' => 'keeper',
     ])->save();
 
     $this->item = InventoryItem::create([
@@ -185,10 +185,10 @@ class InventoryAccessTest extends KernelTestBase {
   }
 
   /**
-   * Tests that a beekeeper cannot delete an inventory item (owner-only).
+   * Tests that a beekeeper can delete an inventory item.
    */
-  public function testBeekeeperCannotDeleteInventoryItem(): void {
-    $this->assertFalse($this->item->access('delete', $this->beekeeper));
+  public function testBeekeeperCanDeleteInventoryItem(): void {
+    $this->assertTrue($this->item->access('delete', $this->beekeeper));
   }
 
   /**
@@ -252,9 +252,9 @@ class InventoryAccessTest extends KernelTestBase {
   }
 
   /**
-   * Tests that a beekeeper cannot delete another user's purchase.
+   * Tests that a beekeeper can delete another user's purchase.
    */
-  public function testBeekeeperCannotDeleteOthersPurchase(): void {
+  public function testBeekeeperCanDeleteOthersPurchase(): void {
     $owner_purchase = InventoryPurchase::create([
       'apiary' => $this->apiary->id(),
       'item' => $this->item->id(),
@@ -264,7 +264,7 @@ class InventoryAccessTest extends KernelTestBase {
       'uid' => $this->owner->id(),
     ]);
     $owner_purchase->save();
-    $this->assertFalse($owner_purchase->access('delete', $this->beekeeper));
+    $this->assertTrue($owner_purchase->access('delete', $this->beekeeper));
   }
 
   /**

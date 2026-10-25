@@ -41,7 +41,7 @@ class HiveComponentAccessControlHandler extends EntityAccessControlHandler {
         return $this->checkApiaryEditAccess($apiary, $account, 'edit any hive component', 'edit own hive component');
 
       case 'delete':
-        return $this->checkApiaryOwnerDeleteAccess($apiary, $account, 'delete any hive component', 'delete own hive component');
+        return $this->checkApiaryDeleteAccess($apiary, $account, 'delete any hive component', 'delete own hive component');
     }
 
     return AccessResult::neutral();

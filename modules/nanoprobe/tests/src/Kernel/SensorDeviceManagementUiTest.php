@@ -257,7 +257,7 @@ class SensorDeviceManagementUiTest extends KernelTestBase {
     ApiaryMembership::create([
       'apiary' => $this->apiary->id(),
       'account' => $viewer->id(),
-      'role' => 'viewer',
+      'role' => 'novice',
     ])->save();
     \Drupal::currentUser()->setAccount($viewer);
 
@@ -328,7 +328,7 @@ class SensorDeviceManagementUiTest extends KernelTestBase {
     ApiaryMembership::create([
       'apiary' => $this->apiary->id(),
       'account' => $viewer->id(),
-      'role' => 'viewer',
+      'role' => 'novice',
     ])->save();
     \Drupal::currentUser()->setAccount($viewer);
 

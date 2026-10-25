@@ -165,7 +165,7 @@ class HivelogDetailPageTraitTest extends KernelTestBase {
     ApiaryMembership::create([
       'apiary' => $this->apiary->id(),
       'account' => $editor->id(),
-      'role' => 'editor',
+      'role' => 'keeper',
     ])->save();
 
     $this->setCurrentUser($editor);

@@ -9,6 +9,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Field\EntityReferenceFieldItemListInterface;
+use Drupal\hivelog\Entity\Apiary;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
@@ -45,7 +46,13 @@ class HivelogParentAccessConstraintValidator extends ConstraintValidator impleme
       if (in_array((string) $parent->id(), $previous, TRUE)) {
         continue;
       }
-      if (!$parent->access($constraint->operation)) {
+      // A record created in or moved to an apiary needs the right to write in
+      // it (beekeeper or owner), not to edit the apiary's own settings, which
+      // is owner-only (task 0224).
+      $operation = $parent instanceof Apiary && $constraint->operation === 'update'
+        ? 'write'
+        : $constraint->operation;
+      if (!$parent->access($operation)) {
         $this->context->addViolation($constraint->message, [
           '@type' => (string) $parent->getEntityType()->getSingularLabel(),
         ]);

@@ -76,12 +76,14 @@ class ApiaryFormLayoutTest extends KernelTestBase {
       'notes' => 'hivelog_details',
       'geolocation' => 'hivelog_map',
       'visibility' => 'hivelog_access',
-      'uid' => 'hivelog_access',
       'ai_insights_enabled' => 'hivelog_ai',
     ];
     foreach ($expected as $field => $tab) {
       $this->assertSame($tab, $form[$field]['#group'], "$field sits in $tab.");
     }
+    // `uid` is history only ("created by"): there is no owner to pick, since
+    // owners are the members with role `owner` (task 0224).
+    $this->assertFalse($form['uid']['#access']);
   }
 
   /**
@@ -100,9 +102,8 @@ class ApiaryFormLayoutTest extends KernelTestBase {
   public function testAccessSettingsAreInOrder(): void {
     $form = $this->editForm();
 
-    $this->assertLessThan($form['uid']['#weight'], $form['visibility']['#weight']);
     $members = $form['hivelog_access']['members'];
-    $this->assertLessThan($members['#weight'], $form['uid']['#weight']);
+    $this->assertLessThan($members['#weight'], $form['visibility']['#weight']);
     $this->assertSame('Members', (string) $members['#title']);
     $this->assertSame('item', $members['#type'], 'Titled like the other settings, not as a page section.');
   }

@@ -109,7 +109,7 @@ class ApiaryMemberManagerForm extends ControllerBase {
       $rows[] = [
       'cells' => [
         Html::escape($account->getDisplayName()),
-        Html::escape((string) (ApiaryMembership::ROLES[$membership->getRole()] ?? $membership->getRole())),
+        Html::escape((string) ApiaryMembership::roleLabel($membership->getRole())),
         (string) $this->renderer->renderInIsolation($operations),
       ]
 ];

@@ -63,28 +63,88 @@ class Apiary extends ContentEntityBase implements EntityChangedInterface, Entity
   use EntityOwnerTrait;
 
   /**
-   * Checks whether the given account is a member of this apiary.
+   * Per-request cache of roles: apiary id => user id => role key.
    *
-   * A member is either the apiary owner or a user with an
-   * ApiaryMembership row for this apiary, in any role (owner, editor, viewer).
+   * @var array<int, array<int, string>>
+   */
+  protected static array $roleCache = [];
+
+  /**
+   * Forgets the cached roles; called whenever a membership changes.
+   */
+  public static function resetRoleCache(): void {
+    static::$roleCache = [];
+  }
+
+  /**
+   * Gets the role an account holds in this apiary, if any.
+   *
+   * Access comes from the current membership only (task 0224): never from
+   * the apiary's `uid`, and never from having created a record.
+   *
+   * @param \Drupal\Core\Session\AccountInterface $account
+   *   The user account.
+   *
+   * @return string|null
+   *   `owner`, `keeper` or `novice`, or NULL if the account is not a member.
+   */
+  public function getRoleOf(AccountInterface $account): ?string {
+    if ($this->isNew() || !$account->id()) {
+      return NULL;
+    }
+    $apiary_id = (int) $this->id();
+    if (!isset(static::$roleCache[$apiary_id])) {
+      static::$roleCache[$apiary_id] = [];
+      $storage = \Drupal::entityTypeManager()->getStorage('apiary_membership');
+      foreach ($storage->loadByProperties(['apiary' => $apiary_id]) as $membership) {
+        /** @var \Drupal\hivelog\Entity\ApiaryMembership $membership */
+        static::$roleCache[$apiary_id][(int) $membership->get('account')->target_id] = $membership->getRole();
+      }
+    }
+    return static::$roleCache[$apiary_id][(int) $account->id()] ?? NULL;
+  }
+
+  /**
+   * Checks whether the account holds at least the given role here.
+   *
+   * @param \Drupal\Core\Session\AccountInterface $account
+   *   The user account.
+   * @param string $minimum
+   *   The role key: `novice`, `keeper` or `owner`.
+   *
+   * @return bool
+   *   TRUE if the account's role ranks at or above the minimum.
+   */
+  public function hasRoleAtLeast(AccountInterface $account, string $minimum): bool {
+    $role = $this->getRoleOf($account);
+    return $role !== NULL
+      && (ApiaryMembership::ROLE_RANK[$role] ?? 0) >= (ApiaryMembership::ROLE_RANK[$minimum] ?? PHP_INT_MAX);
+  }
+
+  /**
+   * Checks whether the given account is a member of this apiary, any role.
    *
    * @param \Drupal\Core\Session\AccountInterface $account
    *   The user account to check.
    *
    * @return bool
-   *   TRUE if the account is the apiary owner or an approved member.
+   *   TRUE if the account has a membership here.
    */
   public function isApiaryMember(AccountInterface $account): bool {
-    if ((int) $this->getOwnerId() === (int) $account->id()) {
-      return TRUE;
-    }
-    foreach ($this->getApiaryMembers() as $membership) {
-      $member = $membership->getMember();
-      if ($member && (int) $member->id() === (int) $account->id()) {
-        return TRUE;
-      }
-    }
-    return FALSE;
+    return $this->getRoleOf($account) !== NULL;
+  }
+
+  /**
+   * Checks whether the given account is an owner of this apiary.
+   *
+   * @param \Drupal\Core\Session\AccountInterface $account
+   *   The user account to check.
+   *
+   * @return bool
+   *   TRUE if the account's membership has the `owner` role.
+   */
+  public function isOwner(AccountInterface $account): bool {
+    return $this->getRoleOf($account) === 'owner';
   }
 
   /**
@@ -135,6 +195,7 @@ class Apiary extends ContentEntityBase implements EntityChangedInterface, Entity
     parent::postSave($storage, $update);
 
     if (!$update) {
+      $this->ensureOwnerMembership();
       try {
         CalendarAction::seedDefaultsForApiary($this);
       }
@@ -145,6 +206,29 @@ class Apiary extends ContentEntityBase implements EntityChangedInterface, Entity
         );
       }
     }
+  }
+
+  /**
+   * Gives a new apiary's creator an `owner` membership.
+   *
+   * Access comes from memberships, so without this the person who creates an
+   * apiary would not be able to open it. `uid` stays as "created by".
+   */
+  protected function ensureOwnerMembership(): void {
+    $uid = (int) $this->getOwnerId();
+    if ($uid <= 0) {
+      return;
+    }
+    $storage = \Drupal::entityTypeManager()->getStorage('apiary_membership');
+    if ($storage->loadByProperties(['apiary' => $this->id(), 'account' => $uid])) {
+      return;
+    }
+    $storage->create([
+      'apiary' => $this->id(),
+      'account' => $uid,
+      'role' => 'owner',
+      'uid' => $uid,
+    ])->save();
   }
 
   /**

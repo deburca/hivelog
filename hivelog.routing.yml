@@ -101,7 +101,7 @@ hivelog.hive.add:
     _title: 'Add Hive'
   requirements:
     _permission: 'add hive+administer hivelog'
-    _entity_access: 'apiary.update'
+    _entity_access: 'apiary.write'
     _entity_create_access: 'hive'
   options:
     parameters:
@@ -422,7 +422,7 @@ hivelog.calendar_action.add:
     _title: 'Add Calendar Action'
   requirements:
     _permission: 'add calendar action+administer hivelog'
-    _entity_access: 'apiary.update'
+    _entity_access: 'apiary.write'
     _entity_create_access: 'calendar_action'
   options:
     parameters:
@@ -557,7 +557,7 @@ hivelog.apiary_action_log.add:
     _title: 'Add Apiary Action Log'
   requirements:
     _permission: 'add apiary action log+administer hivelog'
-    _entity_access: 'apiary.update'
+    _entity_access: 'apiary.write'
     _entity_create_access: 'apiary_action_log'
     _custom_access: '\Drupal\hivelog\Access\CalendarActionApiaryMatchAccessCheck::access'
   options:
@@ -680,7 +680,7 @@ hivelog.inventory_item.add:
     _title: 'Add Inventory Item'
   requirements:
     _permission: 'add inventory item+administer hivelog'
-    _entity_access: 'apiary.update'
+    _entity_access: 'apiary.write'
     _entity_create_access: 'inventory_item'
   options:
     parameters:
@@ -752,7 +752,7 @@ hivelog.inventory_purchase.add:
     _title: 'Add Inventory Purchase'
   requirements:
     _permission: 'add inventory purchase+administer hivelog'
-    _entity_access: 'apiary.update'
+    _entity_access: 'apiary.write'
     _entity_create_access: 'inventory_purchase'
   options:
     parameters:
@@ -822,7 +822,7 @@ hivelog.product.add:
     _title: 'Add Product'
   requirements:
     _permission: 'add product+administer hivelog'
-    _entity_access: 'apiary.update'
+    _entity_access: 'apiary.write'
     _entity_create_access: 'product'
   options:
     parameters:

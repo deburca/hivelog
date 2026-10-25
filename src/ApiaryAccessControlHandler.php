@@ -48,18 +48,27 @@ class ApiaryAccessControlHandler extends EntityAccessControlHandler implements E
         // Only apiary owner can edit the apiary itself.
         return $is_admin
           ? AccessResult::allowed()->cachePerPermissions()
-          : $this->checkApiaryOwnerDeleteAccess($apiary, $account, 'edit any apiary', 'edit own apiary');
+          : $this->checkApiaryOwnerAccess($apiary, $account, 'edit any apiary', 'edit own apiary');
+
+      case 'write':
+        // "May this user add or change records inside the apiary?": a
+        // beekeeper or an owner. The scoped add routes and the parent-access
+        // constraint use it, since 'update' is the apiary's own settings
+        // and owner-only (task 0224).
+        return $is_admin
+          ? AccessResult::allowed()->cachePerPermissions()
+          : $this->checkApiaryRoleAccess($apiary, $account, 'edit any apiary', 'view own apiary', 'keeper');
 
       case 'delete':
         $access = $is_admin
           ? AccessResult::allowed()->cachePerPermissions()
-          : $this->checkApiaryOwnerDeleteAccess($apiary, $account, 'delete any apiary', 'delete own apiary');
+          : $this->checkApiaryOwnerAccess($apiary, $account, 'delete any apiary', 'delete own apiary');
         return $this->blockDelete($access, $entity);
 
       case 'delete_route':
         return $is_admin
           ? AccessResult::allowed()->cachePerPermissions()
-          : $this->checkApiaryOwnerDeleteAccess($apiary, $account, 'delete any apiary', 'delete own apiary');
+          : $this->checkApiaryOwnerAccess($apiary, $account, 'delete any apiary', 'delete own apiary');
     }
 
     return AccessResult::neutral();

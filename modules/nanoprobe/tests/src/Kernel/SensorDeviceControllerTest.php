@@ -114,7 +114,7 @@ class SensorDeviceControllerTest extends KernelTestBase {
     ApiaryMembership::create([
       'apiary' => $this->apiary->id(),
       'account' => $this->viewOnlyMember->id(),
-      'role' => 'viewer',
+      'role' => 'novice',
     ])->save();
 
     $hive = Hive::create([

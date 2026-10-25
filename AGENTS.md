@@ -228,31 +228,42 @@ row with `status: pending`) until a beekeeper reports it `done` or `ignored`:
   apiary-scoped actions; deliberately has no `inspection` field (linking an
   inspection is inherently hive-scoped).
 
-**Apiary memberships** (ADR-0108) — scoped to one `Apiary`; links a user to an
-apiary with a role (`owner`, `editor`, or `viewer`). One row per apiary-user
-pair. Manages team access: owner has full control, editor can edit all hives and
-inspections but not delete the apiary or manage members, viewer gets read-only
-access plus the ability to delete their own inspections and queen observations.
-Replaces the legacy `beekeepers` field (a bare user reference with no role).
-The membership rows are the source of truth: `Apiary::getApiaryMembers()` and
-`isApiaryMember()` query `apiary_membership` by its `apiary` field (a membership
-points at the apiary, so Apiary has no stored members field;
-`hivelog_update_10034` removes the unused `apiary_memberships` storage an
-earlier 10032 installed). **The three roles are not enforced yet**: the access
-handlers ask only "is this user a member", so a viewer currently has an
-editor's access (task 0224). The apiary canonical page shows the members, with
-a Manage members link, only to people who can edit the apiary; add/edit/delete
-is via a headed Members section on the Apiary edit form
-(`ApiaryMemberManagerForm`, built on `hivelog:entity-table`). A migration hook
-(`hivelog_update_10032`) converts existing beekeepers rows to memberships with
-role = `viewer`. Delete-dependency rows 0108-1/0108-2 use CASCADE so deleting
-an apiary removes its memberships automatically. No collection route and no
+**Apiary memberships** (ADR-0108, task 0224) — scoped to one `Apiary`; links a user to an
+apiary with a role, one row per apiary-user pair. There are three **ordered** roles
+(`ApiaryMembership::ROLES`, `ROLE_RANK`): `novice` < `keeper` (label "Beekeeper"; the key
+avoids a clash with the Drupal site role `beekeeper`) < `owner`. A novice reads everything and
+changes nothing; a beekeeper does every action on the apiary and its hives except manage members
+and owners, edit the apiary's own settings (the apiary edit form) and delete the apiary; an owner
+does all of it. Roles are checked through `Apiary::getRoleOf()` / `hasRoleAtLeast()` / `isOwner()`
+(a per-request cache, reset by `ApiaryMembership::postSave()`/`postDelete()`) and
+`ApiaryAccessTrait`'s `checkApiaryViewAccess()` (any role), `checkApiaryEditAccess()` and
+`checkApiaryDeleteAccess()` (beekeeper or owner) and `checkApiaryOwnerAccess()` (owner). **The
+apiary role and the site-wide "own" permission must both allow**; a non-member on a public apiary
+reads it. Access comes from the **current membership only**: never from the apiary's `uid` (now
+"created by", history only, hidden on the edit form) and never from having created a record, so
+the old creator-based "delete your own" rules are gone. Owners are the `owner` memberships, and
+there can be several (hand-over: A adds B as owner, later B removes A); owners may remove other
+owners, and the last owner can neither be removed (`ApiaryMembershipAccessControlHandler`, for
+everyone) nor given another role (`ApiaryMembership::preSave()` and the form). A new apiary's
+creator gets an `owner` membership in `Apiary::postSave()`. Apiary has two operations that
+matter: `update` is its own settings (owner-only) and `write` means "may add or change records
+inside it" (beekeeper or owner): the scoped add routes use `_entity_access: apiary.write`, and
+`HivelogParentAccess` checks `write` on an apiary parent, `update` on any other. The membership
+rows are the source of truth: `Apiary::getApiaryMembers()` queries `apiary_membership` by its
+`apiary` field (a membership points at the apiary, so Apiary has no stored members field;
+`hivelog_update_10034` removed the unused `apiary_memberships` storage). The apiary canonical page
+shows the members, with a Manage members link, only to owners; add/edit/delete is via the Members
+item in the Access tab of the Apiary edit form (`ApiaryMemberManagerForm`, built on
+`hivelog:entity-table`). `hivelog_update_10032` converted old beekeepers rows to memberships;
+`hivelog_update_10035` renames stored roles (`viewer` → `novice`, `editor` → `keeper`) and gives
+every apiary's current owner an `owner` membership. Delete-dependency rows 0108-1/0108-2 use
+CASCADE so deleting an apiary removes its memberships automatically. No collection route and no
 routed canonical page; the add/edit/delete routes are nested under the apiary
-(`/hivelog/apiary/{apiary}/membership/...`), so membership URLs always need the
-`apiary` parameter (`ApiaryMembership::urlRouteParameters()` supplies it) and
-`ApiaryAccessTrait::resolveApiary()` resolves a membership to its apiary. Adding
-a member needs the `add apiary membership` permission; editing and removing need
-`edit own apiary`, and the access handler then allows only the apiary's owner.
+(`/hivelog/apiary/{apiary}/membership/...`), so membership URLs always need the `apiary`
+parameter (`ApiaryMembership::urlRouteParameters()` supplies it) and
+`ApiaryAccessTrait::resolveApiary()` resolves a membership to its apiary. Adding a member needs
+the `add apiary membership` permission; editing and removing need `edit own apiary` and an owner
+role. Planned: stamping the apiary on history records and a hive-move dialog (task 0231).
 
 **Inventory, products and yields** (ADR-0027, ADR-0034) — each catalog type
 is scoped to one `Apiary`; the "recipe" (`CalendarActionItemRequirement`/
