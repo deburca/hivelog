@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: review
+status: done
 priority: high
 project: "[[shared-apiaries-and-team-roles]]"
 area: routing
@@ -118,4 +118,4 @@ Nothing in inventory, prices or insights is hidden from a novice.
 - Project:: [[shared-apiaries-and-team-roles]]
 - Decisions:: [[0108-apiary-membership-entity-and-roles]]
 - Follow-ups:: [[0230-inspection-records-items-used]], [[0231-apiary-history-stamping-and-hive-move]]
-- Commits::
+- Commits:: PR #151 (merge 2667032)

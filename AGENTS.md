@@ -265,6 +265,32 @@ parameter (`ApiaryMembership::urlRouteParameters()` supplies it) and
 the `add apiary membership` permission; editing and removing need `edit own apiary` and an owner
 role. Planned: stamping the apiary on history records and a hive-move dialog (task 0231).
 
+**History is never rewritten; moving a hive** (task 0231) — an inspection, a queen observation
+and a hive action log reach their apiary through their hive, so each carries an `apiary` field
+(`ApiaryStampTrait`: read-only, set in `preSave()` when the record is created, and never
+changed afterwards), and `hive_insight` already carried one. `hivelog_update_10036` installs it
+and fills existing rows from the hive's current apiary (a direct update, so `changed` is not
+touched). Inventory usage and harvest yield need no stamp: `ApiaryAccessTrait::resolveApiary()`
+resolves them through their item and product, whose apiary never changes when a hive moves.
+`resolveApiary()` returns the stamped apiary first, so writing to a record stays with the
+apiary it was written under; reading is wider, `checkRecordViewAccess()` also allows the
+members of the hive's apiary now (`resolveCurrentApiary()`), so a new apiary reads the hive's
+whole history while the old apiary keeps what was written under it. `HivelogSameApiary` judges
+a hive action log against its stamp, not its hive's apiary now. A saved hive changes apiary
+only through the move dialog (`hivelog.hive.move`, `HiveMoveForm`, `HiveMover`): the target
+must be an apiary the user may `write` in, and the hive's own `update` is needed for the
+source; the Hive form disables its apiary field and a constraint
+(`HivelogHiveMovedViaDialog`) refuses a direct change while parts are attached. The dialog
+asks, per part, to **move it with the hive or detach it first**, or the user cancels. Core
+handles components; a module adds its own with `hook_hivelog_hive_move_dependents()` and
+`hook_hivelog_hive_move_apply()` (phases `before` and `after`; nanoprobe does sensors).
+Moving components carries their cost: the target apiary gets a matching item (same name,
+unit and type, created if missing) and an inventory purchase for the quantity at the item's
+weighted-average price, the source a matching **negative** purchase, both flagged `transfer`
+(`hivelog_update_10037`; read-only, and the access handler refuses to edit or delete them), so
+both apiaries' stock and cost reports net out. Queens go with the hive. Records written before
+a move are never touched.
+
 **Inventory, products and yields** (ADR-0027, ADR-0034) — each catalog type
 is scoped to one `Apiary`; the "recipe" (`CalendarActionItemRequirement`/
 `CalendarActionProductYield`) and "actual" (`InventoryUsage`/`HarvestYield`)
@@ -403,7 +429,8 @@ never depends on any of them (ADR-0098). They register with core through the
 `hook_hivelog_apiary_stat_tiles()` / `hook_hivelog_hive_stat_tiles()`
 ("at a glance" stat tiles), `hook_hivelog_needs_attention_alerts()` /
 `hook_hivelog_dashboard_sections()` (the dashboard), `hook_hivelog_app_nav_items()`
-(the front-end nav strip) and `hook_hivelog_delete_dependencies()` (the
+(the front-end nav strip), `hook_hivelog_hive_move_dependents()` /
+`hook_hivelog_hive_move_apply()` (parts of the hive-move dialog) and `hook_hivelog_delete_dependencies()` (the
 delete-dependency registry, task 0134 — a submodule declares rows for
 entity types core can't name directly).
 

@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: backlog
+status: review
 priority: medium
 project: "[[shared-apiaries-and-team-roles]]"
 area: entity
@@ -23,26 +23,28 @@ Today inspections, queen observations, hive action logs, inventory usage, harves
 insights carry only a hive, so after a move they would follow the hive to the new apiary.
 
 ## Acceptance criteria
-- [ ] An `apiary` reference, written when the record is created, on `hive_inspection`,
-      `queen_observation`, `hive_action_log`, `inventory_usage`, `harvest_yield` and `hive_insight`
-      (sensor readings and daily rollups to be decided; they follow their device)
-- [ ] An update hook fills it in for existing rows from the hive's current apiary; safe to run twice
-- [ ] `resolveApiary()` prefers the stamped apiary, so the old apiary's members keep seeing what was
-      written under it, and the new apiary's members see the hive's full history
-- [ ] Moving a hive needs the beekeeper role in **both** apiaries (the right to add a hive in the target)
-- [ ] The move dialog lists the hive's sensors and components and, for each, offers three outcomes:
-      move it with the hive, detach it first and then move, or cancel the whole move. Queens go with
-      the hive
-- [ ] Moving components carries their cost: the target apiary gets a matching item (same name and
-      unit, created if missing) and a transfer-in purchase for the moved quantity at the original
-      price, and the old apiary gets a matching "transferred out" record, so both apiaries' stock and
-      cost reports stay right. A new record type is needed for the transfer
-- [ ] The same-apiary rules (`HivelogSameApiary` on component items and action-log calendar actions)
-      still hold for new records and ignore the stamped history
-- [ ] Hive-scoped sensors that move keep their readings with the device
-- [ ] Tests for the move (each outcome), the stamping, the backfill and the old and new apiary's views
-- [ ] Update hooks and the API contract and schema reviewed; `AGENTS.md` updated
-- [ ] phpcs clean; phpstan clean; kernel tests pass (`--group hivelog`)
+- [x] An `apiary` reference, written when the record is created, on `hive_inspection`,
+      `queen_observation` and `hive_action_log` (`hive_insight` already had one). Inventory usage
+      and harvest yield need none: they resolve through their item and product, whose apiary a hive
+      move never changes. Sensor readings follow their device
+- [x] An update hook (`hivelog_update_10036`) fills it in for existing rows from the hive's current
+      apiary; safe to run twice
+- [x] `resolveApiary()` prefers the stamped apiary for writes; reading also allows the hive's
+      current apiary, so the old apiary keeps seeing what was written under it and the new apiary
+      sees the hive's full history. Records written under another apiary are not edited from the new one
+- [x] Moving a hive needs the beekeeper role in **both** apiaries (`update` on the hive, `write` on the
+      target)
+- [x] The move dialog lists the hive's components and (through a hook) sensors and, for each, offers
+      move with the hive, detach first, or cancel the whole move. Queens go with the hive
+- [x] Moving components carries their cost: a matching item and a transfer-in purchase at the original
+      price in the target, and a matching negative purchase in the source, both flagged `transfer`
+      (`hivelog_update_10037`) and not editable or deletable
+- [x] The same-apiary rules still hold for new records and judge a log by its stamp
+- [x] Hive-scoped sensors that move keep their readings with the device
+- [x] Tests for each outcome, the stamping, the backfill and the old and new apiary's views
+- [x] API contract reviewed (the three exposed types gain a read-only `apiary` relationship;
+      `api_version` stays 1); `AGENTS.md` updated
+- [x] phpcs clean; phpstan clean; kernel tests pass (`--group hivelog`)
 
 ## Related
 - Project:: [[shared-apiaries-and-team-roles]]
