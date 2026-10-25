@@ -107,6 +107,20 @@ and will be folded into one table once the open questions are answered.
     supers, and owner-only fields on records. Member role rights: beekeeper = all of these,
     novice = read.
 
+## Decisions, round 8 (2026-10-25)
+13. **Moving components with a hive carries their cost.** When the user chooses to move a
+    hive's components with it, the target apiary gets a matching item (same name and unit;
+    created if missing) and a transfer-in purchase for the moved quantity at the original
+    purchase price, and the old apiary gets a matching "transferred out" record, so both
+    apiaries' stock and cost reports stay right. A new kind of record is needed for the
+    transfer. No existing record is rewritten.
+14. **Recording items used on an inspection is a separate task**, [[0230-inspection-records-items-used]].
+    0224 ships without it; usage stays tied to reported jobs until then.
+15. **Site permissions and apiary roles both must allow.** The apiary role decides what a
+    user may do in that apiary, and the site-wide "own" permission must also be present, so
+    an administrator can still switch an area off site-wide. The existing "own" permissions
+    keep their meaning.
+
 ## Decisions (2026-10-24)
 Recorded from the owner's review of this task after 0223 shipped. They supersede the
 role table above wherever they differ; that table stays only until the open questions
