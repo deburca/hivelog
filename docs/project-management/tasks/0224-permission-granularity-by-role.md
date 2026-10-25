@@ -38,6 +38,37 @@ identically. The three roles map to distinct permission sets:
 \** Viewer can delete their own inspections.
 \*** Viewer can delete their own observations.
 
+## Decisions, round 5 (2026-10-25): three ordered roles
+This round simplifies the model and **supersedes the earlier rounds below** wherever they
+differ: the "two roles" decision, the owner-only list of areas, "purchases are owner-only"
+and the per-area member rules. The earlier rounds stay as the record of how we got here
+and will be folded into one table once the open questions are answered.
+
+1. **Three roles, ordered: novice < beekeeper < owner.** Each handler asks one question,
+   "is the user at least this role in this apiary?", which matches the three checks
+   `ApiaryAccessTrait` already has (view, edit, owner-only).
+   - **`owner`** (label: Owner; Danish: Ejer). Owns the apiary. Does everything a beekeeper
+     does, plus: manages members and ownership, edits the apiary's own settings (name,
+     visibility, the AI-insights consent toggle) and deletes the apiary.
+   - **`keeper`** (label: Beekeeper; Danish: Biavler). Can perform every action on the
+     apiary and its hives except user and owner management and the owner-only items above.
+   - **`novice`** (label: Novice; Danish: Nybegynder). Read-only access to the apiary and its
+     hives, sensor readings included.
+   Machine keys are `owner`, `keeper` and `novice`. `keeper` avoids a clash with the
+   Drupal site role `beekeeper`, which the permissions and tests already use.
+2. **Owners and several owners stay as decided:** owners are the memberships with role
+   `owner`; owners may remove other owners; the last owner cannot remove themselves;
+   handover is "A adds B as owner, B later removes A"; access never comes from creating a
+   record or from the apiary's `uid` field.
+3. **Existing rows:** every row migrated as `viewer` becomes `novice` (even though those
+   people could edit before roles were enforced; accepted). Any `editor` row becomes
+   `keeper`. Renaming stored role values needs an update hook that rewrites the rows.
+4. **Open from before and still to decide:** whether adding inventory purchases stays
+   owner-only (the money-responsibility rule from round 3); how existing apiary owners
+   get an `owner` membership; how hive moves, history stamping and visibility work; what
+   "detach a queen" means; the inspection-usage feature; site permissions; the API role;
+   the release type.
+
 ## Decisions (2026-10-24)
 Recorded from the owner's review of this task after 0223 shipped. They supersede the
 role table above wherever they differ; that table stays only until the open questions
