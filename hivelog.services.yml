@@ -44,3 +44,7 @@ services:
   hivelog.apiary_member_manager:
     class: Drupal\hivelog\Form\ApiaryMemberManagerForm
     arguments: ['@entity_type.manager', '@renderer']
+
+  hivelog.hive_mover:
+    class: Drupal\hivelog\HiveMover
+    arguments: ['@entity_type.manager', '@module_handler', '@database', '@string_translation']

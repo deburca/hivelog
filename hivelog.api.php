@@ -355,5 +355,46 @@ function hook_hivelog_delete_dependencies() {
 }
 
 /**
+ * Adds a part to the dialog that moves a hive to another apiary.
+ *
+ * Task 0231. A hive's components are handled by core; a module whose records
+ * hang off a hive (nanoprobe's sensors) adds its own part here, so the user
+ * chooses to move it with the hive or detach it before the move.
+ *
+ * @param \Drupal\hivelog\Entity\Hive $hive
+ *   The hive about to move.
+ *
+ * @return array
+ *   Parts keyed by id, each `['label' => string, 'items' => string[],
+ *   'choices' => ['move' => string, 'detach' => string]]`. Return an empty
+ *   array when the hive has nothing of yours attached.
+ */
+function hook_hivelog_hive_move_dependents(Hive $hive): array {
+  return [];
+}
+
+/**
+ * Acts on the user's choice for a part while a hive moves.
+ *
+ * Called twice inside the move's transaction: with `$phase` `before`, while the
+ * hive is still in the source apiary (detach what the user chose to detach), and
+ * with `after`, once the hive is in the target apiary (attach what is moving
+ * with it). Nothing already written may be changed: history stays as it is.
+ *
+ * @param \Drupal\hivelog\Entity\Hive $hive
+ *   The hive.
+ * @param \Drupal\hivelog\Entity\Apiary $source
+ *   The apiary it is leaving.
+ * @param \Drupal\hivelog\Entity\Apiary $target
+ *   The apiary it is moving to.
+ * @param array $choices
+ *   The user's choice for each part id: `move` or `detach`.
+ * @param string $phase
+ *   `before` or `after`.
+ */
+function hook_hivelog_hive_move_apply(Hive $hive, Apiary $source, Apiary $target, array $choices, string $phase): void {
+}
+
+/**
  * @} End of "addtogroup hooks".
  */

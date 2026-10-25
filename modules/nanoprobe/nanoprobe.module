@@ -6,6 +6,7 @@
  */
 
 use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Url;
 use Drupal\hivelog\Delete\HivelogDeleteDependencyRegistry;
 use Drupal\hivelog\Entity\Apiary;
@@ -146,4 +147,56 @@ function nanoprobe_hivelog_delete_dependencies() {
       'manage' => NULL,
     ],
   ];
+}
+
+/**
+ * Implements hook_hivelog_hive_move_dependents().
+ *
+ * Task 0231: a hive-scoped sensor device is one of the parts the move dialog
+ * asks about. See hivelog.api.php.
+ */
+function nanoprobe_hivelog_hive_move_dependents(Hive $hive) {
+  $devices = \Drupal::entityTypeManager()->getStorage('sensor_device')
+    ->loadByProperties(['hive' => $hive->id(), 'scope' => 'hive']);
+  if (!$devices) {
+    return [];
+  }
+  return [
+    'sensors' => [
+      'label' => (string) t('Sensors'),
+      'items' => array_values(array_map(fn($device): string => (string) $device->label(), $devices)),
+      'choices' => [
+        'move' => (string) t('Move them with the hive (their readings go with them)'),
+        'detach' => (string) t('Detach them from the hive first, then move it (they stay in this apiary, apiary-wide)'),
+      ],
+    ],
+  ];
+}
+
+/**
+ * Implements hook_hivelog_hive_move_apply().
+ *
+ * Detached sensors become apiary-wide in the source apiary before the move;
+ * the ones moving with the hive follow it into the target apiary afterwards.
+ * Readings are never touched: they belong to the device. See hivelog.api.php.
+ */
+function nanoprobe_hivelog_hive_move_apply(Hive $hive, Apiary $source, Apiary $target, array $choices, string $phase) {
+  $choice = $choices['sensors'] ?? NULL;
+  if ($choice === NULL) {
+    return;
+  }
+  $storage = \Drupal::entityTypeManager()->getStorage('sensor_device');
+  $devices = $storage->loadByProperties(['hive' => $hive->id(), 'scope' => 'hive']);
+  foreach ($devices as $device) {
+    assert($device instanceof ContentEntityInterface);
+    if ($phase === 'before' && $choice === 'detach') {
+      $device->set('scope', 'apiary');
+      $device->set('hive', NULL);
+      $device->save();
+    }
+    elseif ($phase === 'after' && $choice === 'move') {
+      $device->set('apiary', $target->id());
+      $device->save();
+    }
+  }
 }

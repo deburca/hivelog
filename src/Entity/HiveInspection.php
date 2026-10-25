@@ -8,6 +8,7 @@ use Drupal\Core\Entity\Attribute\ContentEntityType;
 use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityChangedInterface;
 use Drupal\Core\Entity\EntityChangedTrait;
+use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
@@ -58,6 +59,7 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
 
   use EntityChangedTrait;
   use EntityOwnerTrait;
+  use ApiaryStampTrait;
 
   /**
    * {@inheritdoc}
@@ -70,6 +72,23 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
       '@hive' => $hive_name,
       '@date' => $date ?: t('unknown date'),
     ]);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function preSave(EntityStorageInterface $storage) {
+    parent::preSave($storage);
+    $this->stampApiary($storage);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function computeApiaryStamp(): int|string|NULL {
+    /** @var \Drupal\hivelog\Entity\Hive|null $hive */
+    $hive = $this->get('hive')->entity;
+    return $hive ? $hive->get('apiary')->target_id : NULL;
   }
 
   /**
@@ -504,6 +523,8 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
       ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
+
+    $fields['apiary'] = static::apiaryStampField();
 
     $fields['created'] = BaseFieldDefinition::create('created')
       ->setLabel(t('Created'))
