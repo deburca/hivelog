@@ -2699,3 +2699,18 @@ msgstr "Seneste eftersyn"
 #: modules/contrib/hivelog/src/Controller/ApiaryController.php
 msgid "No queen"
 msgstr "Ingen dronning"
+#: modules/contrib/hivelog/src/Entity/ApiaryMembership.php
+msgid "Beekeeper"
+msgstr "Biavler"
+#: modules/contrib/hivelog/src/Entity/ApiaryMembership.php
+msgid "Novice"
+msgstr "Nybegynder"
+#: modules/contrib/hivelog/src/Form/ApiaryMembershipForm.php
+msgid "Novice: can see everything but change nothing. Beekeeper: can do everything on the apiary and its hives except manage members and owners, change the apiary settings and delete the apiary. Owner: all of that too."
+msgstr "Nybegynder: kan se alt, men ikke ændre noget. Biavler: kan alt i bigården og dens bistader undtagen at administrere medlemmer og ejere, ændre bigårdens indstillinger og slette bigården. Ejer: alt det også."
+#: modules/contrib/hivelog/src/Form/ApiaryMembershipForm.php
+msgid "The last owner of an apiary cannot be given another role. Add another owner first."
+msgstr "Bigårdens sidste ejer kan ikke få en anden rolle. Tilføj først en anden ejer."
+#: modules/contrib/hivelog/src/Entity/ApiaryMembership.php
+msgid "The last owner of an apiary cannot be given another role."
+msgstr "Bigårdens sidste ejer kan ikke få en anden rolle."

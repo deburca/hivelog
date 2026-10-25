@@ -41,7 +41,7 @@ class HiveActionLogAccessControlHandler extends EntityAccessControlHandler {
         return $this->checkApiaryEditAccess($apiary, $account, 'edit any hive action log', 'edit own hive action log');
 
       case 'delete':
-        return $this->checkApiaryMemberDeleteAccess($apiary, $entity, $account, 'delete any hive action log', 'delete own hive action log');
+        return $this->checkApiaryDeleteAccess($apiary, $account, 'delete any hive action log', 'delete own hive action log');
     }
 
     return AccessResult::neutral();

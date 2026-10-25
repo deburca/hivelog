@@ -42,7 +42,7 @@ class CalendarActionItemRequirementAccessControlHandler extends EntityAccessCont
         return $this->checkApiaryEditAccess($apiary, $account, 'edit any calendar action item requirement', 'edit own calendar action item requirement');
 
       case 'delete':
-        return $this->checkApiaryOwnerDeleteAccess($apiary, $account, 'delete any calendar action item requirement', 'delete own calendar action item requirement');
+        return $this->checkApiaryDeleteAccess($apiary, $account, 'delete any calendar action item requirement', 'delete own calendar action item requirement');
     }
 
     return AccessResult::neutral();

@@ -41,7 +41,7 @@ class ApiaryActionLogAccessControlHandler extends EntityAccessControlHandler {
         return $this->checkApiaryEditAccess($apiary, $account, 'edit any apiary action log', 'edit own apiary action log');
 
       case 'delete':
-        return $this->checkApiaryMemberDeleteAccess($apiary, $entity, $account, 'delete any apiary action log', 'delete own apiary action log');
+        return $this->checkApiaryDeleteAccess($apiary, $account, 'delete any apiary action log', 'delete own apiary action log');
     }
 
     return AccessResult::neutral();

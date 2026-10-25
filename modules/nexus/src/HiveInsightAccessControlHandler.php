@@ -42,7 +42,7 @@ class HiveInsightAccessControlHandler extends EntityAccessControlHandler {
         return $this->checkApiaryViewAccess($apiary, $account, 'view any hive insight', 'view own hive insight');
 
       case 'delete':
-        return $this->checkApiaryOwnerDeleteAccess($apiary, $account, 'delete any hive insight', 'delete own hive insight');
+        return $this->checkApiaryDeleteAccess($apiary, $account, 'delete any hive insight', 'delete own hive insight');
     }
 
     return AccessResult::neutral();

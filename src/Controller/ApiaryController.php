@@ -172,7 +172,7 @@ class ApiaryController extends ControllerBase {
       foreach ($apiary->getApiaryMembers() as $membership) {
         $member = $membership->getMember();
         if ($member) {
-          $members[] = $member->getDisplayName() . ' (' . (ApiaryMembership::ROLES[$membership->getRole()] ?? $membership->getRole()) . ')';
+          $members[] = $member->getDisplayName() . ' (' . ApiaryMembership::roleLabel($membership->getRole()) . ')';
         }
       }
       $rows[] = [
@@ -253,15 +253,9 @@ class ApiaryController extends ControllerBase {
     if ($this->currentUser->hasPermission('administer hivelog')) {
       return (string) $this->t('Administrator');
     }
-    $uid = (int) $this->currentUser->id();
-    if ((int) $apiary->getOwnerId() === $uid) {
-      return ApiaryMembership::ROLES['owner'];
-    }
-    foreach ($apiary->getApiaryMembers() as $membership) {
-      $member = $membership->getMember();
-      if ($member && (int) $member->id() === $uid) {
-        return ApiaryMembership::ROLES[$membership->getRole()] ?? $membership->getRole();
-      }
+    $role = $apiary->getRoleOf($this->currentUser);
+    if ($role !== NULL) {
+      return (string) ApiaryMembership::roleLabel($role);
     }
     return (string) $this->t('Visitor');
   }

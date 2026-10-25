@@ -261,12 +261,13 @@ trait ApiaryAccessTrait {
       return AccessResult::neutral()->cachePerPermissions()->cachePerUser();
     }
 
-    // Apiary member with the "own" permission.
+    // Apiary member (any role) with the "own" permission.
     if ($apiary->isApiaryMember($account) && $account->hasPermission($own_permission)) {
       return AccessResult::allowed()
         ->cachePerPermissions()
         ->cachePerUser()
-        ->addCacheableDependency($apiary);
+        ->addCacheableDependency($apiary)
+        ->addCacheTags(['apiary_membership_list']);
     }
 
     // Public apiary: any user with the "own" permission can view.
@@ -280,13 +281,16 @@ trait ApiaryAccessTrait {
     return AccessResult::neutral()
       ->cachePerPermissions()
       ->cachePerUser()
-      ->addCacheableDependency($apiary);
+      ->addCacheableDependency($apiary)
+      ->addCacheTags(['apiary_membership_list']);
   }
 
   /**
-   * Checks edit access considering apiary membership.
+   * Checks edit access: a beekeeper or an owner of the apiary.
    *
-   * Grants access to the apiary owner and approved beekeepers.
+   * The apiary role decides what a user may do in this apiary, and the site
+   * permission must also be present, so an administrator can still switch an
+   * area off site-wide (task 0224). A novice reads only.
    *
    * @param \Drupal\hivelog\Entity\Apiary|null $apiary
    *   The parent apiary.
@@ -301,29 +305,15 @@ trait ApiaryAccessTrait {
    *   The access result.
    */
   protected function checkApiaryEditAccess(?Apiary $apiary, AccountInterface $account, string $any_permission, string $own_permission): AccessResult {
-    if ($account->hasPermission($any_permission)) {
-      return AccessResult::allowed()->cachePerPermissions();
-    }
-
-    if (!$apiary) {
-      return AccessResult::neutral()->cachePerPermissions()->cachePerUser();
-    }
-
-    if ($apiary->isApiaryMember($account) && $account->hasPermission($own_permission)) {
-      return AccessResult::allowed()
-        ->cachePerPermissions()
-        ->cachePerUser()
-        ->addCacheableDependency($apiary);
-    }
-
-    return AccessResult::neutral()
-      ->cachePerPermissions()
-      ->cachePerUser()
-      ->addCacheableDependency($apiary);
+    return $this->checkApiaryRoleAccess($apiary, $account, $any_permission, $own_permission, 'keeper');
   }
 
   /**
-   * Checks delete access — apiary owner only (plus site-wide "any").
+   * Checks delete access: a beekeeper or an owner of the apiary.
+   *
+   * Replaces the old owner-only and creator-based delete rules (task 0224):
+   * what a user may delete depends on their current role, not on having
+   * created the record.
    *
    * @param \Drupal\hivelog\Entity\Apiary|null $apiary
    *   The parent apiary.
@@ -332,56 +322,56 @@ trait ApiaryAccessTrait {
    * @param string $any_permission
    *   The "any" permission (site-wide override).
    * @param string $own_permission
-   *   The "own" permission (owner-scoped).
+   *   The "own" permission.
    *
    * @return \Drupal\Core\Access\AccessResult
    *   The access result.
    */
-  protected function checkApiaryOwnerDeleteAccess(?Apiary $apiary, AccountInterface $account, string $any_permission, string $own_permission): AccessResult {
-    if ($account->hasPermission($any_permission)) {
-      return AccessResult::allowed()->cachePerPermissions();
-    }
-
-    if (!$apiary) {
-      return AccessResult::neutral()->cachePerPermissions()->cachePerUser();
-    }
-
-    // Only the apiary owner can delete.
-    $is_owner = (int) $apiary->getOwnerId() === (int) $account->id();
-    if ($is_owner && $account->hasPermission($own_permission)) {
-      return AccessResult::allowed()
-        ->cachePerPermissions()
-        ->cachePerUser()
-        ->addCacheableDependency($apiary);
-    }
-
-    return AccessResult::neutral()
-      ->cachePerPermissions()
-      ->cachePerUser()
-      ->addCacheableDependency($apiary);
+  protected function checkApiaryDeleteAccess(?Apiary $apiary, AccountInterface $account, string $any_permission, string $own_permission): AccessResult {
+    return $this->checkApiaryRoleAccess($apiary, $account, $any_permission, $own_permission, 'keeper');
   }
 
   /**
-   * Checks delete access — apiary owner OR the entity creator.
+   * Checks access that only an owner of the apiary has.
    *
-   * Used for inspections and observations where the beekeeper who created
-   * the record may also delete it.
+   * Managing members and owners, editing the apiary's own settings and
+   * deleting the apiary (plus the site-wide "any" permission).
    *
    * @param \Drupal\hivelog\Entity\Apiary|null $apiary
    *   The parent apiary.
-   * @param \Drupal\Core\Entity\EntityInterface $entity
-   *   The entity being deleted.
    * @param \Drupal\Core\Session\AccountInterface $account
    *   The user account.
    * @param string $any_permission
-   *   The "any" permission.
+   *   The "any" permission (site-wide override).
    * @param string $own_permission
    *   The "own" permission.
    *
    * @return \Drupal\Core\Access\AccessResult
    *   The access result.
    */
-  protected function checkApiaryMemberDeleteAccess(?Apiary $apiary, EntityInterface $entity, AccountInterface $account, string $any_permission, string $own_permission): AccessResult {
+  protected function checkApiaryOwnerAccess(?Apiary $apiary, AccountInterface $account, string $any_permission, string $own_permission): AccessResult {
+    return $this->checkApiaryRoleAccess($apiary, $account, $any_permission, $own_permission, 'owner');
+  }
+
+  /**
+   * Allows the account if it holds at least a role and the site permission.
+   *
+   * @param \Drupal\hivelog\Entity\Apiary|null $apiary
+   *   The parent apiary.
+   * @param \Drupal\Core\Session\AccountInterface $account
+   *   The user account.
+   * @param string $any_permission
+   *   The "any" permission (site-wide override).
+   * @param string $own_permission
+   *   The "own" permission.
+   * @param string $minimum_role
+   *   The lowest role allowed: `keeper` or `owner`.
+   *
+   * @return \Drupal\Core\Access\AccessResult
+   *   Allowed, or neutral, cacheable per permissions, user, the apiary and
+   *   the membership list (so a role change is never served stale).
+   */
+  protected function checkApiaryRoleAccess(?Apiary $apiary, AccountInterface $account, string $any_permission, string $own_permission, string $minimum_role): AccessResult {
     if ($account->hasPermission($any_permission)) {
       return AccessResult::allowed()->cachePerPermissions();
     }
@@ -390,22 +380,14 @@ trait ApiaryAccessTrait {
       return AccessResult::neutral()->cachePerPermissions()->cachePerUser();
     }
 
-    $is_apiary_owner = (int) $apiary->getOwnerId() === (int) $account->id();
-    $is_entity_creator = method_exists($entity, 'getOwnerId')
-      && (int) $entity->getOwnerId() === (int) $account->id();
+    $allowed = $apiary->hasRoleAtLeast($account, $minimum_role)
+      && $account->hasPermission($own_permission);
 
-    if (($is_apiary_owner || ($apiary->isApiaryMember($account) && $is_entity_creator))
-      && $account->hasPermission($own_permission)) {
-      return AccessResult::allowed()
-        ->cachePerPermissions()
-        ->cachePerUser()
-        ->addCacheableDependency($apiary);
-    }
-
-    return AccessResult::neutral()
+    return ($allowed ? AccessResult::allowed() : AccessResult::neutral())
       ->cachePerPermissions()
       ->cachePerUser()
-      ->addCacheableDependency($apiary);
+      ->addCacheableDependency($apiary)
+      ->addCacheTags(['apiary_membership_list']);
   }
 
 }

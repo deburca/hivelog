@@ -81,7 +81,14 @@ class ApiaryMembershipForm extends ContentEntityForm {
 
     $form['account']['widget'][0]['target_id']['#placeholder'] = $this->t('Start typing a username');
     $form['account']['widget'][0]['target_id']['#required'] = TRUE;
-    $form['role']['widget']['#description'] = $this->t('Viewer: can see the apiary, its hives and inspections, and delete their own. Editor: can also add and edit hives and inspections. Owner: full control, including members.');
+    // Option labels in the interface language (the stored list holds the
+    // English source strings).
+    foreach (array_keys(ApiaryMembership::ROLES) as $role) {
+      if (isset($form['role']['widget']['#options'][$role])) {
+        $form['role']['widget']['#options'][$role] = ApiaryMembership::roleLabel($role);
+      }
+    }
+    $form['role']['widget']['#description'] = $this->t('Novice: can see everything but change nothing. Beekeeper: can do everything on the apiary and its hives except manage members and owners, change the apiary settings and delete the apiary. Owner: all of that too.');
 
     return $form;
   }
@@ -113,6 +120,10 @@ class ApiaryMembershipForm extends ContentEntityForm {
 
     /** @var \Drupal\hivelog\Entity\ApiaryMembership $entity */
     $entity = $this->buildEntity($form, $form_state);
+    // An apiary always keeps an owner: refuse to demote the last one.
+    if (!$entity->isNew() && $entity->getRole() !== 'owner' && $entity->isLastOwner(TRUE)) {
+      $form_state->setErrorByName('role', $this->t('The last owner of an apiary cannot be given another role. Add another owner first.'));
+    }
     if (!$entity->isNew() || $entity->get('apiary')->isEmpty() || $entity->get('account')->isEmpty()) {
       return;
     }

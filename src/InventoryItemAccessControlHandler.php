@@ -53,13 +53,13 @@ class InventoryItemAccessControlHandler extends EntityAccessControlHandler imple
       case 'delete':
         $access = $is_admin
           ? AccessResult::allowed()->cachePerPermissions()
-          : $this->checkApiaryOwnerDeleteAccess($apiary, $account, 'delete any inventory item', 'delete own inventory item');
+          : $this->checkApiaryDeleteAccess($apiary, $account, 'delete any inventory item', 'delete own inventory item');
         return $this->blockDelete($access, $entity);
 
       case 'delete_route':
         return $is_admin
           ? AccessResult::allowed()->cachePerPermissions()
-          : $this->checkApiaryOwnerDeleteAccess($apiary, $account, 'delete any inventory item', 'delete own inventory item');
+          : $this->checkApiaryDeleteAccess($apiary, $account, 'delete any inventory item', 'delete own inventory item');
     }
 
     return AccessResult::neutral();

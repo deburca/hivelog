@@ -131,7 +131,7 @@ nanoprobe.sensor_device.add_for_apiary:
     _title: 'Add Sensor Device'
   requirements:
     _permission: 'add sensor device+administer hivelog'
-    _entity_access: 'apiary.update'
+    _entity_access: 'apiary.write'
     _entity_create_access: 'sensor_device'
   options:
     parameters:

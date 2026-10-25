@@ -1075,7 +1075,7 @@ function hivelog_update_10032(&$sandbox) {
             ->create([
               'apiary' => $apiary->id(),
               'account' => $uid,
-              'role' => 'viewer',
+              'role' => 'novice',
             ]);
           $membership->save();
         }
@@ -1115,6 +1115,68 @@ function hivelog_update_10034(&$sandbox) {
     $manager->uninstallFieldStorageDefinition($definition);
   }
   return t('Removed the unused apiary_memberships field from Apiary.');
+}
+
+/**
+ * Applies the three apiary roles: renames the stored roles and gives owners a membership.
+ *
+ * Task 0224. Roles are now `owner`, `keeper` (Beekeeper) and `novice`:
+ * - rows with the old role `viewer` become `novice` (those members could edit
+ *   before roles were enforced; accepted) and `editor` become `keeper`;
+ * - access now comes from memberships only, never from the apiary's `uid`, so
+ *   every apiary's current owner gets an `owner` membership (an existing row
+ *   of theirs is promoted). Safe to run twice.
+ */
+function hivelog_update_10035(&$sandbox) {
+  $database = \Drupal::database();
+  $renamed = 0;
+  foreach (['viewer' => 'novice', 'editor' => 'keeper'] as $old => $new) {
+    $renamed += (int) $database->update('hivelog_apiary_membership')
+      ->fields(['role' => $new])
+      ->condition('role', $old)
+      ->execute();
+  }
+
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $membership_storage = $entity_type_manager->getStorage('apiary_membership');
+  $membership_storage->resetCache();
+
+  $created = 0;
+  $promoted = 0;
+  $apiary_storage = $entity_type_manager->getStorage('apiary');
+  $apiary_ids = $apiary_storage->getQuery()->accessCheck(FALSE)->execute();
+  foreach (array_chunk($apiary_ids, 50) as $chunk) {
+    foreach ($apiary_storage->loadMultiple($chunk) as $apiary) {
+      $uid = (int) $apiary->getOwnerId();
+      if ($uid <= 0) {
+        continue;
+      }
+      $existing = $membership_storage->loadByProperties(['apiary' => $apiary->id(), 'account' => $uid]);
+      if ($existing) {
+        $membership = reset($existing);
+        if ($membership->get('role')->value !== 'owner') {
+          $membership->set('role', 'owner')->save();
+          $promoted++;
+        }
+        continue;
+      }
+      $membership_storage->create([
+        'apiary' => $apiary->id(),
+        'account' => $uid,
+        'role' => 'owner',
+        'uid' => $uid,
+      ])->save();
+      $created++;
+    }
+    $apiary_storage->resetCache($chunk);
+  }
+  Apiary::resetRoleCache();
+
+  return t('Renamed @renamed membership role(s); gave @created apiary owner(s) a membership and promoted @promoted.', [
+    '@renamed' => $renamed,
+    '@created' => $created,
+    '@promoted' => $promoted,
+  ]);
 }
 
 /**

@@ -42,7 +42,7 @@ class CalendarActionProductYieldAccessControlHandler extends EntityAccessControl
         return $this->checkApiaryEditAccess($apiary, $account, 'edit any calendar action product yield', 'edit own calendar action product yield');
 
       case 'delete':
-        return $this->checkApiaryOwnerDeleteAccess($apiary, $account, 'delete any calendar action product yield', 'delete own calendar action product yield');
+        return $this->checkApiaryDeleteAccess($apiary, $account, 'delete any calendar action product yield', 'delete own calendar action product yield');
     }
 
     return AccessResult::neutral();

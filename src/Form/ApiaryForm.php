@@ -43,6 +43,12 @@ class ApiaryForm extends ContentEntityForm {
     $form['#suffix'] = '</div>';
     $form['#attached']['library'][] = 'hivelog/forms';
 
+    // `uid` is history only ("created by"): access comes from memberships, so
+    // there is no owner to pick here (task 0224). Owners are managed in Members.
+    if (isset($form['uid'])) {
+      $form['uid']['#access'] = FALSE;
+    }
+
     // Vertical tabs, one per concern. `#group` on a `details` element moves
     // the field into it at render time, so no field is re-parented and form
     // values keep their parents. Submodules (collective's AI-insights
@@ -56,7 +62,7 @@ class ApiaryForm extends ContentEntityForm {
     $tabs = [
       'hivelog_details' => [$this->t('Details'), 0, ['name', 'location', 'notes']],
       'hivelog_map' => [$this->t('Map'), 1, ['geolocation']],
-      'hivelog_access' => [$this->t('Access'), 2, ['visibility', 'uid']],
+      'hivelog_access' => [$this->t('Access'), 2, ['visibility']],
       'hivelog_ai' => [$this->t('AI insights'), 3, ['ai_insights_enabled']],
     ];
     foreach ($tabs as $key => [$title, $weight, $fields]) {
