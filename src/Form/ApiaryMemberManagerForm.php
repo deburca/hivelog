@@ -10,6 +10,7 @@ use Drupal\Component\Utility\Html;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Url;
 use Drupal\hivelog\Entity\ApiaryMembership;
+use Drupal\hivelog\HivelogOwnerWarning;
 
 /**
  * Renders the member management section on an apiary's edit page.
@@ -72,6 +73,27 @@ class ApiaryMemberManagerForm extends ControllerBase {
     ];
 
     $memberships = $apiary->getApiaryMembers();
+
+    // More than two owners, or whose CBR number the apiary carries (task 0232).
+    $build['owner_warning'] = HivelogOwnerWarning::build($apiary, $this->currentUser()) + ['#weight' => -5];
+    $primary = $apiary->getPrimaryOwner();
+    if ($primary) {
+      $cbr = $apiary->getCbrNumber();
+      $build['cbr'] = [
+        '#type' => 'html_tag',
+        '#tag' => 'p',
+        '#value' => $cbr !== ''
+          ? $this->t("The apiary's CBR number is @cbr, from @owner, the owner for longest.", [
+            '@cbr' => $cbr,
+            '@owner' => $primary->getDisplayName(),
+          ])
+          : $this->t('The apiary has no CBR number: @owner, the owner for longest, has not set one.', [
+            '@owner' => $primary->getDisplayName(),
+          ]),
+        '#attributes' => ['class' => ['description']],
+        '#weight' => -4,
+      ];
+    }
 
     // An apiary must always keep at least one owner.
     $owner_count = count(array_filter($memberships, fn($m): bool => $m->getRole() === 'owner'));

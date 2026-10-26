@@ -1316,3 +1316,28 @@ function hivelog_update_10037(&$sandbox) {
   $update_manager->installFieldStorageDefinition('transfer', 'inventory_purchase', 'hivelog', $fields['transfer']);
   return t('Added the transfer flag to inventory purchases.');
 }
+
+/**
+ * Records when each membership became an owner membership.
+ *
+ * Task 0232. The owner who has held the role longest is the apiary's primary
+ * owner, whose CBR number the apiary carries. Installs `owner_since` on
+ * memberships and fills it in for current owners from their membership's
+ * creation time. Safe to run twice.
+ */
+function hivelog_update_10038(&$sandbox) {
+  $update_manager = \Drupal::entityDefinitionUpdateManager();
+  if (!$update_manager->getFieldStorageDefinition('owner_since', 'apiary_membership')) {
+    $definition = \Drupal::entityTypeManager()->getDefinition('apiary_membership');
+    $fields = $definition->getClass()::baseFieldDefinitions($definition);
+    $update_manager->installFieldStorageDefinition('owner_since', 'apiary_membership', 'hivelog', $fields['owner_since']);
+  }
+  $filled = \Drupal::database()->update('hivelog_apiary_membership')
+    ->expression('owner_since', 'created')
+    ->condition('role', 'owner')
+    ->isNull('owner_since')
+    ->execute();
+  \Drupal::entityTypeManager()->getStorage('apiary_membership')->resetCache();
+  Apiary::resetRoleCache();
+  return t('Recorded when @count owner membership(s) became owner memberships.', ['@count' => $filled]);
+}

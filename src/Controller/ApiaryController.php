@@ -18,6 +18,7 @@ use Drupal\hivelog\Form\HivelogCalendarFilterForm;
 use Drupal\hivelog\Form\HivelogFullCalendarFilterForm;
 use Drupal\hivelog\Form\HivelogHiveFilterForm;
 use Drupal\hivelog\HivelogCalendarChecklistBuilder;
+use Drupal\hivelog\HivelogOwnerWarning;
 use Drupal\hivelog\HivelogEntityActionsTrait;
 use Drupal\hivelog\HivelogStatTileBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -160,6 +161,8 @@ class ApiaryController extends ControllerBase {
 
     $rows = [
       [$label('location'), $text('location')],
+      // The primary owner's number (task 0232).
+      [(string) $this->t('CBR number'), ['#plain_text' => $apiary->getCbrNumber() ?: $empty]],
       [$label('visibility'), ['#plain_text' => (string) $visibility_label]],
       [(string) $this->t('Your role'), ['#plain_text' => $this->currentUserRole($apiary)]],
     ];
@@ -247,6 +250,25 @@ class ApiaryController extends ControllerBase {
   }
 
   /**
+   * Warns owners when an apiary has more than two owners (task 0232).
+   *
+   * Handing an apiary over is "A adds B as owner; later B removes A", so two
+   * owners is normal for a while. More than two usually means a hand-over that
+   * was never finished, and the apiary then carries the CBR number of whoever
+   * has been an owner longest.
+   *
+   * @param \Drupal\hivelog\Entity\Apiary $apiary
+   *   The apiary.
+   *
+   * @return array
+   *   A warning render array, or an empty array when there is nothing to warn
+   *   about or the viewer cannot act on it.
+   */
+  protected function buildOwnerWarning(Apiary $apiary): array {
+    return HivelogOwnerWarning::build($apiary, $this->currentUser);
+  }
+
+  /**
    * Names the current user's relationship to an apiary, for the summary.
    */
   protected function currentUserRole(Apiary $apiary): string {
@@ -275,6 +297,10 @@ class ApiaryController extends ControllerBase {
     // Summary of the apiary itself (location, visibility, the viewer's role,
     // members): the page otherwise opens straight onto its hives.
     $build['summary'] = $this->buildSummary($apiary) + ['#weight' => -5];
+    $owner_warning = $this->buildOwnerWarning($apiary);
+    if ($owner_warning) {
+      $build['owner_warning'] = $owner_warning + ['#weight' => -6];
+    }
 
     // "At a glance" stat tiles — optional submodules only; hivelog core
     // contributes none of its own here. See hivelog.api.php's

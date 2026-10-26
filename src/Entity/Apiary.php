@@ -19,6 +19,7 @@ use Drupal\hivelog\HivelogEntityStorage;
 use Drupal\hivelog\Form\HivelogEntityDeleteForm;
 use Drupal\hivelog\Form\ApiaryForm;
 use Drupal\user\EntityOwnerInterface;
+use Drupal\user\UserInterface;
 use Drupal\user\EntityOwnerTrait;
 
 /**
@@ -167,6 +168,66 @@ class Apiary extends ContentEntityBase implements EntityChangedInterface, Entity
       ->execute();
     $members = array_values($storage->loadMultiple($ids));
     return $members;
+  }
+
+  /**
+   * Gets the owner memberships, the one held longest first.
+   *
+   * @return \Drupal\hivelog\Entity\ApiaryMembership[]
+   *   The memberships with role `owner`, ordered by when each became an owner
+   *   (then by id): the first is the primary owner.
+   */
+  public function getOwnerMemberships(): array {
+    if ($this->isNew()) {
+      return [];
+    }
+    $storage = \Drupal::entityTypeManager()->getStorage('apiary_membership');
+    $ids = $storage->getQuery()
+      ->condition('apiary', $this->id())
+      ->condition('role', 'owner')
+      ->sort('owner_since')
+      ->sort('id')
+      ->accessCheck(FALSE)
+      ->execute();
+    return array_values($storage->loadMultiple($ids));
+  }
+
+  /**
+   * Gets the primary owner: the owner who has held the role longest.
+   *
+   * During a hand-over (A adds B as owner, later B removes A) this is A, until
+   * A is removed, and then B (task 0232).
+   *
+   * @return \Drupal\user\UserInterface|null
+   *   The user, or NULL when the apiary has no owner membership.
+   */
+  public function getPrimaryOwner(): ?UserInterface {
+    foreach ($this->getOwnerMemberships() as $membership) {
+      $account = $membership->get('account')->entity;
+      if ($account instanceof UserInterface) {
+        return $account;
+      }
+    }
+    return NULL;
+  }
+
+  /**
+   * Gets this apiary's CBR number: the primary owner's.
+   *
+   * The CBR number belongs to a person (the `cbr_number` field on the user), and
+   * an apiary carries its primary owner's. When ownership is handed over and the
+   * primary owner is removed, the apiary takes the number of the next user who
+   * was made an owner.
+   *
+   * @return string
+   *   The trimmed number, or an empty string when there is none.
+   */
+  public function getCbrNumber(): string {
+    $owner = $this->getPrimaryOwner();
+    if (!$owner || !$owner->hasField('cbr_number')) {
+      return '';
+    }
+    return trim((string) $owner->get('cbr_number')->value);
   }
 
   /**
