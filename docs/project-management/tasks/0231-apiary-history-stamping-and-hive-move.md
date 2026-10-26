@@ -46,6 +46,13 @@ insights carry only a hive, so after a move they would follow the hive to the ne
       `api_version` stays 1); `AGENTS.md` updated
 - [x] phpcs clean; phpstan clean; kernel tests pass (`--group hivelog`)
 
+## Follow-up (2026-10-26)
+Checked after 3.0.0 shipped: the apiary cost and yield report and the dashboard inspection count found a hive's
+records through the hive's apiary, so a moved hive took its history out of the old apiary's figures and into the
+new one's (a real bug; fixed, with tests, by counting on the stamp). The move page's breadcrumb ended in the
+route's long title (now "Move"), and the sensor part of the dialog was untranslated (Danish added). The calendar
+checklist, alerts and hive lists are current-state views and follow the hive on purpose.
+
 ## Related
 - Project:: [[shared-apiaries-and-team-roles]]
 - Follows:: [[0224-permission-granularity-by-role]]
