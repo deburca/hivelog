@@ -333,4 +333,33 @@ class ApiaryMembershipTest extends KernelTestBase {
     $this->assertFalse($target->access('view', $keeper));
   }
 
+  /**
+   * Tests a membership has no page of its own: its default URL is the edit form.
+   *
+   * It once declared a canonical link template without a route, so the delete
+   * form's link to it threw "Route entity.apiary_membership.canonical does not
+   * exist".
+   */
+  public function testMembershipHasNoCanonicalPage(): void {
+    $membership = $this->addMember($this->createUser()->id(), 'novice');
+
+    $this->assertFalse($membership->hasLinkTemplate('canonical'));
+    $this->assertSame('entity.apiary_membership.edit_form', $membership->toUrl()->getRouteName());
+    $this->assertStringContainsString('/membership/' . $membership->id() . '/edit', $membership->toLink()->getUrl()->toString());
+  }
+
+  /**
+   * Tests the delete form renders, and cancels back to the apiary.
+   */
+  public function testDeleteFormRenders(): void {
+    $this->setCurrentUser($this->owner);
+    $membership = $this->addMember($this->createUser()->id(), 'novice');
+
+    $form = \Drupal::service('entity.form_builder')->getForm($membership, 'delete');
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($form);
+
+    $this->assertStringContainsString('/hivelog/apiary/' . $this->apiary->id(), $html, 'Cancel goes back to the apiary.');
+    $this->assertStringNotContainsString('/membership/' . $membership->id() . '"', $html, 'No link to a membership page.');
+  }
+
 }
