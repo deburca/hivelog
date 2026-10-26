@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a839c804dd4889feae5b016867f11fe6",
+    "content-hash": "8d826f5957efcb7fe241658424295753",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -2459,16 +2459,16 @@
         },
         {
             "name": "hivelog/hivelog",
-            "version": "2.13.0",
+            "version": "3.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/deburca/hivelog.git",
-                "reference": "ea3d51f46fcc8b7f76772bcafbcd0ac9a332451e"
+                "reference": "c7b2276eb0aac5c2557109e02ce39a1d535807eb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/deburca/hivelog/zipball/ea3d51f46fcc8b7f76772bcafbcd0ac9a332451e",
-                "reference": "ea3d51f46fcc8b7f76772bcafbcd0ac9a332451e",
+                "url": "https://api.github.com/repos/deburca/hivelog/zipball/c7b2276eb0aac5c2557109e02ce39a1d535807eb",
+                "reference": "c7b2276eb0aac5c2557109e02ce39a1d535807eb",
                 "shasum": ""
             },
             "require": {
@@ -2515,9 +2515,9 @@
             "homepage": "https://github.com/deburca/hivelog",
             "support": {
                 "issues": "https://github.com/deburca/hivelog/issues",
-                "source": "https://github.com/deburca/hivelog/tree/2.13.0"
+                "source": "https://github.com/deburca/hivelog/tree/3.0.0"
             },
-            "time": "2026-10-15T18:25:24+00:00"
+            "time": "2026-10-26T16:10:11+00:00"
         },
         {
             "name": "itamair/geophp",
