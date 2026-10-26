@@ -85,7 +85,7 @@ function hivelog_api_sync_field_app_role(): void {
   if (!$role) {
     $role = Role::create([
       'id' => HivelogApiResources::SCOPE,
-      'label' => 'HiveLog field app',
+      'label' => 'HiveLog mobile app user',
     ]);
   }
   // `access content` belongs to node; a site without it simply lacks it.
@@ -294,4 +294,21 @@ function hivelog_api_update_10004() {
   return t('Field-app role tops up: it may now @what.', [
     '@what' => $granted ? 'delete the user\'s own inspections and queen observations' : 'not delete anything (the permissions are not defined)',
   ]);
+}
+
+/**
+ * Renames the field-app role to "HiveLog mobile app user".
+ *
+ * An administrator gives this role to each person who may sign in to the app, and a person who lacks it
+ * is told only that `grant simple_oauth codes` is required, so the role's name on the People page has to
+ * say what it is for. The label is replaced only where it is still the earlier default, so one the
+ * site chose is left alone. The role's machine name, which the scope shares, does not change.
+ */
+function hivelog_api_update_10005() {
+  $role = Role::load(HivelogApiResources::SCOPE);
+  if ($role && $role->label() === 'HiveLog field app') {
+    $role->set('label', 'HiveLog mobile app user')->save();
+    return t('Renamed the field-app role to "HiveLog mobile app user".');
+  }
+  return t('The field-app role label was not the default, left as it is.');
 }

@@ -94,8 +94,10 @@ drush en hivelog_api -y
 ```
 
 Enabling it creates a `hivelog_field_app` role, a scope of the same name and a
-public (no secret) PKCE client `hivelog-ios`; give the role to the beekeepers
-who may use the app, and generate Simple OAuth's key pair at
+public (no secret) PKCE client `hivelog-ios`. The role is labelled
+**HiveLog mobile app user**: give it to each person who may sign in to the app
+(without it, sign-in stops with "The 'grant simple_oauth codes' permission is
+required"). Generate Simple OAuth's key pair at
 **Configuration → People → Simple OAuth** (keep it outside the web root; the
 status report warns until you do). The API is served under
 `/hivelog/api/v1`. It does not change JSON:API's site-wide settings.

@@ -261,11 +261,31 @@ class HivelogApiInstallTest extends KernelTestBase {
    * Tests uninstall removes what install created.
    */
   public function testUninstallRemovesTheClientScopeAndRole(): void {
+
     \Drupal::service('module_installer')->uninstall(['hivelog_api']);
 
     $this->assertCount(0, $this->consumers());
     $this->assertNull(Oauth2Scope::load(HivelogApiResources::SCOPE));
     $this->assertNull(Role::load(HivelogApiResources::SCOPE));
+  }
+
+  /**
+   * Tests the role is named for its purpose, and the update renames only the old default.
+   */
+  public function testRoleLabelNamesTheMobileAppUser(): void {
+    $this->loadInstallFile();
+    $this->assertSame('HiveLog mobile app user', Role::load(HivelogApiResources::SCOPE)->label());
+
+    $role = Role::load(HivelogApiResources::SCOPE);
+    $role->set('label', 'HiveLog field app')->save();
+    hivelog_api_update_10005();
+    $this->assertSame('HiveLog mobile app user', Role::load(HivelogApiResources::SCOPE)->label());
+
+    // A label the site chose survives a second run.
+    $role = Role::load(HivelogApiResources::SCOPE);
+    $role->set('label', 'Club app users')->save();
+    hivelog_api_update_10005();
+    $this->assertSame('Club app users', Role::load(HivelogApiResources::SCOPE)->label());
   }
 
 }
