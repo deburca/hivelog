@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: review
+status: done
 priority: medium
 project: "[[shared-apiaries-and-team-roles]]"
 area: entity
@@ -41,4 +41,4 @@ takes the CBR number of the next user who was made an owner.
 ## Related
 - Project:: [[shared-apiaries-and-team-roles]]
 - Follows:: [[0224-permission-granularity-by-role]]
-- Commits::
+- Commits:: merged for 3.0.0

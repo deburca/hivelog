@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: review
+status: done
 priority: medium
 project: "[[shared-apiaries-and-team-roles]]"
 area: entity
@@ -49,4 +49,4 @@ insights carry only a hive, so after a move they would follow the hive to the ne
 ## Related
 - Project:: [[shared-apiaries-and-team-roles]]
 - Follows:: [[0224-permission-granularity-by-role]]
-- Commits::
+- Commits:: merged for 3.0.0
