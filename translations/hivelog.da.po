@@ -2762,3 +2762,15 @@ msgstr "Overført ud"
 #: modules/contrib/hivelog/src/HiveMover.php
 msgid "Transfer in"
 msgstr "Overført ind"
+#: modules/contrib/hivelog/src/Controller/ApiaryController.php
+msgid "CBR number"
+msgstr "CBR-nummer"
+#: modules/contrib/hivelog/src/HivelogOwnerWarning.php
+msgid "This apiary has @count owners (@names), but during a hand-over it should have at most @max. Remove the owner who is leaving. The apiary carries the CBR number of @primary, who has been an owner the longest."
+msgstr "Denne bigård har @count ejere (@names), men under en overdragelse bør den højst have @max. Fjern den ejer, der forlader bigården. Bigården bruger CBR-nummeret fra @primary, som har været ejer længst."
+#: modules/contrib/hivelog/src/Form/ApiaryMemberManagerForm.php
+msgid "The apiary's CBR number is @cbr, from @owner, the owner for longest."
+msgstr "Bigårdens CBR-nummer er @cbr, fra @owner, som har været ejer længst."
+#: modules/contrib/hivelog/src/Form/ApiaryMemberManagerForm.php
+msgid "The apiary has no CBR number: @owner, the owner for longest, has not set one."
+msgstr "Bigården har intet CBR-nummer: @owner, som har været ejer længst, har ikke angivet et."

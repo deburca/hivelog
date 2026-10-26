@@ -115,6 +115,19 @@ class ApiaryMembership extends ContentEntityBase implements EntityChangedInterfa
       }
     }
 
+    // When this membership became an owner membership (task 0232): the owner
+    // who has held the role longest is the apiary's primary owner, whose CBR
+    // number the apiary carries. Set when the role becomes `owner` (a new owner,
+    // or a member promoted), cleared when it stops being one, and otherwise kept.
+    if ($this->getRole() === 'owner') {
+      if ($this->get('owner_since')->isEmpty()) {
+        $this->set('owner_since', \Drupal::time()->getRequestTime());
+      }
+    }
+    elseif (!$this->get('owner_since')->isEmpty()) {
+      $this->set('owner_since', NULL);
+    }
+
     // An apiary always keeps an owner: the last owner cannot be demoted
     // (the form says so first; this is the backstop for other callers).
     if (!$this->isNew() && $this->getRole() !== 'owner' && $this->isLastOwner(TRUE)) {
@@ -275,6 +288,11 @@ class ApiaryMembership extends ContentEntityBase implements EntityChangedInterfa
       ->setDisplayOptions('form', ['type' => 'entity_reference_autocomplete', 'weight' => 3])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
+
+    $fields['owner_since'] = BaseFieldDefinition::create('timestamp')
+      ->setLabel(t('Owner since'))
+      ->setDescription(t('When this membership became an owner membership. The owner who has held the role longest is the apiary\'s primary owner, whose CBR number the apiary carries.'))
+      ->setReadOnly(TRUE);
 
     $fields['created'] = BaseFieldDefinition::create('created')
       ->setLabel(t('Created'))

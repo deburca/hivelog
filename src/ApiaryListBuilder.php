@@ -6,8 +6,8 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\Query\QueryInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
+use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Form\HivelogApiaryFilterForm;
-use Drupal\user\UserInterface;
 
 /**
  * Provides a list builder for Apiary entities.
@@ -38,6 +38,23 @@ class ApiaryListBuilder extends HivelogListBuilder {
 
   /**
    * {@inheritdoc}
+   *
+   * The Owner and CBR columns come from the owner memberships and their users,
+   * so the cached table is also invalidated by those (task 0232).
+   */
+  public function render() {
+    $build = parent::render();
+    if (isset($build['table'])) {
+      $build['table']['#cache']['tags'] = array_merge(
+        $build['table']['#cache']['tags'] ?? [],
+        ['apiary_membership_list', 'user_list']
+      );
+    }
+    return $build;
+  }
+
+  /**
+   * {@inheritdoc}
    */
   protected function getSortableColumns(): array {
     return [
@@ -49,13 +66,23 @@ class ApiaryListBuilder extends HivelogListBuilder {
    * {@inheritdoc}
    */
   public function buildRow(EntityInterface $entity) {
-    $owner = $entity->getOwner();
+    // Owners are the owner memberships, the one held longest first; `uid` is
+    // only "created by" now (task 0224) and the CBR number is the primary
+    // owner's (task 0232).
+    assert($entity instanceof Apiary);
+    $owners = [];
+    foreach ($entity->getOwnerMemberships() as $membership) {
+      $account = $membership->getMember();
+      if ($account) {
+        $owners[] = $account->getDisplayName();
+      }
+    }
     $row['name'] = $entity->toLink()->toString();
-    $row['cbr'] = $this->extractCbr($owner) ?: '—';
+    $row['cbr'] = $entity->getCbrNumber() ?: '—';
     $row['location'] = $entity->get('location')->value
       ? mb_strimwidth($entity->get('location')->value, 0, 60, '...')
       : '';
-    $row['owner'] = $owner ? $owner->getDisplayName() : '';
+    $row['owner'] = implode(', ', $owners);
 
     return $row;
   }
@@ -79,16 +106,6 @@ class ApiaryListBuilder extends HivelogListBuilder {
         'url' => Url::fromRoute('entity.queen.collection')->toString(),
       ],
     ];
-  }
-
-  /**
-   * Extracts a trimmed CBR number from a user, if any.
-   */
-  protected function extractCbr(?UserInterface $user): string {
-    if (!$user || !$user->hasField('cbr_number')) {
-      return '';
-    }
-    return trim((string) $user->get('cbr_number')->value);
   }
 
   /**
