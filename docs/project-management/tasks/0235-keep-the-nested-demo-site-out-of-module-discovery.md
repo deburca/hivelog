@@ -20,13 +20,15 @@ warning from the Update module and eight kernel test errors that appear only loc
 populated). The workaround was `'demo'` in `file_scan_ignore_directories` in a site's `settings.php`.
 
 **Scope (decided 2026-10-26):** HiveLog is tested exclusively on the **kbg** site (`kragebaekgaard.ddev.site` locally,
-`kragebaekgaard.dk` on the web). The other sites of the multisite (vdg, hvg, shh, default) do not run it and are out of
-scope here; the setting is only needed in kbg's `settings.php`, where it is already in place.
+`kragebaekgaard.dk` on the web). The **hvg** site will take over as HiveLog's host ([[0236-move-hivelog-hosting-from-kbg-to-hvg]]);
+until it is installed and configured, kbg is used. The other sites (vdg, shh, default) do not run it and are out of
+scope. The setting is needed only on the site that runs HiveLog: in place on kbg, and already added to hvg's
+`settings.php` ahead of the move.
 
 ## Acceptance criteria
 - [ ] Decide the fix: keep the per-site setting, or stop the generated Drupal being created inside the module tree
       (build the demo outside it, or in a directory discovery already skips)
-- [ ] The Update module's stale project list cleared on kbg after the fix
+- [ ] The Update module's stale project list cleared on kbg, and on hvg once it hosts HiveLog, after the fix
 - [ ] The eight local-only kernel test errors gone (or each explained) on a development site with `demo/` built
 - [ ] README of the demo kit and `AGENTS.md` updated
 

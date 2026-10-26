@@ -16,7 +16,8 @@ blocked-by:
 ## Context
 3.0.0 and 3.0.1 are released and the local site (`kragebaekgaard.ddev.site`) runs them, but the live site
 (`kragebaekgaard.dk`) has not been updated. HiveLog is tested exclusively on kbg; the other sites of the multisite do
-not run it and are not part of this task. 3.0.0 carries a long update chain (`hivelog_update_10032` to `_10038`: memberships from the old
+not run it and are not part of this task. hvg will take over as host later ([[0236-move-hivelog-hosting-from-kbg-to-hvg]]),
+so this rollout is to kbg and the move to hvg is its own task. 3.0.0 carries a long update chain (`hivelog_update_10032` to `_10038`: memberships from the old
 beekeepers field, role renames, history stamps, transfer flag, `owner_since`) that has run only locally and on test
 data. 3.0.1 has no schema change.
 
