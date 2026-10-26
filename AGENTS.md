@@ -263,7 +263,7 @@ routed canonical page; the add/edit/delete routes are nested under the apiary
 parameter (`ApiaryMembership::urlRouteParameters()` supplies it) and
 `ApiaryAccessTrait::resolveApiary()` resolves a membership to its apiary. Adding a member needs
 the `add apiary membership` permission; editing and removing need `edit own apiary` and an owner
-role. Planned: stamping the apiary on history records and a hive-move dialog (task 0231).
+role. The **primary owner** is the owner who has held the role longest (`owner_since`, set when a membership becomes an `owner`; then lowest id): `Apiary::getPrimaryOwner()`, and the apiary's CBR number is theirs (`getCbrNumber()`; the number lives on the user, as `cbr_number`). During a hand-over there are two owners and the number is the first owner's; when that owner is removed it becomes the next owner's. More than two owners shows a warning (`HivelogOwnerWarning`) on the apiary page and in the Members section to whoever can manage the apiary; it is not blocked. Stamping and moving: see below.
 
 **History is never rewritten; moving a hive** (task 0231) — an inspection, a queen observation
 and a hive action log reach their apiary through their hive, so each carries an `apiary` field
