@@ -52,7 +52,6 @@ use Drupal\hivelog\HivelogEntityStorage;
     'owner' => 'uid',
   ],
   links: [
-    'canonical' => '/hivelog/apiary/{apiary}/membership/{apiary_membership}',
     'add-form' => '/hivelog/apiary/{apiary}/membership/add',
     'edit-form' => '/hivelog/apiary/{apiary}/membership/{apiary_membership}/edit',
     'delete-form' => '/hivelog/apiary/{apiary}/membership/{apiary_membership}/delete',
@@ -171,6 +170,16 @@ class ApiaryMembership extends ContentEntityBase implements EntityChangedInterfa
       ->accessCheck(FALSE)
       ->execute();
     return count($owners) <= 1;
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * A membership has no page of its own, so a link to it, which asks for the
+   * canonical page by default, goes to its edit form instead.
+   */
+  public function toLink($text = NULL, $rel = 'canonical', array $options = []) {
+    return parent::toLink($text, $rel === 'canonical' ? 'edit-form' : $rel, $options);
   }
 
   /**
