@@ -1159,7 +1159,10 @@ gives each hive an insight (inspect soon, all clear, and one three days old to s
 directly with no AI provider (`nexus` and `collective` are enabled for the purpose), and `ddev demo-reset`
 runs `scripts/freshen.php` afterwards to set their timestamps and the sensor readings current again, since an
 insight is out of date after 48 hours and the baseline only gets older. The seed also gives each hive its parts with weights (so *Net Colony Weight* is a number) and keeps every
-seasonal job in the future, so the demo opens with amber alerts and none overdue. Do not put
+seasonal job in the future, so the demo opens with amber alerts and none overdue. Since 3.0 the seed also
+makes the `reviewer` an `owner` member of the apiary (task 0234): `assimilate` creates the apiary with no
+owner, so `Apiary::postSave()` grants no membership, and `uid` ("created by") no longer gives access, so
+without it the app signs in and sees nothing. Do not put
 real data on it: `assimilate` is development and demo only.
 
 ### Tests
