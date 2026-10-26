@@ -126,6 +126,15 @@ $apiary->set('name', 'Heathland Apiary')
   ->set('notes', 'A demonstration apiary with invented records. Anything you record here is removed when the demo is reset.');
 demo_save($apiary);
 
+// Since 3.0 access comes from the membership alone, never from the apiary's `uid` ("created by"):
+// assimilate makes the apiary with no owner, so the reviewer must be made its owner here.
+$memberships = \Drupal::entityTypeManager()->getStorage('apiary_membership');
+if (!$memberships->loadByProperties(['apiary' => $apiary->id(), 'account' => $uid])) {
+  demo_save($memberships->create([
+    'apiary' => $apiary->id(), 'account' => $uid, 'role' => 'owner', 'uid' => $uid,
+  ]));
+}
+
 $hive1->set('name', 'Hive 1 - Heather')->set('uid', $uid)
   ->set('hive_type', 'langstroth')->set('hive_material', 'wood')->set('temperament', 'calm')
   ->set('notes', 'The strongest colony; on a weight scale.');

@@ -64,5 +64,7 @@ so sign in again afterwards.
 | generated, not committed | `web/`, `vendor/`, `private/` (the OAuth keys), `baseline/` (the reset's copy), `.demo-secrets` |
 
 The seed runs as user 1 because creating a child record needs update access to its parent, and
-assigns each record to the reviewer: the app only shows what its signed-in user owns, and
-`assimilate`'s own records have no owner until this script gives them one.
+assigns each record to the reviewer and makes them an owner of the apiary (since HiveLog 3.0
+access comes from the apiary membership alone, not from who created a record): the app only shows
+what its signed-in user may reach, and `assimilate`'s own records have no owner until this script
+gives them one.
