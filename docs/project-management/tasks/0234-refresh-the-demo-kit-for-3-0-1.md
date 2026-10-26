@@ -1,13 +1,13 @@
 ---
 type: task
 tags: [hivelog/task]
-status: review
+status: done
 priority: medium
 project: "[[ios-field-app]]"
 area: install
 created: 2026-10-26
 branch: chore/0234-refresh-demo-kit
-release:
+release: 3.0.2
 depends-on: ["[[0215-demo-site-kit]]"]
 blocked-by:
 ---
