@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: backlog
+status: done
 priority: high
 project: "[[shared-apiaries-and-team-roles]]"
 area: routing
@@ -19,19 +19,25 @@ proposal F.
 Part of [[shared-apiaries-and-team-roles]].
 
 ## Acceptance criteria
-- [ ] Every core and submodule access handler and list row filter grants per
+- [x] Every core and submodule access handler and list row filter grants per
       membership role, per the ADR
-- [ ] `RouteEntityAccessTest` (kernel, hard gate) extended with member/non-
+- [x] `RouteEntityAccessTest` (kernel, hard gate) extended with member/non-
       member cases for every entity type
-- [ ] Correct cache contexts so one user's access is never cached for another
-- [ ] AGENTS.md access section updated
-- [ ] `AGENTS.md` updated if entity types, routes, services, hooks or conventions changed
-- [ ] phpcs clean; phpstan clean; kernel tests pass (`--group hivelog`)
+- [x] Correct cache contexts so one user's access is never cached for another
+- [x] AGENTS.md access section updated
+- [x] `AGENTS.md` updated if entity types, routes, services, hooks or conventions changed
+- [x] phpcs clean; phpstan clean; kernel tests pass (`--group hivelog`)
 
 ## Implementation notes
 - 
 
+## Outcome (closed 2026-10-26)
+Delivered by [[0224-permission-granularity-by-role]] in 3.0.0: every core and submodule access handler decides from the
+current membership role through `ApiaryAccessTrait`, `RouteEntityAccessTest` and `HivelogApiAccessParityTest` cover
+member and non-member cases, and a role change is seen at once (the role cache is reset on membership save and delete).
+`AGENTS.md` describes the model. The API follows the same handlers.
+
 ## Related
 - Project:: [[shared-apiaries-and-team-roles]]
 - Decisions:: 
-- Commits:: 
+- Commits:: merged for 3.0.0 (built as 0224)
