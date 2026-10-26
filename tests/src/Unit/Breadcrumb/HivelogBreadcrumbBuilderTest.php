@@ -1079,6 +1079,30 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
+   * Hive move page (task 0231): Home › HiveLog › <Apiary> › <Hive> › Move.
+   *
+   * A short "Move", not the route's long title, as the Insights page does.
+   */
+  public function testBuildHiveMovePage(): void {
+    $apiary = $this->createApiaryMock(1, 'Home Apiary');
+    $hive = $this->createHiveMock(5, 'Hive Alpha', $apiary);
+    /** @var \PHPUnit\Framework\MockObject\MockObject&\Drupal\Core\Routing\RouteMatchInterface $route_match */
+    $route_match = $this->createRouteMatch('hivelog.hive.move');
+    $route_match->method('getParameter')->willReturnMap([
+      ['apiary', NULL],
+      ['hive', $hive],
+    ]);
+
+    $links = $this->builder->build($route_match)->getLinks();
+
+    $this->assertCount(6, $links);
+    $this->assertEquals('Hive Alpha', (string) $links[4]->getText());
+    $this->assertEquals('Move', (string) $links[5]->getText());
+    $this->assertEquals('hivelog.hive.move', $links[5]->getUrl()->getRouteName());
+    $this->assertEquals(['hive' => 5], $links[5]->getUrl()->getRouteParameters());
+  }
+
+  /**
    * Hive edit: apiary and hive ancestor links are both added (5 links total).
    */
   public function testBuildHiveEditForm(): void {

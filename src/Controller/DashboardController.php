@@ -404,6 +404,31 @@ class DashboardController extends ControllerBase {
   }
 
   /**
+   * Counts this month's inspections in the given apiaries.
+   *
+   * Counted under the apiary each was written under (its stamp), so a hive that
+   * has since moved does not take its history with it (task 0231).
+   *
+   * @param array<int|string> $apiary_ids
+   *   The apiary ids.
+   *
+   * @return int
+   *   The number of inspections dated this month.
+   */
+  protected function inspectionsThisMonth(array $apiary_ids): int {
+    if (!$apiary_ids) {
+      return 0;
+    }
+    return (int) $this->entityTypeManager->getStorage('hive_inspection')->getQuery()
+      ->accessCheck(TRUE)
+      ->condition('apiary', $apiary_ids, 'IN')
+      ->condition('inspection_date', date('Y-m-01'), '>=')
+      ->condition('inspection_date', date('Y-m-01', strtotime('first day of next month')), '<')
+      ->count()
+      ->execute();
+  }
+
+  /**
    * Extracts a trimmed CBR number from a user, if any.
    */
   protected function extractCbr(?UserInterface $user): string {
@@ -477,20 +502,7 @@ class DashboardController extends ControllerBase {
       ->count()
       ->execute();
 
-    $hive_ids = $etm->getStorage('hive')->getQuery()
-      ->accessCheck(TRUE)
-      ->condition('apiary', $apiary_ids, 'IN')
-      ->execute();
-    $inspections_this_month = 0;
-    if ($hive_ids) {
-      $inspections_this_month = (int) $etm->getStorage('hive_inspection')->getQuery()
-        ->accessCheck(TRUE)
-        ->condition('hive', array_values($hive_ids), 'IN')
-        ->condition('inspection_date', date('Y-m-01'), '>=')
-        ->condition('inspection_date', date('Y-m-01', strtotime('first day of next month')), '<')
-        ->count()
-        ->execute();
-    }
+    $inspections_this_month = $this->inspectionsThisMonth($apiary_ids);
 
     // With exactly one apiary the tile jumps straight to it; otherwise to
     // the list.

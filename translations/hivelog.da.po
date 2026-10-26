@@ -2774,3 +2774,15 @@ msgstr "Bigårdens CBR-nummer er @cbr, fra @owner, som har været ejer længst."
 #: modules/contrib/hivelog/src/Form/ApiaryMemberManagerForm.php
 msgid "The apiary has no CBR number: @owner, the owner for longest, has not set one."
 msgstr "Bigården har intet CBR-nummer: @owner, som har været ejer længst, har ikke angivet et."
+#: modules/contrib/hivelog/modules/nanoprobe/nanoprobe.module
+msgid "Sensors"
+msgstr "Sensorer"
+#: modules/contrib/hivelog/modules/nanoprobe/nanoprobe.module
+msgid "Move them with the hive (their readings go with them)"
+msgstr "Flyt dem med bistaden (deres målinger følger med)"
+#: modules/contrib/hivelog/modules/nanoprobe/nanoprobe.module
+msgid "Detach them from the hive first, then move it (they stay in this apiary, apiary-wide)"
+msgstr "Fjern dem fra bistaden først og flyt den derefter (de bliver i denne bigård, gældende for hele bigården)"
+#: modules/contrib/hivelog/src/Breadcrumb/HivelogBreadcrumbBuilder.php
+msgid "Move"
+msgstr "Flyt"

@@ -284,6 +284,7 @@ source; the Hive form disables its apiary field and a constraint
 asks, per part, to **move it with the hive or detach it first**, or the user cancels. Core
 handles components; a module adds its own with `hook_hivelog_hive_move_dependents()` and
 `hook_hivelog_hive_move_apply()` (phases `before` and `after`; nanoprobe does sensors).
+Anything that totals an apiary's records counts them by that stamp, never through the hive's apiary now: the cost and yield report of an apiary's year (`InventoryReportController::apiaryYearLogIds()`) and the dashboard's inspections this month (`DashboardController::inspectionsThisMonth()`), so a moved hive leaves the old apiary's figures where they were and does not add them to the new apiary's. Current-state views (an apiary's hives, its calendar checklist, its alerts) still follow the hive. The move page's breadcrumb ends in "Move".
 Moving components carries their cost: the target apiary gets a matching item (same name,
 unit and type, created if missing) and an inventory purchase for the quantity at the item's
 weighted-average price, the source a matching **negative** purchase, both flagged `transfer`

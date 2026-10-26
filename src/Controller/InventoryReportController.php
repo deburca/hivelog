@@ -612,18 +612,15 @@ class InventoryReportController extends ControllerBase {
       ->condition('year', $year)
       ->execute();
 
-    $hive_ids = $this->entityTypeManager->getStorage('hive')->getQuery()
+    // A hive's logs belong to the apiary they were written under (their
+    // stamp), not to the apiary the hive is in now: after a hive moves, the
+    // old apiary's year still holds its cost and yield, and the new apiary's
+    // does not take them over (task 0231, history is never rewritten).
+    $hive_log_ids = $this->entityTypeManager->getStorage('hive_action_log')->getQuery()
       ->accessCheck(FALSE)
       ->condition('apiary', $apiary->id())
+      ->condition('year', $year)
       ->execute();
-    $hive_log_ids = [];
-    if ($hive_ids) {
-      $hive_log_ids = $this->entityTypeManager->getStorage('hive_action_log')->getQuery()
-        ->accessCheck(FALSE)
-        ->condition('hive', array_values($hive_ids), 'IN')
-        ->condition('year', $year)
-        ->execute();
-    }
 
     return ['apiary_log_ids' => $apiary_log_ids, 'hive_log_ids' => $hive_log_ids];
   }
