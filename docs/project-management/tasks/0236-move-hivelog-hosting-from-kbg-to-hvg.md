@@ -21,9 +21,9 @@ for HiveLog. Until hvg is installed and configured, kbg stays the only site that
 - [ ] hvg's local and web hostnames recorded here
 - [ ] hvg has the module and its dependencies installed (geofield, leaflet, and key and simple_oauth if `nexus` and
       `hivelog_api` are used), its theme and menu set up, and the HiveLog permissions given to its roles
-- [ ] OAuth keys generated on hvg with `private://` paths, and the Vinculum app pointed at hvg's address
-- [ ] Data brought over from kbg (database export or a migration), checked afterwards: apiaries, owners, roles, CBR
-      numbers, hives, history and files
+- [ ] OAuth keys generated on hvg with `private://` paths (done on the live host), and the Vinculum app pointed at hvg's address
+- [x] Data brought over from kbg (database export or a migration), checked afterwards: apiaries, owners, roles, CBR
+      numbers, hives, history and files ✅ 2026-10-27 (live kbg's Vand Værk; the six orphaned logs left behind)
 - [ ] `'demo'` in `file_scan_ignore_directories` kept in hvg's `settings.php` (already added); the testing rule
       "HiveLog is tested only on its host" moves to hvg, and `AGENTS.md` and tasks 0233 and 0235 are updated
 - [ ] kbg's HiveLog retired or left read-only, as decided when this starts
@@ -70,7 +70,7 @@ All sites share one codebase (cms2), so hvg already runs HiveLog 3.0.2's code; i
        apiaries and shows as their primary owner. Søndermarken's notes carry "Former CBR number (kbg admin account): 4471-092".
        Left behind: apiary 10 and its records, `vinculum_test`, `test1` to `test3`, and the novice memberships (admin's on
        apiaries 1 and 4, the test users' on 4). No photos needed copying: all seven inspection images belong to the test
-       apiary. Still to do for this step: the same copy on the **live** hivelog.eu, and a look through the pages as paddy.
+       apiary. The live copy is below (the live kbg holds different data: Vand Værk only).
 6. [ ] Retire kbg's HiveLog (or leave it read-only), then update `AGENTS.md`, 0233 and 0235 for "tested on hvg".
 
 **Decided 2026-10-27:** a scripted copy. Copy `paddy`; map kbg's `admin` onto the same hvg account (one person); leave the
@@ -86,29 +86,65 @@ hold one number, so merging them makes Søndermarken show paddy's number.
 the test users. (b) A scripted copy of kbg's HiveLog tables, files and the real users, with their ids mapped onto hvg's.
 (c) Clone kbg's database over hvg's, which would also replace hvg's own content (landing page, admin account).
 
-## Live hivelog.eu (blocked on access to the live host; the local hvg is confirmed working, 2026-10-27)
+## Live hivelog.eu (SSH access to the host, `ssh ovh`, from 2026-10-27)
 The Vinculum app can be tried only against the live `hivelog.eu` (a phone cannot reach `hivelog.ddev.site` without DDEV's
-certificate authority). `sites.php` maps `hivelog.eu` to the same `hvg` site directory as `hivelog.ddev.site`, so the code on the
-live host is already 3.0.2 once kbg's rollout is; what is behind is the live hvg **database** (schema 10031 like the local one was).
+certificate authority). `sites.php` maps `hivelog.eu` to the same `hvg` site directory as `hivelog.ddev.site`. Project at
+`/homez.2186/xvxvpii/verdigris`, drush at `vendor/bin/drush --uri=hivelog.eu` (PHP 8.4, drush 13.8).
 
-1. [ ] Back up the live hvg database and the live kbg database.
-2. [ ] `drush --uri=hivelog.eu updb -y` and `cr` (runs 10032 to 10038 on an empty HiveLog, plus the other modules' pending updates).
-3. [ ] `drush --uri=hivelog.eu en hivelog_api -y` (brings `jsonapi`, `consumers`, `simple_oauth`).
-4. [ ] OAuth keys generated **on the live host** (openssl, directory 700, keys 600) under `private://oauth-keys/`, and
-       `simple_oauth.settings` `private_key` / `public_key` set to the `private://` paths. Status report shows "OAuth keys: Configured".
-5. [ ] Copy the data from the **live** kbg, not from the local copy:
-       - `cms2/hivelog-move.php` reads kbg through the same database server (`kbg.` qualified tables); on the live host that needs
-         one database user with access to both databases. If the host does not allow it, dump the HiveLog tables from live kbg,
-         load them into a scratch database the live hvg user can read, and point `$src` at it.
-       - The script has the local copy's ids written in: apiaries `(1,4,5)`, memberships `id IN (9,15,8)`, kbg users `1,2,4`
-         and paddy as `uid = 2`. Live may differ (more records, other ids), so check them first, or make the script work them
-         out (owner memberships of the real apiaries, users by name). The dry run (default) stops on any row owned by a user it
-         does not map, and checks every table's count, so run it and read it before `DRY_RUN=0`.
-       - A live copy may well have photos (the local one had none for the real apiaries): the script copies the files from
-         `sites/kbg/files` to the hvg public files and gives them new file ids; check the counts and open one.
-6. [ ] Give `paddy` (or whoever uses the app) the **HiveLog mobile app user** role if they are not an administrator.
+State found by a read-only survey on 2026-10-27, before anything was written: the host already ran hivelog 3.1.0 and
+beeswax 1.1.1; the live hvg database was at schema 10038 (`updb` had run), `hivelog`, `hivelog_api`, `simple_oauth`,
+`consumers` and `jsonapi` were enabled, an OAuth key pair existed under `private/hvg/oauth-keys/` (`simple_oauth.settings`
+pointing at `private://oauth-keys/...`), and there were two users: `admin` (uid 1) and `paddy` (uid 3, roles
+`administrator` and `hivelog_field_app`). HiveLog data: none.
+
+1. [x] Back up the live hvg and kbg databases ✅ 2026-10-27: `~/backups/hvg-before-hivelog-move-20261027-2138.sql.gz` and
+       `~/backups/kbg-before-hivelog-move-20261027-2138.sql.gz` on the host (directory mode 700), made with `drush sql:dump --gzip`.
+2. [x] `updb` and `cr`: already done on the live hvg when the survey ran (schema 10038).
+3. [x] `hivelog_api` enabled: already done (with `jsonapi`, `consumers` and `simple_oauth`).
+4. [x] OAuth keys generated on the live host and the two paths set: already done, `private.key` mode 600, `public.key` 644.
+       **To tighten:** the key directory is mode 755, where the runbook says 700. Not yet checked from Vinculum.
+5. [x] Data copied from the **live** kbg ✅ 2026-10-27, see below.
+6. [x] `paddy` has the **HiveLog mobile app user** role on the live hvg already.
 7. [ ] Sign in from Vinculum against `https://hivelog.eu`, record an inspection with a photo, edit and delete one, sign out
-       (the host-firewall behaviours from task 0212 and 0220 apply to this host too: check them).
+       (the host-firewall behaviours from tasks 0212 and 0220 apply to this host too: check them).
+
+### What live kbg holds (it is not the local kbg)
+The live `kragebaekgaard.dk` has **2 apiaries**: Vand Værk (id 1: 4 hives VV-01 to VV-04, 5 queens, 2 queen observations,
+31 calendar actions, 24 hive components, 32 inventory items, 35 purchases, 2 products, 54 + 6 hive action logs, 16 apiary
+action logs, no inspections and no photos) and "Test" (id 4). Ravnholt Home and Søndermarken, in the local copy above, exist only
+in the local kbg database. Its users: `admin`, `paddy` (uid 2), `demo`, `test1` to `test3`; Vand Værk's owners were `paddy` and
+`test1`, with `test2` and `test3` as novices.
+
+### How the copy was done
+kbg and hvg are on **different MySQL servers** on the host (`xvxvpiikbg`, `xvxvpiihivelog`), so the local script's
+cross-database reads cannot work. Instead:
+1. a fresh `drush sql:dump --tables-list=` of kbg's 20 HiveLog tables, table names prefixed with `kbgsrc_` by `sed`, loaded
+   into the hvg database as **scratch tables**;
+2. `cms2/hivelog-move-live.php` (untracked in cms2; options `APIARIES`, `KBG_USERS`, `EXTRA_TO_PADDY`, `KBG_PADDY_CBR`,
+   `DEST_USER`, `SKIP_ORPHANS`) reads the scratch tables, keeps the destination's own `paddy` account, copies Vand Værk and
+   everything under it with the ids kept in one transaction, and checks the columns match, every count, and that every entity
+   validates; it is a dry run unless `DRY_RUN=0`, and stops on a row owned by an unmapped user or on any photo row;
+3. a dry run first on a copy of the local hvg database (against a dump of live kbg), then on the live hvg, then the real run
+   (`DRY_RUN=0 SKIP_ORPHANS=1`); then the 20 scratch tables were dropped and the script and the dump files removed from the host.
+
+### Six action logs left behind
+The dry run found six hive action logs on VV-01 (ids 1, 2, 3, 5, 12, 17; 2026, five `done` and one `ignored`) whose calendar
+action (ids 1, 2, 3, 5, 12, 17) **no longer exists on kbg**: Vand Værk's calendar actions there start at id 4. Copied, they fail
+validation. They were left behind with `SKIP_ORPHANS=1`; they stay on kbg, and the jobs can be reported again on hivelog.eu.
+
+### Result and verification (2026-10-27)
+Every count matched the source, and 0 validation violations: 1 apiary, 1 membership (`paddy`, owner), 4 hives, 5 queens,
+2 queen observations, 31 calendar actions (+2 requirements, +2 product yields), 24 hive components, 32 inventory items,
+35 purchases, 1 inventory usage, 2 products, 2 harvest yields, 54 hive action logs and 16 apiary action logs. Checked again on
+the live database afterwards: `paddy` is the primary owner with CBR `4592017570` and can view and update the apiary; each hive
+shows its queen and an empty weight (4.2, 5.0, 4.1, 5.0 kg); the alert collector builds. Live kbg is unchanged. Left behind on
+purpose: the Test apiary, the test users and their memberships.
+
+### Still to do
+- Sign in at `https://hivelog.eu` as `paddy` and look through the pages; then Vinculum (step 7).
+- Decide whether Ravnholt Home and Søndermarken (local only) should be brought to hivelog.eu from the local hvg.
+- Step 3 of the plan (compare roles and permissions kbg and hvg), then step 6 (retire kbg's HiveLog; update `AGENTS.md`, 0233, 0235).
+- Tighten the key directory to mode 700.
 
 ## Related
 - Project:: [[shared-apiaries-and-team-roles]]
