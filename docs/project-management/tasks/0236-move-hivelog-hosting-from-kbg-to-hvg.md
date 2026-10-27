@@ -86,6 +86,30 @@ hold one number, so merging them makes Søndermarken show paddy's number.
 the test users. (b) A scripted copy of kbg's HiveLog tables, files and the real users, with their ids mapped onto hvg's.
 (c) Clone kbg's database over hvg's, which would also replace hvg's own content (landing page, admin account).
 
+## Live hivelog.eu (blocked on access to the live host; the local hvg is confirmed working, 2026-10-27)
+The Vinculum app can be tried only against the live `hivelog.eu` (a phone cannot reach `hivelog.ddev.site` without DDEV's
+certificate authority). `sites.php` maps `hivelog.eu` to the same `hvg` site directory as `hivelog.ddev.site`, so the code on the
+live host is already 3.0.2 once kbg's rollout is; what is behind is the live hvg **database** (schema 10031 like the local one was).
+
+1. [ ] Back up the live hvg database and the live kbg database.
+2. [ ] `drush --uri=hivelog.eu updb -y` and `cr` (runs 10032 to 10038 on an empty HiveLog, plus the other modules' pending updates).
+3. [ ] `drush --uri=hivelog.eu en hivelog_api -y` (brings `jsonapi`, `consumers`, `simple_oauth`).
+4. [ ] OAuth keys generated **on the live host** (openssl, directory 700, keys 600) under `private://oauth-keys/`, and
+       `simple_oauth.settings` `private_key` / `public_key` set to the `private://` paths. Status report shows "OAuth keys: Configured".
+5. [ ] Copy the data from the **live** kbg, not from the local copy:
+       - `cms2/hivelog-move.php` reads kbg through the same database server (`kbg.` qualified tables); on the live host that needs
+         one database user with access to both databases. If the host does not allow it, dump the HiveLog tables from live kbg,
+         load them into a scratch database the live hvg user can read, and point `$src` at it.
+       - The script has the local copy's ids written in: apiaries `(1,4,5)`, memberships `id IN (9,15,8)`, kbg users `1,2,4`
+         and paddy as `uid = 2`. Live may differ (more records, other ids), so check them first, or make the script work them
+         out (owner memberships of the real apiaries, users by name). The dry run (default) stops on any row owned by a user it
+         does not map, and checks every table's count, so run it and read it before `DRY_RUN=0`.
+       - A live copy may well have photos (the local one had none for the real apiaries): the script copies the files from
+         `sites/kbg/files` to the hvg public files and gives them new file ids; check the counts and open one.
+6. [ ] Give `paddy` (or whoever uses the app) the **HiveLog mobile app user** role if they are not an administrator.
+7. [ ] Sign in from Vinculum against `https://hivelog.eu`, record an inspection with a photo, edit and delete one, sign out
+       (the host-firewall behaviours from task 0212 and 0220 apply to this host too: check them).
+
 ## Related
 - Project:: [[shared-apiaries-and-team-roles]]
 - Follows:: [[0233-roll-out-3-0-x-to-the-sites]]
