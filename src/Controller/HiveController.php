@@ -630,7 +630,7 @@ class HiveController extends ControllerBase {
         ],
       ],
       'empty_weight' => [
-        '#markup' => '<p>' . $empty_weight_display . '</p>',
+        '#markup' => '<p class="hivelog-list-footnote">' . $empty_weight_display . '</p>',
       ],
     ];
 

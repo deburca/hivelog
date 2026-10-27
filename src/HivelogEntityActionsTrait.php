@@ -57,6 +57,9 @@ trait HivelogEntityActionsTrait {
       '#type' => 'component',
       '#component' => 'hivelog:button-group',
       '#props' => ['buttons' => $buttons],
+      // Room below the buttons before the first section heading.
+      '#prefix' => '<div class="hivelog-page-actions">',
+      '#suffix' => '</div>',
       '#weight' => -10,
     ];
   }

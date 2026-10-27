@@ -317,3 +317,8 @@
 .hivelog-list-heading__action .button:last-child {
   margin-right: 0;
 }
+
+/* The Edit / Delete cluster at the top of a canonical page. */
+.hivelog-page-actions {
+  margin-block: 0 1.5rem;
+}

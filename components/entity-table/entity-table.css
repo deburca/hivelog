@@ -182,3 +182,9 @@
   color: var(--hivelog-warning);
   font-weight: 600;
 }
+
+/* Dates and the Edit / Delete cluster never wrap inside a cell. */
+.hivelog-entity-table__nowrap,
+.hivelog-entity-table td:has(.hivelog-button-group) {
+  white-space: nowrap;
+}
