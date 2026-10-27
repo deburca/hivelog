@@ -18,6 +18,8 @@
  *   .hivelog-queen-actions               queen canonical page actions
  *   .hivelog-queen-observation-actions   observation canonical page actions
  *   .hivelog-entity-form .form-actions   add / edit entity forms
+ *   .hivelog-confirm-form .form-actions  delete / confirmation forms
+ *   .hivelog-inline-actions              a button placed inside a form or a detail row
  *   .hivelog-table-actions               table row operations cells
  *   .hivelog-button-group                grouped button clusters (View/Edit/Delete)
  *   .hivelog-attention__row              dashboard "Needs attention" row actions
@@ -43,6 +45,8 @@
   .hivelog-queen-actions,
   .hivelog-queen-observation-actions,
   .hivelog-entity-form .form-actions,
+  .hivelog-confirm-form .form-actions,
+  .hivelog-inline-actions,
   .hivelog-table-actions,
   .hivelog-button-group,
   .hivelog-attention__row,
@@ -75,6 +79,8 @@
   .hivelog-queen-actions,
   .hivelog-queen-observation-actions,
   .hivelog-entity-form .form-actions,
+  .hivelog-confirm-form .form-actions,
+  .hivelog-inline-actions,
   .hivelog-table-actions,
   .hivelog-attention__row,
   .hivelog-dashboard__welcome-actions,
@@ -91,6 +97,8 @@
   .hivelog-queen-actions,
   .hivelog-queen-observation-actions,
   .hivelog-entity-form .form-actions,
+  .hivelog-confirm-form .form-actions,
+  .hivelog-inline-actions,
   .hivelog-table-actions,
   .hivelog-button-group,
   .hivelog-attention__row,
@@ -110,6 +118,8 @@
   .hivelog-queen-actions,
   .hivelog-queen-observation-actions,
   .hivelog-entity-form .form-actions,
+  .hivelog-confirm-form .form-actions,
+  .hivelog-inline-actions,
   .hivelog-table-actions,
   .hivelog-button-group,
   .hivelog-attention__row,
@@ -129,6 +139,8 @@
   .hivelog-queen-actions,
   .hivelog-queen-observation-actions,
   .hivelog-entity-form .form-actions,
+  .hivelog-confirm-form .form-actions,
+  .hivelog-inline-actions,
   .hivelog-table-actions,
   .hivelog-button-group,
   .hivelog-attention__row,
@@ -148,6 +160,8 @@
   .hivelog-queen-actions,
   .hivelog-queen-observation-actions,
   .hivelog-entity-form .form-actions,
+  .hivelog-confirm-form .form-actions,
+  .hivelog-inline-actions,
   .hivelog-table-actions,
   .hivelog-button-group,
   .hivelog-attention__row,
@@ -167,6 +181,8 @@
   .hivelog-queen-actions,
   .hivelog-queen-observation-actions,
   .hivelog-entity-form .form-actions,
+  .hivelog-confirm-form .form-actions,
+  .hivelog-inline-actions,
   .hivelog-table-actions,
   .hivelog-button-group,
   .hivelog-attention__row,
@@ -294,4 +310,10 @@
 .hivelog-cbr-summary a {
   color: var(--hivelog-btn-primary-bg);
   text-decoration: underline;
+}
+
+/* The last button of a heading row ends flush with the table below it, not a
+   margin short of it. */
+.hivelog-list-heading__action .button:last-child {
+  margin-right: 0;
 }

@@ -208,15 +208,10 @@ class DashboardTest extends KernelTestBase {
   }
 
   /**
-   * The page title carries the hexagon mark and "HiveLog" wordmark.
+   * The page title names the page; the header already carries the brand.
    */
-  public function testTitleMarkup(): void {
-    $markup = (string) $this->controller()->title();
-
-    $this->assertStringContainsString('hivelog-masthead__mark', $markup);
-    $this->assertStringContainsString('<svg', $markup);
-    $this->assertStringContainsString('hivelog-masthead__word', $markup);
-    $this->assertStringContainsString('HiveLog', $markup);
+  public function testTitle(): void {
+    $this->assertSame('Dashboard', (string) $this->controller()->title());
   }
 
   /**

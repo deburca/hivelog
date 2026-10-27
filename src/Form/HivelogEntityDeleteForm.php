@@ -89,6 +89,14 @@ class HivelogEntityDeleteForm extends ContentEntityDeleteForm {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     $form = parent::buildForm($form, $form_state);
+    // The buttons' context wrapper, and the destructive action in the danger
+    // variant like every other Delete in HiveLog.
+    $form['#attributes']['class'][] = 'hivelog-confirm-form';
+    $form['#attached']['library'][] = 'hivelog/buttons';
+    $form['#attached']['library'][] = 'hivelog/forms';
+    if (isset($form['actions']['submit'])) {
+      $form['actions']['submit']['#attributes']['class'][] = 'button--danger';
+    }
 
     $sections = $this->buildDependencySections();
     if ($sections) {

@@ -10,8 +10,8 @@ use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\DependencyInjection\ClassResolverInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Render\Markup;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\hivelog\HivelogAlertCollector;
 use Drupal\hivelog\HivelogCalendarChecklistBuilder;
@@ -89,21 +89,15 @@ class DashboardController extends ControllerBase {
   }
 
   /**
-   * Page title: a hexagon mark plus the "HiveLog" wordmark.
+   * Page title: "Dashboard".
    *
-   * Returned as safe markup so the SVG survives into the theme's <h1>;
-   * the "Apiary & hive logbook" subtitle is a separate element rendered
-   * by view() just below it.
+   * The site's own header already carries the hexagon and the "HiveLog" name
+   * (and the breadcrumb ends in HiveLog), so the page names what it is; the
+   * "Apiary and hive logbook" subtitle is a separate element rendered by
+   * view() just below it.
    */
-  public function title(): Markup {
-    return Markup::create(
-      '<span class="hivelog-masthead__mark" aria-hidden="true">'
-      . '<svg viewBox="0 0 24 24" width="56" height="56">'
-      . '<path fill="currentColor" opacity=".16" d="M12 2.6l8.15 4.7v9.4L12 21.4 3.85 16.7V7.3z"/>'
-      . '<path fill="none" stroke="currentColor" stroke-width="1.6" d="M12 4.1l6.85 3.95v7.9L12 19.9l-6.85-3.95v-7.9z"/>'
-      . '</svg></span>'
-      . '<span class="hivelog-masthead__word">' . $this->t('HiveLog') . '</span>'
-    );
+  public function title(): TranslatableMarkup {
+    return $this->t('Dashboard');
   }
 
   /**
