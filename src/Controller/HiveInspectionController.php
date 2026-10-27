@@ -163,9 +163,7 @@ class HiveInspectionController extends ControllerBase {
     switch ($field_name) {
       case 'hive':
       case 'uid':
-        return $field->entity ? $field->entity->toLink()->toRenderable() : [
-          '#plain_text' => (string) $this->t('—'),
-        ];
+        return $this->buildReference($field);
 
       case 'inspection_date':
         $timestamp = strtotime($field->value . ' 00:00:00 UTC');

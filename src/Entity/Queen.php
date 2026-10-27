@@ -81,6 +81,20 @@ class Queen extends ContentEntityBase implements EntityChangedInterface, EntityO
   ];
 
   /**
+   * The marking colour's name without its years, or '' when none is set.
+   */
+  public function getColourName(): string {
+    $colour = $this->get('queen_colour')->value;
+    if (!$colour) {
+      return '';
+    }
+    $label = (string) ($this->get('queen_colour')->getSetting('allowed_values')[$colour] ?? $colour);
+    // The allowed-value labels carry the marking years ("Blue (years ending
+    // 0, 5)"); next to the queen's year only the colour's name is wanted.
+    return trim((string) preg_replace('/\s*\(.*\)\s*$/', '', $label));
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function preSave(EntityStorageInterface $storage) {

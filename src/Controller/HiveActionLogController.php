@@ -154,9 +154,7 @@ class HiveActionLogController extends ControllerBase {
       case 'calendar_action':
       case 'inspection':
       case 'uid':
-        return $field->entity ? $field->entity->toLink()->toRenderable() : [
-          '#plain_text' => (string) $this->t('—'),
-        ];
+        return $this->buildReference($field);
 
       case 'status':
         $allowed_values = $field->getSetting('allowed_values');

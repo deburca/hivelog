@@ -547,4 +547,17 @@ class QueenTest extends KernelTestBase {
     $this->assertStringContainsString('button--danger', $html);
   }
 
+  /**
+   * The colour's name drops the marking years its label carries.
+   */
+  public function testColourNameDropsTheYears(): void {
+    $queen = Queen::create(['name' => 'Q-blue', 'hive' => $this->hive->id(), 'queen_year' => 2025]);
+    $queen->save();
+    $this->assertSame('Blue', $queen->getColourName());
+
+    $unmarked = Queen::create(['name' => 'Q-unmarked', 'hive' => $this->hive->id()]);
+    $unmarked->save();
+    $this->assertSame('', $unmarked->getColourName());
+  }
+
 }

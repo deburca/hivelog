@@ -847,6 +847,19 @@ classes will conflict with the module's token rules.
 `button--primary`, `button--danger`, or `button--default` as a variant
 modifier. No framework or utility classes.
 
+A button outside a listed context renders as a plain link — that is how "Add a
+member" looked before task 0237. Three contexts exist for a button that does not
+belong to a heading row or a form's action bar: `.hivelog-inline-actions` (a
+button inside a form or a detail row; wrap the element in `<div>` or, in running
+text, `<span class="hivelog-inline-actions">`), `.hivelog-confirm-form .form-actions`
+(`HivelogEntityDeleteForm` adds the class and gives Delete `button--danger`) and
+`.hivelog-page-actions` (the Edit / Delete cluster at the top of a canonical page,
+`HivelogEntityActionsTrait::buildActions()`). A table's Edit / Delete cluster is
+nowrap inside `.hivelog-entity-table` cells (it is a wrapping flex row, which a
+table squeezes to one button wide). The entity-table keeps an "Operations" header
+for screen readers only and gives a cell holding only an ISO date its own
+no-wrap class.
+
 `button-group.twig` renders a `<div class="hivelog-button-group">` wrapper
 only. All layout (inline-flex), join-corner styling (`:first-child` /
 `:last-child` border-radius overrides), border collapse (`margin-left: -1px`),
@@ -897,7 +910,9 @@ the module stays palette-free). The supported surface:
   `.images.css` and `.weight-histogram.css` are not tokenised (chart /
   media internals, not part of the themed chrome).
 - **Stable class names** — the `.hivelog-*` BEM classes on the dashboard
-  (`__masthead`, `__attention`, `__stat-tiles`, `__split`, …), the
+  (`__masthead__sub`, `__attention`, `__stat-tiles`, `__split`, …; the dashboard's
+  title is plain "Dashboard" since 3.1.0, so `__masthead__mark` and `__masthead__word`
+  are gone), the
   `hivelog-inventory-report-table` / `-breakdown` / `-trend` report
   tables, `.hivelog-filter-form`, `.hivelog-list-heading`, the generic
   `.hivelog-detail-table` / `.hivelog-detail-section` every detail-page

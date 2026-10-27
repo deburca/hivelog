@@ -242,9 +242,7 @@ class ApiaryController extends ControllerBase {
     $year = $queen->get('queen_year')->value;
     $colour = $queen->get('queen_colour')->value;
     if ($year) {
-      // The marking colour's label carries its years ("Blue (years ending 0,
-      // 5)"); next to the year itself only the colour name is wanted.
-      $colour_label = $colour ? trim(preg_replace('/\s*\(.*\)\s*$/', '', (string) ($queen->get('queen_colour')->getSetting('allowed_values')[$colour] ?? $colour))) : '';
+      $colour_label = $colour ? $queen->getColourName() : '';
       $parts[] = $colour_label ? "$year · $colour_label" : (string) $year;
     }
     $breed = $queen->get('breed')->value;

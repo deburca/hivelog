@@ -746,4 +746,25 @@ class HiveInspectionTest extends KernelTestBase {
     $this->assertEquals('chalkbrood', $form['disease_signs']['widget']['#default_value'][0] ?? NULL);
   }
 
+  /**
+   * An inspection by the anonymous user names it in plain text instead of linking to a page that is not there.
+   */
+  public function testAnonymousInspectorIsPlainText(): void {
+    $this->config('user.settings')->set('anonymous', 'Anonymous')->save();
+    User::create(['uid' => 0, 'name' => ''])->save();
+    $inspection = HiveInspection::create([
+      'hive' => $this->hive->id(),
+      'inspection_date' => '2026-09-01',
+      'uid' => 0,
+    ]);
+    $inspection->save();
+
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(HiveInspectionController::class);
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($controller->view($inspection));
+
+    $this->assertStringContainsString('Anonymous', $html);
+    $this->assertStringNotContainsString('/user/0', $html);
+  }
+
 }
