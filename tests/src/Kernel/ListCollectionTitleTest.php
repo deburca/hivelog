@@ -159,4 +159,38 @@ class ListCollectionTitleTest extends KernelTestBase {
     }
   }
 
+  /**
+   * The Operations header is for screen readers only, and the header strip spans the buttons.
+   */
+  public function testOperationsHeaderIsHiddenVisually(): void {
+    $apiary = Apiary::create(['name' => 'Ravnholt Home', 'uid' => 1]);
+    $apiary->save();
+    Hive::create(['name' => 'H-1', 'apiary' => $apiary->id(), 'status' => 'active'])->save();
+
+    $build = \Drupal::entityTypeManager()->getListBuilder('hive')->render();
+    $headers = $build['table']['#props']['headers'];
+    $this->assertSame('Operations', end($headers), 'The appended Operations cell has a header');
+
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+    $this->assertStringContainsString('<th class="text-left"><span class="visually-hidden">Operations</span></th>', $html);
+    $this->assertStringNotContainsString('>Operations</th>', $html, 'No visible Operations label');
+    $this->assertStringNotContainsString('data-label="Operations"', $html, 'Its cells do not repeat it as a mobile label');
+  }
+
+  /**
+   * A cell holding only an ISO date never wraps.
+   */
+  public function testIsoDateCellsDoNotWrap(): void {
+    $apiary = Apiary::create(['name' => 'Ravnholt Home', 'uid' => 1]);
+    $apiary->save();
+    $hive = Hive::create(['name' => 'H-1', 'apiary' => $apiary->id(), 'status' => 'active']);
+    $hive->save();
+    HiveInspection::create(['hive' => $hive->id(), 'inspection_date' => '2026-09-01'])->save();
+
+    $build = \Drupal::entityTypeManager()->getListBuilder('hive_inspection')->render();
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+    $this->assertMatchesRegularExpression('/<td[^>]*class="hivelog-entity-table__nowrap"[^>]*>\s*<a[^>]*>2026-09-01<\/a>/', $html);
+    $this->assertDoesNotMatchRegularExpression('/<td[^>]*hivelog-entity-table__nowrap[^>]*>[^<]*Ravnholt/', $html, 'Other cells still wrap');
+  }
+
 }

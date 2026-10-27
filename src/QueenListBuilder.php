@@ -43,10 +43,10 @@ class QueenListBuilder extends HivelogListBuilder {
    * {@inheritdoc}
    */
   public function buildRow(EntityInterface $entity) {
+    /** @var \Drupal\hivelog\Entity\Queen $entity */
     $row['name'] = $entity->toLink()->toString();
 
-    $colour = $entity->get('queen_colour')->value;
-    $row['colour'] = $colour ? ($entity->get('queen_colour')->getSetting('allowed_values')[$colour] ?? $colour) : '';
+    $row['colour'] = $entity->getColourName();
 
     $hive = $entity->get('hive')->entity;
     $row['hive'] = $hive ? $hive->toLink()->toString() : '';

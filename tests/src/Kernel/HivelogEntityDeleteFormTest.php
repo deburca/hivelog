@@ -409,4 +409,16 @@ class HivelogEntityDeleteFormTest extends KernelTestBase {
     return Url::fromRoute('hivelog.dashboard');
   }
 
+  /**
+   * The delete form has the button context, and Delete is the danger variant.
+   */
+  public function testDeleteIsTheDangerVariantInTheButtonContext(): void {
+    $queen = $this->buildEntity('queen', TRUE);
+    $form = \Drupal::service('entity.form_builder')->getForm($queen, 'delete');
+
+    $this->assertContains('hivelog-confirm-form', $form['#attributes']['class']);
+    $this->assertContains('button--danger', $form['actions']['submit']['#attributes']['class']);
+    $this->assertContains('hivelog/buttons', $form['#attached']['library']);
+  }
+
 }

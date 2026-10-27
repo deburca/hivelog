@@ -630,7 +630,7 @@ class HiveController extends ControllerBase {
         ],
       ],
       'empty_weight' => [
-        '#markup' => '<p>' . $empty_weight_display . '</p>',
+        '#markup' => '<p class="hivelog-list-footnote">' . $empty_weight_display . '</p>',
       ],
     ];
 
@@ -744,9 +744,7 @@ class HiveController extends ControllerBase {
 
     if ($queen) {
       $colour = $queen->get('queen_colour')->value;
-      $colour_label = $colour
-        ? ($queen->get('queen_colour')->getSetting('allowed_values')[$colour] ?? $colour)
-        : $this->t('Not set');
+      $colour_label = $colour ? $queen->getColourName() : $this->t('Not set');
 
       $breed = $queen->get('breed')->value;
       $breed_label = $breed

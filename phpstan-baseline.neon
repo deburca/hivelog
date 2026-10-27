@@ -885,12 +885,6 @@ parameters:
 		-
 			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
 			identifier: method.notFound
-			count: 6
-			path: src/QueenListBuilder.php
-
-		-
-			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
-			identifier: method.notFound
 			count: 7
 			path: src/QueenObservationListBuilder.php
 

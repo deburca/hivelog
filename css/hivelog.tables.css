@@ -23,10 +23,27 @@
   color: var(--hivelog-ink-muted);
 }
 
-/* Detail-page label/value tables (task 0131). */
+/* Detail-page label/value tables (task 0131). The labels share one column
+   width so every table on a page lines up, and the Field / Value header row,
+   which says nothing, is kept for screen readers only. */
 .hivelog-detail-table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.hivelog-detail-table thead {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.hivelog-detail-table td:first-child {
+  width: min(14rem, 40%);
+  color: var(--hivelog-ink-muted);
 }
 
 /* Horizontal dividers between rows. */
@@ -131,4 +148,10 @@
     width: 40%;
     font-weight: 600;
   }
+}
+
+/* Sections of a detail page (an inspection's Overview, Queen status, …) are
+   separated by more than a heading's own margin. */
+.hivelog-detail-section + .hivelog-detail-section {
+  margin-top: 1.5rem;
 }

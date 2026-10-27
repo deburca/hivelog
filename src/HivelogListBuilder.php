@@ -282,6 +282,9 @@ abstract class HivelogListBuilder extends EntityListBuilder {
    */
   public function render() {
     $headers = array_map('strval', array_values($this->buildHeader()));
+    // The Operations cell is appended to every row below; give it a header so
+    // the header strip spans the table (the entity-table hides its label).
+    $headers[] = (string) $this->t('Operations');
 
     $rows = [];
     foreach ($this->load() as $entity) {

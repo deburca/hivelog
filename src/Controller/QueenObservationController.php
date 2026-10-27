@@ -134,9 +134,7 @@ class QueenObservationController extends ControllerBase {
     switch ($field_name) {
       case 'queen':
       case 'uid':
-        return $field->entity ? $field->entity->toLink()->toRenderable() : [
-          '#plain_text' => (string) $this->t('—'),
-        ];
+        return $this->buildReference($field);
 
       case 'observation_date':
         $timestamp = strtotime($field->value . ' 00:00:00 UTC');

@@ -160,3 +160,24 @@ span.hivelog-inline-actions {
   margin-block: 0;
   margin-inline-start: 0.5rem;
 }
+
+/* ------------------------------------------------------------------
+   A date field's label is the datetime wrapper's <h4> (not a <label>), and
+   its description is an unclassed div: both fall back to the theme's heading
+   and body styles. Make them look like the label and description of every
+   other field.
+------------------------------------------------------------------ */
+
+.hivelog-entity-form h4 {
+  display: block;
+  margin: 1rem 0 0.3rem;
+  font: inherit;
+  font-weight: 600;
+  line-height: inherit;
+}
+
+.hivelog-entity-form [data-drupal-field-elements="description"] {
+  margin: 0.25rem 0 1rem;
+  font-size: 0.85rem;
+  color: var(--hivelog-ink-muted);
+}

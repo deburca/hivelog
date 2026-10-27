@@ -253,9 +253,7 @@ class QueenController extends ControllerBase {
     switch ($field_name) {
       case 'hive':
       case 'uid':
-        return $field->entity ? $field->entity->toLink()->toRenderable() : [
-          '#plain_text' => (string) $this->t('—'),
-        ];
+        return $this->buildReference($field);
 
       case 'purchase_date':
       case 'introduction_date':
@@ -271,8 +269,11 @@ class QueenController extends ControllerBase {
           '#plain_text' => number_format((float) $field->value, 2),
         ];
 
-      case 'status':
       case 'queen_colour':
+        /** @var \Drupal\hivelog\Entity\Queen $entity */
+        return ['#plain_text' => $entity->getColourName() ?: (string) $this->t('—')];
+
+      case 'status':
       case 'breed':
       case 'temperament':
         $allowed_values = $field->getSetting('allowed_values');

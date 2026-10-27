@@ -6,6 +6,7 @@ namespace Drupal\hivelog;
 
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\user\UserInterface;
 
 /**
  * Shared detail-page section builders for HiveLog canonical-page controllers.
@@ -118,6 +119,24 @@ trait HivelogDetailPageTrait {
     }
 
     return $this->formatFieldValue($entity, $field_name, $field);
+  }
+
+  /**
+   * A reference field's value: a link to the entity, or plain text.
+   *
+   * "—" when nothing is referenced, and the name alone for the anonymous
+   * user (a record whose author was deleted or never signed in), which has no
+   * page to link to.
+   */
+  protected function buildReference(FieldItemListInterface $field): array {
+    $entity = $field->entity;
+    if (!$entity) {
+      return ['#plain_text' => (string) $this->t('—')];
+    }
+    if ($entity instanceof UserInterface && $entity->isAnonymous()) {
+      return ['#plain_text' => (string) $entity->getDisplayName()];
+    }
+    return $entity->toLink()->toRenderable();
   }
 
   /**

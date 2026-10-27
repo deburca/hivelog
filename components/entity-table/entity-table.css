@@ -182,3 +182,15 @@
   color: var(--hivelog-warning);
   font-weight: 600;
 }
+
+/* Dates and the Edit / Delete cluster never wrap inside a cell. The cluster
+   is a wrapping flex row, so it needs its own nowrap: without it the table
+   squeezes the cell to one button's width and stacks the other under it. */
+.hivelog-entity-table__nowrap,
+.hivelog-entity-table td:has(.hivelog-button-group) {
+  white-space: nowrap;
+}
+
+.hivelog-entity-table td .hivelog-button-group {
+  flex-wrap: nowrap;
+}
