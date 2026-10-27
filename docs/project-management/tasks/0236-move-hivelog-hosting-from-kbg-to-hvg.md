@@ -49,16 +49,25 @@ All sites share one codebase (cms2), so hvg already runs HiveLog 3.0.2's code; i
 - Nothing on hvg is used by the Vinculum app yet; the app takes the server address at sign-in.
 
 ## Plan
-1. [ ] hvg to 3.0.2: back up, `updb` (runs 10032 to 10038 on an empty HiveLog), `cr`; status report clean.
-2. [ ] Enable on hvg what kbg runs: `hivelog_api` (and `jsonapi`, `consumers`, `simple_oauth`, `key`), and `collective` and
-       `nexus` if wanted; give the **HiveLog mobile app user** role to the people who use the app.
+1. [x] hvg to 3.0.2: backed up, `updb` (10032 to 10038 on an empty HiveLog, plus the pending updates of tagify, ECA, menu_link_attributes and trash), `cr` ✅ 2026-10-27 (local DDEV). Backups: `cms2/hvg-before-hivelog-move.sql.gz`, `cms2/kbg-before-hivelog-move.sql.gz`.
+2. [ ] Enable on hvg what kbg runs: `hivelog_api` with `jsonapi`, `consumers` and `simple_oauth` ✅ 2026-10-27 (local DDEV). `collective`
+       and `nexus` hold no data on kbg (0 API clients, 0 AI providers, 0 insights) and are left off unless wanted; give the **HiveLog mobile app user** role to the people who use the app.
 3. [ ] Roles and permissions: compare kbg's HiveLog permissions per role with hvg's and copy what is wanted.
 4. [ ] OAuth keys on hvg (`private://` paths), then sign in from Vinculum against `hivelog.ddev.site`, then `hivelog.eu`.
 5. [ ] Data: decide which of kbg's data is real and what to carry over (see the open decision), then copy it and check
        apiaries, owners and roles, CBR numbers, hives, history and files.
 6. [ ] Retire kbg's HiveLog (or leave it read-only), then update `AGENTS.md`, 0233 and 0235 for "tested on hvg".
 
-**Open decision:** how to bring the data over. (a) Re-enter it on hvg by hand, which fits about 40 records and drops
+**Decided 2026-10-27:** a scripted copy. Copy `paddy`; map kbg's `admin` onto the same hvg account (one person); leave the
+test apiary (10, "Vinculum test apiary") and the test users (`vinculum_test`, `test1` to `test3`) behind. Copies apiaries 1, 4
+and 5 (12 hives, 5 inspections, queens, 75 calendar actions, 2 inventory items) with ids kept, since hvg has no HiveLog rows;
+only users and files are mapped. hvg's own table columns match kbg's (checked after `updb`).
+
+**Open question found while preparing the copy:** the CBR number lives on the user, and the two kbg accounts carry different
+numbers: `admin` (owns Søndermarken) has `4471-092`, `paddy` (owns Vand Værk and Ravnholt Home) has `4592017570`. One account can
+hold one number, so merging them makes Søndermarken show paddy's number.
+
+**Earlier open decision (settled above):** how to bring the data over. (a) Re-enter it on hvg by hand, which fits about 40 records and drops
 the test users. (b) A scripted copy of kbg's HiveLog tables, files and the real users, with their ids mapped onto hvg's.
 (c) Clone kbg's database over hvg's, which would also replace hvg's own content (landing page, admin account).
 
