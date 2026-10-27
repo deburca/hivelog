@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: in-progress
+status: done
 priority: low
 project: "[[shared-apiaries-and-team-roles]]"
 area: install
@@ -16,17 +16,20 @@ blocked-by:
 ## Context
 Decided 2026-10-26: the **hvg** site will supersede kbg (`kragebaekgaard.ddev.site`, `kragebaekgaard.dk`) as the host
 for HiveLog. Until hvg is installed and configured, kbg stays the only site that runs and is tested with it.
+**Done 2026-10-27:** hvg hosts HiveLog (`hivelog.eu`, `hivelog.ddev.site`), the Vinculum app signs in to it, and kbg's HiveLog
+is uninstalled.
 
 ## Acceptance criteria
-- [ ] hvg's local and web hostnames recorded here
-- [ ] hvg has the module and its dependencies installed (geofield, leaflet, and key and simple_oauth if `nexus` and
-      `hivelog_api` are used), its theme and menu set up, and the HiveLog permissions given to its roles
-- [ ] OAuth keys generated on hvg with `private://` paths (done on the live host), and the Vinculum app pointed at hvg's address
+- [x] hvg's local and web hostnames recorded here ✅ 2026-10-27 (`hivelog.ddev.site`, `hivelog.eu`, `www.hivelog.eu`)
+- [x] hvg has the module and its dependencies installed (geofield, leaflet, and key and simple_oauth if `nexus` and
+      `hivelog_api` are used), its theme and menu set up, and the HiveLog permissions given to its roles ✅ 2026-10-27
+      (`hivelog`, `hivelog_api`; kbg's `nexus` and `collective` held no data worth keeping beyond 112 insights from 1 to 2 October)
+- [x] OAuth keys generated on hvg with `private://` paths (done on the live host), and the Vinculum app pointed at hvg's address ✅ 2026-10-27 (sign-in from Vinculum confirmed; the key directory is mode 700)
 - [x] Data brought over from kbg (database export or a migration), checked afterwards: apiaries, owners, roles, CBR
       numbers, hives, history and files ✅ 2026-10-27 (live kbg's Vand Værk; the six orphaned logs left behind)
-- [ ] `'demo'` in `file_scan_ignore_directories` kept in hvg's `settings.php` (already added); the testing rule
-      "HiveLog is tested only on its host" moves to hvg, and `AGENTS.md` and tasks 0233 and 0235 are updated
-- [ ] kbg's HiveLog retired or left read-only, as decided when this starts
+- [x] `'demo'` in `file_scan_ignore_directories` kept in hvg's `settings.php` (already added); the testing rule
+      "HiveLog is tested only on its host" moves to hvg, and `AGENTS.md` and tasks 0233 and 0235 are updated ✅ 2026-10-27
+- [x] kbg's HiveLog retired or left read-only, as decided when this starts ✅ 2026-10-27 (uninstalled, see below)
 
 ## Where things stand (surveyed 2026-10-27, read-only)
 All sites share one codebase (cms2), so hvg already runs HiveLog 3.0.2's code; its database has not been updated to it.
@@ -140,11 +143,25 @@ the live database afterwards: `paddy` is the primary owner with CBR `4592017570`
 shows its queen and an empty weight (4.2, 5.0, 4.1, 5.0 kg); the alert collector builds. Live kbg is unchanged. Left behind on
 purpose: the Test apiary, the test users and their memberships.
 
-### Still to do
-- Sign in at `https://hivelog.eu` as `paddy` and look through the pages; then Vinculum (step 7).
-- Decide whether Ravnholt Home and Søndermarken (local only) should be brought to hivelog.eu from the local hvg.
-- Step 3 of the plan (compare roles and permissions kbg and hvg), then step 6 (retire kbg's HiveLog; update `AGENTS.md`, 0233, 0235).
-- Tighten the key directory to mode 700.
+### Vinculum, roles, and the decisions that closed this
+- **Vinculum** sign-in on `https://hivelog.eu` works (2026-10-27); step 7 is done by the owner.
+- **Ravnholt Home and Søndermarken** are not brought to hivelog.eu: they stay on the local hvg for testing.
+- **Key directory** tightened from mode 755 to 700.
+- **Roles and permissions** compared on the live sites (step 3): no HiveLog permission needs carrying over. kbg's `authenticated`
+  and `content_editor` roles had none, so HiveLog worked there only for administrators and the app role; hvg's `hivelog_user`
+  role (64 view / add / edit-own / delete-own permissions) is the member role. The one difference was `view own hive insight` on
+  `hivelog_field_app` (kbg only, from `nexus`).
+
+### kbg's HiveLog retired (2026-10-27)
+A fresh backup first (`~/backups/kbg-before-hivelog-retire-20261027-2154.sql.gz`, integrity checked; earlier ones from 21:38 beside
+it). **Drupal refuses `pmu` while a module's entity types hold content** (`hook_uninstall()` runs only after that check), so a purge
+script (`cms2/retire-hivelog-purge.php`, untracked in cms2; counts only unless `PURGE=1`) deleted the content child-first through the
+entity API; it first ran against a snapshot of the local kbg, then on the live site: **257 entities** (the 112 `nexus` insights went
+with their hives). Then `drush pmu hivelog_api nexus collective hivelog -y`. Afterwards: no HiveLog, Nexus or Collective tables, no
+`cbr_number` column, the `hivelog_field_app` role and the Vinculum consumer gone, no new errors, kbg and hivelog.eu both answer 200.
+**Found on the way:** live kbg held an AI provider config ("Production AI Provider", Anthropic) and 112 insights, not the "none"
+the local copy showed; they are deleted. Its Key `claude_api` (the credential) remains on kbg with `key`, `simple_oauth` and
+`consumers`; delete the Key and revoke the key at Anthropic if it is no longer wanted.
 
 ## Related
 - Project:: [[shared-apiaries-and-team-roles]]

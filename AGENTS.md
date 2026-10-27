@@ -37,6 +37,14 @@ the apiary map widget is `leaflet_widget_default`, not a geocoder-backed
 widget, and nothing else in the module talks to geocoder services. Do not
 reintroduce the dependency without adding and documenting a concrete use.
 
+**Where it runs (task 0236, 2026-10-27).** HiveLog is hosted, and tested, on the **hvg** site of the `cms2`
+multisite: `hivelog.eu` on the web and `hivelog.ddev.site` locally. It is the server for the Vinculum app too. The
+**kbg** site (`kragebaekgaard.dk`) was HiveLog's host until then; its HiveLog modules were uninstalled, so
+nothing there is current. The other sites of the multisite (vdg, shh) do not run it. `cms2` shares one codebase, so a
+module release reaches hvg with `composer update` and the Makefile's `hvg-pull`; the live host is reached with `ssh ovh`.
+A change that needs a look in a browser is checked on `hivelog.ddev.site`, which carries a copy of kbg's real data plus
+test apiaries.
+
 ## CI Pipeline
 
 A GitHub Actions workflow, `.github/workflows/ci.yml`, runs the tests where they can still

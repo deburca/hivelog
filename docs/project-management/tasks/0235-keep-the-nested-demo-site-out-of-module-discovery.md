@@ -19,11 +19,10 @@ extension discovery walks into it and finds a second copy of core, which produce
 warning from the Update module and eight kernel test errors that appear only locally (CI never has `demo/`
 populated). The workaround was `'demo'` in `file_scan_ignore_directories` in a site's `settings.php`.
 
-**Scope (decided 2026-10-26):** HiveLog is tested exclusively on the **kbg** site (`kragebaekgaard.ddev.site` locally,
-`kragebaekgaard.dk` on the web). The **hvg** site will take over as HiveLog's host ([[0236-move-hivelog-hosting-from-kbg-to-hvg]]);
-until it is installed and configured, kbg is used. The other sites (vdg, shh, default) do not run it and are out of
-scope. The setting is needed only on the site that runs HiveLog: in place on kbg, and already added to hvg's
-`settings.php` ahead of the move.
+**Scope (decided 2026-10-26, moved 2026-10-27):** HiveLog is tested exclusively on the **hvg** site (`hivelog.ddev.site`
+locally, `hivelog.eu` on the web), which took over from kbg ([[0236-move-hivelog-hosting-from-kbg-to-hvg]]); kbg's HiveLog
+was uninstalled. The other sites (vdg, shh, default) do not run it and are out of scope. The setting is needed only on the
+site that runs HiveLog: in place on hvg's `settings.php` (kbg still has it, harmlessly).
 
 ## Acceptance criteria
 - [ ] Decide the fix: keep the per-site setting, or stop the generated Drupal being created inside the module tree
