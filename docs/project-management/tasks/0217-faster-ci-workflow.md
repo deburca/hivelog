@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: review
+status: done
 priority: medium
 project:
 area: tests
@@ -34,7 +34,7 @@ comes from not running them where they gate nothing.
       tag as its version and that the commit's push run has not failed
 - [x] `AGENTS.md` describes the new rules, including "wait for `main` to go green before releasing"
 - [x] Observed on a real branch push, on `main`, and on a release (2.12.0: the release-check job ran and passed)
-- [ ] Sharding PHPUnit across parallel jobs (a separate follow-up; the biggest saving for code pushes)
+- [x] Sharding PHPUnit across parallel jobs (done as [[0218-shard-phpunit-in-ci]]) ✅ 2026-10-27
 
 ## Implementation notes
 - `.github/workflows/ci.yml`: `on.push.branches: ['**']` (excludes tags) with `paths-ignore`; a

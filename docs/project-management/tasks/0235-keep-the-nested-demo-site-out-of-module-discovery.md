@@ -32,6 +32,10 @@ scope. The setting is needed only on the site that runs HiveLog: in place on kbg
 - [ ] The eight local-only kernel test errors gone (or each explained) on a development site with `demo/` built
 - [ ] README of the demo kit and `AGENTS.md` updated
 
+## Decision so far (2026-10-27)
+For now `'demo'` is added to `file_scan_ignore_directories` in the `settings.php` of the site that runs HiveLog. How the demo is
+hosted permanently (inside or outside the module tree) is undecided, so the first criterion stays open until that is.
+
 ## Related
 - Project:: [[ios-field-app]]
 - Follows:: [[0215-demo-site-kit]]

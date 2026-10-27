@@ -114,6 +114,8 @@ Tick each item as it passes. Anything that fails goes under "Findings" below.
   who may use the app (the README now says so). A user who was using the app before the update already has it;
   3.0 does not touch the role.
 - Nothing else failed in the checklist.
+- **3.0.2 rolled out to kbg (2026-10-27):** `updb` ran `hivelog_api_update_10005`; the People page shows the role as
+  "HiveLog mobile app user".
 
 ## Related
 - Project:: [[shared-apiaries-and-team-roles]]
