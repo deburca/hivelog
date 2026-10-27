@@ -54,6 +54,13 @@ All sites share one codebase (cms2), so hvg already runs HiveLog 3.0.2's code; i
        and `nexus` hold no data on kbg (0 API clients, 0 AI providers, 0 insights) and are left off unless wanted; give the **HiveLog mobile app user** role to the people who use the app.
 3. [ ] Roles and permissions: compare kbg's HiveLog permissions per role with hvg's and copy what is wanted.
 4. [ ] OAuth keys on hvg (`private://` paths), then sign in from Vinculum against `hivelog.ddev.site`, then `hivelog.eu`.
+       Local hvg done 2026-10-27: a key pair in `private/hvg/oauth-keys/` (directory 700, keys 600, outside the web root),
+       `simple_oauth.settings` `private_key` and `public_key` set to `private://oauth-keys/private.key` and `.../public.key`
+       (as on kbg). The status report shows "HiveLog API: OAuth keys: Configured" and the discovery document answers
+       (`api_version` 1, features `json_write`, `multipart_upload`, `method_override`). Not yet done: the sign-in from Vinculum
+       (give `paddy` the **HiveLog mobile app user** role first if the app should work for a non-administrator), and the
+       same on the live `hivelog.eu`, where the keys are generated on that host, never copied. The two paths are now active
+       config on hvg; they are not in `config/hvg/sync` until exported.
 5. [x] Data copied to the **local** hvg (`hivelog.ddev.site`) on 2026-10-27 by `cms2/hivelog-move.php` (a dry run first, then
        `DRY_RUN=0`; kbg is only read). Arrived with ids kept: 3 apiaries (1 Vand Værk, 4 Ravnholt Home, 5 Søndermarken), 12 hives,
        5 inspections, 5 queens, 1 queen observation, 75 calendar actions (+2 product yields), 2 inventory items, 1 purchase,
