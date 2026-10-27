@@ -67,18 +67,21 @@
    prevents the label from stretching to full width.
 ------------------------------------------------------------------ */
 
-.hivelog-entity-form .form-type--checkbox {
+.hivelog-entity-form .form-type--checkbox,
+.hivelog-entity-form .form-type-checkbox {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
-.hivelog-entity-form .form-type--checkbox input[type="checkbox"] {
+.hivelog-entity-form .form-type--checkbox input[type="checkbox"],
+.hivelog-entity-form .form-type-checkbox input[type="checkbox"] {
   width: auto;
   flex-shrink: 0;
 }
 
-.hivelog-entity-form .form-type--checkbox label {
+.hivelog-entity-form .form-type--checkbox label,
+.hivelog-entity-form .form-type-checkbox label {
   margin-bottom: 0;
   font-weight: normal;
 }
@@ -108,4 +111,52 @@
   .hivelog-entity-form .form-item textarea {
     max-width: 100%;
   }
+}
+
+/* ------------------------------------------------------------------
+   A checkbox's description wraps under the label instead of sitting
+   beside it in the flex row.
+------------------------------------------------------------------ */
+
+.hivelog-entity-form .form-type--checkbox,
+.hivelog-entity-form .form-type-checkbox {
+  flex-wrap: wrap;
+}
+
+.hivelog-entity-form .form-type--checkbox .description,
+.hivelog-entity-form .form-type-checkbox .description {
+  flex-basis: 100%;
+  margin-top: 0;
+}
+
+/* ------------------------------------------------------------------
+   Delete / confirmation forms: the question is the page title, so the form
+   is just the explanation and the actions; give them room.
+------------------------------------------------------------------ */
+
+.hivelog-confirm-form .form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.hivelog-confirm-form .form-actions .button {
+  margin-right: 0;
+}
+
+.hivelog-confirm-form .description,
+.hivelog-confirm-form > p {
+  max-width: 40rem;
+  margin-block: 0 0.5rem;
+}
+
+/* A button placed in a form or a detail row sits clear of what is above it. */
+.hivelog-inline-actions {
+  margin-block: 0.5rem 1rem;
+}
+span.hivelog-inline-actions {
+  margin-block: 0;
+  margin-inline-start: 0.5rem;
 }

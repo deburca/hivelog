@@ -123,13 +123,17 @@
 
 /*
  * Task 0149: a hub whose *child* is the active section, not the hub's
- * own link — an outline in the same primary colour, not a solid fill,
+ * own link — a tint in the primary colour, not a solid fill,
  * so it reads as "you're in here" rather than "you're on this exact
  * page" (that's `.is-active`, above).
  */
 .hivelog-app-nav__item.has-active-child > .hivelog-app-nav__link {
-  border-color: var(--hivelog-btn-primary-border);
+  /* A tint, not an outline: the hexagon's clip-path cuts the angled sides of
+     a 1px border away, leaving only a line above and below the label. */
+  border-color: var(--hivelog-btn-bg-hover);
+  background: var(--hivelog-btn-bg-hover);
   color: var(--hivelog-btn-primary-bg);
+  font-weight: 600;
 }
 
 /* A decorative divider, not a nav item of its own — see the

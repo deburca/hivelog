@@ -186,7 +186,10 @@ class ApiaryController extends ControllerBase {
             '#type' => 'link',
             '#title' => $this->t('Manage members'),
             '#url' => $apiary->toUrl('edit-form', ['fragment' => 'members']),
-            '#prefix' => ' ',
+            '#attributes' => ['class' => ['button', 'button--default']],
+            '#prefix' => ' <span class="hivelog-inline-actions">',
+            '#suffix' => '</span>',
+            '#attached' => ['library' => ['hivelog/buttons']],
           ],
         ],
       ];
@@ -239,8 +242,10 @@ class ApiaryController extends ControllerBase {
     $year = $queen->get('queen_year')->value;
     $colour = $queen->get('queen_colour')->value;
     if ($year) {
-      $colour_label = $colour ? ($queen->get('queen_colour')->getSetting('allowed_values')[$colour] ?? $colour) : '';
-      $parts[] = $colour_label ? "$year ($colour_label)" : (string) $year;
+      // The marking colour's label carries its years ("Blue (years ending 0,
+      // 5)"); next to the year itself only the colour name is wanted.
+      $colour_label = $colour ? trim(preg_replace('/\s*\(.*\)\s*$/', '', (string) ($queen->get('queen_colour')->getSetting('allowed_values')[$colour] ?? $colour))) : '';
+      $parts[] = $colour_label ? "$year · $colour_label" : (string) $year;
     }
     $breed = $queen->get('breed')->value;
     if ($breed) {

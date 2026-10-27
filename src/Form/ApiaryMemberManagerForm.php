@@ -161,6 +161,8 @@ class ApiaryMemberManagerForm extends ControllerBase {
         'url' => Url::fromRoute('hivelog.apiary_membership.add', ['apiary' => $apiary_id])->toString(),
         'variant' => 'primary',
       ],
+      '#prefix' => '<div class="hivelog-inline-actions">',
+      '#suffix' => '</div>',
       '#weight' => 10,
     ];
 
