@@ -7,7 +7,7 @@ project: "[[hivelog-visual-identity]]"
 area: ui
 created: 2026-10-28
 branch: ui/small-fixes
-release:
+release: 3.1.2
 depends-on: ["[[0237-ui-polish-under-beeswax]]", "[[0171-sortable-list-columns]]"]
 blocked-by:
 ---
