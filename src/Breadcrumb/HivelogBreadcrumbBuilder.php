@@ -127,6 +127,8 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
     // in sync with hivelog.routing.yml (see AGENTS.md).
     $non_page_routes = [
       'hivelog.queen.observations_csv',
+      'hivelog.page_not_found',
+      'hivelog.access_denied',
     ];
     if (in_array($route_name, $non_page_routes, TRUE)) {
       return FALSE;

@@ -68,9 +68,21 @@ class RouteEntityAccessTest extends KernelTestBase {
   ];
 
   /**
+   * Routes anyone may open, anonymous included, on purpose.
+   *
+   * The friendly error pages are what a visitor sees when a page is missing or
+   * refused, so they must render for a visitor who cannot see anything else.
+   * They show no record. The anonymous test asserts they are open, so one that
+   * is closed by mistake fails as loudly as a private route that opens.
+   */
+  protected const OPEN_ROUTES = ['hivelog.page_not_found', 'hivelog.access_denied'];
+
+  /**
    * Routes with no entity parameter, and why they need no per-entity check.
    */
   protected const EXEMPT_ROUTES = [
+    'hivelog.page_not_found' => 'open on purpose (OPEN_ROUTES): the 404 page, which shows no record (task 0238)',
+    'hivelog.access_denied' => 'open on purpose (OPEN_ROUTES): the 403 page, which shows no record (task 0238)',
     'hivelog.dashboard' => 'aggregates every apiary the current user can already view',
     'hivelog.insights' => 'no entity of its own; InsightsPageAccessCheck derives access from the nav registry (task 0146)',
     'entity.apiary.collection' => 'collection page; row filtering is HivelogListBuilder::load() (task 0124)',
@@ -447,6 +459,14 @@ class RouteEntityAccessTest extends KernelTestBase {
       $route_params = [];
       foreach ($this->entityParameterNames($route) as $param_name) {
         $route_params[$param_name] = $this->fixtures[$param_name]->id();
+      }
+
+      if (in_array($name, self::OPEN_ROUTES, TRUE)) {
+        $this->assertTrue(
+          $access_manager->checkNamedRoute($name, $route_params, $anonymous),
+          "Anonymous must be allowed on the open route '$name'."
+        );
+        continue;
       }
 
       $this->assertFalse(
