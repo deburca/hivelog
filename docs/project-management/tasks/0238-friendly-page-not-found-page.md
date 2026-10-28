@@ -7,7 +7,7 @@ project: "[[hivelog-visual-identity]]"
 area: ui
 created: 2026-10-28
 branch:
-release: 3.2.0
+release: 3.2.0, 3.2.1
 depends-on: ["[[0237-ui-polish-under-beeswax]]"]
 blocked-by:
 ---
@@ -35,3 +35,5 @@ home page and pick up their trail from there." The copy and the picture were cho
 - Checked on hivelog.ddev.site with a real 404 (status 404, title, link). The pane blocked the site's stylesheets,
   so the scene was checked with the component's CSS injected by hand, not the theme's; phone width and dark mode
   not checked.
+
+- 3.2.1: `noUi: true` on the component. Canvas had registered it (config `canvas.component.sdc.hivelog.error-page`, plus a changed `canvas.folder.*`), listing the error scene in its library and drifting from the sync directory.
