@@ -118,12 +118,29 @@ class CalendarActionController extends ControllerBase {
     $build['filter'] = $this->formBuilder->getForm(HivelogCalendarActionsFilterForm::class);
     $build['filter']['#weight'] = 0;
 
+    $sort = $this->currentCollectionSort();
+    if ($sort) {
+      // A GET form replaces the whole query string on submit, so the active
+      // sort rides along as hidden inputs (the same as HivelogListBuilder).
+      foreach (['sort' => $sort['key'], 'order' => $sort['direction']] as $name => $value) {
+        $build['filter']['sort_state_' . $name] = [
+          '#type' => 'html_tag',
+          '#tag' => 'input',
+          '#attributes' => ['type' => 'hidden', 'name' => $name, 'value' => $value],
+        ];
+      }
+    }
+
     $filters = $this->extractCollectionFilters();
     $query = $this->entityTypeManager
       ->getStorage('calendar_action')
       ->getQuery()
-      ->accessCheck(TRUE)
-      ->sort('week_start', 'ASC');
+      ->accessCheck(TRUE);
+    if ($sort) {
+      $query->sort($sort['field'], strtoupper($sort['direction']));
+    }
+    // The default order, and the tie-breaker under any chosen one.
+    $query->sort('week_start', 'ASC')->sort('id', 'ASC');
     $this->applyCollectionFilters($query, $filters);
     $calendar_action_ids = $query->execute();
 
@@ -145,13 +162,13 @@ class CalendarActionController extends ControllerBase {
     ];
 
     $header = [
-      $this->t('Title'),
-      $this->t('Apiary'),
-      $this->t('Scope'),
-      $this->t('Category'),
-      $this->t('Week(s)'),
-      $this->t('Enabled'),
-      $this->t('Operations'),
+      'title' => $this->t('Title'),
+      'apiary' => $this->t('Apiary'),
+      'scope' => $this->t('Scope'),
+      'category' => $this->t('Category'),
+      'weeks' => $this->t('Week(s)'),
+      'enabled' => $this->t('Enabled'),
+      'operations' => $this->t('Operations'),
     ];
 
     $rows = [];
@@ -208,11 +225,12 @@ class CalendarActionController extends ControllerBase {
     }
 
     $build['table'] = $this->buildEntityTable(
-      $header,
+      array_values($header),
       $rows,
       (string) (!empty($filters)
         ? $this->t('No calendar actions match the current filters.')
-        : $this->t('No calendar actions have been added yet.'))
+        : $this->t('No calendar actions have been added yet.')),
+      $this->buildCollectionColumnSorts($header, $sort)
     );
     $build['table']['#weight'] = 1;
 
@@ -240,6 +258,90 @@ class CalendarActionController extends ControllerBase {
     $cache->applyTo($build);
 
     return $build;
+  }
+
+  /**
+   * The sortable Calendar Actions columns: header key => field or path.
+   *
+   * Only these keys are ever honoured from the `sort` query parameter (task
+   * 0171's rule for every list), so nothing a visitor sends reaches the query
+   * as a field name. The Apiary column sorts on the related record's name.
+   *
+   * @return array<string, string>
+   *   Header key => field name or relationship path.
+   */
+  protected function collectionSortableColumns(): array {
+    return [
+      'title' => 'title',
+      'apiary' => 'apiary.entity.name',
+      'scope' => 'scope',
+      'category' => 'category',
+      'weeks' => 'week_start',
+      'enabled' => 'enabled',
+    ];
+  }
+
+  /**
+   * The sort requested in the query string, or NULL for the default order.
+   *
+   * @return array{key: string, field: string, direction: string}|null
+   *   The header key, the field to sort on and `asc`|`desc`.
+   */
+  protected function currentCollectionSort(): ?array {
+    $columns = $this->collectionSortableColumns();
+    $request = $this->requestStack->getCurrentRequest();
+    if (!$request) {
+      return NULL;
+    }
+    $query = $request->query->all();
+    $key = is_string($query['sort'] ?? NULL) ? $query['sort'] : '';
+    if ($key === '' || !isset($columns[$key])) {
+      return NULL;
+    }
+    $order = is_string($query['order'] ?? NULL) ? strtolower($query['order']) : 'asc';
+    return [
+      'key' => $key,
+      'field' => $columns[$key],
+      'direction' => $order === 'desc' ? 'desc' : 'asc',
+    ];
+  }
+
+  /**
+   * Builds the entity-table component's `column_sorts` prop.
+   *
+   * Each sortable column links to its own next sort on the current page's
+   * other query parameters (the week filter included), without `page`.
+   *
+   * @param array<string, \Drupal\Core\StringTranslation\TranslatableMarkup> $header
+   *   The header labels keyed by column key.
+   * @param array|null $current
+   *   The `currentCollectionSort()` result.
+   *
+   * @return array<string, array{url: string, direction: string}>
+   *   Keyed by header label.
+   */
+  protected function buildCollectionColumnSorts(array $header, ?array $current): array {
+    $request = $this->requestStack->getCurrentRequest();
+    $columns = $this->collectionSortableColumns();
+    if (!$request) {
+      return [];
+    }
+    $base = $request->query->all();
+    unset($base['page'], $base['sort'], $base['order']);
+
+    $sorts = [];
+    foreach ($header as $key => $label) {
+      if (!isset($columns[$key])) {
+        continue;
+      }
+      $is_current = $current && $current['key'] === $key;
+      $next = $is_current && $current['direction'] === 'asc' ? 'desc' : 'asc';
+      $sorts[(string) $label] = [
+        'url' => Url::fromRoute('<current>', [], ['query' => $base + ['sort' => $key, 'order' => $next]])->toString(),
+        'direction' => $is_current ? ($current['direction'] === 'asc' ? 'ascending' : 'descending') : 'none',
+      ];
+    }
+    return $sorts;
   }
 
   /**

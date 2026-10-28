@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\hivelog\Kernel;
 
+use Drupal\hivelog\Controller\CalendarActionController;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\ApiaryActionLog;
 use Drupal\hivelog\Entity\CalendarAction;
@@ -479,6 +480,66 @@ class ListSortTest extends KernelTestBase {
     $this->assertStringContainsString('aria-hidden="true"', $html, 'The arrow is decoration.');
     // The Breed header is computed, so plain text rather than a link.
     $this->assertMatchesRegularExpression('/<th[^>]*>\s*Breed\s*<\/th>/', $html);
+  }
+
+  /**
+   * Renders the Calendar Actions page (a controller, not a list builder).
+   */
+  protected function calendarActionsPage(array $query = []): array {
+    $this->pushRoutedRequest('/hivelog/calendar-actions', $query);
+    return \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(CalendarActionController::class)
+      ->collection();
+  }
+
+  /**
+   * The Calendar Actions page sorts like every other list (task 0237).
+   *
+   * Its default order is the week, a chosen column comes first with the week
+   * as the tie-breaker, an unknown column falls back to the default, the sort
+   * rides through the filter form, and the sort links keep the week filter.
+   */
+  public function testCalendarActionsSortAndKeepFilters(): void {
+    $other = Apiary::create(['name' => 'Another Apiary']);
+    $other->save();
+    // A new apiary is seeded with the default seasonal calendar; start clean.
+    $storage = \Drupal::entityTypeManager()->getStorage('calendar_action');
+    $storage->delete($storage->loadMultiple());
+    foreach ([
+      ['Bravo', 12, $this->apiary],
+      ['Alpha', 30, $other],
+      ['Charlie', 5, $this->apiary],
+    ] as [$title, $week, $apiary]) {
+      CalendarAction::create(['apiary' => $apiary->id(), 'title' => $title, 'week_start' => $week])->save();
+    }
+    $titles = fn(array $build) => array_map(
+      fn(array $row) => trim(strip_tags((string) $row['cells'][0])),
+      $build['table']['#props']['rows']
+    );
+
+    $order = fn(array $query) => $titles($this->calendarActionsPage($query));
+    $this->assertSame(['Charlie', 'Bravo', 'Alpha'], $order([]), 'Default: by week.');
+    $this->assertSame(['Alpha', 'Bravo', 'Charlie'], $order(['sort' => 'title']));
+    $this->assertSame(['Charlie', 'Bravo', 'Alpha'], $order(['sort' => 'title', 'order' => 'desc']));
+    $this->assertSame(['Alpha', 'Charlie', 'Bravo'], $order(['sort' => 'apiary']), 'By apiary name, then week.');
+    $this->assertSame(['Charlie', 'Bravo', 'Alpha'], $order(['sort' => 'bogus']), 'An unknown column is the default.');
+    $this->assertSame(['Charlie', 'Bravo', 'Alpha'], $order(['sort' => ['title']]), 'An array is the default.');
+
+    $build = $this->calendarActionsPage(['sort' => 'title', 'order' => 'asc', 'week_from' => '10', 'page' => '2']);
+    $sorts = $build['table']['#props']['column_sorts'];
+    $this->assertSame(
+      ['Title', 'Apiary', 'Scope', 'Category', 'Week(s)', 'Enabled'],
+      array_keys($sorts),
+      'Operations is not sortable.'
+    );
+    $this->assertSame('ascending', $sorts['Title']['direction']);
+    $this->assertSame('none', $sorts['Apiary']['direction']);
+    $url = urldecode(html_entity_decode($sorts['Title']['url']));
+    $this->assertStringContainsString('order=desc', $url);
+    $this->assertStringContainsString('week_from=10', $url);
+    $this->assertStringNotContainsString('page=', $url);
+    $this->assertSame('title', $build['filter']['sort_state_sort']['#attributes']['value']);
+    $this->assertSame('asc', $build['filter']['sort_state_order']['#attributes']['value']);
   }
 
 }
