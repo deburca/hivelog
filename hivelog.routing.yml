@@ -24,6 +24,25 @@ hivelog.insights:
   requirements:
     _custom_access: '\Drupal\hivelog\Access\InsightsPageAccessCheck::access'
 
+# Friendly error pages (task 0238). Name one as the site's 404 page
+# (`system.site:page.404`). Open to everyone: a visitor who is turned away
+# must be able to read it. No breadcrumb (see HivelogBreadcrumbBuilder).
+hivelog.page_not_found:
+  path: '/hivelog/page-not-found'
+  defaults:
+    _controller: '\Drupal\hivelog\Controller\ErrorPageController::notFound'
+    _title_callback: '\Drupal\hivelog\Controller\ErrorPageController::notFoundTitle'
+  requirements:
+    _access: 'TRUE'
+
+hivelog.access_denied:
+  path: '/hivelog/access-denied'
+  defaults:
+    _controller: '\Drupal\hivelog\Controller\ErrorPageController::accessDenied'
+    _title_callback: '\Drupal\hivelog\Controller\ErrorPageController::accessDeniedTitle'
+  requirements:
+    _access: 'TRUE'
+
 # Apiary routes.
 entity.apiary.collection:
   path: '/hivelog/apiaries'

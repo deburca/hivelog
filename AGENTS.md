@@ -698,6 +698,17 @@ Routes in `hivelog.routing.yml` follow two patterns:
   - `hivelog.queen_observation.add` → `/hivelog/queen/{queen}/observation/add`
   - `hivelog.hive_component.add` → `/hivelog/hive/{hive}/component/add`
 
+**Friendly error pages** (task 0238). `hivelog.page_not_found` (`/hivelog/page-not-found`) and
+`hivelog.access_denied` (`/hivelog/access-denied`), both `ErrorPageController` with `_access: 'TRUE'` (a refused
+visitor must be able to read the page that says so), render the `hivelog:error-page` SDC component: a bee-themed
+SVG scene (`scene` prop: `not-found`, a confused bee, an empty hive and a "Vacant" sign; `access-denied`, two bees
+flanking the entrance under a "Residents only" sign) and a message slot with a link to `<front>`. The access-denied
+message also offers **Sign in** (back to the refused page through `redirect.destination`) to an anonymous
+visitor only. The headline is the page title, the theme's H1. The scene's colours are `--hivelog-error-*` custom
+properties with the hive-and-meadow palette as fallback; they do not follow dark mode. The module does not change
+any site setting: a site uses the pages by setting `system.site:page.404` to `/hivelog/page-not-found` and
+`system.site:page.403` to `/hivelog/access-denied`. Both routes are in the breadcrumb builder's `$non_page_routes`.
+
 All routes use the `/hivelog/` path prefix. New routes must follow this
 convention; the breadcrumb builder's `applies()` also relies on it (see
 Services below).

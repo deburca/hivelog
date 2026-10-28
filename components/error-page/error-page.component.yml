@@ -1,0 +1,39 @@
+$schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schemas/v1/metadata.schema.json
+
+name: Error Page
+status: stable
+description: >
+  The body of a friendly error page (page not found, access denied): a
+  decorative bee-themed illustration and a short message with a link back to
+  the home page. The page's own title, the theme's H1, carries the headline.
+
+props:
+  type: object
+  required:
+    - scene
+  properties:
+    scene:
+      type: string
+      title: Scene
+      description: 'Which illustration to draw. One of: not-found, access-denied.'
+      enum:
+        - not-found
+        - access-denied
+      examples:
+        - not-found
+    sign:
+      type: string
+      title: Sign text
+      description: The word on the sign in the scene, already translated.
+      default: ''
+      examples:
+        - Vacant
+
+slots:
+  message:
+    title: Message
+    description: The text under the illustration, including the link home.
+
+libraryOverrides:
+  dependencies:
+    - hivelog/responsive
