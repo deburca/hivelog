@@ -7,7 +7,7 @@ project: "[[hivelog-visual-identity]]"
 area: ui
 created: 2026-10-28
 branch:
-release:
+release: 3.2.0
 depends-on: ["[[0237-ui-polish-under-beeswax]]"]
 blocked-by:
 ---
@@ -30,6 +30,8 @@ home page and pick up their trail from there." The copy and the picture were cho
 
 ## Outcome (2026-10-28)
 - Component `components/error-page/`, `ErrorPageController`, `tests/src/Kernel/ErrorPageTest.php`.
+- `RouteEntityAccessTest` exempts both routes (`EXEMPT_ROUTES`) and asserts they allow anonymous (`OPEN_ROUTES`); the first CI
+  run had failed on both of its route checks.
 - Checked on hivelog.ddev.site with a real 404 (status 404, title, link). The pane blocked the site's stylesheets,
   so the scene was checked with the component's CSS injected by hand, not the theme's; phone width and dark mode
   not checked.

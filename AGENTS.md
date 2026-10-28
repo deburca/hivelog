@@ -707,7 +707,8 @@ message also offers **Sign in** (back to the refused page through `redirect.dest
 visitor only. The headline is the page title, the theme's H1. The scene's colours are `--hivelog-error-*` custom
 properties with the hive-and-meadow palette as fallback; they do not follow dark mode. The module does not change
 any site setting: a site uses the pages by setting `system.site:page.404` to `/hivelog/page-not-found` and
-`system.site:page.403` to `/hivelog/access-denied`. Both routes are in the breadcrumb builder's `$non_page_routes`.
+`system.site:page.403` to `/hivelog/access-denied`. Both routes are in the breadcrumb builder's `$non_page_routes`. `RouteEntityAccessTest` lists them as `OPEN_ROUTES`: exempt from the per-entity check, and the
+anonymous test asserts they *allow* anonymous (every other route must deny it).
 
 All routes use the `/hivelog/` path prefix. New routes must follow this
 convention; the breadcrumb builder's `applies()` also relies on it (see
