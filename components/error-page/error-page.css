@@ -1,0 +1,91 @@
+/**
+ * @file
+ * Styling for the hivelog:error-page SDC component (task 0238).
+ *
+ * The illustration is a scene, not themed chrome: its colours default to the
+ * hive-and-meadow palette and do not follow dark mode. A theme that wants
+ * other colours redefines the --hivelog-error-* custom properties below; the
+ * fallbacks here are the defaults.
+ */
+
+.hivelog-error-page {
+  max-width: 42rem;
+  margin: 1.5rem auto;
+  text-align: center;
+}
+
+.hivelog-error-page__scene {
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+.hivelog-error-scene {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.hivelog-error-page__message {
+  margin: 1.25rem 0 0;
+  color: var(--hivelog-ink, #374151);
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+.hivelog-error-scene__sky { fill: var(--hivelog-error-sky, #fff4d6); }
+.hivelog-error-scene__ground { fill: var(--hivelog-error-ground, #c9db94); }
+.hivelog-error-scene__trail {
+  fill: none;
+  stroke: var(--hivelog-error-trail, #b88a3a);
+  stroke-width: 1.2;
+  stroke-dasharray: 2 7;
+  stroke-linecap: round;
+}
+.hivelog-error-scene__wood-dark { fill: var(--hivelog-error-wood-dark, #7a4e1b); }
+.hivelog-error-scene__box {
+  fill: var(--hivelog-error-wood, #e9c27a);
+  stroke: var(--hivelog-error-roof, #8a5a1e);
+  stroke-width: 1.5;
+}
+.hivelog-error-scene__box--light { fill: var(--hivelog-error-wood-light, #efcf90); }
+.hivelog-error-scene__roof { fill: var(--hivelog-error-roof, #8a5a1e); }
+.hivelog-error-scene__entrance { fill: var(--hivelog-error-ink, #3b2a12); }
+.hivelog-error-scene__nail { fill: var(--hivelog-error-nail, #5a3a12); }
+.hivelog-error-scene__string {
+  fill: none;
+  stroke: var(--hivelog-error-wood-dark, #7a4e1b);
+  stroke-width: 1.2;
+}
+.hivelog-error-scene__sign {
+  fill: var(--hivelog-error-sign, #fff);
+  stroke: var(--hivelog-error-wood-dark, #7a4e1b);
+  stroke-width: 1.5;
+}
+.hivelog-error-scene__sign-stripe { fill: var(--hivelog-error-sign-stripe, #c0452e); }
+.hivelog-error-scene__sign-text {
+  fill: var(--hivelog-error-ink, #3b2a12);
+  font: 500 14px sans-serif;
+}
+.hivelog-error-scene__wing {
+  fill: #fff;
+  stroke: #8a6d2b;
+  stroke-width: 0.4;
+}
+.hivelog-error-scene__bee { fill: var(--hivelog-error-bee, #f2b632); }
+.hivelog-error-scene__stripe {
+  fill: none;
+  stroke: var(--hivelog-error-ink, #3b2a12);
+  stroke-width: 2;
+}
+.hivelog-error-scene__stinger { fill: var(--hivelog-error-ink, #3b2a12); }
+.hivelog-error-scene__eye { fill: var(--hivelog-error-ink, #3b2a12); }
+.hivelog-error-scene__antenna {
+  fill: none;
+  stroke: var(--hivelog-error-ink, #3b2a12);
+  stroke-width: 0.6;
+  stroke-linecap: round;
+}
+.hivelog-error-scene__question {
+  fill: var(--hivelog-error-question, #8a4b00);
+  font: 500 40px sans-serif;
+}
