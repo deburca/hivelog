@@ -160,8 +160,9 @@ entity API; it first ran against a snapshot of the local kbg, then on the live s
 with their hives). Then `drush pmu hivelog_api nexus collective hivelog -y`. Afterwards: no HiveLog, Nexus or Collective tables, no
 `cbr_number` column, the `hivelog_field_app` role and the Vinculum consumer gone, no new errors, kbg and hivelog.eu both answer 200.
 **Found on the way:** live kbg held an AI provider config ("Production AI Provider", Anthropic) and 112 insights, not the "none"
-the local copy showed; they are deleted. Its Key `claude_api` (the credential) remains on kbg with `key`, `simple_oauth` and
-`consumers`; delete the Key and revoke the key at Anthropic if it is no longer wanted.
+the local copy showed; they are deleted. Its Key `claude_api` (the credential) was left on kbg with `key`, `simple_oauth` and
+`consumers`; the owner deleted it and revoked the key at Anthropic on 2026-10-28, and it was checked gone from live kbg
+(`key.key.claude_api` does not exist, and no config names `claude` or `anthropic`).
 
 ## Related
 - Project:: [[shared-apiaries-and-team-roles]]
