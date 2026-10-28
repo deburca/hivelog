@@ -7,7 +7,7 @@ project: "[[hivelog-visual-identity]]"
 area: ui
 created: 2026-10-28
 branch: ui/phone-filters
-release:
+release: 3.3.0
 depends-on: ["[[0237-ui-polish-under-beeswax]]", "[[0229-app-nav-menu-button]]"]
 blocked-by:
 ---
