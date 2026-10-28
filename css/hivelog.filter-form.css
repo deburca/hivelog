@@ -84,7 +84,17 @@
   .hivelog-filter-form .form-item input,
   .hivelog-filter-form .form-item select {
     width: 100%;
+    min-width: 0;
+    max-width: 100%;
     box-sizing: border-box;
+  }
+
+  /* iOS Safari gives a date field an intrinsic width wider than a phone's
+     filter panel, which pushed it past the panel's right edge. */
+  .hivelog-filter-form .form-item input[type="date"] {
+    -webkit-appearance: none;
+    appearance: none;
+    display: block;
   }
 
   /* Actions span the row instead of being pushed to the right edge. */

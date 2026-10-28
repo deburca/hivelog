@@ -189,8 +189,24 @@ class ListCollectionTitleTest extends KernelTestBase {
 
     $build = \Drupal::entityTypeManager()->getListBuilder('hive_inspection')->render();
     $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
-    $this->assertMatchesRegularExpression('/<td[^>]*class="hivelog-entity-table__nowrap"[^>]*>\s*<a[^>]*>2026-09-01<\/a>/', $html);
+    $this->assertMatchesRegularExpression('/<td[^>]*class="hivelog-entity-table__nowrap"[^>]*><span class="hivelog-entity-table__cell">\s*<a[^>]*>2026-09-01<\/a>/', $html);
     $this->assertDoesNotMatchRegularExpression('/<td[^>]*hivelog-entity-table__nowrap[^>]*>[^<]*Ravnholt/', $html, 'Other cells still wrap');
+  }
+
+  /**
+   * A cell's content is one wrapped item, and an empty cell is marked so a phone's stacked card can leave it out.
+   */
+  public function testCellsAreWrappedAndEmptyOnesMarked(): void {
+    $apiary = Apiary::create(['name' => 'Ravnholt Home', 'uid' => 1]);
+    $apiary->save();
+    // No queen, so the Breed cell is empty.
+    Hive::create(['name' => 'H-1', 'apiary' => $apiary->id(), 'status' => 'active'])->save();
+
+    $build = \Drupal::entityTypeManager()->getListBuilder('hive')->render();
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+
+    $this->assertMatchesRegularExpression('/<td data-label="Hive"[^>]*><span class="hivelog-entity-table__cell">/', $html, 'A filled cell wraps its content');
+    $this->assertMatchesRegularExpression('/<td data-label="Breed" class="hivelog-entity-table__empty"><\/td>/', $html, 'An empty cell is marked and has no wrapper');
   }
 
 }

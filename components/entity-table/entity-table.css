@@ -159,6 +159,18 @@
     color: var(--hivelog-ink);
   }
 
+  /* The cell's content stays one item beside its label, however many text and element parts it has. */
+  .hivelog-entity-table td[data-label] > .hivelog-entity-table__cell {
+    min-width: 0;
+    text-align: right;
+    overflow-wrap: anywhere;
+  }
+
+  /* A label with no value beside it says nothing. */
+  .hivelog-entity-table td.hivelog-entity-table__empty {
+    display: none;
+  }
+
   /* Empty-state cell spans the card without a label. */
   .hivelog-entity-table td:not([data-label]) {
     padding: var(--hivelog-gap, 1rem) 0;

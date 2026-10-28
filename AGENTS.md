@@ -858,7 +858,10 @@ text, `<span class="hivelog-inline-actions">`), `.hivelog-confirm-form .form-act
 nowrap inside `.hivelog-entity-table` cells (it is a wrapping flex row, which a
 table squeezes to one button wide). The entity-table keeps an "Operations" header
 for screen readers only and gives a cell holding only an ISO date its own
-no-wrap class.
+no-wrap class. Every filled cell's content sits in one `.hivelog-entity-table__cell` span,
+because the phone layout turns a cell into a flex row (label left, value right) and mixed
+text and elements ("Unreported (" + a span + ")") would otherwise be spread across it; an empty
+cell gets `.hivelog-entity-table__empty`, which the phone layout hides.
 
 `button-group.twig` renders a `<div class="hivelog-button-group">` wrapper
 only. All layout (inline-flex), join-corner styling (`:first-child` /
