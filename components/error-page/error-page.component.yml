@@ -2,6 +2,9 @@ $schema: https://git.drupalcode.org/project/drupal/-/raw/HEAD/core/assets/schema
 
 name: Error Page
 status: stable
+# Not for a page builder: the page is the route's own, not a block to place.
+# Without this Canvas registers the component and lists it in its library.
+noUi: true
 description: >
   The body of a friendly error page (page not found, access denied): a
   decorative bee-themed illustration and a short message with a link back to
