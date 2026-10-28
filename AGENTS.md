@@ -804,6 +804,14 @@ builds it and its filter form (`HivelogCalendarActionsFilterForm`)
 directly, so it doesn't use these hooks. It does sort: the same `sort` / `order` rules as `getSortableColumns()`, in
 `currentCollectionSort()` and `buildCollectionColumnSorts()` (task 0239).
 
+Every filter form is wrapped in a collapsible panel on a phone (task 0240): `hivelog_form_alter()` calls
+`HivelogFilterPanel::wrap()` for any form carrying the `hivelog-filter-form` class, which puts a hidden checkbox and a
+"Filters" label before the `<form>` (a CSS-only disclosure like the app nav's Menu button, so the checkbox must stay the
+label's previous sibling and the form its later sibling). The bar says how many filters are set, from the fields'
+`#default_value`s, so a new filter form needs nothing beyond the class; it must keep its fields out of `filter_actions`
+and any `sort_state_*` element, which are not counted. The prefix is `Markup` because a plain `#prefix` is admin-XSS
+filtered, which drops `<input>` and `<label>`.
+
 A list opts into sortable columns by overriding `getSortableColumns()`
 (task 0171): a map from a `buildHeader()` key to what it sorts on — a stored
 field, or for an Apiary or Hive column the relationship path (`apiary.entity.name`
