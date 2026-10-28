@@ -47,6 +47,19 @@ class ErrorPageTest extends KernelTestBase {
   }
 
   /**
+   * Tests the component is kept out of page builders such as Canvas.
+   *
+   * Canvas registers every SDC whose props it can handle, which put the error
+   * scene in its component library and added config that drifts from the
+   * sync directory; `noUi` is the standard way to opt a component out.
+   */
+  public function testComponentIsHiddenFromPageBuilders(): void {
+    $definition = \Drupal::service('plugin.manager.sdc')->getDefinition('hivelog:error-page');
+
+    $this->assertTrue($definition['noUi']);
+  }
+
+  /**
    * Tests the page renders the scene, the sign and a link to the home page.
    */
   public function testNotFoundPageRenders(): void {
