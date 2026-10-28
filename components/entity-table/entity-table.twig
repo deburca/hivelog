@@ -27,8 +27,12 @@
         {% for row in rows %}
           <tr>
             {% for cell in row.cells %}
-              {# A date on its own stays on one line instead of breaking at its hyphens. #}
-              <td data-label="{{ headers[loop.index0] == 'Operations'|t ? '' : headers[loop.index0] }}"{% if cell|striptags|trim matches '/^\\d{4}-\\d{2}-\\d{2}$/' %} class="hivelog-entity-table__nowrap"{% endif %}>{{ cell|raw }}</td>
+              {% set value = cell|trim %}
+              {# A date on its own stays on one line instead of breaking at its hyphens; an empty cell is marked so the
+                 stacked cards on a phone can leave out a label with nothing beside it. #}
+              {% set cell_class = value is empty ? ' class="hivelog-entity-table__empty"' : (value|striptags|trim matches '/^\\d{4}-\\d{2}-\\d{2}$/' ? ' class="hivelog-entity-table__nowrap"' : '') %}
+              {# The wrapper keeps mixed text and elements ("Unreported (" + a span + ")") together as one flex item in the card layout. #}
+              <td data-label="{{ headers[loop.index0] == 'Operations'|t ? '' : headers[loop.index0] }}"{{ cell_class|raw }}>{% if value is not empty %}<span class="hivelog-entity-table__cell">{{ value|raw }}</span>{% endif %}</td>
             {% endfor %}
           </tr>
         {% endfor %}
