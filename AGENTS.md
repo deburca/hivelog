@@ -789,7 +789,8 @@ Action Log filters share `HivelogActionLogFilterFormBase`, each subclass
 naming only its entity type, parent field and label. The Calendar Actions
 collection page is the exception: `CalendarActionController::collection()`
 builds it and its filter form (`HivelogCalendarActionsFilterForm`)
-directly, so it doesn't use these hooks.
+directly, so it doesn't use these hooks. It does sort: the same `sort` / `order` rules as `getSortableColumns()`, in
+`currentCollectionSort()` and `buildCollectionColumnSorts()` (task 0239).
 
 A list opts into sortable columns by overriding `getSortableColumns()`
 (task 0171): a map from a `buildHeader()` key to what it sorts on — a stored
