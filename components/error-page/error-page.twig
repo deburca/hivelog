@@ -3,6 +3,8 @@
     <svg class="hivelog-error-scene" viewBox="0 0 680 342" focusable="false">
       <rect class="hivelog-error-scene__sky" width="680" height="342"/>
       <rect class="hivelog-error-scene__ground" y="318" width="680" height="24"/>
+      {#- The access-denied scene is drawn around the hive at x=455 with a guard on each side, so it is shifted left to put the hive at the card's centre. #}
+      <g{% if scene != 'not-found' %} transform="translate(-115 0)"{% endif %}>
       {%- if scene == 'not-found' %}
       <path class="hivelog-error-scene__trail" d="M120 250 C 150 190, 210 270, 245 215"/>
       {%- endif %}
@@ -47,6 +49,7 @@
       </g>
       {%- endfor %}
       {%- endif %}
+      </g>
     </svg>
   </div>
   <p class="hivelog-error-page__message">{{ message }}</p>

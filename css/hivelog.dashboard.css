@@ -157,6 +157,40 @@
   border-left-color: var(--hivelog-warning);
 }
 
+/*
+ * "Show N more" — the rows past the first few, behind a native <details>
+ * disclosure (no script). The summary reads as one more row of the panel.
+ */
+.hivelog-attention__more-summary {
+  display: flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0.5rem 1rem 0.5rem 1.25rem;
+  border-left: 4px solid transparent;
+  color: var(--hivelog-ink-muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.hivelog-attention__more-summary:hover,
+.hivelog-attention__more-summary:focus-visible {
+  color: var(--hivelog-ink);
+}
+
+.hivelog-attention__more[open] > .hivelog-attention__more-summary {
+  border-bottom: 1px solid var(--hivelog-hairline);
+}
+
+.hivelog-attention__more-hide,
+.hivelog-attention__more[open] .hivelog-attention__more-show {
+  display: none;
+}
+
+.hivelog-attention__more[open] .hivelog-attention__more-hide {
+  display: inline;
+}
+
 .hivelog-attention__chip {
   flex: 0 0 auto;
   padding: 0.15rem 0.4rem;

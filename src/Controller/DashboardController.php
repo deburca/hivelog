@@ -34,6 +34,11 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class DashboardController extends ControllerBase {
 
   /**
+   * How many "Needs attention" rows show before "Show N more" (task 0242).
+   */
+  const ATTENTION_VISIBLE_ROWS = 5;
+
+  /**
    * The class resolver, used to build InventoryReportController on demand.
    */
   protected ClassResolverInterface $classResolver;
@@ -317,8 +322,41 @@ class DashboardController extends ControllerBase {
         : $this->formatPlural(count($alerts), '@count item to review', '@count items to review'),
     ];
 
-    foreach (array_values($alerts) as $i => $alert) {
-      $panel['row_' . $i] = $this->buildAttentionRow($alert);
+    // Only the first rows show; the rest sit behind a "Show N more" disclosure
+    // (task 0242). Rows are already ordered overdue first, so what stays
+    // visible is what matters most, and the header count says how many there
+    // are in all.
+    $rows = array_map(fn(array $alert) => $this->buildAttentionRow($alert), array_values($alerts));
+    foreach (array_slice($rows, 0, self::ATTENTION_VISIBLE_ROWS, TRUE) as $i => $row) {
+      $panel['row_' . $i] = $row;
+    }
+    $hidden = array_slice($rows, self::ATTENTION_VISIBLE_ROWS, NULL, TRUE);
+    if ($hidden) {
+      $panel['more'] = [
+        '#type' => 'html_tag',
+        '#tag' => 'details',
+        '#attributes' => ['class' => ['hivelog-attention__more']],
+        'summary' => [
+          '#type' => 'html_tag',
+          '#tag' => 'summary',
+          '#attributes' => ['class' => ['hivelog-attention__more-summary']],
+          'show' => [
+            '#type' => 'html_tag',
+            '#tag' => 'span',
+            '#attributes' => ['class' => ['hivelog-attention__more-show']],
+            '#value' => $this->t('Show @count more', ['@count' => count($hidden)]),
+          ],
+          'hide' => [
+            '#type' => 'html_tag',
+            '#tag' => 'span',
+            '#attributes' => ['class' => ['hivelog-attention__more-hide']],
+            '#value' => $this->t('Show fewer'),
+          ],
+        ],
+      ];
+      foreach ($hidden as $i => $row) {
+        $panel['more']['row_' . $i] = $row;
+      }
     }
 
     return $panel;
