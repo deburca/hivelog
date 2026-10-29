@@ -85,6 +85,20 @@ class SensorReadingRetentionServiceTest extends KernelTestBase {
   }
 
   /**
+   * Seconds before now of $hour o'clock UTC, $days_ago days ago.
+   *
+   * Rollups bucket by UTC day, so readings meant to share a day must be placed
+   * on it by the clock, not by "N hours before now": two days and an hour ago
+   * is a different UTC day from two days ago whenever the suite runs in the
+   * last hours of the UTC day (CI at 22:08 UTC failed on exactly that).
+   */
+  protected function secondsAgoAt(int $days_ago, int $hour): int {
+    $now = \Drupal::time()->getRequestTime();
+    $midnight_today = $now - ($now % 86400);
+    return $now - ($midnight_today - $days_ago * 86400 + $hour * 3600);
+  }
+
+  /**
    * Loads all sensor_reading_daily rows, for direct inspection.
    */
   protected function loadAllRollups(): array {
@@ -98,9 +112,9 @@ class SensorReadingRetentionServiceTest extends KernelTestBase {
    */
   public function testRollupValuesAreCorrect(): void {
     // Three readings on the same past day.
-    $this->createReading('weight_kg', 40.0, 2 * 86400);
-    $this->createReading('weight_kg', 42.0, 2 * 86400 - 3600);
-    $this->createReading('weight_kg', 41.0, 2 * 86400 - 7200);
+    $this->createReading('weight_kg', 40.0, $this->secondsAgoAt(2, 10));
+    $this->createReading('weight_kg', 42.0, $this->secondsAgoAt(2, 11));
+    $this->createReading('weight_kg', 41.0, $this->secondsAgoAt(2, 12));
 
     \Drupal::service('nanoprobe.sensor_reading_retention')->computeRollups();
 
@@ -134,7 +148,7 @@ class SensorReadingRetentionServiceTest extends KernelTestBase {
    * already-rolled-up date.
    */
   public function testRecomputingUpdatesExistingRollupRow(): void {
-    $this->createReading('weight_kg', 40.0, 2 * 86400);
+    $this->createReading('weight_kg', 40.0, $this->secondsAgoAt(2, 10));
     \Drupal::service('nanoprobe.sensor_reading_retention')->computeRollups();
 
     $rollups = $this->loadAllRollups();
@@ -142,7 +156,7 @@ class SensorReadingRetentionServiceTest extends KernelTestBase {
     $original_id = reset($rollups)->id();
 
     // A late-arriving reading for the same day.
-    $this->createReading('weight_kg', 44.0, 2 * 86400 - 3600);
+    $this->createReading('weight_kg', 44.0, $this->secondsAgoAt(2, 11));
     \Drupal::service('nanoprobe.sensor_reading_retention')->computeRollups();
 
     $rollups = $this->loadAllRollups();
