@@ -67,15 +67,16 @@ class HivelogAppNavBuilderTest extends KernelTestBase {
    *
    * `hives`/`inspections`/`queens`/`queen_observations`/
    * `inventory_items`/`inventory_purchases`/`products` all nest under
-   * `apiaries` now — only `dashboard` and `apiaries` themselves are
-   * top-level keys in this bare (no submodule) environment.
+   * `apiaries` now — only `apiaries` itself is a
+   * top-level key in this bare (no submodule) environment.
    */
   public function testAllBuiltInItemsAppearForAdministrator(): void {
     $this->loginAdmin();
 
     $build = \Drupal::service('hivelog.app_nav_builder')->build();
 
-    $this->assertArrayHasKey('dashboard', $build);
+    // No Dashboard entry since task 0244: the header's "HiveLog" item is it.
+    $this->assertArrayNotHasKey('dashboard', $build);
     $this->assertArrayHasKey('apiaries', $build);
 
     $apiaries_children = [
@@ -214,7 +215,7 @@ class HivelogAppNavBuilderTest extends KernelTestBase {
    * Tests items are sorted by group then weight (task 0120/0148).
    *
    * The top level has no separator at all since task 0148 — with only
-   * `dashboard` and `apiaries` accessible here, there's nothing for one
+   * `apiaries` accessible here, there's nothing for one
    * to usefully divide. Apiaries' own submenu still gets one between
    * its `records`- and `inventory`-sourced children.
    */
@@ -226,8 +227,8 @@ class HivelogAppNavBuilderTest extends KernelTestBase {
 
     // The separator between `records` and `inventory` moved into
     // Apiaries' own submenu (task 0148) — the top level has no
-    // separator at all with only two primary items here.
-    $this->assertSame(['dashboard', 'apiaries'], $top_level_keys);
+    // separator at all with only one primary item here.
+    $this->assertSame(['apiaries'], $top_level_keys);
 
     $submenu_keys = array_keys(array_filter($build['apiaries']['submenu'], fn($k) => is_string($k) && !str_starts_with((string) $k, '#'), ARRAY_FILTER_USE_KEY));
     $expected_submenu_keys = [
@@ -507,11 +508,12 @@ class HivelogAppNavBuilderTest extends KernelTestBase {
    * Tests an item with no children gets no id and no group.
    */
   public function testItemWithoutChildrenHasNoIdOrGroup(): void {
+    $this->enableModules(['hivelog_app_nav_test']);
     $this->loginAdmin();
     $build = \Drupal::service('hivelog.app_nav_builder')->build();
 
-    $this->assertArrayNotHasKey('id', $build['dashboard']['link']['#attributes']);
-    $this->assertArrayNotHasKey('submenu', $build['dashboard']);
+    $this->assertArrayNotHasKey('id', $build['hivelog_app_nav_test_orphan']['link']['#attributes']);
+    $this->assertArrayNotHasKey('submenu', $build['hivelog_app_nav_test_orphan']);
   }
 
   /**

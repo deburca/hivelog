@@ -1116,9 +1116,8 @@ item's collection is "about", read by the active-state check below.
 for a primary (top-level) item. Two surfaces read this one registry
 instead of each keeping its own hand-maintained copy:
 
-**Primary vs. secondary.** Only three built-ins have no `parent`, and are
-therefore primary: **Dashboard** (synthetic — see below), **Apiaries**,
-and **Insights** (`hivelog.insights`, `InsightsController`, task 0146,
+**Primary vs. secondary.** Only two built-ins have no `parent`, and are
+therefore primary: **Apiaries** and **Insights** (`hivelog.insights`, `InsightsController`, task 0146,
 named "Setup" before task 0152's rename — a small landing page whose
 sole job is to exist for `insights`-group items to nest under; it has
 no content of its own beyond listing its accessible children). Every
@@ -1146,8 +1145,7 @@ permission), `InsightsController::view()`, and `build()` below, so
 none of the three can silently drift from what the others consider
 accessible.
 
-- **The in-app nav strip** — `build()` filters `getAllItems()` (plus the
-  synthetic Dashboard entry) to what the current user can access
+- **The in-app nav strip** — `build()` filters `getAllItems()` to what the current user can access
   (`Url::access()`), partitions the result into primary items and each
   hub's accessible children, and renders one `.hivelog-app-nav__item`
   wrapper per primary item — its own link, plus (if it has ≥1 accessible
@@ -1188,10 +1186,9 @@ accessible.
   *derivable* item parents under that item's own derived link
   (`hivelog.nav_item:<parent_key>`) instead of the single hand-written
   `hivelog.admin` link the YAML's own default still is — same
-  unresolvable-parent fallback as the nav strip. The Dashboard entry is
-  excluded here too (see above) — `hivelog.admin` already points at the
-  same route, so a menu child pointing there as well would be
-  redundant. A submodule that wants a main-menu entry implements
+  unresolvable-parent fallback as the nav strip. `hivelog.admin` ("HiveLog") points at the dashboard, and since task 0244 that
+  is the only way to it from the menus: the strip has no Dashboard entry
+  either, so it starts at Apiaries. A submodule that wants a main-menu entry implements
   `hook_hivelog_app_nav_items()` only — it no longer ships its own
   `<module>.links.menu.yml` (`collective`/`nexus`/`nanoprobe` all did,
   pre-0119). A static → derived plugin ID is a different string (the

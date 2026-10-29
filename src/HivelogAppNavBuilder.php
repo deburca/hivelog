@@ -28,14 +28,13 @@ use Drupal\Core\Url;
  * `getAllItems()` — the main-menu links are a second rendering of the
  * exact same registry, not a hand-maintained duplicate list.
  *
- * Task 0120 adds two things `getAllItems()` does NOT carry, both
- * strip-only: the Dashboard entry (prepended directly in `build()` —
- * deliberately not a `getAllItems()` member, since a "Dashboard" child
- * menu link under `hivelog.admin`, which already points at the same
- * route, would be a redundant menu entry even though it's a genuinely
- * useful strip shortcut) and active-state marking (`is-active` /
- * `aria-current`, resolved from the current route — meaningless for a
- * menu link, whose active state the menu system already marks itself).
+ * Task 0120 adds one thing `getAllItems()` does NOT carry, strip-only:
+ * active-state marking (`is-active` / `aria-current`, resolved from the
+ * current route — meaningless for a menu link, whose active state the
+ * menu system already marks itself). Task 0244 removed the strip's other
+ * addition, a "Dashboard" entry: the header menu's "HiveLog" item
+ * (`hivelog.admin`) already points at the dashboard, so the strip starts
+ * at Apiaries.
  *
  * Task 0146/0147, ADR-0104: an item's optional `parent` key names
  * another item (built-in or contributed) it nests under. `build()`
@@ -70,12 +69,9 @@ class HivelogAppNavBuilder {
   /**
    * Display order for item `group` values; a group not listed sorts last.
    *
-   * `dashboard` and `default` are never declared by a real item's
-   * `group` key today (the Dashboard entry is handled outside
-   * `getAllItems()` entirely) — both exist purely as safe fallback
-   * positions: `default` for a future item that omits `group`,
-   * `dashboard` reserved for symmetry with the Dashboard entry's own
-   * synthetic group key in `build()`.
+   * `default` is never declared by a real item's `group` key today — it
+   * exists purely as a safe fallback position for a future item that
+   * omits `group`.
    *
    * Task 0147, ADR-0104: `inventory` no longer has any *primary-tier*
    * member — its only current members (`inventory_items`,
@@ -87,7 +83,7 @@ class HivelogAppNavBuilder {
    * `records`-group ones (task 0148's `sortByGroupThenWeight()`, reused
    * per hub) — it hasn't named a primary-tier item since task 0147.
    */
-  protected const GROUP_ORDER = ['dashboard', 'records', 'inventory', 'default', 'insights'];
+  protected const GROUP_ORDER = ['records', 'inventory', 'default', 'insights'];
 
   public function __construct(
     protected ModuleHandlerInterface $moduleHandler,
@@ -113,7 +109,7 @@ class HivelogAppNavBuilder {
    *   current user (e.g. an anonymous visitor).
    */
   public function build(): array {
-    $items = ['dashboard' => $this->dashboardItem()] + $this->getAllItems();
+    $items = $this->getAllItems();
     $accessible = array_filter($items, fn(array $item) => $item['url']->access());
     if (!$accessible) {
       return [];
@@ -385,32 +381,12 @@ class HivelogAppNavBuilder {
   }
 
   /**
-   * The Dashboard nav-strip entry.
-   *
-   * Strip-only (see class docblock) — not part of `getAllItems()`, so
-   * it never becomes a redundant `hivelog.admin`-child menu link
-   * pointing at the same route `hivelog.admin` itself already does.
-   *
-   * @return array
-   *   A nav item descriptor in its own synthetic `dashboard` group,
-   *   first in `GROUP_ORDER`.
-   */
-  protected function dashboardItem(): array {
-    return [
-      'title' => $this->t('Dashboard'),
-      'url' => Url::fromRoute('hivelog.dashboard'),
-      'weight' => 0,
-      'group' => 'dashboard',
-    ];
-  }
-
-  /**
    * Resolves which item, if any, is the current page's active section.
    *
    * Two rules, in order:
    * - **Exact match** (`aria-current="page"`): an item whose own route is
-   *   the current route — the Dashboard item on the dashboard, or e.g.
-   *   "Apiaries" on the apiary collection page itself.
+   *   the current route, e.g. "Apiaries" on the apiary collection page
+   *   itself.
    * - **Section match** (`aria-current="true"`): the current route's
    *   subject entity (`HivelogEntityHierarchy::resolveSubject()` — the
    *   same resolution the breadcrumb trail uses) belongs to a type an
