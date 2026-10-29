@@ -280,6 +280,11 @@
   white-space: nowrap;
 }
 
+/* The report's year selector, left of its cross-links (task 0245). */
+.hivelog-list-heading__years {
+  margin-left: 0;
+}
+
 @media (max-width: 768px) {
   .hivelog-list-heading {
     flex-direction: column;
