@@ -117,3 +117,87 @@
   color: var(--hivelog-ink);
   font-size: 0.875rem;
 }
+
+/*
+ * Task 0240: the collapsible panel around every filter form (HivelogFilterPanel).
+ * From 769px up the Filters bar is hidden and the form shows as above. On a
+ * phone the form is closed until the bar is tapped, so the table it filters
+ * is not pushed below the fold; the bar names the number of filters set.
+ * A hidden checkbox plus its label, the same CSS-only disclosure as the app
+ * nav's Menu button, so the checkbox must stay the label's previous sibling.
+ */
+.hivelog-filter-panel__toggle,
+.hivelog-filter-panel__label {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .hivelog-filter-panel__toggle {
+    display: block;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+  }
+
+  .hivelog-filter-panel__label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    min-height: 44px;
+    margin: 0.5rem 0 1rem;
+    padding: 0 1rem;
+    box-sizing: border-box;
+    background: var(--hivelog-surface-2);
+    border: 1px solid var(--hivelog-hairline);
+    border-radius: 4px;
+    color: var(--hivelog-ink);
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  /* A disclosure arrow that turns when the panel is open. */
+  .hivelog-filter-panel__label::after {
+    content: "";
+    flex: none;
+    width: 0.5rem;
+    height: 0.5rem;
+    margin-left: auto;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(45deg);
+  }
+
+  .hivelog-filter-panel__toggle:checked + .hivelog-filter-panel__label::after {
+    transform: rotate(-135deg);
+  }
+
+  .hivelog-filter-panel__toggle:focus-visible + .hivelog-filter-panel__label {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+  }
+
+  .hivelog-filter-panel__count {
+    margin-right: 0.25rem;
+    padding: 0.1rem 0.5rem;
+    background: var(--hivelog-warning-tint);
+    border-left: 3px solid var(--hivelog-warning);
+    border-radius: 2px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+  }
+
+  .hivelog-filter-panel > .hivelog-filter-form {
+    display: none;
+    margin-top: -0.5rem;
+  }
+
+  .hivelog-filter-panel__toggle:checked ~ .hivelog-filter-form {
+    display: flex;
+  }
+}

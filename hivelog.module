@@ -9,6 +9,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\hivelog\HivelogFilterPanel;
 
 /**
  * Implements hook_preprocess_HOOK() for html.html.twig.
@@ -138,6 +139,10 @@ function hivelog_form_alter(array &$form, FormStateInterface $form_state, string
     $form['#attributes']['class'][] = 'hivelog-entity-form';
     $form['#attached']['library'][] = 'hivelog/buttons';
   }
+
+  // Every collection's filter form collapses behind a Filters bar on a phone
+  // (task 0240); the wrapper is added here so the twelve forms don't repeat it.
+  HivelogFilterPanel::wrap($form, $form_id);
 }
 
 /**
