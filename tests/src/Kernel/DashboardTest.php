@@ -446,6 +446,52 @@ class DashboardTest extends KernelTestBase {
   }
 
   /**
+   * Past five rows the rest sit behind a "Show N more" disclosure (task 0242).
+   */
+  public function testLongAttentionListFoldsBehindShowMore(): void {
+    $html = $this->attentionHtmlWithDueActions(7);
+
+    $this->assertStringContainsString('7 items to review', $html);
+    $this->assertStringContainsString('<details', $html);
+    $this->assertStringContainsString('Show 2 more', $html);
+    [$before, $inside] = explode('<details', $html, 2);
+    $this->assertSame(5, preg_match_all('/class="hivelog-attention__row /', $before));
+    $this->assertSame(2, preg_match_all('/class="hivelog-attention__row /', $inside));
+  }
+
+  /**
+   * Up to five rows nothing is folded away.
+   */
+  public function testShortAttentionListHasNoShowMore(): void {
+    $html = $this->attentionHtmlWithDueActions(5);
+
+    $this->assertSame(5, preg_match_all('/class="hivelog-attention__row /', $html));
+    $this->assertStringNotContainsString('hivelog-attention__more', $html);
+  }
+
+  /**
+   * Renders the dashboard with $count actions due this week.
+   */
+  protected function attentionHtmlWithDueActions(int $count): string {
+    $week = (int) date('W');
+    $user = $this->makeCurrentUser();
+    $apiary = Apiary::create(['name' => 'Ravnholt', 'uid' => $user->id()]);
+    $apiary->save();
+    $this->clearSeededCalendarActions();
+    for ($i = 1; $i <= $count; $i++) {
+      CalendarAction::create([
+        'apiary' => $apiary->id(),
+        'title' => 'Seasonal job ' . $i,
+        'description' => 'Do it.',
+        'week_start' => $week,
+        'week_end' => $week,
+        'scope' => 'apiary',
+      ])->save();
+    }
+    return $this->renderBuild($this->controller()->view());
+  }
+
+  /**
    * An action whose window covers the current week becomes a warning row.
    */
   public function testDueThisWeekActionAppears(): void {

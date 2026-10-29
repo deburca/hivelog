@@ -3,9 +3,10 @@
  * Styling for the hivelog:error-page SDC component (task 0238).
  *
  * The illustration is a scene, not themed chrome: its colours default to the
- * hive-and-meadow palette and do not follow dark mode. A theme that wants
- * other colours redefines the --hivelog-error-* custom properties below; the
- * fallbacks here are the defaults.
+ * hive-and-meadow palette and the module has no dark mode of its own. A theme
+ * that wants other colours (beeswax gives it a dusk palette under .dark)
+ * redefines the --hivelog-error-* custom properties below; the fallbacks here
+ * are the defaults.
  */
 
 .hivelog-error-page {

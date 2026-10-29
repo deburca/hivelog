@@ -705,7 +705,8 @@ SVG scene (`scene` prop: `not-found`, a confused bee, an empty hive and a "Vacan
 flanking the entrance under a "Residents only" sign) and a message slot with a link to `<front>`. The access-denied
 message also offers **Sign in** (back to the refused page through `redirect.destination`) to an anonymous
 visitor only. The headline is the page title, the theme's H1. The scene's colours are `--hivelog-error-*` custom
-properties with the hive-and-meadow palette as fallback; they do not follow dark mode. The module does not change
+properties with the hive-and-meadow palette as fallback; the module has no dark mode, so a theme sets them (beeswax does, under
+`.dark`). The access-denied scene is shifted to put the hive at the card's centre (task 0243). The module does not change
 any site setting: a site uses the pages by setting `system.site:page.404` to `/hivelog/page-not-found` and
 `system.site:page.403` to `/hivelog/access-denied`. Both routes are in the breadcrumb builder's `$non_page_routes`. `RouteEntityAccessTest` lists them as `OPEN_ROUTES`: exempt from the per-entity check, and the
 anonymous test asserts they *allow* anonymous (every other route must deny it).
@@ -811,6 +812,16 @@ label's previous sibling and the form its later sibling). The bar says how many 
 `#default_value`s, so a new filter form needs nothing beyond the class; it must keep its fields out of `filter_actions`
 and any `sort_state_*` element, which are not counted. The prefix is `Markup` because a plain `#prefix` is admin-XSS
 filtered, which drops `<input>` and `<label>`.
+
+A hive autocomplete shows the hive's apiary (task 0241): `hivelog_field_widget_single_element_entity_reference_autocomplete_form_alter()`
+hands every `entity_reference_autocomplete` widget that targets a hive to `HivelogHiveReference::alterWidget()`, which sets the
+`default:hivelog_hive_with_apiary` selection (labels "Hive · Apiary", same hives as the default) and a value callback so a saved
+reference reads the same ("VV-01 · Vand Værk (1)"). A new field that references hives needs nothing; the "(id)" stays because
+core resolves the text to a record by it.
+
+The dashboard's "Needs attention" panel shows `DashboardController::ATTENTION_VISIBLE_ROWS` (5) rows and folds the rest into a
+native `<details>` "Show N more" (task 0242); the rows are sorted overdue first before the cut, and the API's `computed/alerts`
+is not cut.
 
 A list opts into sortable columns by overriding `getSortableColumns()`
 (task 0171): a map from a `buildHeader()` key to what it sorts on — a stored
