@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\Tests\hivelog\Kernel;
 
 use Drupal\hivelog\Controller\CalendarActionController;
+use Drupal\hivelog\Controller\InventoryReportController;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
@@ -215,6 +216,53 @@ class ListCrossLinksTest extends KernelTestBase {
       ['Add Product', 'View Financial Report'],
       $this->listHeadingLabels('product', '/hivelog/products')
     );
+  }
+
+  /**
+   * Inventory Items, Purchases, Products and the report all link to each other.
+   *
+   * Task 0245: Items had no link to the report and the report had none back,
+   * so the group read differently page by page.
+   */
+  public function testFinancePagesLinkToOneAnother(): void {
+    $this->actAs(['administer hivelog']);
+    $this->assertSame(
+      ['Add Inventory Item', 'View Purchases', 'View Financial Report'],
+      $this->listHeadingLabels('inventory_item', '/hivelog/inventory-items')
+    );
+    $this->assertSame(
+      ['View Inventory Items', 'View Purchases', 'View Products'],
+      $this->reportLinkLabels()
+    );
+    // The per-apiary report also offers the all-apiaries one.
+    $this->assertSame(
+      ['View All Apiaries', 'View Inventory Items', 'View Purchases', 'View Products'],
+      array_column($this->financeLinksOf(TRUE), 'label')
+    );
+
+    // A viewer who may not open Products is not offered it.
+    $this->actAs(['view any inventory item', 'view any inventory purchase']);
+    $this->assertSame(
+      ['View Inventory Items', 'View Purchases'],
+      $this->reportLinkLabels()
+    );
+  }
+
+  /**
+   * The combined report's cross-link labels.
+   */
+  protected function reportLinkLabels(): array {
+    return array_column($this->financeLinksOf(FALSE), 'label');
+  }
+
+  /**
+   * Calls the report controller's cross-link builder.
+   */
+  protected function financeLinksOf(bool $with_combined): array {
+    $this->pushRoutedRequest('/hivelog/apiaries/financial-report');
+    $controller = \Drupal::service('class_resolver')->getInstanceFromDefinition(InventoryReportController::class);
+    $method = new \ReflectionMethod($controller, 'financeLinks');
+    return $method->invoke($controller, $with_combined);
   }
 
   /**

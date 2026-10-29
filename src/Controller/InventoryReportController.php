@@ -87,7 +87,7 @@ class InventoryReportController extends ControllerBase {
     // buttons of its own (the year selector is its own row below), so it
     // would have done nothing but restate the route's own page title
     // (costReportTitle()) as a second, redundant heading.
-    $build['year_selector'] = $this->yearSelector('hivelog.apiary.inventory_cost_report', ['apiary' => $apiary->id()], $year);
+    $build['year_selector'] = $this->yearSelector('hivelog.apiary.inventory_cost_report', ['apiary' => $apiary->id()], $year, $this->financeLinks(TRUE));
 
     $build['summary'] = [
       '#type' => 'table',
@@ -247,7 +247,7 @@ class InventoryReportController extends ControllerBase {
       ->addCacheTags($this->entityTypeManager->getDefinition('harvest_yield')->getListCacheTags());
 
     $build = [];
-    $build['year_selector'] = $this->yearSelector('hivelog.apiaries.financial_report', [], $year);
+    $build['year_selector'] = $this->yearSelector('hivelog.apiaries.financial_report', [], $year, $this->financeLinks());
 
     $rows = [];
     $sum = ['consumable' => 0.0, 'depreciation' => 0.0, 'cost' => 0.0, 'income' => 0.0, 'net' => 0.0];
@@ -546,12 +546,16 @@ class InventoryReportController extends ControllerBase {
    *   combined report).
    * @param int $selected_year
    *   The currently selected year.
+   * @param array $links
+   *   Cross-link buttons (financeLinks()), shown at the right of the row.
    */
-  protected function yearSelector(string $route, array $route_params, int $selected_year): array {
-    return [
+  protected function yearSelector(string $route, array $route_params, int $selected_year, array $links = []): array {
+    $heading = [
       '#type' => 'container',
       '#attributes' => ['class' => ['hivelog-list-heading']],
       '#weight' => 1,
+      // The links a viewer is offered depend on their permissions.
+      '#cache' => ['contexts' => ['user.permissions']],
       'actions' => [
         '#type' => 'container',
         '#attributes' => ['class' => ['hivelog-list-heading__action']],
@@ -563,6 +567,54 @@ class InventoryReportController extends ControllerBase {
       ],
       '#attached' => ['library' => ['hivelog/buttons']],
     ];
+    if ($links) {
+      // At the right, where the other pages' cross-links are; the year
+      // selector stays at the left of the row.
+      $heading['links'] = [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['hivelog-list-heading__action']],
+        'group' => [
+          '#type' => 'component',
+          '#component' => 'hivelog:button-group',
+          '#props' => ['buttons' => $links],
+        ],
+      ];
+      $heading['actions']['#attributes']['class'][] = 'hivelog-list-heading__years';
+    }
+    return $heading;
+  }
+
+  /**
+   * The report's cross-links to the pages its figures come from (task 0245).
+   *
+   * Items, Purchases and Products each link to the financial report, so the
+   * report links back to them; offered only where the viewer may open them
+   * (a link to a page they are refused is a dead end). The per-apiary report
+   * adds the all-apiaries one.
+   *
+   * @param bool $with_combined
+   *   Also offer the all-apiaries report (for the per-apiary one).
+   *
+   * @return array
+   *   `hivelog:button-group` button props.
+   */
+  protected function financeLinks(bool $with_combined = FALSE): array {
+    $targets = [
+      [$this->t('View Inventory Items'), 'entity.inventory_item.collection'],
+      [$this->t('View Purchases'), 'entity.inventory_purchase.collection'],
+      [$this->t('View Products'), 'entity.product.collection'],
+    ];
+    if ($with_combined) {
+      array_unshift($targets, [$this->t('View All Apiaries'), 'hivelog.apiaries.financial_report']);
+    }
+    $links = [];
+    foreach ($targets as [$label, $route]) {
+      $url = Url::fromRoute($route);
+      if ($url->access()) {
+        $links[] = ['label' => (string) $label, 'url' => $url->toString()];
+      }
+    }
+    return $links;
   }
 
   /**

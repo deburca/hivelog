@@ -746,8 +746,8 @@ does not open an add form itself, and none of the three list builders
 gained a new route). Likewise the Calendar Actions page and the Hive and
 Apiary Action Log lists (task 0172) link to one another — Calendar Actions
 → View Hive Logs / View Apiary Logs; each log list → View Calendar Actions
-and the sibling log list — and Products and Inventory Purchases link to the
-combined financial report. These come from
+and the sibling log list — and Inventory Items, Products and Inventory Purchases link to the
+combined financial report, which links back to all three (task 0245, `InventoryReportController::financeLinks()`). These come from
 `HivelogListPageTrait::accessibleLinkAction()`, which offers a link only if
 the target route's access check passes (so nobody is sent into a 403) and
 whose heading declares the `user.permissions` cache context; it is only

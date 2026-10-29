@@ -89,10 +89,11 @@ class InventoryItemListBuilder extends HivelogListBuilder {
    *
    * "Add Inventory Item" plus a cross-link to Purchases — a real
    * workflow shortcut (recording a purchase is the very next step after
-   * cataloguing an item), kept per task 0126's heading cross-link review.
+   * cataloguing an item), kept per task 0126's heading cross-link review —
+   * and, like Purchases and Products, the financial report (task 0245).
    */
   protected function getHeadingActions(): array {
-    return [
+    return array_values(array_filter([
       [
         'label' => (string) $this->t('Add Inventory Item'),
         'url' => Url::fromRoute('entity.inventory_item.add_form')->toString(),
@@ -102,7 +103,8 @@ class InventoryItemListBuilder extends HivelogListBuilder {
         'label' => (string) $this->t('View Purchases'),
         'url' => Url::fromRoute('entity.inventory_purchase.collection')->toString(),
       ],
-    ];
+      $this->accessibleLinkAction($this->t('View Financial Report'), 'hivelog.apiaries.financial_report'),
+    ]));
   }
 
   /**

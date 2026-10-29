@@ -45,7 +45,16 @@
   flex: 0 1 15rem;
 }
 
+/* Narrow screens: two to a row from a phone held sideways (a tile is never
+   stretched past its content either way), one to a row in portrait. Task
+   0245: a landscape phone is 480 to 768px wide and showed full-width tiles. */
 @media (max-width: 768px) {
+  .hivelog-stat-tiles .hivelog-stat-tile {
+    flex-basis: calc(50% - 0.375rem);
+  }
+}
+
+@media (max-width: 480px) {
   .hivelog-stat-tiles .hivelog-stat-tile {
     flex-basis: 100%;
   }
