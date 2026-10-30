@@ -25,7 +25,8 @@ ddev demo-setup             # installs and seeds; prints where it put the passwo
 ddev demo-info              # the address, the logins and the values for the review notes
 ```
 
-`ddev demo-setup --fresh` rebuilds from nothing. `ddev demo-reset` puts the database and the
+`ddev demo-setup --fresh` rebuilds from nothing (do this after `composer.lock` moves to a new HiveLog
+release: the saved baseline is the old release's database). `ddev demo-reset` puts the database and the
 uploaded files back to the baseline `demo-setup` saved. The passwords are random and kept in
 `.demo-secrets` (not committed); set `DEMO_REVIEWER_PASSWORD` and `DEMO_ADMIN_PASSWORD` before
 `ddev demo-setup` to choose them.
