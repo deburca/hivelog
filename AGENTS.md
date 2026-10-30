@@ -496,7 +496,7 @@ entity types core can't name directly).
   app's scope on any JSON:API route off the prefix (a token could otherwise
   list every user's display name at `/jsonapi/user/user`). `GET
   /api/v1` is a public discovery document (`api_version`, OAuth
-  endpoints) a client reads before signing in. Install creates, idempotently,
+  endpoints, `features`, and `page_prefix`, where the site serves its pages, for reading a QR label) a client reads before signing in. Install creates, idempotently,
   the `hivelog_field_app` role, a scope of that name (granularity `role`) and
   the public PKCE client `hivelog-ios` (redirect `hivelog://oauth/callback`), labelled
   with the app's name, Vinculum (`HivelogApiResources::APP_NAME`), which is what a
@@ -534,7 +534,9 @@ entity types core can't name directly).
   warns if any other scope enables it. **Computed views** (task 0202), for
   values no entity stores, are plain-JSON, read-only routes beside the
   JSON:API ones: `GET /api/v1/computed/alerts` (the dashboard's
-  "Needs attention" queue for the current user), and
+  "Needs attention" queue for the current user), `GET /api/v1/computed/apiary-roles` (task 0247: the
+  user's role, `owner`, `keeper` or `novice`, or null for site-permission access, in each apiary they can see,
+  so a client shows only what the user may do; the server still decides every write), and
   `/computed/hive/{hive}/stat-tiles` (the hive page's tiles plus
   `empty_weight_kg`) and `/computed/hive/{hive}/insight`, where `{hive}` is
   the hive's UUID (`HivelogApiUuidParamConverter`; an unknown one is 404, one
