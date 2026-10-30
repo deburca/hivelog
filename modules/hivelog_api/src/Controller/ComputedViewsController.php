@@ -73,6 +73,30 @@ class ComputedViewsController extends ControllerBase {
   }
 
   /**
+   * The current user's role in each apiary they can see.
+   *
+   * `role` is `owner`, `keeper` or `novice`, or NULL where the user sees the
+   * apiary without being a member (a site permission). A client uses it to
+   * show only what the user may do; the server still decides every write.
+   */
+  public function apiaryRoles(): CacheableJsonResponse {
+    $cache = new CacheableMetadata();
+    $cache->addCacheContexts(['user']);
+    $cache->addCacheTags($this->entityTypeManager()->getDefinition('apiary')->getListCacheTags());
+    $cache->addCacheTags($this->entityTypeManager()->getDefinition('apiary_membership')->getListCacheTags());
+
+    $account = $this->currentUser();
+    $data = [];
+    foreach ($this->checklistBuilder->viewableApiaries($account) as $apiary) {
+      $data[] = [
+        'apiary' => $this->reference($apiary),
+        'role' => $apiary->getRoleOf($account),
+      ];
+    }
+    return $this->respond(['data' => $data, 'meta' => ['count' => count($data)]], $cache);
+  }
+
+  /**
    * A hive's "at a glance" stat tiles, plus its empty weight.
    */
   public function hiveStatTiles(Hive $hive): CacheableJsonResponse {

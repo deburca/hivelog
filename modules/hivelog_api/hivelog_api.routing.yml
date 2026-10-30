@@ -44,6 +44,16 @@ hivelog_api.computed_alerts:
   requirements:
     _user_is_logged_in: 'TRUE'
 
+hivelog_api.computed_apiary_roles:
+  path: '/api/v1/computed/apiary-roles'
+  defaults:
+    _controller: '\Drupal\hivelog_api\Controller\ComputedViewsController::apiaryRoles'
+    _title: 'My role in each apiary'
+    _format: json
+  methods: [GET]
+  requirements:
+    _user_is_logged_in: 'TRUE'
+
 hivelog_api.computed_hive_stat_tiles:
   path: '/api/v1/computed/hive/{hive}/stat-tiles'
   defaults:

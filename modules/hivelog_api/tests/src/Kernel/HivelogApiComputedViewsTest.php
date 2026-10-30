@@ -10,6 +10,7 @@ use Drupal\hivelog\Entity\Hive;
 use Drupal\hivelog\Entity\HiveComponent;
 use Drupal\hivelog\Entity\InventoryItem;
 use Drupal\hivelog\Entity\InventoryPurchase;
+use Drupal\hivelog\Entity\ApiaryMembership;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
@@ -120,6 +121,39 @@ class HivelogApiComputedViewsTest extends HivelogApiKernelTestBase {
     $this->assertContains('apiary_list', $metadata->getCacheTags());
     $this->assertGreaterThan(0, $metadata->getCacheMaxAge());
     $this->assertLessThanOrEqual(86400, $metadata->getCacheMaxAge());
+  }
+
+  /**
+   * Tests the roles endpoint gives the user's role in each apiary they see (task 0247).
+   */
+  public function testApiaryRolesAreTheUsersOwn(): void {
+    $keeper = $this->beekeeper('keeper_member');
+    $novice = $this->beekeeper('novice_member');
+    foreach ([['keeper', $keeper], ['novice', $novice]] as [$role, $user]) {
+      ApiaryMembership::create([
+        'apiary' => $this->fixtures['my_apiary']->id(),
+        'account' => $user->id(),
+        'role' => $role,
+      ])->save();
+    }
+    $rows = fn($user) => array_column(
+      array_map(fn($row) => ['id' => $row['apiary']['id'], 'role' => $row['role']],
+        $this->api('GET', '/api/v1/computed/apiary-roles', NULL, $user)['body']['data']),
+      'role', 'id');
+    $mine = $this->fixtures['my_apiary']->uuid();
+
+    $this->assertSame('owner', $rows($this->me)[$mine]);
+    $this->assertSame('keeper', $rows($keeper)[$mine]);
+    $this->assertSame('novice', $rows($novice)[$mine]);
+    // Another beekeeper's apiary is not listed for me.
+    $this->assertArrayNotHasKey($this->fixtures['their_apiary']->uuid(), $rows($this->me));
+  }
+
+  /**
+   * Tests an unauthenticated request gets no roles.
+   */
+  public function testApiaryRolesNeedSignIn(): void {
+    $this->assertSame(401, $this->api('GET', '/api/v1/computed/apiary-roles')['status']);
   }
 
   /**
