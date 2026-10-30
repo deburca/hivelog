@@ -9,6 +9,7 @@ use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Url;
+use Drupal\hivelog\HivelogPaths;
 use Drupal\hivelog_api\HivelogApiResources;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -60,6 +61,10 @@ class DiscoveryController extends ControllerBase {
           'module_version' => $this->resources->moduleVersion(),
           'site_name' => (string) $site->get('name'),
           'features' => HivelogApiResources::FEATURES,
+          // Where the site serves its pages (a QR label reads
+          // `/<page_prefix>/hive/<id>/quick`); `hivelog` unless the site sets
+          // `$settings['hivelog_path_prefix']`.
+          'page_prefix' => HivelogPaths::prefix(),
           'oauth' => [
             'client_id' => HivelogApiResources::CLIENT_ID,
             'scope' => HivelogApiResources::SCOPE,

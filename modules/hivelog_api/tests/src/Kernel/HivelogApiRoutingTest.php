@@ -23,6 +23,8 @@ class HivelogApiRoutingTest extends HivelogApiKernelTestBase {
 
     $meta = $response['body']['meta']['hivelog_api'];
     $this->assertSame(1, $meta['api_version']);
+    // Where the pages are served, for a client reading a QR label (task 0247).
+    $this->assertSame('hivelog', $meta['page_prefix']);
     $this->assertSame('hivelog-ios', $meta['oauth']['client_id']);
     $this->assertSame('hivelog_field_app', $meta['oauth']['scope']);
     $this->assertStringEndsWith('/oauth/authorize', $meta['oauth']['authorize']);
