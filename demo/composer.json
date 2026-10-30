@@ -20,7 +20,7 @@
         "drupal/leaflet": "^10.4",
         "drupal/simple_oauth": "^6.1",
         "drush/drush": "^13.7",
-        "hivelog/hivelog": "^3.0"
+        "hivelog/hivelog": "^4.1"
     },
     "conflict": {
         "drupal/drupal": "*"
