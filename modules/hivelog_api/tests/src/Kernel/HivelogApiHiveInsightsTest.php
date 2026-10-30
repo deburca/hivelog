@@ -79,12 +79,12 @@ class HivelogApiHiveInsightsTest extends HivelogApiKernelTestBase {
     $apiary->set('ai_insights_enabled', TRUE)->save();
     $this->insight($apiary, $hive, 'act_now');
 
-    $one = $this->api('GET', '/hivelog/api/v1/computed/hive/' . $hive->uuid() . '/insight', NULL, $this->me);
+    $one = $this->api('GET', '/api/v1/computed/hive/' . $hive->uuid() . '/insight', NULL, $this->me);
     $this->assertSame(200, $one['status'], $one['raw']);
     $this->assertSame('act_now', $one['body']['data']['verdict']);
     $this->assertFalse($one['body']['data']['stale']);
 
-    $all = $this->api('GET', '/hivelog/api/v1/computed/apiary/' . $apiary->uuid() . '/hive-insights', NULL, $this->me);
+    $all = $this->api('GET', '/api/v1/computed/apiary/' . $apiary->uuid() . '/hive-insights', NULL, $this->me);
     $this->assertSame(200, $all['status'], $all['raw']);
     $this->assertSame([$hive->uuid()], array_column($all['body']['data'], 'hive'));
     $this->assertSame('act_now', $all['body']['data'][0]['verdict']);
@@ -98,7 +98,7 @@ class HivelogApiHiveInsightsTest extends HivelogApiKernelTestBase {
     $apiary->set('ai_insights_enabled', TRUE)->save();
     $this->insight($apiary, $this->fixtures['my_hive'], 'all_clear', 3 * 24 * 3600);
 
-    $all = $this->api('GET', '/hivelog/api/v1/computed/apiary/' . $apiary->uuid() . '/hive-insights', NULL, $this->me);
+    $all = $this->api('GET', '/api/v1/computed/apiary/' . $apiary->uuid() . '/hive-insights', NULL, $this->me);
     $this->assertTrue($all['body']['data'][0]['stale']);
   }
 
@@ -109,7 +109,7 @@ class HivelogApiHiveInsightsTest extends HivelogApiKernelTestBase {
     $apiary = $this->fixtures['my_apiary'];
     $this->insight($apiary, $this->fixtures['my_hive'], 'all_clear');
 
-    $all = $this->api('GET', '/hivelog/api/v1/computed/apiary/' . $apiary->uuid() . '/hive-insights', NULL, $this->me);
+    $all = $this->api('GET', '/api/v1/computed/apiary/' . $apiary->uuid() . '/hive-insights', NULL, $this->me);
     $this->assertSame([], $all['body']['data']);
   }
 
@@ -121,9 +121,9 @@ class HivelogApiHiveInsightsTest extends HivelogApiKernelTestBase {
     $theirs->set('ai_insights_enabled', TRUE)->save();
     $this->insight($theirs, $this->fixtures['their_hive'], 'act_now');
 
-    $this->assertSame(403, $this->api('GET', '/hivelog/api/v1/computed/apiary/' . $theirs->uuid() . '/hive-insights', NULL, $this->me)['status']);
-    $this->assertSame(403, $this->api('GET', '/hivelog/api/v1/computed/hive/' . $this->fixtures['their_hive']->uuid() . '/insight', NULL, $this->me)['status']);
-    $mine = $this->api('GET', '/hivelog/api/v1/computed/apiary/' . $this->fixtures['my_apiary']->uuid() . '/hive-insights', NULL, $this->me);
+    $this->assertSame(403, $this->api('GET', '/api/v1/computed/apiary/' . $theirs->uuid() . '/hive-insights', NULL, $this->me)['status']);
+    $this->assertSame(403, $this->api('GET', '/api/v1/computed/hive/' . $this->fixtures['their_hive']->uuid() . '/insight', NULL, $this->me)['status']);
+    $mine = $this->api('GET', '/api/v1/computed/apiary/' . $this->fixtures['my_apiary']->uuid() . '/hive-insights', NULL, $this->me);
     $this->assertSame([], $mine['body']['data']);
   }
 

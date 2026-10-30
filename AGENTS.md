@@ -480,7 +480,7 @@ entity types core can't name directly).
   (ADR-0107, task 0201). Adds no entity types. Depends on `hivelog`, core
   `jsonapi` and `simple_oauth` (only a `suggest` in `composer.json`, like
   `key`). It serves core JSON:API under the versioned prefix
-  `/hivelog/api/v1` for an **allow-list** of resources
+  `/api/v1` for an **allow-list** of resources
   (`HivelogApiResources::RESOURCES`: apiary, hive, inspection, queen, queen
   observation, calendar action, both action logs, file). Everything else —
   inventory, products, components, sensors, API clients, AI providers, users —
@@ -495,7 +495,7 @@ entity types core can't name directly).
   setting. `HivelogApiTokenConfinementSubscriber` refuses a token carrying the
   app's scope on any JSON:API route off the prefix (a token could otherwise
   list every user's display name at `/jsonapi/user/user`). `GET
-  /hivelog/api/v1` is a public discovery document (`api_version`, OAuth
+  /api/v1` is a public discovery document (`api_version`, OAuth
   endpoints) a client reads before signing in. Install creates, idempotently,
   the `hivelog_field_app` role, a scope of that name (granularity `role`) and
   the public PKCE client `hivelog-ios` (redirect `hivelog://oauth/callback`), labelled
@@ -533,7 +533,7 @@ entity types core can't name directly).
   authorization-code grant, not just its consumer's, so the status report
   warns if any other scope enables it. **Computed views** (task 0202), for
   values no entity stores, are plain-JSON, read-only routes beside the
-  JSON:API ones: `GET /hivelog/api/v1/computed/alerts` (the dashboard's
+  JSON:API ones: `GET /api/v1/computed/alerts` (the dashboard's
   "Needs attention" queue for the current user), and
   `/computed/hive/{hive}/stat-tiles` (the hive page's tiles plus
   `empty_weight_kg`) and `/computed/hive/{hive}/insight`, where `{hive}` is
@@ -551,7 +551,7 @@ entity types core can't name directly).
   just works; the kernel tests opt in Basic Auth through the
   `hivelog_api_test` module instead.
   **Sign-out (task 0204).** simple_oauth 6 has no revocation endpoint, so
-  `POST /hivelog/api/v1/sign-out` (`SignOutController`) revokes the bearer
+  `POST /api/v1/sign-out` (`SignOutController`) revokes the bearer
   token's access token and, if the body carries `{"refresh_token": "..."}`, that
   refresh token and the access token it was issued with, so one device signs out
   and another stays signed in. The refresh token is the opaque blob the client
@@ -601,7 +601,7 @@ entity types core can't name directly).
   through a relationship (`filter[hive.name]`, `filter[hive.apiary.name]`),
   that a filter through the owner matches only the user themself, and that
   plain `/jsonapi` keeps JSON:API's default. A new exposed type is covered by
-  `HivelogApiResources::narrowedTypes()`. (2) **`GET /hivelog/api/v1/schema`**
+  `HivelogApiResources::narrowedTypes()`. (2) **`GET /api/v1/schema`**
   (`SchemaController`, signed-in users) describes the writable fields of each
   exposed type: `kind` (boolean, integer, number, text, long_text, date,
   choice, reference, images, other), `label`, `required`, `multiple`, for a
@@ -711,9 +711,20 @@ any site setting: a site uses the pages by setting `system.site:page.404` to `/h
 `system.site:page.403` to `/hivelog/access-denied`. Both routes are in the breadcrumb builder's `$non_page_routes`. `RouteEntityAccessTest` lists them as `OPEN_ROUTES`: exempt from the per-entity check, and the
 anonymous test asserts they *allow* anonymous (every other route must deny it).
 
-All routes use the `/hivelog/` path prefix. New routes must follow this
-convention; the breadcrumb builder's `applies()` also relies on it (see
-Services below).
+All routes are **declared** under the `/hivelog/` path prefix, and new routes must follow this
+convention. A site may serve them under another prefix with `$settings['hivelog_path_prefix']`
+(task 0246, e.g. `'app'` for `/app/...`): `HivelogPathPrefixRouteSubscriber` rewrites every
+route declared under `/hivelog` (the module's, the submodules' and the entity link templates'
+alike, which keep their `/hivelog/...` strings) when the router is built, after every other module's alter,
+and `HivelogPaths` is the one place that reads the setting. Code that asks "is this one of
+HiveLog's pages?" from a route's path (the breadcrumb builder's `applies()`, `hivelog_preprocess_html()`
+and `hivelog_preprocess_page()`) must therefore call `HivelogPaths::matches()`, never compare with the
+literal `/hivelog`, and a link must be built from a route name, never a string. Routes under
+`/hivelog/api/` (nanoprobe's sensor ingestion, collective's context API) are machine contracts and are
+never moved. The field-app API is **not** under this prefix: since 4.0.0 it is at `/api/v1`
+(`HivelogApiResources::PATH_PREFIX`), a versioned contract that stays put whatever the setting says. An
+unusable value (not `[a-z0-9-]`, over 32 characters, or a core/module-owned name such as `admin` or `api`)
+is ignored and the pages stay at `/hivelog`.
 
 Canonical view pages are rendered by custom controllers
 (`ApiaryController`, `HiveController`, `HiveInspectionController`,

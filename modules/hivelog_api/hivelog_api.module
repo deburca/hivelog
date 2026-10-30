@@ -5,7 +5,7 @@
  * The HiveLog API module.
  *
  * Mostly services and routes: a path processor serves core JSON:API under
- * /hivelog/api/v1 for an allow-list of resources (see HivelogApiResources).
+ * /api/v1 for an allow-list of resources (see HivelogApiResources).
  */
 
 use Drupal\Core\Database\Query\AlterableInterface;

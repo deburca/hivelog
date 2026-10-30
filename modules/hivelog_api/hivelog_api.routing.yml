@@ -1,5 +1,5 @@
 hivelog_api.discovery:
-  path: '/hivelog/api/v1'
+  path: '/api/v1'
   defaults:
     _controller: '\Drupal\hivelog_api\Controller\DiscoveryController::index'
     _title: 'HiveLog API'
@@ -11,7 +11,7 @@ hivelog_api.discovery:
 
 # Sign out (task 0204): revokes the app's tokens, which simple_oauth cannot do.
 hivelog_api.sign_out:
-  path: '/hivelog/api/v1/sign-out'
+  path: '/api/v1/sign-out'
   defaults:
     _controller: '\Drupal\hivelog_api\Controller\SignOutController::signOut'
     _title: 'Sign out'
@@ -23,7 +23,7 @@ hivelog_api.sign_out:
 # What the app's forms offer (task 0205): each exposed type's writable fields
 # with their allowed values, labels and limits. Static facts, no user data.
 hivelog_api.schema:
-  path: '/hivelog/api/v1/schema'
+  path: '/api/v1/schema'
   defaults:
     _controller: '\Drupal\hivelog_api\Controller\SchemaController::index'
     _title: 'Field schema'
@@ -35,7 +35,7 @@ hivelog_api.schema:
 # Computed views (task 0202): values no entity stores, each built by the same
 # service as the matching web page. Plain JSON, read-only, OAuth or session.
 hivelog_api.computed_alerts:
-  path: '/hivelog/api/v1/computed/alerts'
+  path: '/api/v1/computed/alerts'
   defaults:
     _controller: '\Drupal\hivelog_api\Controller\ComputedViewsController::alerts'
     _title: 'Needs attention'
@@ -45,7 +45,7 @@ hivelog_api.computed_alerts:
     _user_is_logged_in: 'TRUE'
 
 hivelog_api.computed_hive_stat_tiles:
-  path: '/hivelog/api/v1/computed/hive/{hive}/stat-tiles'
+  path: '/api/v1/computed/hive/{hive}/stat-tiles'
   defaults:
     _controller: '\Drupal\hivelog_api\Controller\ComputedViewsController::hiveStatTiles'
     _title: 'Hive stat tiles'
@@ -59,7 +59,7 @@ hivelog_api.computed_hive_stat_tiles:
         type: hivelog_api_uuid:hive
 
 hivelog_api.computed_hive_insight:
-  path: '/hivelog/api/v1/computed/hive/{hive}/insight'
+  path: '/api/v1/computed/hive/{hive}/insight'
   defaults:
     _controller: '\Drupal\hivelog_api\Controller\ComputedViewsController::hiveInsight'
     _title: 'Hive insight'
@@ -75,7 +75,7 @@ hivelog_api.computed_hive_insight:
 # The verdict of every hive's latest insight in one apiary, in one request (task 0221): the app tints
 # each hive's badge by it, and asking hive by hive would be a request per row.
 hivelog_api.computed_apiary_hive_insights:
-  path: '/hivelog/api/v1/computed/apiary/{apiary}/hive-insights'
+  path: '/api/v1/computed/apiary/{apiary}/hive-insights'
   defaults:
     _controller: '\Drupal\hivelog_api\Controller\ComputedViewsController::apiaryHiveInsights'
     _title: 'Hive insights in an apiary'

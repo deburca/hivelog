@@ -3,7 +3,7 @@ services:
     class: Drupal\hivelog_api\HivelogApiResources
     arguments: ['@extension.list.module', '%jsonapi.base_path%']
 
-  # Maps the versioned /hivelog/api/v1 prefix onto core JSON:API routes (and
+  # Maps the versioned /api/v1 prefix onto core JSON:API routes (and
   # their generated links back), for allow-listed resource types only.
   hivelog_api.path_processor:
     class: Drupal\hivelog_api\PathProcessor\HivelogApiPathProcessor

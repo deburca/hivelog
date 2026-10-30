@@ -33,7 +33,7 @@ class HivelogApiFilterTest extends HivelogApiKernelTestBase {
     ]);
     $second->save();
 
-    $response = $this->api('GET', '/hivelog/api/v1/hive/hive?filter[name]=second%20hive', NULL, $this->me);
+    $response = $this->api('GET', '/api/v1/hive/hive?filter[name]=second%20hive', NULL, $this->me);
     $this->assertSame(200, $response['status'], $response['raw']);
     $this->assertSame([$second->uuid()], array_column($response['body']['data'], 'id'), $response['raw']);
   }
@@ -42,7 +42,7 @@ class HivelogApiFilterTest extends HivelogApiKernelTestBase {
    * Tests a filter never reaches another user's record.
    */
   public function testFilterDoesNotWidenAccess(): void {
-    $response = $this->api('GET', '/hivelog/api/v1/hive/hive?filter[name]=their%20hive', NULL, $this->me);
+    $response = $this->api('GET', '/api/v1/hive/hive?filter[name]=their%20hive', NULL, $this->me);
     $this->assertSame(200, $response['status']);
     $this->assertSame([], $response['body']['data']);
   }
@@ -57,11 +57,11 @@ class HivelogApiFilterTest extends HivelogApiKernelTestBase {
     $queen = Queen::create(['name' => 'Q', 'hive' => $hive->id(), 'status' => 'active', 'uid' => $this->me->id()]);
     $queen->save();
 
-    $response = $this->api('GET', '/hivelog/api/v1/hive_inspection/hive_inspection?filter[hive.id]=' . $hive->uuid() . '&sort=-inspection_date&page[limit]=2', NULL, $this->me);
+    $response = $this->api('GET', '/api/v1/hive_inspection/hive_inspection?filter[hive.id]=' . $hive->uuid() . '&sort=-inspection_date&page[limit]=2', NULL, $this->me);
     $this->assertSame(200, $response['status'], $response['raw']);
     $this->assertSame(['2026-08-01', '2026-07-01'], array_column(array_column($response['body']['data'], 'attributes'), 'inspection_date'), $response['raw']);
 
-    $response = $this->api('GET', '/hivelog/api/v1/queen/queen?filter[hive.id]=' . $hive->uuid() . '&filter[status]=active', NULL, $this->me);
+    $response = $this->api('GET', '/api/v1/queen/queen?filter[hive.id]=' . $hive->uuid() . '&filter[status]=active', NULL, $this->me);
     $this->assertSame([$queen->uuid()], array_column($response['body']['data'], 'id'), $response['raw']);
   }
 
@@ -72,7 +72,7 @@ class HivelogApiFilterTest extends HivelogApiKernelTestBase {
    * inspections"; it must not become a way to probe another user's records.
    */
   public function testFilterThroughRelationshipCannotProbeOthers(): void {
-    $path = '/hivelog/api/v1/hive_inspection/hive_inspection';
+    $path = '/api/v1/hive_inspection/hive_inspection';
     $mine = $this->api('GET', $path . '?filter[hive.name]=my%20hive', NULL, $this->me);
     $this->assertSame([$this->fixtures['my_inspection']->uuid()], array_column($mine['body']['data'], 'id'), $mine['raw']);
 
@@ -93,12 +93,12 @@ class HivelogApiFilterTest extends HivelogApiKernelTestBase {
    * is not a way to find out who else exists.
    */
   public function testFilterByOwnerMatchesOnlyTheCurrentUser(): void {
-    $mine = $this->api('GET', '/hivelog/api/v1/hive/hive?filter[uid.name]=me', NULL, $this->me);
+    $mine = $this->api('GET', '/api/v1/hive/hive?filter[uid.name]=me', NULL, $this->me);
     $this->assertSame([$this->fixtures['my_hive']->uuid()], array_column($mine['body']['data'], 'id'), $mine['raw']);
 
-    $theirs = $this->api('GET', '/hivelog/api/v1/hive/hive?filter[uid.name]=them', NULL, $this->me);
+    $theirs = $this->api('GET', '/api/v1/hive/hive?filter[uid.name]=them', NULL, $this->me);
     $this->assertSame([], $theirs['body']['data'] ?? NULL, $theirs['raw']);
-    $nobody = $this->api('GET', '/hivelog/api/v1/hive/hive?filter[uid.name]=nobody', NULL, $this->me);
+    $nobody = $this->api('GET', '/api/v1/hive/hive?filter[uid.name]=nobody', NULL, $this->me);
     $this->assertSame($theirs['body']['data'], $nobody['body']['data'], 'A user who exists answers like one who does not');
   }
 

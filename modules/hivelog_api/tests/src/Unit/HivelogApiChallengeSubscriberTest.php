@@ -55,12 +55,12 @@ class HivelogApiChallengeSubscriberTest extends UnitTestCase {
    */
   public static function cases(): array {
     return [
-      'anonymous on a resource' => ['/hivelog/api/v1/hive/hive', 'jsonapi.hive--hive.collection', TRUE, TRUE],
-      'anonymous on a computed view' => ['/hivelog/api/v1/computed/alerts', 'hivelog_api.computed_alerts', TRUE, TRUE],
-      'anonymous on the public discovery document' => ['/hivelog/api/v1', 'hivelog_api.discovery', TRUE, FALSE],
-      'signed in on a resource' => ['/hivelog/api/v1/hive/hive', 'jsonapi.hive--hive.collection', FALSE, FALSE],
+      'anonymous on a resource' => ['/api/v1/hive/hive', 'jsonapi.hive--hive.collection', TRUE, TRUE],
+      'anonymous on a computed view' => ['/api/v1/computed/alerts', 'hivelog_api.computed_alerts', TRUE, TRUE],
+      'anonymous on the public discovery document' => ['/api/v1', 'hivelog_api.discovery', TRUE, FALSE],
+      'signed in on a resource' => ['/api/v1/hive/hive', 'jsonapi.hive--hive.collection', FALSE, FALSE],
       'anonymous outside the prefix' => ['/jsonapi/hive/hive', 'jsonapi.hive--hive.collection', TRUE, FALSE],
-      'anonymous on an unmatched path' => ['/hivelog/api/v1/nothing/nothing', NULL, TRUE, FALSE],
+      'anonymous on an unmatched path' => ['/api/v1/nothing/nothing', NULL, TRUE, FALSE],
     ];
   }
 
@@ -68,7 +68,7 @@ class HivelogApiChallengeSubscriberTest extends UnitTestCase {
    * Tests the challenge names the Bearer scheme and is JSON:API shaped.
    */
   public function testChallengeNamesBearerAndIsJson(): void {
-    $event = $this->dispatch('/hivelog/api/v1/hive/hive', 'jsonapi.hive--hive.collection', TRUE);
+    $event = $this->dispatch('/api/v1/hive/hive', 'jsonapi.hive--hive.collection', TRUE);
     $response = $event->getResponse();
     $this->assertStringStartsWith('Bearer', $response->headers->get('WWW-Authenticate'));
     $this->assertSame('application/vnd.api+json', $response->headers->get('Content-Type'));
@@ -82,7 +82,7 @@ class HivelogApiChallengeSubscriberTest extends UnitTestCase {
    * challenged too, forever.
    */
   public function testSubRequestsAreLeftAlone(): void {
-    $event = $this->dispatch('/hivelog/api/v1/hive/hive', 'jsonapi.hive--hive.collection', TRUE, FALSE);
+    $event = $this->dispatch('/api/v1/hive/hive', 'jsonapi.hive--hive.collection', TRUE, FALSE);
     $this->assertFalse($event->hasResponse());
   }
 

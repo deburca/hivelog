@@ -58,7 +58,7 @@ class HivelogApiValidationTest extends HivelogApiKernelTestBase {
    * Posts a document and returns the response.
    */
   protected function post(string $type, array $attributes, array $relationships): array {
-    return $this->api('POST', "/hivelog/api/v1/$type/$type", [
+    return $this->api('POST', "/api/v1/$type/$type", [
       'data' => [
         'type' => "$type--$type",
         'attributes' => $attributes,

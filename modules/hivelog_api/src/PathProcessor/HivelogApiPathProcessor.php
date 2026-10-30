@@ -12,9 +12,9 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
- * Serves core JSON:API under the versioned /hivelog/api/v1 prefix.
+ * Serves core JSON:API under the versioned /api/v1 prefix.
  *
- * Inbound: `/hivelog/api/v1/hive/hive/…` becomes `/jsonapi/hive/hive/…` so
+ * Inbound: `/api/v1/hive/hive/…` becomes `/jsonapi/hive/hive/…` so
  * the stock routes, controllers, access and normalisation all apply, but only
  * for an allow-listed resource type; any other path is left alone and so
  * finds no route (404). It must stay free of side effects: the router caches

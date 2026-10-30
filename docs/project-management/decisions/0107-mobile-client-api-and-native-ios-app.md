@@ -13,6 +13,11 @@ Spike [[0198-mobile-api-jsonapi-oauth-spike]] (2026-10-04) supports §1 and
 §2 with one amendment, below.
 See [[ios-field-app]] for the project scope and phasing.
 
+**Amended 2026-10-30 ([[0246-path-prefix-setting-and-api-at-api-v1]]).** The versioned API prefix moved from
+`/hivelog/api/v1` to `/api/v1` in 4.0.0; the version (`api_version: 1`) and everything under the prefix are
+unchanged. Paths written as `/hivelog/api/v1` elsewhere in this note, the project note and the 2.x release
+notes are the earlier prefix.
+
 ## Context
 HiveLog is entirely server-rendered. Every one of its 22 entity types
 (16 core, 6 from submodules) is created and edited through Drupal forms

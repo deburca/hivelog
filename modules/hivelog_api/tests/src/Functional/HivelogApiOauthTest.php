@@ -201,16 +201,16 @@ class HivelogApiOauthTest extends BrowserTestBase {
     $access = $tokens['json']['access_token'];
 
     // Discovery needs no token; the data does.
-    $this->drupalGet('/hivelog/api/v1');
+    $this->drupalGet('/api/v1');
     $this->assertSession()->statusCodeEquals(200);
-    $garbage = $this->bearer('GET', '/hivelog/api/v1/apiary/apiary', 'not-a-token');
+    $garbage = $this->bearer('GET', '/api/v1/apiary/apiary', 'not-a-token');
     $this->assertSame(401, $garbage['status'], substr($garbage['text'], 0, 600));
 
     // The app sees its own records only.
-    $read = $this->bearer('GET', '/hivelog/api/v1/apiary/apiary', $access);
+    $read = $this->bearer('GET', '/api/v1/apiary/apiary', $access);
     $this->assertSame(200, $read['status']);
     $this->assertSame(['Mine'], array_column(array_column($read['json']['data'], 'attributes'), 'name'));
-    $this->assertSame(403, $this->bearer('GET', '/hivelog/api/v1/hive/hive/' . $their_hive->uuid(), $access)['status']);
+    $this->assertSame(403, $this->bearer('GET', '/api/v1/hive/hive/' . $their_hive->uuid(), $access)['status']);
 
     // It can log an inspection on its own hive, not on someone else's.
     $document = fn(string $hive_uuid) => [
@@ -220,12 +220,12 @@ class HivelogApiOauthTest extends BrowserTestBase {
         'relationships' => ['hive' => ['data' => ['type' => 'hive--hive', 'id' => $hive_uuid]]],
       ],
     ];
-    $created = $this->bearer('POST', '/hivelog/api/v1/hive_inspection/hive_inspection', $access, $document($my_hive->uuid()));
+    $created = $this->bearer('POST', '/api/v1/hive_inspection/hive_inspection', $access, $document($my_hive->uuid()));
     $this->assertSame(201, $created['status']);
 
     // A photo is uploaded straight onto the new inspection's images field.
     $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==');
-    $upload = $this->getHttpClient()->request('POST', $this->buildUrl('/hivelog/api/v1/hive_inspection/hive_inspection/' . $created['json']['data']['id'] . '/images'), [
+    $upload = $this->getHttpClient()->request('POST', $this->buildUrl('/api/v1/hive_inspection/hive_inspection/' . $created['json']['data']['id'] . '/images'), [
       'http_errors' => FALSE,
       'body' => $png,
       'headers' => [
@@ -236,25 +236,25 @@ class HivelogApiOauthTest extends BrowserTestBase {
       ],
     ]);
     $this->assertSame(200, $upload->getStatusCode(), (string) $upload->getBody());
-    $this->assertSame(422, $this->bearer('POST', '/hivelog/api/v1/hive_inspection/hive_inspection', $access, $document($their_hive->uuid()))['status']);
+    $this->assertSame(422, $this->bearer('POST', '/api/v1/hive_inspection/hive_inspection', $access, $document($their_hive->uuid()))['status']);
 
     // The computed views take the same bearer token.
-    $alerts = $this->bearer('GET', '/hivelog/api/v1/computed/alerts', $access);
+    $alerts = $this->bearer('GET', '/api/v1/computed/alerts', $access);
     $this->assertSame(200, $alerts['status']);
     $this->assertArrayHasKey('data', $alerts['json']);
-    $tiles = $this->bearer('GET', '/hivelog/api/v1/computed/hive/' . $my_hive->uuid() . '/stat-tiles', $access);
+    $tiles = $this->bearer('GET', '/api/v1/computed/hive/' . $my_hive->uuid() . '/stat-tiles', $access);
     $this->assertSame(200, $tiles['status']);
-    $this->assertSame(403, $this->bearer('GET', '/hivelog/api/v1/computed/hive/' . $their_hive->uuid() . '/stat-tiles', $access)['status']);
-    $this->assertSame(401, $this->bearer('GET', '/hivelog/api/v1/computed/alerts', 'not-a-token')['status']);
+    $this->assertSame(403, $this->bearer('GET', '/api/v1/computed/hive/' . $their_hive->uuid() . '/stat-tiles', $access)['status']);
+    $this->assertSame(401, $this->bearer('GET', '/api/v1/computed/alerts', 'not-a-token')['status']);
 
     // Outside the allow-list, and no way to read other users.
-    $this->assertSame(404, $this->bearer('GET', '/hivelog/api/v1/inventory_item/inventory_item', $access)['status']);
+    $this->assertSame(404, $this->bearer('GET', '/api/v1/inventory_item/inventory_item', $access)['status']);
     $users = $this->bearer('GET', '/jsonapi/user/user', $access);
     $names = array_column(array_column($users['json']['data'] ?? [], 'attributes'), 'display_name');
     $this->assertNotContains('oauth_them', $names, 'The token can enumerate other users');
 
     // No credentials is a 401 with a Bearer challenge, not a 403 or an empty list.
-    $anonymous = $this->getHttpClient()->request('GET', $this->buildUrl('/hivelog/api/v1/apiary/apiary'), [
+    $anonymous = $this->getHttpClient()->request('GET', $this->buildUrl('/api/v1/apiary/apiary'), [
       'http_errors' => FALSE,
       'headers' => ['Accept' => 'application/vnd.api+json'],
     ]);
@@ -268,8 +268,8 @@ class HivelogApiOauthTest extends BrowserTestBase {
     $short = $this->exchange($short_params['code'], $verifier);
     $this->assertSame(200, $short['status']);
     sleep(3);
-    $this->assertSame(401, $this->bearer('GET', '/hivelog/api/v1/apiary/apiary', $short['json']['access_token'])['status']);
-    $this->assertSame(401, $this->bearer('GET', '/hivelog/api/v1/computed/alerts', $short['json']['access_token'])['status']);
+    $this->assertSame(401, $this->bearer('GET', '/api/v1/apiary/apiary', $short['json']['access_token'])['status']);
+    $this->assertSame(401, $this->bearer('GET', '/api/v1/computed/alerts', $short['json']['access_token'])['status']);
 
     // Refresh works and rotates.
     $refresh = $this->getHttpClient()->request('POST', $this->buildUrl('/oauth/token'), [
@@ -284,13 +284,13 @@ class HivelogApiOauthTest extends BrowserTestBase {
     $rotated = json_decode((string) $refresh->getBody(), TRUE);
 
     // Sign out revokes this session's tokens on the server, not just locally.
-    $sign_out = $this->getHttpClient()->request('POST', $this->buildUrl('/hivelog/api/v1/sign-out'), [
+    $sign_out = $this->getHttpClient()->request('POST', $this->buildUrl('/api/v1/sign-out'), [
       'http_errors' => FALSE,
       'headers' => ['Authorization' => 'Bearer ' . $rotated['access_token'], 'Content-Type' => 'application/json'],
       'body' => json_encode(['refresh_token' => $rotated['refresh_token']]),
     ]);
     $this->assertSame(204, $sign_out->getStatusCode(), (string) $sign_out->getBody());
-    $this->assertSame(401, $this->bearer('GET', '/hivelog/api/v1/apiary/apiary', $rotated['access_token'])['status']);
+    $this->assertSame(401, $this->bearer('GET', '/api/v1/apiary/apiary', $rotated['access_token'])['status']);
     $again = $this->getHttpClient()->request('POST', $this->buildUrl('/oauth/token'), [
       'http_errors' => FALSE,
       'form_params' => [
@@ -304,7 +304,7 @@ class HivelogApiOauthTest extends BrowserTestBase {
     // Another user's refresh token cannot be revoked with your own bearer.
     $mine = $this->exchange($this->authorize($me, $verifier)['code'], $verifier);
     $theirs = $this->exchange($this->authorize($them, $verifier)['code'], $verifier);
-    $this->getHttpClient()->request('POST', $this->buildUrl('/hivelog/api/v1/sign-out'), [
+    $this->getHttpClient()->request('POST', $this->buildUrl('/api/v1/sign-out'), [
       'http_errors' => FALSE,
       'headers' => ['Authorization' => 'Bearer ' . $mine['json']['access_token'], 'Content-Type' => 'application/json'],
       'body' => json_encode(['refresh_token' => $theirs['json']['refresh_token']]),

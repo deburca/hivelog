@@ -89,10 +89,10 @@ class HivelogApiNonExposedTypesTest extends HivelogApiKernelTestBase {
 
     foreach (self::HIDDEN as $type) {
       $this->assertSame(200, $this->api('GET', "/jsonapi/$type/$type", NULL, $admin)['status'], "$type exists in plain JSON:API");
-      foreach (["/hivelog/api/v1/$type/$type", "/hivelog/api/v1/$type/$type/" . \Drupal::service('uuid')->generate()] as $path) {
+      foreach (["/api/v1/$type/$type", "/api/v1/$type/$type/" . \Drupal::service('uuid')->generate()] as $path) {
         $this->assertSame(404, $this->api('GET', $path, NULL, $admin)['status'], $path);
       }
-      $this->assertSame(404, $this->api('POST', "/hivelog/api/v1/$type/$type", ['data' => ['type' => "$type--$type"]], $admin)['status'], "POST $type");
+      $this->assertSame(404, $this->api('POST', "/api/v1/$type/$type", ['data' => ['type' => "$type--$type"]], $admin)['status'], "POST $type");
     }
   }
 

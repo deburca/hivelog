@@ -107,7 +107,7 @@ class HivelogApiSensorTilesTest extends HivelogApiKernelTestBase {
     ])->save();
     HiveComponent::create(['hive' => $hive->id(), 'item' => $item->id(), 'quantity' => 2])->save();
 
-    $response = $this->api('GET', '/hivelog/api/v1/computed/hive/' . $hive->uuid() . '/stat-tiles', NULL, $this->me);
+    $response = $this->api('GET', '/api/v1/computed/hive/' . $hive->uuid() . '/stat-tiles', NULL, $this->me);
     $this->assertSame(200, $response['status'], $response['raw']);
 
     $tiles = array_column($response['body']['data'], NULL, 'key');
@@ -126,8 +126,8 @@ class HivelogApiSensorTilesTest extends HivelogApiKernelTestBase {
     $this->deviceWithReading($this->fixtures['their_apiary'], $this->fixtures['their_hive'], 'Their scale', 'weight', 'weight_kg', 44.0);
     $uuid = $this->fixtures['their_hive']->uuid();
 
-    $this->assertSame(403, $this->api('GET', "/hivelog/api/v1/computed/hive/$uuid/stat-tiles", NULL, $this->me)['status']);
-    $mine = $this->api('GET', '/hivelog/api/v1/computed/hive/' . $this->fixtures['my_hive']->uuid() . '/stat-tiles', NULL, $this->me);
+    $this->assertSame(403, $this->api('GET', "/api/v1/computed/hive/$uuid/stat-tiles", NULL, $this->me)['status']);
+    $mine = $this->api('GET', '/api/v1/computed/hive/' . $this->fixtures['my_hive']->uuid() . '/stat-tiles', NULL, $this->me);
     $this->assertSame(200, $mine['status']);
     $this->assertStringNotContainsString('Their scale', $mine['raw']);
   }
@@ -138,9 +138,9 @@ class HivelogApiSensorTilesTest extends HivelogApiKernelTestBase {
   public function testSensorsAreNotServedAsResources(): void {
     $device = $this->deviceWithReading($this->fixtures['my_apiary'], $this->fixtures['my_hive'], 'Scale', 'weight', 'weight_kg', 30.0);
     foreach (['sensor_device', 'sensor_reading'] as $type) {
-      $this->assertSame(404, $this->api('GET', "/hivelog/api/v1/$type/$type", NULL, $this->me)['status'], $type);
+      $this->assertSame(404, $this->api('GET', "/api/v1/$type/$type", NULL, $this->me)['status'], $type);
     }
-    $this->assertSame(404, $this->api('GET', '/hivelog/api/v1/sensor_device/sensor_device/' . $device->uuid(), NULL, $this->me)['status']);
+    $this->assertSame(404, $this->api('GET', '/api/v1/sensor_device/sensor_device/' . $device->uuid(), NULL, $this->me)['status']);
   }
 
 }

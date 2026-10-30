@@ -100,7 +100,8 @@ public (no secret) PKCE client `hivelog-ios`. The role is labelled
 required"). Generate Simple OAuth's key pair at
 **Configuration → People → Simple OAuth** (keep it outside the web root; the
 status report warns until you do). The API is served under
-`/hivelog/api/v1`. It does not change JSON:API's site-wide settings.
+`/api/v1` (before 4.0.0: `/hivelog/api/v1`). It does not change JSON:API's site-wide
+settings.
 
 ### OAuth keys: use `private://` paths on a shared host, and when moving configuration
 
@@ -355,6 +356,23 @@ access control handlers when a "done" action-log report creates, updates,
 or removes the underlying usage/yield records.
 
 ## Routes
+
+Every path below is under `/hivelog` unless the site sets another prefix. To serve the pages
+at `/app/...` (so `hivelog.eu/app` rather than `hivelog.eu/hivelog`), add to `settings.php` and
+rebuild the router (`drush cr`):
+
+```php
+$settings['hivelog_path_prefix'] = 'app';
+```
+
+Lower-case letters, digits and hyphens only, up to 32 characters; a value that is not (or one
+core or another module owns, such as `admin`, `api` or `user`) is ignored and the pages stay at
+`/hivelog`. Route names and permissions do not change. The old `/hivelog/...` paths stop working
+once a prefix is set, so update any links you hold: the site's 403 and 404 pages
+(`system.site:page.403` and `page.404`, set to `/hivelog/access-denied` and
+`/hivelog/page-not-found` if you use the friendly error pages), menu links to a path, and
+bookmarks. The machine endpoints under `/hivelog/api/` (sensor ingestion, the collective context
+API) never move, and the field-app API is at `/api/v1` whatever the prefix.
 
 **Apiary**
 

@@ -44,7 +44,7 @@ class HivelogApiSchemaTest extends HivelogApiKernelTestBase {
    *   The `data` member.
    */
   protected function schema(): array {
-    $response = $this->api('GET', '/hivelog/api/v1/schema', NULL, $this->me);
+    $response = $this->api('GET', '/api/v1/schema', NULL, $this->me);
     $this->assertSame(200, $response['status'], $response['raw']);
     return $response['body']['data'];
   }
@@ -53,7 +53,7 @@ class HivelogApiSchemaTest extends HivelogApiKernelTestBase {
    * Tests the schema needs a sign-in, like the rest of the API.
    */
   public function testItNeedsCredentials(): void {
-    $this->assertSame(401, $this->api('GET', '/hivelog/api/v1/schema')['status']);
+    $this->assertSame(401, $this->api('GET', '/api/v1/schema')['status']);
   }
 
   /**
