@@ -20,21 +20,8 @@
               "icon": "lucide-file",
               "title": "WEIGHT_SENSOR"
             }
-          },
-          {
-            "id": "f20376b524840770",
-            "type": "leaf",
-            "state": {
-              "type": "release-notes",
-              "state": {
-                "currentVersion": "1.14.4"
-              },
-              "icon": "lucide-book-up",
-              "title": "Release Notes 1.14.4"
-            }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "vertical"
@@ -201,6 +188,6 @@
       "bases:Create new base": false
     }
   },
-  "active": "f20376b524840770",
+  "active": "dad1945e4f4eb78f",
   "lastOpenFiles": []
 }
