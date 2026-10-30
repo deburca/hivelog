@@ -29,7 +29,7 @@ class HivelogApiLeafDeleteTest extends HivelogApiKernelTestBase {
    * The item path of a record.
    */
   protected function path(string $type, string $uuid): string {
-    return "/hivelog/api/v1/$type/$type/$uuid";
+    return "/api/v1/$type/$type/$uuid";
   }
 
   /**

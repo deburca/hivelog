@@ -92,7 +92,7 @@ class HivelogApiCompatibleWritesTest extends HivelogApiKernelTestBase {
    */
   public function testRecordSentAsApplicationJsonIsCreated(): void {
     $uuid = \Drupal::service('uuid')->generate();
-    $path = '/hivelog/api/v1/hive_inspection/hive_inspection';
+    $path = '/api/v1/hive_inspection/hive_inspection';
 
     $response = $this->send($path, 'application/json', $this->inspectionJson($this->fixtures['my_hive']->uuid(), $uuid), $this->me);
     $this->assertSame(201, $response['status'], $response['raw']);
@@ -119,7 +119,7 @@ class HivelogApiCompatibleWritesTest extends HivelogApiKernelTestBase {
    * A request with no Authorization header is not rewritten.
    */
   public function testRequestWithoutCredentialsIsLeftAlone(): void {
-    $request = Request::create('http://localhost/hivelog/api/v1/hive_inspection/hive_inspection', 'POST', [], [], [], ['CONTENT_TYPE' => 'application/json'], '{}');
+    $request = Request::create('http://localhost/api/v1/hive_inspection/hive_inspection', 'POST', [], [], [], ['CONTENT_TYPE' => 'application/json'], '{}');
     $this->assertFalse(HivelogApiWriteCompatibilitySubscriber::applies($request));
     $request->headers->set('Authorization', 'Bearer abc');
     $this->assertTrue(HivelogApiWriteCompatibilitySubscriber::applies($request));
@@ -135,12 +135,12 @@ class HivelogApiCompatibleWritesTest extends HivelogApiKernelTestBase {
       return $request;
     };
     $applies = fn(string $method, string $path): bool => HivelogApiWriteCompatibilitySubscriber::applies($make($method, $path));
-    $this->assertTrue($applies('POST', '/hivelog/api/v1/hive_inspection/hive_inspection'));
-    $this->assertTrue($applies('POST', '/hivelog/api/v1/hive_inspection/hive_inspection/abc/images'));
-    $this->assertFalse($applies('GET', '/hivelog/api/v1/hive_inspection/hive_inspection'));
-    $this->assertFalse($applies('POST', '/hivelog/api/v1/sign-out'));
-    $this->assertFalse($applies('POST', '/hivelog/api/v1/schema'));
-    $this->assertFalse($applies('POST', '/hivelog/api/v1/computed/alerts'));
+    $this->assertTrue($applies('POST', '/api/v1/hive_inspection/hive_inspection'));
+    $this->assertTrue($applies('POST', '/api/v1/hive_inspection/hive_inspection/abc/images'));
+    $this->assertFalse($applies('GET', '/api/v1/hive_inspection/hive_inspection'));
+    $this->assertFalse($applies('POST', '/api/v1/sign-out'));
+    $this->assertFalse($applies('POST', '/api/v1/schema'));
+    $this->assertFalse($applies('POST', '/api/v1/computed/alerts'));
     $this->assertFalse($applies('POST', '/jsonapi/hive_inspection/hive_inspection'));
   }
 
@@ -149,7 +149,7 @@ class HivelogApiCompatibleWritesTest extends HivelogApiKernelTestBase {
    */
   public function testMultipartPhotoIsAttachedToTheInspection(): void {
     $inspection = $this->fixtures['my_inspection'];
-    $path = '/hivelog/api/v1/hive_inspection/hive_inspection/' . $inspection->uuid() . '/images';
+    $path = '/api/v1/hive_inspection/hive_inspection/' . $inspection->uuid() . '/images';
     $upload = $this->uploadedPng('hive photo.png');
 
     $response = $this->send($path, 'multipart/form-data; boundary=x', NULL, $this->me, ['file' => $upload]);
@@ -168,7 +168,7 @@ class HivelogApiCompatibleWritesTest extends HivelogApiKernelTestBase {
    * A multipart request with no file, or an empty one, is a clean 400.
    */
   public function testMultipartWithNoFileIsRefused(): void {
-    $path = '/hivelog/api/v1/hive_inspection/hive_inspection/' . $this->fixtures['my_inspection']->uuid() . '/images';
+    $path = '/api/v1/hive_inspection/hive_inspection/' . $this->fixtures['my_inspection']->uuid() . '/images';
     $none = $this->send($path, 'multipart/form-data; boundary=x', NULL, $this->me);
     $this->assertSame(400, $none['status'], $none['raw']);
     $this->assertSame('400', $none['body']['errors'][0]['status']);
@@ -182,7 +182,7 @@ class HivelogApiCompatibleWritesTest extends HivelogApiKernelTestBase {
    * Someone else's inspection still cannot be given a photo.
    */
   public function testMultipartCannotAttachToAnotherBeekeepersRecord(): void {
-    $path = '/hivelog/api/v1/hive_inspection/hive_inspection/' . $this->fixtures['their_inspection']->uuid() . '/images';
+    $path = '/api/v1/hive_inspection/hive_inspection/' . $this->fixtures['their_inspection']->uuid() . '/images';
     $response = $this->send($path, 'multipart/form-data; boundary=x', NULL, $this->me, ['file' => $this->uploadedPng('x.png')]);
     $this->assertContains($response['status'], [403, 404], $response['raw']);
     /** @var \Drupal\hivelog\Entity\HiveInspection $reloaded */
@@ -194,7 +194,7 @@ class HivelogApiCompatibleWritesTest extends HivelogApiKernelTestBase {
    * An inspection's item path.
    */
   protected function inspectionPath(string $uuid): string {
-    return '/hivelog/api/v1/hive_inspection/hive_inspection/' . $uuid;
+    return '/api/v1/hive_inspection/hive_inspection/' . $uuid;
   }
 
   /**
@@ -281,7 +281,7 @@ class HivelogApiCompatibleWritesTest extends HivelogApiKernelTestBase {
     $storage = \Drupal::entityTypeManager()->getStorage('hive_inspection');
 
     // The role cannot delete a hive: a 403 (a DELETE refused), not a 405 (a POST nobody routes).
-    $hive = $this->send('/hivelog/api/v1/hive/hive/' . $this->fixtures['my_hive']->uuid(), '', NULL, $this->me, [], ['X-HTTP-Method-Override' => 'DELETE']);
+    $hive = $this->send('/api/v1/hive/hive/' . $this->fixtures['my_hive']->uuid(), '', NULL, $this->me, [], ['X-HTTP-Method-Override' => 'DELETE']);
     $this->assertSame(403, $hive['status'], $hive['raw']);
 
     // Never another beekeeper's inspection.
@@ -333,7 +333,7 @@ class HivelogApiCompatibleWritesTest extends HivelogApiKernelTestBase {
       }
       return $request;
     };
-    $item = '/hivelog/api/v1/hive_inspection/hive_inspection/abc';
+    $item = '/api/v1/hive_inspection/hive_inspection/abc';
     $named = fn(Request $r): ?string => HivelogApiWriteCompatibilitySubscriber::overrideMethod($r);
 
     $this->assertSame('PATCH', $named($make($item, 'PATCH')));
@@ -344,9 +344,9 @@ class HivelogApiCompatibleWritesTest extends HivelogApiKernelTestBase {
     $this->assertNull($named($make($item, 'GET')));
     $this->assertNull($named($make($item, 'DELETE', FALSE)), 'No credentials in a header: no override.');
     $this->assertNull($named($make('/jsonapi/hive_inspection/hive_inspection/abc', 'DELETE')), 'Not off the versioned prefix.');
-    $this->assertNull($named($make('/hivelog/api/v1/sign-out', 'DELETE')));
-    $this->assertNull($named($make('/hivelog/api/v1/schema', 'PATCH')));
-    $this->assertNull($named($make('/hivelog/api/v1/computed/alerts', 'DELETE')));
+    $this->assertNull($named($make('/api/v1/sign-out', 'DELETE')));
+    $this->assertNull($named($make('/api/v1/schema', 'PATCH')));
+    $this->assertNull($named($make('/api/v1/computed/alerts', 'DELETE')));
     $this->assertNull($named($make($item, 'DELETE', TRUE, 'GET')), 'Only a real POST can be an override.');
   }
 
@@ -354,7 +354,7 @@ class HivelogApiCompatibleWritesTest extends HivelogApiKernelTestBase {
    * The discovery document lists what the server accepts.
    */
   public function testDiscoveryListsTheFeatures(): void {
-    $response = $this->api('GET', '/hivelog/api/v1');
+    $response = $this->api('GET', '/api/v1');
     $this->assertSame(200, $response['status']);
     $this->assertSame(['json_write', 'multipart_upload', 'method_override'], $response['body']['meta']['hivelog_api']['features']);
     $this->assertSame(HivelogApiResources::FEATURES, $response['body']['meta']['hivelog_api']['features']);

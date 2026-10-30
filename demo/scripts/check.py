@@ -84,7 +84,7 @@ def check(ok, what):
 
 
 print(f"== {base}")
-status, body, _ = request(f"{base}/hivelog/api/v1", headers={"Accept": "application/json"})
+status, body, _ = request(f"{base}/api/v1", headers={"Accept": "application/json"})
 check(status == 200, "the discovery document answers")
 meta = json.loads(body)["meta"]["hivelog_api"] if status == 200 else {}
 check(meta.get("api_version") == 1, f"API version 1 (module {meta.get('module_version')})")
@@ -130,7 +130,7 @@ auth = {"Authorization": f"Bearer {token}", "Accept": "application/vnd.api+json"
 
 
 def get(path):
-    status, body, _ = request(f"{base}/hivelog/api/v1/{path}", headers=auth)
+    status, body, _ = request(f"{base}/api/v1/{path}", headers=auth)
     return status, (json.loads(body) if body else {})
 
 
@@ -172,14 +172,14 @@ if "--write" in flags and first_hive:
     doc = {"data": {"type": "hive_inspection--hive_inspection", "id": new_id,
                     "attributes": {"inspection_date": "2026-01-01", "notes": "Written by scripts/check.py"},
                     "relationships": {"hive": {"data": {"type": "hive--hive", "id": first_hive}}}}}
-    status, body, _ = request(f"{base}/hivelog/api/v1/hive_inspection/hive_inspection", data=json.dumps(doc).encode(),
+    status, body, _ = request(f"{base}/api/v1/hive_inspection/hive_inspection", data=json.dumps(doc).encode(),
                               headers={**auth, "Content-Type": "application/json"}, method="POST")
     check(status == 201, f"an inspection is recorded as plain JSON ({status})")
     jpeg = base64.b64decode("/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wgALCAABAAEBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA=")
     boundary = "check" + uuid.uuid4().hex
     part = (f"--{boundary}\r\nContent-Disposition: form-data; name=\"file\"; filename=\"check.jpg\"\r\n"
             f"Content-Type: image/jpeg\r\n\r\n").encode() + jpeg + f"\r\n--{boundary}--\r\n".encode()
-    status, body, _ = request(f"{base}/hivelog/api/v1/hive_inspection/hive_inspection/{new_id}/images", data=part,
+    status, body, _ = request(f"{base}/api/v1/hive_inspection/hive_inspection/{new_id}/images", data=part,
                               headers={**auth, "Content-Type": f"multipart/form-data; boundary={boundary}"}, method="POST")
     check(status == 200, f"a photo is attached as a multipart form ({status})")
     print("        (the test inspection stays until the next `ddev demo-reset`)")

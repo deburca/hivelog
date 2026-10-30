@@ -13,7 +13,7 @@ use Drupal\hivelog\Entity\Hive;
  *
  * The same optional-submodule-extends-without-a-dependency pattern as
  * hivelog core's own hooks (see hivelog.api.php and ADR-0099), applied to
- * `GET /hivelog/api/v1/computed/hive/{hive}/insight`: `hivelog_api` defines
+ * `GET /api/v1/computed/hive/{hive}/insight`: `hivelog_api` defines
  * and invokes this hook and implements nothing here itself, so it never
  * depends on `nexus`. Return plain data, never markup.
  *

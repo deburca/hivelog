@@ -34,7 +34,7 @@ class HivelogApiWriteTest extends HivelogApiKernelTestBase {
    */
   public function testClientUuidIsKeptAndRetryConflicts(): void {
     $uuid = \Drupal::service('uuid')->generate();
-    $path = '/hivelog/api/v1/hive_inspection/hive_inspection';
+    $path = '/api/v1/hive_inspection/hive_inspection';
     $document = $this->inspectionDocument($this->fixtures['my_hive']->uuid(), [], $uuid);
 
     $first = $this->api('POST', $path, $document, $this->me);
@@ -53,7 +53,7 @@ class HivelogApiWriteTest extends HivelogApiKernelTestBase {
    * Tests a constraint violation is a 422 naming the field, not a 500.
    */
   public function testConstraintViolationIsA422WithTheFieldPointer(): void {
-    $path = '/hivelog/api/v1/hive_inspection/hive_inspection';
+    $path = '/api/v1/hive_inspection/hive_inspection';
     $document = $this->inspectionDocument($this->fixtures['my_hive']->uuid(), ['fed' => TRUE]);
 
     $response = $this->api('POST', $path, $document, $this->me);
@@ -67,7 +67,7 @@ class HivelogApiWriteTest extends HivelogApiKernelTestBase {
    * Tests a record cannot be created under another beekeeper's hive.
    */
   public function testCreatingUnderForeignHiveIsRefused(): void {
-    $path = '/hivelog/api/v1/hive_inspection/hive_inspection';
+    $path = '/api/v1/hive_inspection/hive_inspection';
     $document = $this->inspectionDocument($this->fixtures['their_hive']->uuid());
 
     $response = $this->api('POST', $path, $document, $this->me);
@@ -81,7 +81,7 @@ class HivelogApiWriteTest extends HivelogApiKernelTestBase {
    */
   public function testReparentingToForeignHiveIsRefused(): void {
     $uuid = $this->fixtures['my_inspection']->uuid();
-    $path = "/hivelog/api/v1/hive_inspection/hive_inspection/$uuid/relationships/hive";
+    $path = "/api/v1/hive_inspection/hive_inspection/$uuid/relationships/hive";
     $body = ['data' => ['type' => 'hive--hive', 'id' => $this->fixtures['their_hive']->uuid()]];
 
     $this->assertSame(422, $this->api('PATCH', $path, $body, $this->me)['status']);
@@ -99,17 +99,17 @@ class HivelogApiWriteTest extends HivelogApiKernelTestBase {
 
     // Another beekeeper's inspection is refused, and stays.
     $theirs = $this->fixtures['their_inspection'];
-    $foreign = $this->api('DELETE', "/hivelog/api/v1/hive_inspection/hive_inspection/{$theirs->uuid()}", NULL, $this->me);
+    $foreign = $this->api('DELETE', "/api/v1/hive_inspection/hive_inspection/{$theirs->uuid()}", NULL, $this->me);
     $this->assertContains($foreign['status'], [403, 404]);
     $this->assertNotNull($storage->load($theirs->id()));
 
     // A hive is not a leaf: never, though it is the user's own.
-    $hive = $this->api('DELETE', "/hivelog/api/v1/hive/hive/{$this->fixtures['my_hive']->uuid()}", NULL, $this->me);
+    $hive = $this->api('DELETE', "/api/v1/hive/hive/{$this->fixtures['my_hive']->uuid()}", NULL, $this->me);
     $this->assertSame(403, $hive['status']);
 
     // Their own inspection goes.
     $mine = $this->fixtures['my_inspection'];
-    $response = $this->api('DELETE', "/hivelog/api/v1/hive_inspection/hive_inspection/{$mine->uuid()}", NULL, $this->me);
+    $response = $this->api('DELETE', "/api/v1/hive_inspection/hive_inspection/{$mine->uuid()}", NULL, $this->me);
     $this->assertSame(204, $response['status'], $response['raw']);
     $this->assertNull($storage->load($mine->id()));
   }
@@ -119,7 +119,7 @@ class HivelogApiWriteTest extends HivelogApiKernelTestBase {
    */
   public function testUnauthenticatedCannotWrite(): void {
     $document = $this->inspectionDocument($this->fixtures['my_hive']->uuid());
-    $response = $this->api('POST', '/hivelog/api/v1/hive_inspection/hive_inspection', $document);
+    $response = $this->api('POST', '/api/v1/hive_inspection/hive_inspection', $document);
     $this->assertSame(401, $response['status']);
   }
 

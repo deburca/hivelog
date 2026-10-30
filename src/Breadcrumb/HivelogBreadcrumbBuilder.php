@@ -12,6 +12,7 @@ use Drupal\Core\Link;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\hivelog\HivelogEntityHierarchy;
+use Drupal\hivelog\HivelogPaths;
 
 /**
  * Provides breadcrumbs for hivelog entity routes.
@@ -141,7 +142,7 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
     // list that drifts as routes are added (task 0067).
     $route = $route_match->getRouteObject();
     $path = $route ? $route->getPath() : '';
-    return $path === '/hivelog' || str_starts_with($path, '/hivelog/');
+    return HivelogPaths::matches($path);
   }
 
   /**

@@ -18,7 +18,7 @@ class HivelogApiRoutingTest extends HivelogApiKernelTestBase {
    * Tests the discovery document is public and describes the API.
    */
   public function testDiscoveryDocumentIsPublic(): void {
-    $response = $this->api('GET', '/hivelog/api/v1');
+    $response = $this->api('GET', '/api/v1');
     $this->assertSame(200, $response['status']);
 
     $meta = $response['body']['meta']['hivelog_api'];
@@ -27,8 +27,8 @@ class HivelogApiRoutingTest extends HivelogApiKernelTestBase {
     $this->assertSame('hivelog_field_app', $meta['oauth']['scope']);
     $this->assertStringEndsWith('/oauth/authorize', $meta['oauth']['authorize']);
     $this->assertStringEndsWith('/oauth/token', $meta['oauth']['token']);
-    $this->assertStringEndsWith('/hivelog/api/v1/sign-out', $meta['oauth']['sign_out']);
-    $this->assertStringEndsWith('/hivelog/api/v1/hive/hive', $response['body']['links']['hive--hive']['href']);
+    $this->assertStringEndsWith('/api/v1/sign-out', $meta['oauth']['sign_out']);
+    $this->assertStringEndsWith('/api/v1/hive/hive', $response['body']['links']['hive--hive']['href']);
     $this->assertArrayNotHasKey('inventory_item--inventory_item', $response['body']['links']);
   }
 
@@ -36,12 +36,12 @@ class HivelogApiRoutingTest extends HivelogApiKernelTestBase {
    * Tests an allow-listed resource is served under the prefix, owner-scoped.
    */
   public function testAllowListedResourceIsServedUnderThePrefix(): void {
-    $response = $this->api('GET', '/hivelog/api/v1/apiary/apiary', NULL, $this->me);
+    $response = $this->api('GET', '/api/v1/apiary/apiary', NULL, $this->me);
     $this->assertSame(200, $response['status'], $response['raw']);
 
     $names = array_column(array_column($response['body']['data'], 'attributes'), 'name');
     $this->assertSame(['my apiary'], $names, 'Another beekeeper\'s apiary is not listed');
-    $this->assertStringContainsString('/hivelog/api/v1/apiary/apiary', $response['body']['links']['self']['href']);
+    $this->assertStringContainsString('/api/v1/apiary/apiary', $response['body']['links']['self']['href']);
   }
 
   /**
@@ -49,8 +49,8 @@ class HivelogApiRoutingTest extends HivelogApiKernelTestBase {
    */
   public function testForeignRecordIsRefused(): void {
     $uuid = $this->fixtures['their_hive']->uuid();
-    $this->assertSame(403, $this->api('GET', "/hivelog/api/v1/hive/hive/$uuid", NULL, $this->me)['status']);
-    $this->assertSame(200, $this->api('GET', "/hivelog/api/v1/hive/hive/$uuid", NULL, $this->them)['status']);
+    $this->assertSame(403, $this->api('GET', "/api/v1/hive/hive/$uuid", NULL, $this->me)['status']);
+    $this->assertSame(200, $this->api('GET', "/api/v1/hive/hive/$uuid", NULL, $this->them)['status']);
   }
 
   /**
@@ -59,7 +59,7 @@ class HivelogApiRoutingTest extends HivelogApiKernelTestBase {
   public function testLinksFollowTheRequestPrefixWithoutCacheLeakage(): void {
     $self = fn(array $response): string => $response['body']['links']['self']['href'];
     $plain = '/jsonapi/apiary/apiary';
-    $versioned = '/hivelog/api/v1/apiary/apiary';
+    $versioned = '/api/v1/apiary/apiary';
 
     foreach ([$plain, $versioned, $plain, $versioned] as $path) {
       $response = $this->api('GET', $path, NULL, $this->me);
@@ -77,7 +77,7 @@ class HivelogApiRoutingTest extends HivelogApiKernelTestBase {
       'hive_component/hive_component', 'calendar_action_item_requirement/calendar_action_item_requirement',
       'user/user', 'consumer/consumer', 'oauth2_token/access_token', 'nothing/nothing',
     ] as $resource) {
-      $response = $this->api('GET', "/hivelog/api/v1/$resource", NULL, $this->me);
+      $response = $this->api('GET', "/api/v1/$resource", NULL, $this->me);
       $this->assertSame(404, $response['status'], $resource);
     }
     // The same resource is not hidden by being unreachable elsewhere: it is
@@ -109,7 +109,7 @@ class HivelogApiRoutingTest extends HivelogApiKernelTestBase {
     $unprefixed = $this->api('POST', '/jsonapi/hive_inspection/hive_inspection', $document, $this->me);
     $this->assertSame(405, $unprefixed['status'], 'Plain JSON:API keeps the site\'s read-only mode');
 
-    $prefixed = $this->api('POST', '/hivelog/api/v1/hive_inspection/hive_inspection', $document, $this->me);
+    $prefixed = $this->api('POST', '/api/v1/hive_inspection/hive_inspection', $document, $this->me);
     $this->assertSame(201, $prefixed['status'], $prefixed['raw']);
     $this->assertTrue($this->config('jsonapi.settings')->get('read_only'), 'The setting itself is untouched');
   }

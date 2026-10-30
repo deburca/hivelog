@@ -205,7 +205,7 @@ class HivelogApiAccessParityTest extends HivelogApiKernelTestBase {
    * The versioned collection or item path of a type.
    */
   protected function path(string $type, ?ContentEntityInterface $entity = NULL): string {
-    return "/hivelog/api/v1/$type/$type" . ($entity ? '/' . $entity->uuid() : '');
+    return "/api/v1/$type/$type" . ($entity ? '/' . $entity->uuid() : '');
   }
 
   /**
@@ -296,7 +296,7 @@ class HivelogApiAccessParityTest extends HivelogApiKernelTestBase {
    * Tests the file collection is not served, only items and uploads.
    */
   public function testTheFileCollectionIsNotServed(): void {
-    $this->assertSame(404, $this->api('GET', '/hivelog/api/v1/file/file', NULL, $this->actors['owner'])['status']);
+    $this->assertSame(404, $this->api('GET', '/api/v1/file/file', NULL, $this->actors['owner'])['status']);
   }
 
   /**

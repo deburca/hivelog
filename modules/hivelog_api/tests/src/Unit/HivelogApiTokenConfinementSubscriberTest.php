@@ -91,7 +91,7 @@ class HivelogApiTokenConfinementSubscriberTest extends UnitTestCase {
   public static function cases(): array {
     return [
       'app token on plain JSON:API' => ['/jsonapi/user/user', TRUE, ['hivelog_field_app'], TRUE],
-      'app token on the versioned API' => ['/hivelog/api/v1/hive/hive', TRUE, ['hivelog_field_app'], FALSE],
+      'app token on the versioned API' => ['/api/v1/hive/hive', TRUE, ['hivelog_field_app'], FALSE],
       'app token on a non-JSON:API route' => ['/oauth/userinfo', FALSE, ['hivelog_field_app'], FALSE],
       'another client\'s token on plain JSON:API' => ['/jsonapi/node/page', TRUE, ['some_other_scope'], FALSE],
       'app scope among others' => ['/jsonapi/user/user', TRUE, ['x', 'hivelog_field_app'], TRUE],

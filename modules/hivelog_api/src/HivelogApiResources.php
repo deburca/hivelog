@@ -27,7 +27,7 @@ class HivelogApiResources {
   /**
    * The versioned path prefix.
    */
-  public const PATH_PREFIX = '/hivelog/api/v1';
+  public const PATH_PREFIX = '/api/v1';
 
   /**
    * The OAuth client id, scope and redirect the app uses.

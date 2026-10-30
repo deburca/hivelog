@@ -66,7 +66,7 @@ class HivelogApiComputedViewsTest extends HivelogApiKernelTestBase {
     $mine = $this->dueAction($this->fixtures['my_apiary'], 'Mine due now');
     $theirs = $this->dueAction($this->fixtures['their_apiary'], 'Theirs due now');
 
-    $response = $this->api('GET', '/hivelog/api/v1/computed/alerts', NULL, $this->me);
+    $response = $this->api('GET', '/api/v1/computed/alerts', NULL, $this->me);
     $this->assertSame(200, $response['status'], $response['raw']);
 
     $rows = array_column($response['body']['data'], NULL, 'title');
@@ -81,7 +81,7 @@ class HivelogApiComputedViewsTest extends HivelogApiKernelTestBase {
     $this->assertSame(['id' => $mine->uuid(), 'scope' => 'hive'], $row['calendar_action']);
     $this->assertSame(
       ['id' => $theirs->uuid(), 'scope' => 'hive'],
-      array_column($this->api('GET', '/hivelog/api/v1/computed/alerts', NULL, $this->them)['body']['data'], 'calendar_action', 'title')['Theirs due now']
+      array_column($this->api('GET', '/api/v1/computed/alerts', NULL, $this->them)['body']['data'], 'calendar_action', 'title')['Theirs due now']
     );
     $this->assertSame(count($response['body']['data']), $response['body']['meta']['count']);
 
@@ -104,7 +104,7 @@ class HivelogApiComputedViewsTest extends HivelogApiKernelTestBase {
    * Tests an unauthenticated request gets no alerts.
    */
   public function testAlertsNeedSignIn(): void {
-    $this->assertSame(401, $this->api('GET', '/hivelog/api/v1/computed/alerts')['status']);
+    $this->assertSame(401, $this->api('GET', '/api/v1/computed/alerts')['status']);
   }
 
   /**
@@ -127,7 +127,7 @@ class HivelogApiComputedViewsTest extends HivelogApiKernelTestBase {
    */
   public function testHiveStatTilesAreServedInWeightOrder(): void {
     $uuid = $this->fixtures['my_hive']->uuid();
-    $response = $this->api('GET', "/hivelog/api/v1/computed/hive/$uuid/stat-tiles", NULL, $this->me);
+    $response = $this->api('GET', "/api/v1/computed/hive/$uuid/stat-tiles", NULL, $this->me);
     $this->assertSame(200, $response['status'], $response['raw']);
 
     $this->assertSame(['first_tile', 'test_tile'], array_column($response['body']['data'], 'key'));
@@ -168,7 +168,7 @@ class HivelogApiComputedViewsTest extends HivelogApiKernelTestBase {
     ])->save();
 
     $uuid = $this->fixtures['my_hive']->uuid();
-    $response = $this->api('GET', "/hivelog/api/v1/computed/hive/$uuid/stat-tiles", NULL, $this->me);
+    $response = $this->api('GET', "/api/v1/computed/hive/$uuid/stat-tiles", NULL, $this->me);
     $this->assertEquals(8.5, $response['body']['meta']['empty_weight_kg']);
   }
 
@@ -177,7 +177,7 @@ class HivelogApiComputedViewsTest extends HivelogApiKernelTestBase {
    */
   public function testHiveInsightIsServed(): void {
     $uuid = $this->fixtures['my_hive']->uuid();
-    $response = $this->api('GET', "/hivelog/api/v1/computed/hive/$uuid/insight", NULL, $this->me);
+    $response = $this->api('GET', "/api/v1/computed/hive/$uuid/insight", NULL, $this->me);
     $this->assertSame(200, $response['status'], $response['raw']);
     $this->assertSame('inspect_soon', $response['body']['data']['verdict']);
     $this->assertSame(['Weight is flat'], $response['body']['data']['signals']);
@@ -196,7 +196,7 @@ class HivelogApiComputedViewsTest extends HivelogApiKernelTestBase {
     $second->save();
 
     $uuid = $this->fixtures['my_apiary']->uuid();
-    $response = $this->api('GET', "/hivelog/api/v1/computed/apiary/$uuid/hive-insights", NULL, $this->me);
+    $response = $this->api('GET', "/api/v1/computed/apiary/$uuid/hive-insights", NULL, $this->me);
     $this->assertSame(200, $response['status'], $response['raw']);
 
     $rows = array_column($response['body']['data'], NULL, 'hive');
@@ -219,12 +219,12 @@ class HivelogApiComputedViewsTest extends HivelogApiKernelTestBase {
    */
   public function testApiaryHiveInsightsRefuseForeignAndUnknownApiaries(): void {
     $theirs = $this->fixtures['their_apiary']->uuid();
-    $path = "/hivelog/api/v1/computed/apiary/$theirs/hive-insights";
+    $path = "/api/v1/computed/apiary/$theirs/hive-insights";
     $this->assertSame(403, $this->api('GET', $path, NULL, $this->me)['status']);
     $mine = $this->api('GET', $path, NULL, $this->them);
     $this->assertSame(200, $mine['status']);
     $this->assertSame([$this->fixtures['their_hive']->uuid()], array_column($mine['body']['data'], 'hive'));
-    $this->assertSame(404, $this->api('GET', '/hivelog/api/v1/computed/apiary/' . \Drupal::service('uuid')->generate() . '/hive-insights', NULL, $this->me)['status']);
+    $this->assertSame(404, $this->api('GET', '/api/v1/computed/apiary/' . \Drupal::service('uuid')->generate() . '/hive-insights', NULL, $this->me)['status']);
     $this->assertSame(401, $this->api('GET', $path)['status']);
   }
 
@@ -234,10 +234,10 @@ class HivelogApiComputedViewsTest extends HivelogApiKernelTestBase {
   public function testHiveEndpointsRefuseForeignAndUnknownHives(): void {
     $theirs = $this->fixtures['their_hive']->uuid();
     foreach (['stat-tiles', 'insight'] as $endpoint) {
-      $this->assertSame(403, $this->api('GET', "/hivelog/api/v1/computed/hive/$theirs/$endpoint", NULL, $this->me)['status'], $endpoint);
-      $this->assertSame(200, $this->api('GET', "/hivelog/api/v1/computed/hive/$theirs/$endpoint", NULL, $this->them)['status'], $endpoint);
-      $this->assertSame(404, $this->api('GET', '/hivelog/api/v1/computed/hive/' . \Drupal::service('uuid')->generate() . "/$endpoint", NULL, $this->me)['status'], $endpoint);
-      $this->assertSame(401, $this->api('GET', "/hivelog/api/v1/computed/hive/$theirs/$endpoint")['status'], $endpoint);
+      $this->assertSame(403, $this->api('GET', "/api/v1/computed/hive/$theirs/$endpoint", NULL, $this->me)['status'], $endpoint);
+      $this->assertSame(200, $this->api('GET', "/api/v1/computed/hive/$theirs/$endpoint", NULL, $this->them)['status'], $endpoint);
+      $this->assertSame(404, $this->api('GET', '/api/v1/computed/hive/' . \Drupal::service('uuid')->generate() . "/$endpoint", NULL, $this->me)['status'], $endpoint);
+      $this->assertSame(401, $this->api('GET', "/api/v1/computed/hive/$theirs/$endpoint")['status'], $endpoint);
     }
   }
 
@@ -247,10 +247,10 @@ class HivelogApiComputedViewsTest extends HivelogApiKernelTestBase {
   public function testComputedEndpointsAreReadOnly(): void {
     $uuid = $this->fixtures['my_hive']->uuid();
     $paths = [
-      '/hivelog/api/v1/computed/alerts',
-      "/hivelog/api/v1/computed/hive/$uuid/stat-tiles",
-      "/hivelog/api/v1/computed/hive/$uuid/insight",
-      '/hivelog/api/v1/computed/apiary/' . $this->fixtures['my_apiary']->uuid() . '/hive-insights',
+      '/api/v1/computed/alerts',
+      "/api/v1/computed/hive/$uuid/stat-tiles",
+      "/api/v1/computed/hive/$uuid/insight",
+      '/api/v1/computed/apiary/' . $this->fixtures['my_apiary']->uuid() . '/hive-insights',
     ];
     foreach ($paths as $path) {
       $this->assertSame(405, $this->api('POST', $path, [], $this->me)['status'], $path);

@@ -14,7 +14,7 @@ use Symfony\Component\Routing\RouteCollection;
  *
  * JSON:API's read-only mode is one site-wide setting that drops every write
  * route. Enabling this module should not flip it for the whole site, so a
- * request that arrived on `/hivelog/api/v1` is filtered by the plain core
+ * request that arrived on `/api/v1` is filtered by the plain core
  * method filter instead, and every other request still meets whatever the
  * site configured. Access checks and the allow-list are unaffected.
  */

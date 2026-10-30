@@ -21,7 +21,7 @@ use Symfony\Component\HttpKernel\KernelEvents;
  * `/jsonapi`, and some of those are readable by any signed-in user (the user
  * collection lists every display name). The field app's token needs none of
  * that, so a token carrying the app's scope is refused on any JSON:API route
- * outside `/hivelog/api/v1`, whose allow-list is the intended surface. Tokens
+ * outside `/api/v1`, whose allow-list is the intended surface. Tokens
  * with other scopes, and sessions, are untouched.
  */
 class HivelogApiTokenConfinementSubscriber implements EventSubscriberInterface {

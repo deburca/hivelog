@@ -9,6 +9,11 @@ services:
     tags:
       - { name: breadcrumb_builder, priority: 1004 }
 
+  hivelog.path_prefix_route_subscriber:
+    class: Drupal\hivelog\Routing\HivelogPathPrefixRouteSubscriber
+    tags:
+      - { name: event_subscriber }
+
   hivelog.app_nav_builder:
     class: Drupal\hivelog\HivelogAppNavBuilder
     arguments: ['@module_handler', '@current_route_match', '@string_translation']
