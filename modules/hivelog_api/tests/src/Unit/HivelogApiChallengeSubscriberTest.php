@@ -60,6 +60,7 @@ class HivelogApiChallengeSubscriberTest extends UnitTestCase {
       'anonymous on the public discovery document' => ['/api/v1', 'hivelog_api.discovery', TRUE, FALSE],
       'signed in on a resource' => ['/api/v1/hive/hive', 'jsonapi.hive--hive.collection', FALSE, FALSE],
       'anonymous outside the prefix' => ['/jsonapi/hive/hive', 'jsonapi.hive--hive.collection', TRUE, FALSE],
+      'anonymous on another module route' => ['/api/v1/puzzle', 'friendlycaptcha.api_puzzle', TRUE, FALSE],
       'anonymous on an unmatched path' => ['/api/v1/nothing/nothing', NULL, TRUE, FALSE],
     ];
   }

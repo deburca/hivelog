@@ -50,6 +50,12 @@ class HivelogApiChallengeSubscriber implements EventSubscriberInterface {
     if ($route === NULL || $route === 'hivelog_api.discovery') {
       return;
     }
+    // Another module may own a route under the same path (friendlycaptcha's
+    // own puzzle endpoint is /api/v1/puzzle, which must stay public for the
+    // login form), so only the API's own routes are challenged.
+    if (!str_starts_with((string) $route, 'hivelog_api.') && !str_starts_with((string) $route, 'jsonapi.')) {
+      return;
+    }
     if ($this->currentUser->isAnonymous()) {
       // Answered here, as JSON:API's error shape, rather than thrown: a thrown
       // 401 is rendered by Drupal as an HTML page.
