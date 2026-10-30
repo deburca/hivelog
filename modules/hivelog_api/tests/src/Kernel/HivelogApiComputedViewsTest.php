@@ -147,6 +147,12 @@ class HivelogApiComputedViewsTest extends HivelogApiKernelTestBase {
     $this->assertSame('novice', $rows($novice)[$mine]);
     // Another beekeeper's apiary is not listed for me.
     $this->assertArrayNotHasKey($this->fixtures['their_apiary']->uuid(), $rows($this->me));
+  }
+
+  /**
+   * Tests an unauthenticated request gets no roles.
+   */
+  public function testApiaryRolesNeedSignIn(): void {
     $this->assertSame(401, $this->api('GET', '/api/v1/computed/apiary-roles')['status']);
   }
 
