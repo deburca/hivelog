@@ -981,6 +981,16 @@ class ApiaryController extends ControllerBase {
           'extra_classes' => 'hivelog-list-heading__action',
         ],
       ],
+      'copy' => [
+        '#type' => 'component',
+        '#component' => 'hivelog:button',
+        '#props' => [
+          'label' => (string) $this->t('Copy a calendar'),
+          'url' => Url::fromRoute('hivelog.apiary.calendar_copy', ['apiary' => $apiary->id()])->toString(),
+          'variant' => 'default',
+        ],
+        '#access' => Url::fromRoute('hivelog.apiary.calendar_copy', ['apiary' => $apiary->id()])->access($this->currentUser),
+      ],
     ];
 
     $build['filter'] = $this->formBuilder->getForm(HivelogFullCalendarFilterForm::class, $apiary);
