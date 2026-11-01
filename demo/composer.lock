@@ -2459,16 +2459,16 @@
         },
         {
             "name": "hivelog/hivelog",
-            "version": "4.1.0",
+            "version": "4.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/deburca/hivelog.git",
-                "reference": "b454f689350574b7f9988b55b7f0ead028da924a"
+                "reference": "be7756b43741aec0c29d35c9f222757008feeb09"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/deburca/hivelog/zipball/b454f689350574b7f9988b55b7f0ead028da924a",
-                "reference": "b454f689350574b7f9988b55b7f0ead028da924a",
+                "url": "https://api.github.com/repos/deburca/hivelog/zipball/be7756b43741aec0c29d35c9f222757008feeb09",
+                "reference": "be7756b43741aec0c29d35c9f222757008feeb09",
                 "shasum": ""
             },
             "require": {
@@ -2515,9 +2515,9 @@
             "homepage": "https://github.com/deburca/hivelog",
             "support": {
                 "issues": "https://github.com/deburca/hivelog/issues",
-                "source": "https://github.com/deburca/hivelog/tree/4.1.0"
+                "source": "https://github.com/deburca/hivelog/tree/4.1.1"
             },
-            "time": "2026-10-30T19:59:24+00:00"
+            "time": "2026-10-30T22:04:55+00:00"
         },
         {
             "name": "itamair/geophp",
