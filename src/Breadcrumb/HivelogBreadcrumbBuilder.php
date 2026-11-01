@@ -76,6 +76,7 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
   protected const TERMINAL_CRUMB_PARAM = [
     'hivelog.apiary.inventory_cost_report' => 'apiary',
     'hivelog.apiary.calendar_action.collection' => 'apiary',
+    'hivelog.apiary.calendar_copy' => 'apiary',
     'entity.hive.insights' => 'hive',
     'hivelog.hive.move' => 'hive',
     'entity.sensor_device.readings' => 'sensor_device',
@@ -333,6 +334,7 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
     return match ($route_name) {
       'hivelog.apiary.inventory_cost_report' => $this->t('Financial Report'),
       'hivelog.apiary.calendar_action.collection' => $this->t('Calendar'),
+      'hivelog.apiary.calendar_copy' => $this->t('Copy calendar'),
       'entity.hive.insights' => $this->t('Insights'),
       'hivelog.hive.move' => $this->t('Move'),
       'entity.sensor_device.readings' => $this->t('Readings'),
