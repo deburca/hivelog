@@ -1,9 +1,10 @@
 {
     ".harness/CONVENTIONS.md": "7dc91d1a6203ad713f8d541b9eff7e8efcdcd434f07d3f2ca180ad8caa665b79",
-    ".harness/harness.sh": "8531d88f24e607a3ec8f42b63896db1abd612ced7fe6df21bd7a647094edb0b1",
-    ".opencode/agent/phorward-dev.md": "fa6350a001d206c5ed692be985a5a4edb5c0c9ebc93e3c4fc88b9c9f0065e019",
-    ".opencode/agent/phorward-tests.md": "7bc7dfeffebe671ba9767ab4cf474a70eb891da94f9bab6ac303896383e3e6f9",
-    ".opencode/command/feature.md": "11237ff4385dfccc2de403abec11b0c76d3458f7e3178c99fb91bfccaaf481d1",
-    ".opencode/command/fix-bug.md": "e380fbbc4776a86bd915e0052fce69f4553119d5e8ea049a8168bcf6c752735a",
-    ".opencode/command/verify.md": "24d56454836682cf4e03380695ebbb3aed431adcfc3e9ec11f4a7fcaab4740f2"
+    ".harness/command": "031a275af32ef66a096d126026dd17ea9c345e5f6cc5683c56ff349f121ea8f0",
+    ".harness/harness.sh": "048d8081ef8218018094e2d341408db986b69ae8e572e75a9aa76f80372b6f84",
+    ".opencode/agent/phorward-dev.md": "db9e43caaa0b3321547f3d78f50cea6e8e9df33711e259e0ac02dac1451afe96",
+    ".opencode/agent/phorward-tests.md": "276bf0337bb9ccf9f4cf54d48314002d71ea0537d32cf0b9031e62f5e3732ebb",
+    ".opencode/command/feature.md": "e80c91f6499e86fcef0c766bad5be9a34cb12dab97b8c854007b4916d6a75249",
+    ".opencode/command/fix-bug.md": "f748bd541b2dd0337adcc3134277cf1f851dbaa3e03b9b85d5b5c949c0f6bb67",
+    ".opencode/command/verify.md": "9a20f7c171dcca0790d84b9c22643b5c863dcb09b8be04e35f50bec26db9c8c3"
 }
