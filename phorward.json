@@ -1,0 +1,5 @@
+{
+  "sync": {
+    "exclude": ["demo/web", "demo/vendor", "hardware/*/.pio"]
+  }
+}
