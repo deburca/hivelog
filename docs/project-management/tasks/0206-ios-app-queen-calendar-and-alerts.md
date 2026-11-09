@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: review
+status: deferred
 priority: medium
 project: "[[ios-field-app]]"
 area: app
@@ -10,6 +10,11 @@ branch: feature/0206-ios-app-queen-calendar-and-alerts
 release:
 depends-on: ["[[0205-ios-app-browse-and-inspection-logging]]", "[[0202-hivelog-api-computed-view-endpoints]]"]
 blocked-by:
+---
+
+> **Deferred to Vinculum task [[vinculum:0003-queen-observations-calendar-actions-and-alerts]].**
+> Completed in the app repository. This Hivelog task is preserved as a record of the server-side API endpoints.
+
 ---
 # Task: iOS app: queen observations, calendar actions and alerts
 

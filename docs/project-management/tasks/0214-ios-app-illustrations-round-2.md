@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: review
+status: deferred
 priority: low
 project: "[[ios-field-app]]"
 area: app
@@ -10,6 +10,11 @@ branch: feature/0214-ios-app-illustrations-round-2
 release:
 depends-on: ["[[0211-ios-app-illustrations]]"]
 blocked-by:
+---
+
+> **Deferred to Vinculum task [[vinculum:0006-brand-look-and-illustrations]].**
+> Completed in the app repository. This Hivelog task is preserved as a record of the illustration pipeline and decisions.
+
 ---
 # Task: iOS app: illustrations for the remaining empty and failure screens
 

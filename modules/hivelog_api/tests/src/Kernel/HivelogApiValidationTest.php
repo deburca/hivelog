@@ -179,8 +179,40 @@ class HivelogApiValidationTest extends HivelogApiKernelTestBase {
       ['name' => 'Good', 'status' => 'active'],
       ['apiary' => $this->rel('apiary', $f['my_apiary']->uuid())]
     );
-    $this->assertSame(201, $response['status'], $response['raw']);
+    $this->sameResponse(201, $response['status'], $response['raw']);
     $this->assertNotNull(Apiary::load($f['my_apiary']->id()));
+  }
+
+  /**
+   * Tests the queen active-invariant is a 422 via the API (task 0027).
+   *
+   * Before this constraint was added, posting two active queens for the same
+   * hive returned a 500 from Queen::preSave(). The constraint on the `hive`
+   * field now returns a 422 pointing at that field.
+   */
+  public function testQueenActiveInvariantIs422(): void {
+    $f = $this->fixtures;
+    $hive = $this->rel('hive', $f['my_hive']->uuid());
+
+    // First queen: active on this hive — succeeds.
+    $first_queen = $this->post(
+      'queen',
+      ['name' => 'First', 'queen_year' => 2025, 'status' => 'active'],
+      ['hive' => $hive]
+    );
+    $this->sameResponse(201, $first_queen['status'], 'first queen created');
+
+    // Second queen: also active on the same hive — 422.
+    $response = $this->post(
+      'queen',
+      ['name' => 'Second', 'queen_year' => 2026, 'status' => 'active'],
+      ['hive' => $hive]
+    );
+    $this->assertRefused(
+      $response,
+      'hive',
+      'two active queens on the same hive'
+    );
   }
 
 }

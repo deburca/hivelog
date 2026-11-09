@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: review
+status: deferred
 priority: low
 project: "[[ios-field-app]]"
 area: ios
@@ -9,6 +9,11 @@ created: 2026-10-07
 branch:
 depends-on: "[[0221-ios-app-hive-insight-tint]]"
 blocked-by:
+---
+
+> **Deferred to Vinculum task [[vinculum:0009-map-zoom-hive-rows-and-insight-tint]].** (combined with 0219 and 0221)
+> Completed in the app repository. This Hivelog task is preserved as a record of the consistent tint architecture.
+
 ---
 # Task: iOS app: one tint per hive, across the list and the hive page
 
