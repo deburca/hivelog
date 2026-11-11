@@ -1,0 +1,10 @@
+{
+    ".harness/CONVENTIONS.md": "7dc91d1a6203ad713f8d541b9eff7e8efcdcd434f07d3f2ca180ad8caa665b79",
+    ".harness/command": "031a275af32ef66a096d126026dd17ea9c345e5f6cc5683c56ff349f121ea8f0",
+    ".harness/harness.sh": "048d8081ef8218018094e2d341408db986b69ae8e572e75a9aa76f80372b6f84",
+    ".opencode/agent/phorward-dev.md": "db9e43caaa0b3321547f3d78f50cea6e8e9df33711e259e0ac02dac1451afe96",
+    ".opencode/agent/phorward-tests.md": "276bf0337bb9ccf9f4cf54d48314002d71ea0537d32cf0b9031e62f5e3732ebb",
+    ".opencode/command/feature.md": "e80c91f6499e86fcef0c766bad5be9a34cb12dab97b8c854007b4916d6a75249",
+    ".opencode/command/fix-bug.md": "f748bd541b2dd0337adcc3134277cf1f851dbaa3e03b9b85d5b5c949c0f6bb67",
+    ".opencode/command/verify.md": "9a20f7c171dcca0790d84b9c22643b5c863dcb09b8be04e35f50bec26db9c8c3"
+}

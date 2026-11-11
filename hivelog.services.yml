@@ -26,6 +26,10 @@ services:
     class: Drupal\hivelog\HivelogAlertCollector
     arguments: ['@entity_type.manager', '@module_handler', '@string_translation']
 
+  hivelog.calendar_copier:
+    class: Drupal\hivelog\HivelogCalendarCopier
+    arguments: ['@entity_type.manager', '@current_user']
+
   hivelog.calendar_checklist_builder:
     class: Drupal\hivelog\HivelogCalendarChecklistBuilder
     arguments: ['@entity_type.manager', '@request_stack', '@string_translation']

@@ -273,6 +273,8 @@ parameter (`ApiaryMembership::urlRouteParameters()` supplies it) and
 the `add apiary membership` permission; editing and removing need `edit own apiary` and an owner
 role. The **primary owner** is the owner who has held the role longest (`owner_since`, set when a membership becomes an `owner`; then lowest id): `Apiary::getPrimaryOwner()`, and the apiary's CBR number is theirs (`getCbrNumber()`; the number lives on the user, as `cbr_number`). During a hand-over there are two owners and the number is the first owner's; when that owner is removed it becomes the next owner's. More than two owners shows a warning (`HivelogOwnerWarning`) on the apiary page and in the Members section to whoever can manage the apiary; it is not blocked. Stamping and moving: see below.
 
+**Choosing an apiary's calendar** (task 0249) — every `CalendarAction` stays scoped to one apiary, so apiaries in different regions each keep their own calendar. `hivelog.calendar_copier` (`HivelogCalendarCopier`) fills one from a *source id*: `default` (the built-in `CalendarAction::DEFAULT_STARTER_CALENDAR`) or `apiary:<id>` (another apiary's actions, with their item requirements and product yields). Each source is turned into plain definitions and one writer creates the entities, so a new kind of source (a regional or hemisphere preset, `preset:<key>`) is one more branch in `definitions()` and `sourceOptions()` and changes no caller. `apply()` is additive and repeatable (an action with the same title, scope and starting week is skipped; nothing is deleted or altered), requirements and yields are matched to the target's catalogue by name and unit and created there if missing (catalogue data only, no purchases), and sources are limited to apiaries the user may view. A **new** apiary starts from the source set with `Apiary::setCalendarSource()` (the Details tab's "Seasonal calendar" select on the add form, shown only when the user has other apiaries to copy from; default `default`, read once in `postSave()`); an **existing** apiary uses "Copy a calendar" on its Calendar page (`hivelog.apiary.calendar_copy`, `CalendarCopyForm`, needing `add calendar action` and `write` on the apiary). `CalendarAction::seedDefaultsForApiary()` is now a thin call into the service.
+
 **History is never rewritten; moving a hive** (task 0231) — an inspection, a queen observation
 and a hive action log reach their apiary through their hive, so each carries an `apiary` field
 (`ApiaryStampTrait`: read-only, set in `preSave()` when the record is created, and never
@@ -522,10 +524,12 @@ entity types core can't name directly).
   readable only as those computed tiles. It likewise holds `view own hive insight` (task 0221,
   granted only where `nexus` defines it, topped up on a later `nexus` install and by
   `hivelog_api_update_10003()`): without it `computed/hive/{hive}/insight` always answered "nothing" for
-  an app token, so the app never showed an insight. It does hold
-  `edit own apiary|hive|queen`, because adding a child needs `update` on its
-  parent (task 0133 / the parent-access constraint); that over-grant is
-  documented in the install file. **Versioning:** the contract is pinned by
+  an app token, so the app never showed an insight. Since task 0027 it
+  also holds `add hive` / `add queen` and `edit own hive|queen`, so the app can
+  create and edit its own hives and queens (adding a child needs `update` on
+  its parent, task 0133 / the parent-access constraint; that over-grant is
+  documented in the install file). A second active queen on a hive demotes the
+  first in `Queen::preSave()`, through the API as on the web. **Versioning:** the contract is pinned by
   `tests/fixtures/api-v1-contract.json` (every exposed resource and field
   name); renaming or removing an exposed field fails
   `HivelogApiContractTest`, and needs an alias or a new `API_VERSION` and

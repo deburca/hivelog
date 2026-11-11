@@ -6,6 +6,8 @@ namespace Drupal\hivelog\Form;
 
 use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\hivelog\Entity\Apiary;
+use Drupal\hivelog\HivelogCalendarCopier;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -23,11 +25,17 @@ class ApiaryForm extends ContentEntityForm {
   protected $memberManager;
 
   /**
+   * Lists and applies the sources a new apiary's calendar can come from.
+   */
+  protected HivelogCalendarCopier $calendarCopier;
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
     $form = parent::create($container);
     $form->memberManager = $container->get('hivelog.apiary_member_manager');
+    $form->calendarCopier = $container->get('hivelog.calendar_copier');
     return $form;
   }
 
@@ -79,6 +87,22 @@ class ApiaryForm extends ContentEntityForm {
       }
     }
 
+    // Where a new apiary's calendar starts from (task 0249). Only on create:
+    // afterwards the calendar is the apiary's own, and "Copy a calendar" on
+    // its Calendar page adds to it.
+    $sources = $this->entity->isNew() ? $this->calendarCopier->sourceOptions($this->currentUser()) : [];
+    if (count($sources) > 1) {
+      $form['calendar_source'] = [
+        '#type' => 'select',
+        '#title' => $this->t('Seasonal calendar'),
+        '#description' => $this->t('Start from the built-in calendar, or copy the calendar of one of your other apiaries. Either way you can edit this apiary\'s calendar afterwards without affecting any other.'),
+        '#options' => $sources,
+        '#default_value' => HivelogCalendarCopier::SOURCE_DEFAULT,
+        '#group' => 'hivelog_details',
+        '#weight' => 50,
+      ];
+    }
+
     // Members belong with the other access settings, after them, as a child
     // of that tab (a form item has no #group processing of its own): the form
     // display gives visibility weight 6 and owner weight 8, and a display's
@@ -100,6 +124,10 @@ class ApiaryForm extends ContentEntityForm {
    */
   public function save(array $form, FormStateInterface $form_state) {
     $entity = $this->entity;
+    assert($entity instanceof Apiary);
+    if ($entity->isNew() && $form_state->hasValue('calendar_source')) {
+      $entity->setCalendarSource((string) $form_state->getValue('calendar_source'));
+    }
     $status = $entity->save();
 
     if ($status === SAVED_NEW) {

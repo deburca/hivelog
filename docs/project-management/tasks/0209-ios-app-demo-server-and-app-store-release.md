@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: in-progress
+status: deferred
 priority: medium
 project: "[[ios-field-app]]"
 area: app
@@ -10,6 +10,11 @@ branch: feature/0209-ios-app-demo-server-and-app-store-release
 release:
 depends-on: ["[[0206-ios-app-queen-calendar-and-alerts]]", "[[0207-ios-app-offline-outbox]]", "[[0208-ios-app-qr-hive-label-scanning]]"]
 blocked-by:
+---
+
+> **Deferred to Vinculum task [[vinculum:0008-app-store-readiness]].**
+> Completed in the app repository. This Hivelog task is preserved as a record of the demo site setup and identity decisions.
+
 ---
 # Task: iOS app: demo server, TestFlight and App Store submission
 

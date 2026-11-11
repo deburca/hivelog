@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: review
+status: deferred
 priority: low
 project: "[[ios-field-app]]"
 area: ios
@@ -10,6 +10,11 @@ branch:
 release: 2.12.0
 depends-on: "[[0219-ios-app-map-zoom-and-hive-rows]]"
 blocked-by:
+---
+
+> **Deferred to Vinculum task [[vinculum:0009-map-zoom-hive-rows-and-insight-tint]].** (combined with 0219 and 0222)
+> Completed in the app repository. This Hivelog task is preserved as a record of the server-side work (hive-insights endpoint, `view own hive insight` permission).
+
 ---
 # Task: iOS app: tint a hive's badge by its insight
 

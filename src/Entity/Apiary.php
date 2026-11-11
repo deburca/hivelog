@@ -15,6 +15,7 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\hivelog\ApiaryAccessControlHandler;
 use Drupal\hivelog\ApiaryListBuilder;
+use Drupal\hivelog\HivelogCalendarCopier;
 use Drupal\hivelog\HivelogEntityStorage;
 use Drupal\hivelog\Form\HivelogEntityDeleteForm;
 use Drupal\hivelog\Form\ApiaryForm;
@@ -62,6 +63,11 @@ class Apiary extends ContentEntityBase implements EntityChangedInterface, Entity
 
   use EntityChangedTrait;
   use EntityOwnerTrait;
+
+  /**
+   * Where this apiary's starter calendar comes from; not a stored field.
+   */
+  protected string $calendarSource = HivelogCalendarCopier::SOURCE_DEFAULT;
 
   /**
    * Per-request cache of roles: apiary id => user id => role key.
@@ -258,15 +264,28 @@ class Apiary extends ContentEntityBase implements EntityChangedInterface, Entity
     if (!$update) {
       $this->ensureOwnerMembership();
       try {
-        CalendarAction::seedDefaultsForApiary($this);
+        \Drupal::service('hivelog.calendar_copier')->apply($this, $this->calendarSource);
       }
       catch (\Exception $e) {
         \Drupal::logger('hivelog')->error(
-          'Failed to seed the default starter calendar for apiary @id: @message',
-          ['@id' => $this->id(), '@message' => $e->getMessage()]
+          'Failed to seed the starter calendar (@source) for apiary @id: @message',
+          ['@source' => $this->calendarSource, '@id' => $this->id(), '@message' => $e->getMessage()]
         );
       }
     }
+  }
+
+  /**
+   * Chooses where a new apiary's calendar comes from (task 0249).
+   *
+   * Read once, in postSave() of an insert; see HivelogCalendarCopier for the
+   * source ids. Not stored: after creation the calendar is the apiary's own.
+   *
+   * @return $this
+   */
+  public function setCalendarSource(string $source): static {
+    $this->calendarSource = $source;
+    return $this;
   }
 
   /**

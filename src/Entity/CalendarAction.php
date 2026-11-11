@@ -16,6 +16,7 @@ use Drupal\hivelog\CalendarActionAccessControlHandler;
 use Drupal\hivelog\CalendarActionListBuilder;
 use Drupal\hivelog\Form\HivelogEntityDeleteForm;
 use Drupal\hivelog\Form\CalendarActionForm;
+use Drupal\hivelog\HivelogCalendarCopier;
 use Drupal\hivelog\HivelogEntityStorage;
 use Drupal\user\EntityOwnerInterface;
 use Drupal\user\EntityOwnerTrait;
@@ -408,13 +409,7 @@ class CalendarAction extends ContentEntityBase implements EntityChangedInterface
    *   The apiary to seed a starter calendar for.
    */
   public static function seedDefaultsForApiary(Apiary $apiary): void {
-    foreach (static::DEFAULT_STARTER_CALENDAR as $definition) {
-      static::create($definition + [
-        'apiary' => $apiary->id(),
-        'recurring' => TRUE,
-        'enabled' => TRUE,
-      ])->save();
-    }
+    \Drupal::service('hivelog.calendar_copier')->apply($apiary, HivelogCalendarCopier::SOURCE_DEFAULT);
   }
 
   /**

@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: in-progress
+status: deferred
 priority: medium
 project: "[[ios-field-app]]"
 area: ios
@@ -10,6 +10,11 @@ branch: feature/0220-delete-own-inspections-and-observations
 release: 2.13.0
 depends-on: "[[0212-hivelog-api-write-compatibility-with-host-firewalls]]"
 blocked-by:
+---
+
+> **Deferred to Vinculum tasks [[vinculum:0020-server-delete-permissions-for-inspections-and-observations]], [[vinculum:0021-client-update-and-delete-calls]], [[vinculum:0022-observations-list-screen]], [[vinculum:0023-edit-inspections-and-observations]], [[vinculum:0024-delete-inspections-and-observations]], [[vinculum:0025-photos-on-edit]] and [[vinculum:0026-edit-and-delete-while-offline]].**
+> Completed in the app repository. This Hivelog task is preserved as a record of the server-side work (method override, delete permissions, access parity).
+
 ---
 # Task: iOS app: view, edit and delete inspections and queen observations
 

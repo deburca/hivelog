@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: review
+status: deferred
 priority: medium
 project: "[[ios-field-app]]"
 area: app
@@ -10,6 +10,11 @@ branch: feature/0208-ios-app-qr-hive-label-scanning
 release:
 depends-on: ["[[0205-ios-app-browse-and-inspection-logging]]", "[[0177-hive-quick-access-page]]"]
 blocked-by:
+---
+
+> **Deferred to Vinculum task [[vinculum:0005-qr-hive-label-scanning]].**
+> Completed in the app repository. This Hivelog task is preserved as a record of the label format and hive-number lookup.
+
 ---
 # Task: iOS app: scan hive QR labels
 

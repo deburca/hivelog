@@ -538,19 +538,20 @@ class HivelogApiAccessParityTest extends HivelogApiKernelTestBase {
    * Tests what the field-app role itself can and cannot do (its ceiling).
    *
    * Independent of the web matrix: this is the role the app's token carries.
-   * It creates inspections, observations and action reports; it cannot create
-   * an apiary, hive, queen or calendar action, and deletes only its own
-   * inspections and observations (task 0220). It can
-   * edit the parents it adds children under (the documented over-grant).
+   * It creates hives, queens, inspections, observations and action reports
+   * (hives and queens since task 0027); it cannot create an apiary or a
+   * calendar action, and deletes only its own inspections and observations
+   * (task 0220). It can edit the parents it adds children under (the
+   * documented over-grant).
    */
   public function testTheFieldAppRoleCeiling(): void {
     $tree = $this->fixturesForAppRole();
     $app = $this->me;
 
-    foreach (['hive_inspection', 'queen_observation', 'hive_action_log', 'apiary_action_log'] as $type) {
+    foreach (['hive', 'queen', 'hive_inspection', 'queen_observation', 'hive_action_log', 'apiary_action_log'] as $type) {
       $this->assertSame(201, $this->api('POST', $this->path($type), $this->createDocument($type, $tree), $app)['status'], "App creates $type");
     }
-    foreach (['apiary', 'hive', 'queen', 'calendar_action'] as $type) {
+    foreach (['apiary', 'calendar_action'] as $type) {
       $this->assertContains(
         $this->api('POST', $this->path($type), $this->createDocument($type, $tree), $app)['status'],
         [403, 422],

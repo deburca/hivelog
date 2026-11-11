@@ -642,6 +642,23 @@ hivelog.apiary.calendar_action.collection:
       apiary:
         type: entity:apiary
 
+# Copy another apiary's (or the starter) calendar into this one (task 0249).
+# Same rule as adding a calendar action by hand: the permission and `write`
+# on the apiary. What may be copied from is decided by the form's source list.
+hivelog.apiary.calendar_copy:
+  path: '/hivelog/apiary/{apiary}/calendar/copy'
+  defaults:
+    _form: '\Drupal\hivelog\Form\CalendarCopyForm'
+    _title_callback: '\Drupal\hivelog\Form\CalendarCopyForm::title'
+  requirements:
+    _permission: 'add calendar action+administer hivelog'
+    _entity_access: 'apiary.write'
+    _entity_create_access: 'calendar_action'
+  options:
+    parameters:
+      apiary:
+        type: entity:apiary
+
 # Per-apiary, per-year inventory cost & depreciation report (task 0032).
 # Read-side aggregation only. _entity_access added (task 0133) so this
 # deeper view of one apiary's data requires the same access as the apiary
