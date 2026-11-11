@@ -4,25 +4,24 @@ declare(strict_types=1);
 
 namespace Drupal\hivelog\Plugin\Validation\Constraint;
 
+use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 
 /**
  * Validates the HivelogOneActiveQueenPerHive constraint.
  */
-class HivelogOneActiveQueenPerHiveConstraintValidator extends ConstraintValidator {
+class HivelogOneActiveQueenPerHiveConstraintValidator extends ConstraintValidator implements ContainerInjectionInterface {
+
+  public function __construct(protected EntityTypeManagerInterface $entityTypeManager) {}
 
   /**
-   * The entity type manager.
+   * {@inheritdoc}
    */
-  private EntityTypeManagerInterface $entityTypeManager;
-
-  /**
-   * Constructor.
-   */
-  public function __construct(EntityTypeManagerInterface $entityTypeManager) {
-    $this->entityTypeManager = $entityTypeManager;
+  public static function create(ContainerInterface $container) {
+    return new self($container->get('entity_type.manager'));
   }
 
   /**
