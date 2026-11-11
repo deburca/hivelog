@@ -206,7 +206,9 @@ class CalendarCopierTest extends KernelTestBase {
     $this->assertCount(1, $syrups);
     $yield = reset($storage->getStorage('calendar_action_product_yield')->loadByProperties(['calendar_action' => $copied->id()]));
     assert($yield instanceof ContentEntityInterface);
-    $this->assertSame($target->id(), $yield->get('product')->entity->get('apiary')->target_id);
+    $product = $yield->get('product')->entity;
+    assert($product instanceof ContentEntityInterface);
+    $this->assertSame($target->id(), $product->get('apiary')->target_id);
   }
 
   /**
