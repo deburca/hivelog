@@ -1,10 +1,11 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\hivelog\Plugin\Validation\ConstraintValidator;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\hivelog\Plugin\Validation\Constraint\HivelogOneActiveQueenPerHiveConstraint;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 
@@ -29,7 +30,7 @@ class HivelogOneActiveQueenPerHiveConstraintValidator extends ConstraintValidato
    * {@inheritdoc}
    */
   public function validate(mixed $items, Constraint $constraint): void {
-    if (!$constraint instanceof \Drupal\hivelog\Plugin\Validation\Constraint\HivelogOneActiveQueenPerHiveConstraint) {
+    if (!$constraint instanceof HivelogOneActiveQueenPerHiveConstraint) {
       return;
     }
 
