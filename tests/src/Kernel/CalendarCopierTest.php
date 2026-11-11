@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\hivelog\Kernel;
 
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\CalendarAction;
 use Drupal\hivelog\HivelogCalendarCopier;
@@ -198,11 +199,13 @@ class CalendarCopierTest extends KernelTestBase {
     $this->assertSame(1, $result['yields']);
     $copied = $this->actionTitled($target, 'Feed');
     $requirement = reset($storage->getStorage('calendar_action_item_requirement')->loadByProperties(['calendar_action' => $copied->id()]));
+    assert($requirement instanceof ContentEntityInterface);
     $this->assertSame($existing->id(), $requirement->get('item')->target_id);
     $syrups = $storage->getStorage('inventory_item')
       ->loadByProperties(['apiary' => $target->id(), 'name' => 'Syrup']);
     $this->assertCount(1, $syrups);
     $yield = reset($storage->getStorage('calendar_action_product_yield')->loadByProperties(['calendar_action' => $copied->id()]));
+    assert($yield instanceof ContentEntityInterface);
     $this->assertSame($target->id(), $yield->get('product')->entity->get('apiary')->target_id);
   }
 

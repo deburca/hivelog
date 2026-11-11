@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\hivelog_api\Kernel;
 
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\CalendarAction;
 use Drupal\user\Entity\Role;
@@ -213,6 +214,7 @@ class HivelogApiValidationTest extends HivelogApiKernelTestBase {
     $queens = \Drupal::entityTypeManager()->getStorage('queen')
       ->loadByProperties(['uuid' => $first_queen['body']['data']['id']]);
     $first = reset($queens);
+    assert($first instanceof ContentEntityInterface);
     $this->assertSame('inactive', $first->get('status')->value);
     $this->assertSame((int) $f['my_hive']->id(), (int) $first->get('hive')->target_id);
   }

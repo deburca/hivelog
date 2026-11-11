@@ -6,6 +6,7 @@ namespace Drupal\hivelog\Form;
 
 use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\HivelogCalendarCopier;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -123,6 +124,7 @@ class ApiaryForm extends ContentEntityForm {
    */
   public function save(array $form, FormStateInterface $form_state) {
     $entity = $this->entity;
+    assert($entity instanceof Apiary);
     if ($entity->isNew() && $form_state->hasValue('calendar_source')) {
       $entity->setCalendarSource((string) $form_state->getValue('calendar_source'));
     }

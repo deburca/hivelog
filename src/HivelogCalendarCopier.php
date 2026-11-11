@@ -268,7 +268,7 @@ class HivelogCalendarCopier {
   /**
    * Loads the rows of a child type that hang off an action.
    *
-   * @return \Drupal\Core\Entity\EntityInterface[]
+   * @return \Drupal\Core\Entity\ContentEntityInterface[]
    *   The rows.
    */
   protected function childrenOf(string $type, CalendarAction $action): array {

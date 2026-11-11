@@ -39,14 +39,15 @@ use Drupal\user\Entity\Role;
  *
  * Known over-grant: adding a child record needs `update` on its parent (the
  * same rule the web routes apply, task 0133, and the parent-access
- * constraint, task 0200), so the role must include `edit own apiary`, `hive`
- * and `queen`. The allow-list does not stop the app from also editing those
+ * constraint, task 0200), so the role must include `edit own hive` and
+ * `queen` (an apiary parent needs `write`, which a membership grants). The
+ * allow-list does not stop the app from also editing those
  * records. Narrowing that needs a separate "add children" permission in core.
  *
  * Phase 2 (record-management): add/edit for hives and queens, so the app can
  * manage its own hives and queens in the field. No delete yet — archive comes
- * with apiary management (phase 3). The queen constraint is a separate change;
- * see task 0027.
+ * with apiary management (phase 3). A second active queen on a hive demotes
+ * the first in Queen::preSave(), as on the web; there is no constraint.
  *
  * @return string[]
  *   Permission machine names.
@@ -338,20 +339,4 @@ function hivelog_api_update_10006() {
   return t('Field-app role tops up: it may now @what.', [
     '@what' => $granted ? 'add and edit hives and queens' : 'not manage hives or queens (the permissions are not defined)',
   ]);
-}
-
-/**
- * Adds the "one active queen per hive" constraint to the Queen entity.
- *
- * Before this, the invariant lived only in Queen::preSave() as a throw,
- * which an API client would see as a 500. Now it is a field constraint on
- * the `hive` reference, so a validation failure through the API returns a
- * 422 with a field pointer — matching every other constraint rule.
- */
-function hivelog_api_update_10007() {
-  // The constraint is attached in Queen::baseFieldDefinitions() and does not
-  // require an update hook to install (Drupal installs it automatically when
-  // the field storage is saved). This hook exists only for idempotent
-  // reporting — no-op on an existing site that already has it.
-  return t('The queen active-invariant is now a constraint (not only preSave()), so API clients get a 422 instead of a 500 when a hive has two active queens.');
 }

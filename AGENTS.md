@@ -524,10 +524,12 @@ entity types core can't name directly).
   readable only as those computed tiles. It likewise holds `view own hive insight` (task 0221,
   granted only where `nexus` defines it, topped up on a later `nexus` install and by
   `hivelog_api_update_10003()`): without it `computed/hive/{hive}/insight` always answered "nothing" for
-  an app token, so the app never showed an insight. It does hold
-  `edit own apiary|hive|queen`, because adding a child needs `update` on its
-  parent (task 0133 / the parent-access constraint); that over-grant is
-  documented in the install file. **Versioning:** the contract is pinned by
+  an app token, so the app never showed an insight. Since task 0027 it
+  also holds `add hive` / `add queen` and `edit own hive|queen`, so the app can
+  create and edit its own hives and queens (adding a child needs `update` on
+  its parent, task 0133 / the parent-access constraint; that over-grant is
+  documented in the install file). A second active queen on a hive demotes the
+  first in `Queen::preSave()`, through the API as on the web. **Versioning:** the contract is pinned by
   `tests/fixtures/api-v1-contract.json` (every exposed resource and field
   name); renaming or removing an exposed field fails
   `HivelogApiContractTest`, and needs an alias or a new `API_VERSION` and
