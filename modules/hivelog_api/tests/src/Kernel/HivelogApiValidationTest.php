@@ -184,13 +184,12 @@ class HivelogApiValidationTest extends HivelogApiKernelTestBase {
   }
 
   /**
-   * Tests the queen active-invariant is a 422 via the API (task 0027).
+   * Tests a second active queen demotes the first, as on the web (task 0027).
    *
-   * Before this constraint was added, posting two active queens for the same
-   * hive returned a 500 from Queen::preSave(). The constraint on the `hive`
-   * field now returns a 422 pointing at that field.
+   * Queen::preSave() keeps one active queen per hive by demoting the previous
+   * one, so the API accepts the second queen rather than refusing it.
    */
-  public function testQueenActiveInvariantIs422(): void {
+  public function testSecondActiveQueenDemotesTheFirst(): void {
     $f = $this->fixtures;
     $hive = $this->rel('hive', $f['my_hive']->uuid());
 
@@ -202,17 +201,20 @@ class HivelogApiValidationTest extends HivelogApiKernelTestBase {
     );
     $this->assertSame(201, $first_queen['status'], 'first queen created');
 
-    // Second queen: also active on the same hive — 422.
+    // Second queen: also active on the same hive — accepted.
     $response = $this->post(
       'queen',
       ['name' => 'Second', 'queen_year' => 2026, 'status' => 'active'],
       ['hive' => $hive]
     );
-    $this->assertRefused(
-      $response,
-      'hive',
-      'two active queens on the same hive'
-    );
+    $this->assertSame(201, $response['status'], $response['raw']);
+
+    // The first queen is now inactive and still belongs to the hive.
+    $queens = \Drupal::entityTypeManager()->getStorage('queen')
+      ->loadByProperties(['uuid' => $first_queen['body']['data']['id']]);
+    $first = reset($queens);
+    $this->assertSame('inactive', $first->get('status')->value);
+    $this->assertSame((int) $f['my_hive']->id(), (int) $first->get('hive')->target_id);
   }
 
 }

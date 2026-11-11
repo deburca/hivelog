@@ -274,13 +274,6 @@ class Queen extends ContentEntityBase implements EntityChangedInterface, EntityO
     // enforced for every caller, not only the web form (tasks 0198/0200).
     $fields['hive']->addConstraint('HivelogParentAccess');
 
-    // One active queen per hive: the invariant that a single hive can have
-    // only one live queen at a time. When a queen is set to 'active' and its
-    // hive already has an active queen, the API returns a 422 pointing at
-    // this field (not a preSave() 500). The existing queen on that hive is
-    // demoted to inactive in preSave() so it survives as history.
-    $fields['hive']->addConstraint('HivelogOneActiveQueenPerHive');
-
     return $fields;
   }
 
