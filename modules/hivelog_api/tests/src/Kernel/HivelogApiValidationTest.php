@@ -179,7 +179,7 @@ class HivelogApiValidationTest extends HivelogApiKernelTestBase {
       ['name' => 'Good', 'status' => 'active'],
       ['apiary' => $this->rel('apiary', $f['my_apiary']->uuid())]
     );
-    $this->sameResponse(201, $response['status'], $response['raw']);
+    $this->assertSame(201, $response['status'], $response['raw']);
     $this->assertNotNull(Apiary::load($f['my_apiary']->id()));
   }
 
@@ -200,7 +200,7 @@ class HivelogApiValidationTest extends HivelogApiKernelTestBase {
       ['name' => 'First', 'queen_year' => 2025, 'status' => 'active'],
       ['hive' => $hive]
     );
-    $this->sameResponse(201, $first_queen['status'], 'first queen created');
+    $this->assertSame(201, $first_queen['status'], 'first queen created');
 
     // Second queen: also active on the same hive — 422.
     $response = $this->post(

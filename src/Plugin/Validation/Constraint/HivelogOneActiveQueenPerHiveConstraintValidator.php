@@ -2,10 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Drupal\hivelog\Plugin\Validation\ConstraintValidator;
+namespace Drupal\hivelog\Plugin\Validation\Constraint;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\hivelog\Plugin\Validation\Constraint\HivelogOneActiveQueenPerHiveConstraint;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 
