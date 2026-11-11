@@ -43,6 +43,11 @@ use Drupal\user\Entity\Role;
  * and `queen`. The allow-list does not stop the app from also editing those
  * records. Narrowing that needs a separate "add children" permission in core.
  *
+ * Phase 2 (record-management): add/edit for hives and queens, so the app can
+ * manage its own hives and queens in the field. No delete yet — archive comes
+ * with apiary management (phase 3). The queen constraint is a separate change;
+ * see task 0027.
+ *
  * @return string[]
  *   Permission machine names.
  */
@@ -58,9 +63,11 @@ function hivelog_api_field_app_permissions(): array {
   foreach ($viewable as $type) {
     $permissions[] = 'view own ' . $type;
   }
-  // Parents a child is added under; see the note above.
-  foreach (['apiary', 'hive', 'queen'] as $parent) {
-    $permissions[] = 'edit own ' . $parent;
+  // Phase 2: hives and queens can be created/edited from the app.
+  // add/edit own hive; add/edit own queen.
+  foreach (['hive', 'queen'] as $type) {
+    $permissions[] = 'add ' . $type;
+    $permissions[] = 'edit own ' . $type;
   }
   foreach (['hive inspection', 'queen observation', 'hive action log', 'apiary action log'] as $type) {
     $permissions[] = 'add ' . $type;
@@ -311,4 +318,40 @@ function hivelog_api_update_10005() {
     return t('Renamed the field-app role to "HiveLog mobile app user".');
   }
   return t('The field-app role label was not the default, left as it is.');
+}
+
+/**
+ * Lets the field-app role manage hives and queens.
+ *
+ * Phase 2 of [[0016-role-ceiling-for-edit-and-delete]]: the app can now add
+ * and edit own hives and queens, so a beekeeper can set up out-apiaries and
+ * manage queen inventory from the phone without visiting the website.
+ * Additive, never revokes a site's change.
+ */
+function hivelog_api_update_10006() {
+  hivelog_api_sync_field_app_role();
+  $role = Role::load(HivelogApiResources::SCOPE);
+  $granted = array_values(array_filter(
+    ['add hive', 'edit own hive', 'add queen', 'edit own queen'],
+    fn(string $permission) => $role->hasPermission($permission),
+  ));
+  return t('Field-app role tops up: it may now @what.', [
+    '@what' => $granted ? 'add and edit hives and queens' : 'not manage hives or queens (the permissions are not defined)',
+  ]);
+}
+
+/**
+ * Adds the "one active queen per hive" constraint to the Queen entity.
+ *
+ * Before this, the invariant lived only in Queen::preSave() as a throw,
+ * which an API client would see as a 500. Now it is a field constraint on
+ * the `hive` reference, so a validation failure through the API returns a
+ * 422 with a field pointer — matching every other constraint rule.
+ */
+function hivelog_api_update_10007() {
+  // The constraint is attached in Queen::baseFieldDefinitions() and does not
+  // require an update hook to install (Drupal installs it automatically when
+  // the field storage is saved). This hook exists only for idempotent
+  // reporting — no-op on an existing site that already has it.
+  return t('The queen active-invariant is now a constraint (not only preSave()), so API clients get a 422 instead of a 500 when a hive has two active queens.');
 }

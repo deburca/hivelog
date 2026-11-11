@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: review
+status: deferred
 priority: high
 project: "[[ios-field-app]]"
 area: app
@@ -10,6 +10,11 @@ branch: feature/0205-ios-app-browse-and-inspection-logging
 release:
 depends-on: ["[[0204-ios-app-setup-and-sign-in]]"]
 blocked-by:
+---
+
+> **Deferred to Vinculum task [[vinculum:0002-browse-and-inspection-logging]].**
+> Completed in the app repository. This Hivelog task is preserved as a record of the server-side work (filter fix, schema endpoint) that the app depended on.
+
 ---
 # Task: iOS app: apiary/hive browsing and inspection logging
 

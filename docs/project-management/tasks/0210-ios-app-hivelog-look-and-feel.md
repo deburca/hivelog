@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: review
+status: deferred
 priority: medium
 project: "[[ios-field-app]]"
 area: app
@@ -10,6 +10,11 @@ branch: feature/0210-ios-app-hivelog-look-and-feel
 release:
 depends-on: ["[[0205-ios-app-browse-and-inspection-logging]]"]
 blocked-by:
+---
+
+> **Deferred to Vinculum task [[vinculum:0006-brand-look-and-illustrations]].**
+> Completed in the app repository. This Hivelog task is preserved as a record of the beeswax design system decisions.
+
 ---
 # Task: iOS app: the HiveLog / beeswax look and feel
 

@@ -138,7 +138,8 @@ class HivelogApiInstallTest extends KernelTestBase {
   public function testTheRoleIsLeastPrivilege(): void {
     $permissions = Role::load(HivelogApiResources::SCOPE)->getPermissions();
 
-    foreach (['view own hive', 'add hive inspection', 'add queen observation', 'edit own hive action log'] as $wanted) {
+    foreach (['view own hive', 'add hive inspection', 'add queen observation', 'edit own hive action log',
+      'add hive', 'add queen'] as $wanted) {
       $this->assertContains($wanted, $permissions);
     }
     // Deletes: the user's own inspections and queen observations, and nothing else (task 0220).
@@ -155,7 +156,9 @@ class HivelogApiInstallTest extends KernelTestBase {
     $this->assertEmpty(array_diff($insight, ['view own hive insight']), 'Insights are view-own only');
     $this->assertNotContains('administer hivelog', $permissions);
     foreach ($permissions as $permission) {
-      $this->assertNotContains($permission, ['view any hive', 'edit any hive', 'add hive', 'add apiary']);
+      $this->assertNotContains($permission, ['view any hive', 'edit any hive', 'add apiary']);
+      // Phase 2 adds `add hive` and `add queen`; the negative assertions
+      // above still hold: no view-any or edit-any on hives.
     }
   }
 
