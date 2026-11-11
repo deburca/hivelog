@@ -49,6 +49,11 @@ final class HivelogFilterPanel {
       : '';
 
     $form['#attached']['library'][] = 'hivelog/filter_form';
+    // A filter form is a GET search, not a submission: a site-wide captcha
+    // (captcha's "enable globally") would otherwise render inside it, in the
+    // table header. Dropped after every form_alter has run, whatever the
+    // module order, so real submit forms keep theirs.
+    $form['#after_build'][] = [self::class, 'removeCaptcha'];
     // Markup objects, because a plain #prefix goes through the admin XSS filter,
     // which drops <input> and <label>. Every dynamic part above is escaped.
     $form['#prefix'] = Markup::create(
@@ -59,6 +64,32 @@ final class HivelogFilterPanel {
       . Html::escape((string) new TranslatableMarkup('Filters')) . $count . '</label>'
     );
     $form['#suffix'] = Markup::create('</div>' . ($form['#suffix'] ?? ''));
+  }
+
+  /**
+   * Form #after_build callback: removes any captcha element from the form.
+   *
+   * @param array $element
+   *   The form, or a container within it.
+   *
+   * @return array
+   *   The element without captcha children.
+   */
+  public static function removeCaptcha(array $element): array {
+    foreach (array_keys($element) as $key) {
+      if (is_string($key) && str_starts_with($key, '#')) {
+        continue;
+      }
+      if (!is_array($element[$key])) {
+        continue;
+      }
+      if (($element[$key]['#type'] ?? NULL) === 'captcha') {
+        unset($element[$key]);
+        continue;
+      }
+      $element[$key] = self::removeCaptcha($element[$key]);
+    }
+    return $element;
   }
 
   /**
