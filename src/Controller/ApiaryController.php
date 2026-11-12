@@ -167,6 +167,10 @@ class ApiaryController extends ControllerBase {
       [(string) $this->t('Your role'), ['#plain_text' => $this->currentUserRole($apiary)]],
     ];
 
+    // Members and notes are the long, rarely needed rows: they fold behind one
+    // line so the facts above stay a compact strip (task 0255).
+    $more = [];
+
     // Who the members are is for people who manage the apiary, as with the
     // membership access handler (owners only see the rows).
     $cache_tags = $apiary->getCacheTags();
@@ -178,7 +182,7 @@ class ApiaryController extends ControllerBase {
           $members[] = $member->getDisplayName() . ' (' . ApiaryMembership::roleLabel($membership->getRole()) . ')';
         }
       }
-      $rows[] = [
+      $more[] = [
         (string) $this->t('Members'),
         [
           'summary' => ['#plain_text' => $members ? implode(', ', $members) : $empty],
@@ -195,7 +199,17 @@ class ApiaryController extends ControllerBase {
       ];
       $cache_tags[] = 'apiary_membership_list';
     }
-    $rows[] = [$label('notes'), $text('notes')];
+    $more[] = [$label('notes'), $text('notes')];
+
+    $table = fn(array $table_rows, array $classes): array => [
+      '#type' => 'table',
+      '#rows' => array_map(
+        fn(array $row): array => [['data' => ['#plain_text' => $row[0]]], ['data' => $row[1]]],
+        $table_rows
+      ),
+      '#attributes' => ['class' => $classes],
+      '#attached' => ['library' => ['hivelog/tables']],
+    ];
 
     return [
       '#type' => 'container',
@@ -205,14 +219,17 @@ class ApiaryController extends ControllerBase {
         '#tag' => 'h2',
         '#value' => $this->t('Details'),
       ],
-      'table' => [
-        '#type' => 'table',
-        '#rows' => array_map(
-          fn(array $row): array => [['data' => ['#plain_text' => $row[0]]], ['data' => $row[1]]],
-          $rows
-        ),
-        '#attributes' => ['class' => ['hivelog-detail-table', 'hivelog-apiary-table']],
-        '#attached' => ['library' => ['hivelog/tables']],
+      'table' => $table($rows, ['hivelog-detail-table', 'hivelog-apiary-table', 'hivelog-apiary-facts']),
+      'more' => [
+        '#type' => 'html_tag',
+        '#tag' => 'details',
+        '#attributes' => ['class' => ['hivelog-apiary-more']],
+        'summary' => [
+          '#type' => 'html_tag',
+          '#tag' => 'summary',
+          '#value' => $this->t('Members and notes'),
+        ],
+        'table' => $table($more, ['hivelog-detail-table', 'hivelog-apiary-table']),
       ],
       '#cache' => [
         'tags' => $cache_tags,
