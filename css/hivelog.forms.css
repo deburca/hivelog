@@ -62,6 +62,26 @@
 }
 
 /* ------------------------------------------------------------------
+   Vertical-tab corners.
+   Core lays the tab menu out to the LEFT of the .vertical-tabs box (the box
+   has a 15em left margin, the menu a matching negative one), so the two sit
+   edge to edge. A theme that rounds both leaves the box's left corners
+   rounded where the menu meets it; they stay square, the outer right corners
+   keep whatever radius the theme gives. Below 48em core builds no tabs (plain
+   details stack), so the rule never reaches the phone layout. The doubled
+   class outranks a theme's `body.hivelog-page .vertical-tabs`.
+------------------------------------------------------------------ */
+
+.hivelog-entity-form .vertical-tabs.vertical-tabs {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+[dir="rtl"] .hivelog-entity-form .vertical-tabs.vertical-tabs {
+  border-radius: 6px 0 0 6px;
+}
+
+/* ------------------------------------------------------------------
    Checkbox / boolean widget alignment.
    Inline-flex keeps the checkbox and its label on one line and
    prevents the label from stretching to full width.

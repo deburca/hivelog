@@ -24,3 +24,21 @@
     min-height: 200px;
   }
 }
+
+/**
+ * Apiary overview: details and map side by side (wider than a phone).
+ * Each keeps its own markup, so the details section stays an H2 and the map
+ * follows it in source order, which is also the stacked phone order.
+ */
+@media (min-width: 769px) {
+  .hivelog-apiary-overview {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    gap: 0 1.5rem;
+    align-items: start;
+  }
+
+  .hivelog-apiary-overview [id^="leaflet-map"] {
+    height: 18rem !important;
+  }
+}

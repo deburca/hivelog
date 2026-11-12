@@ -299,7 +299,14 @@ class ApiaryController extends ControllerBase {
 
     // Summary of the apiary itself (location, visibility, the viewer's role,
     // members): the page otherwise opens straight onto its hives.
-    $build['summary'] = $this->buildSummary($apiary) + ['#weight' => -5];
+    // The summary and the map share one row (task 0250: the two stacked used
+    // most of the screen); CSS-only, stacking again on a phone.
+    $build['overview'] = [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['hivelog-apiary-overview']],
+      '#weight' => -5,
+      'summary' => $this->buildSummary($apiary),
+    ];
     $owner_warning = $this->buildOwnerWarning($apiary);
     if ($owner_warning) {
       $build['owner_warning'] = $owner_warning + ['#weight' => -6];
@@ -316,7 +323,7 @@ class ApiaryController extends ControllerBase {
 
     // Render the apiary entity fields.
     $view_builder = $this->entityTypeManager->getViewBuilder('apiary');
-    $build['apiary'] = $view_builder->view($apiary);
+    $build['overview']['apiary'] = $view_builder->view($apiary);
 
     // Load the responsive map stylesheet so the apiary's Leaflet map gets a
     // taller, viewport-relative height on small screens (task 0008).

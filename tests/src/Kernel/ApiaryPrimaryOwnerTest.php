@@ -208,7 +208,7 @@ class ApiaryPrimaryOwnerTest extends KernelTestBase {
     $build = $controller->view($this->apiary);
 
     $this->assertArrayHasKey('text', $build['owner_warning']);
-    $summary = (string) \Drupal::service('renderer')->renderInIsolation($build['summary']);
+    $summary = (string) \Drupal::service('renderer')->renderInIsolation($build['overview']['summary']);
     $this->assertStringContainsString('CBR number', $summary);
     $this->assertStringContainsString('111', $summary);
   }
