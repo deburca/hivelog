@@ -27,44 +27,10 @@
 
 /**
  * Apiary overview (task 0255): a compact header strip. The facts (location,
- * CBR number, visibility, role) run as a wrapping row of label-over-value
- * chips, members and notes fold behind one line, and the map is a thumbnail
+ * CBR number, visibility, role) are the shared stat tiles, members and notes fold behind one line, and the map is a thumbnail
  * beside them on anything wider than a phone. Source order (details, then
  * map) is also the stacked phone order, and the Details heading stays an H2.
  */
-.hivelog-detail-table.hivelog-apiary-facts,
-.hivelog-detail-table.hivelog-apiary-facts tbody {
-  display: block;
-}
-
-.hivelog-detail-table.hivelog-apiary-facts tbody {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem 2rem;
-}
-
-.hivelog-detail-table.hivelog-apiary-facts tr {
-  display: block;
-  border: 0;
-}
-
-.hivelog-detail-table.hivelog-apiary-facts td {
-  display: block;
-  width: auto;
-  padding: 0;
-  border: 0;
-  font-weight: normal;
-  overflow-wrap: normal;
-}
-
-.hivelog-detail-table.hivelog-apiary-facts td:first-child {
-  width: auto;
-  font-size: 0.8rem;
-  font-weight: normal;
-  white-space: nowrap;
-  color: var(--hivelog-ink-muted);
-}
-
 .hivelog-apiary-more {
   margin-top: 0.75rem;
 }
@@ -95,5 +61,24 @@
   .hivelog-apiary-overview [id^="leaflet-map"] {
     height: 11rem !important;
     min-height: 0;
+  }
+}
+
+/* A fact is text, not a headline figure: a smaller value keeps the strip one
+   row high on desktop and two tiles wide on a phone. */
+.hivelog-stat-tiles.hivelog-apiary-facts .hivelog-stat-tile {
+  flex-basis: 9.5rem;
+  padding: 0.6rem 0.8rem 0.7rem;
+}
+
+.hivelog-stat-tiles.hivelog-apiary-facts .hivelog-stat-tile__value {
+  font-size: 1.05rem;
+  line-height: 1.25;
+  overflow-wrap: break-word;
+}
+
+@media (max-width: 480px) {
+  .hivelog-stat-tiles.hivelog-apiary-facts .hivelog-stat-tile {
+    flex-basis: calc(50% - 0.375rem);
   }
 }

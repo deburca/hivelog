@@ -72,8 +72,8 @@
   text-decoration: none;
 }
 
-.hivelog-stat-tile:hover,
-.hivelog-stat-tile:focus {
+.hivelog-stat-tile:is(a):hover,
+.hivelog-stat-tile:is(a):focus {
   background: var(--hivelog-surface-2);
 }
 

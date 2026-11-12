@@ -159,13 +159,23 @@ class ApiaryController extends ControllerBase {
     $visibility = $apiary->get('visibility')->value;
     $visibility_label = $apiary->get('visibility')->getSetting('allowed_values')[$visibility] ?? $visibility;
 
-    $rows = [
-      [$label('location'), $text('location')],
-      // The primary owner's number (task 0232).
-      [(string) $this->t('CBR number'), ['#plain_text' => $apiary->getCbrNumber() ?: $empty]],
-      [$label('visibility'), ['#plain_text' => (string) $visibility_label]],
-      [(string) $this->t('Your role'), ['#plain_text' => $this->currentUserRole($apiary)]],
+    // The facts are the same stat tiles the dashboard and the hive page use
+    // (informational: no destination), so the page reads like the others.
+    $tile = fn(string $tile_label, string $value): array => [
+      '#type' => 'component',
+      '#component' => 'hivelog:stat-tile',
+      '#props' => ['value' => $value, 'label' => $tile_label, 'url' => ''],
     ];
+    $location = trim((string) $apiary->get('location')->value);
+    $tiles = [
+      'location' => $tile($label('location'), $location !== '' ? $location : $empty),
+      // The primary owner's number (task 0232).
+      'cbr' => $tile((string) $this->t('CBR number'), $apiary->getCbrNumber() ?: $empty),
+      'visibility' => $tile($label('visibility'), (string) $visibility_label),
+      'role' => $tile((string) $this->t('Your role'), $this->currentUserRole($apiary)),
+    ];
+    $tiles['#type'] = 'container';
+    $tiles['#attributes'] = ['class' => ['hivelog-stat-tiles', 'hivelog-apiary-facts']];
 
     // Members and notes are the long, rarely needed rows: they fold behind one
     // line so the facts above stay a compact strip (task 0255).
@@ -219,7 +229,7 @@ class ApiaryController extends ControllerBase {
         '#tag' => 'h2',
         '#value' => $this->t('Details'),
       ],
-      'table' => $table($rows, ['hivelog-detail-table', 'hivelog-apiary-table', 'hivelog-apiary-facts']),
+      'facts' => $tiles,
       'more' => [
         '#type' => 'html_tag',
         '#tag' => 'details',
