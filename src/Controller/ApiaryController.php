@@ -159,13 +159,27 @@ class ApiaryController extends ControllerBase {
     $visibility = $apiary->get('visibility')->value;
     $visibility_label = $apiary->get('visibility')->getSetting('allowed_values')[$visibility] ?? $visibility;
 
-    $rows = [
-      [$label('location'), $text('location')],
-      // The primary owner's number (task 0232).
-      [(string) $this->t('CBR number'), ['#plain_text' => $apiary->getCbrNumber() ?: $empty]],
-      [$label('visibility'), ['#plain_text' => (string) $visibility_label]],
-      [(string) $this->t('Your role'), ['#plain_text' => $this->currentUserRole($apiary)]],
+    // The facts are the same stat tiles the dashboard and the hive page use
+    // (informational: no destination), so the page reads like the others.
+    $tile = fn(string $tile_label, string $value): array => [
+      '#type' => 'component',
+      '#component' => 'hivelog:stat-tile',
+      '#props' => ['value' => $value, 'label' => $tile_label, 'url' => ''],
     ];
+    $location = trim((string) $apiary->get('location')->value);
+    $tiles = [
+      'location' => $tile($label('location'), $location !== '' ? $location : $empty),
+      // The primary owner's number (task 0232).
+      'cbr' => $tile((string) $this->t('CBR number'), $apiary->getCbrNumber() ?: $empty),
+      'visibility' => $tile($label('visibility'), (string) $visibility_label),
+      'role' => $tile((string) $this->t('Your role'), $this->currentUserRole($apiary)),
+    ];
+    $tiles['#type'] = 'container';
+    $tiles['#attributes'] = ['class' => ['hivelog-stat-tiles', 'hivelog-apiary-facts']];
+
+    // Members and notes are the long, rarely needed rows: they fold behind one
+    // line so the facts above stay a compact strip (task 0255).
+    $more = [];
 
     // Who the members are is for people who manage the apiary, as with the
     // membership access handler (owners only see the rows).
@@ -178,7 +192,7 @@ class ApiaryController extends ControllerBase {
           $members[] = $member->getDisplayName() . ' (' . ApiaryMembership::roleLabel($membership->getRole()) . ')';
         }
       }
-      $rows[] = [
+      $more[] = [
         (string) $this->t('Members'),
         [
           'summary' => ['#plain_text' => $members ? implode(', ', $members) : $empty],
@@ -195,7 +209,17 @@ class ApiaryController extends ControllerBase {
       ];
       $cache_tags[] = 'apiary_membership_list';
     }
-    $rows[] = [$label('notes'), $text('notes')];
+    $more[] = [$label('notes'), $text('notes')];
+
+    $table = fn(array $table_rows, array $classes): array => [
+      '#type' => 'table',
+      '#rows' => array_map(
+        fn(array $row): array => [['data' => ['#plain_text' => $row[0]]], ['data' => $row[1]]],
+        $table_rows
+      ),
+      '#attributes' => ['class' => $classes],
+      '#attached' => ['library' => ['hivelog/tables']],
+    ];
 
     return [
       '#type' => 'container',
@@ -205,14 +229,17 @@ class ApiaryController extends ControllerBase {
         '#tag' => 'h2',
         '#value' => $this->t('Details'),
       ],
-      'table' => [
-        '#type' => 'table',
-        '#rows' => array_map(
-          fn(array $row): array => [['data' => ['#plain_text' => $row[0]]], ['data' => $row[1]]],
-          $rows
-        ),
-        '#attributes' => ['class' => ['hivelog-detail-table', 'hivelog-apiary-table']],
-        '#attached' => ['library' => ['hivelog/tables']],
+      'facts' => $tiles,
+      'more' => [
+        '#type' => 'html_tag',
+        '#tag' => 'details',
+        '#attributes' => ['class' => ['hivelog-apiary-more']],
+        'summary' => [
+          '#type' => 'html_tag',
+          '#tag' => 'summary',
+          '#value' => $this->t('Members and notes'),
+        ],
+        'table' => $table($more, ['hivelog-detail-table', 'hivelog-apiary-table']),
       ],
       '#cache' => [
         'tags' => $cache_tags,
