@@ -20,7 +20,7 @@ services:
 
   hivelog.stat_tile_builder:
     class: Drupal\hivelog\HivelogStatTileBuilder
-    arguments: ['@module_handler']
+    arguments: ['@module_handler', '@entity_type.manager', '@hivelog.alert_collector', '@class_resolver']
 
   hivelog.alert_collector:
     class: Drupal\hivelog\HivelogAlertCollector

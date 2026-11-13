@@ -71,6 +71,9 @@ class ApiaryCalendarChecklistTest extends KernelTestBase {
     $this->installEntitySchema('inventory_purchase');
     $this->installEntitySchema('inventory_usage');
     $this->installEntitySchema('product');
+    $this->installEntitySchema('calendar_action_item_requirement');
+    $this->installEntitySchema('calendar_action_product_yield');
+    $this->installEntitySchema('harvest_yield');
     $this->installSchema('file', ['file_usage']);
 
     $user = User::create([

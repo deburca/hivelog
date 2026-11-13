@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Drupal\Tests\hivelog\Kernel;
 
 use Drupal\Core\Form\FormState;
-use Drupal\hivelog\Controller\DashboardController;
 use Drupal\hivelog\Controller\InventoryReportController;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\CalendarAction;
@@ -214,9 +213,7 @@ class ReportsAfterHiveMoveTest extends KernelTestBase {
     HiveInspection::create(['hive' => $this->hive->id(), 'inspection_date' => date('Y-m-d')])->save();
 
     $count_for = function (Apiary $apiary): int {
-      $controller = \Drupal::service('class_resolver')->getInstanceFromDefinition(DashboardController::class);
-      $method = new \ReflectionMethod($controller, 'inspectionsThisMonth');
-      return $method->invoke($controller, [$apiary->id()]);
+      return \Drupal::service('hivelog.stat_tile_builder')->inspectionsThisMonth([$apiary->id()]);
     };
 
     $this->assertSame(1, $count_for($this->oldApiary));

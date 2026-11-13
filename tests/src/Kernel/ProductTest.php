@@ -54,6 +54,7 @@ class ProductTest extends KernelTestBase {
     $this->installEntitySchema('apiary');
     $this->installEntitySchema('apiary_membership');
     $this->installEntitySchema('hive');
+    $this->installEntitySchema('hive_inspection');
     $this->installEntitySchema('calendar_action');
     $this->installEntitySchema('calendar_action_item_requirement');
     $this->installEntitySchema('hive_action_log');
