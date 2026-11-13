@@ -928,6 +928,20 @@ and compact sizing (`--hivelog-btn-compact-padding-*` tokens with a
 in `css/hivelog.buttons.css`. See ADR-0012 and ADR-0024 in
 `docs/project-management/decisions/`.
 
+#### Stat-tile strips (task 0256)
+
+A detail page shows short, enumerated facts (status, type, a date, a yes/no) as a row of `hivelog:stat-tile`s,
+not as a label/value table. `HivelogStatTileStripTrait::buildTileStrip($entity, $tiles, $extra_classes)` is the one
+place a field becomes a tile; `HivelogDetailPageTrait` uses it, so those controllers have it, and the apiary page uses
+it on its own. A tile is described by an array keyed by field name (`label`, `value`, `url`, `sublabel`, `variant`,
+`omit_empty`; all optional); booleans read Yes/No, allowed-value lists their label, references the record's label and
+dates `Y-m-d`; override `tileFieldText()` for a field needing other wording. A reference tile links as a **whole** to
+the record when the viewer may view it (a value is never its own link: a link inside a link is invalid), `'url' => FALSE`
+suppresses that. Values over 80 characters are cut with an ellipsis. The wrapper carries `hivelog-stat-tiles--facts`
+(smaller value, label at the bottom, two to a row on a phone; the rules are in `stat-tile.css`) and any class a caller
+adds; the apiary page keeps `hivelog-apiary-facts` for theme continuity. The sub-line variants are `default`,
+`critical`, `warning` and `ok`. Long prose (notes, descriptions) stays text, never a tile.
+
 #### Heading hierarchy (task 0128)
 
 Every page's title is the theme's own H1. Below it: **a page's top-level
@@ -963,7 +977,8 @@ the module stays palette-free). The supported surface:
   `--hivelog-ink`, `--hivelog-ink-muted`, `--hivelog-ink-faint`,
   `--hivelog-hairline`, `--hivelog-border`, `--hivelog-rule`,
   `--hivelog-critical` / `--hivelog-critical-tint`,
-  `--hivelog-warning` / `--hivelog-warning-tint`.
+  `--hivelog-warning` / `--hivelog-warning-tint`, `--hivelog-ok` / `--hivelog-ok-tint` (task 0256; the
+  stat tile's `ok` sub-line variant).
   Consumed by `css/hivelog.dashboard.css`, `css/hivelog.tables.css`,
   `css/hivelog.filter-form.css`, `css/hivelog.forms.css` and the
   `stat-tile` / `entity-table` SDC stylesheets. `css/hivelog.map.css`,

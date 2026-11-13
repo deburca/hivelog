@@ -21,6 +21,7 @@ use Drupal\hivelog\HivelogCalendarChecklistBuilder;
 use Drupal\hivelog\HivelogOwnerWarning;
 use Drupal\hivelog\HivelogEntityActionsTrait;
 use Drupal\hivelog\HivelogStatTileBuilder;
+use Drupal\hivelog\HivelogStatTileStripTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -30,6 +31,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
 class ApiaryController extends ControllerBase {
 
   use HivelogEntityActionsTrait;
+  use HivelogStatTileStripTrait;
 
   /**
    * Default number of hives shown per page in the embedded list.
@@ -150,28 +152,18 @@ class ApiaryController extends ControllerBase {
    */
   protected function buildSummary(Apiary $apiary): array {
     $empty = (string) $this->t('—');
-    $label = fn(string $field): string => (string) $apiary->get($field)->getFieldDefinition()->getLabel();
-
-    $visibility = $apiary->get('visibility')->value;
-    $visibility_label = $apiary->get('visibility')->getSetting('allowed_values')[$visibility] ?? $visibility;
 
     // The facts are the same stat tiles the dashboard and the hive page use
-    // (informational: no destination), so the page reads like the others.
-    $tile = fn(string $tile_label, string $value): array => [
-      '#type' => 'component',
-      '#component' => 'hivelog:stat-tile',
-      '#props' => ['value' => $value, 'label' => $tile_label, 'url' => ''],
-    ];
-    $location = trim((string) $apiary->get('location')->value);
-    $tiles = [
-      'location' => $tile($label('location'), $location !== '' ? $location : $empty),
+    // (informational: no destination), so the page reads like the others. The
+    // shared strip helper builds them (task 0256); hivelog-apiary-facts is
+    // kept as a second class for theme continuity.
+    $tiles = $this->buildTileStrip($apiary, [
+      'location' => [],
       // The primary owner's number (task 0232).
-      'cbr' => $tile((string) $this->t('CBR number'), $apiary->getCbrNumber() ?: $empty),
-      'visibility' => $tile($label('visibility'), (string) $visibility_label),
-      'role' => $tile((string) $this->t('Your role'), $this->currentUserRole($apiary)),
-    ];
-    $tiles['#type'] = 'container';
-    $tiles['#attributes'] = ['class' => ['hivelog-stat-tiles', 'hivelog-apiary-facts']];
+      'cbr' => ['label' => $this->t('CBR number'), 'value' => $apiary->getCbrNumber()],
+      'visibility' => [],
+      'role' => ['label' => $this->t('Your role'), 'value' => $this->currentUserRole($apiary)],
+    ], ['hivelog-apiary-facts']);
 
     // Members fold behind one line so the facts above stay a compact strip
     // (task 0255); only for people who manage the apiary, as with the

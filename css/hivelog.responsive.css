@@ -87,6 +87,8 @@
   --hivelog-critical-tint: #fdeceb;
   --hivelog-warning:       #a4630a;
   --hivelog-warning-tint:  #f7ecd9;
+  --hivelog-ok:            #1f6b3a;
+  --hivelog-ok-tint:       #e4f2e9;
 
   /*
    * Button design tokens (ADR-0012, task 0010).

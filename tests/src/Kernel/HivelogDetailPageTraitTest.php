@@ -232,4 +232,78 @@ class HivelogDetailPageTraitTest extends KernelTestBase {
     $this->assertContains('hivelog-queen-table', $section['table']['#attributes']['class']);
   }
 
+  /**
+   * Invokes the protected buildTileStrip() method via reflection (task 0256).
+   */
+  protected function buildTileStrip(array $tiles, array $classes = []): array {
+    $controller = \Drupal::service('class_resolver')->getInstanceFromDefinition(QueenController::class);
+    $method = new \ReflectionMethod(QueenController::class, 'buildTileStrip');
+    $method->setAccessible(TRUE);
+    return $method->invoke($controller, $this->queen, $tiles, $classes);
+  }
+
+  /**
+   * Tests fields become tiles: labels, allowed-value text, links, empty dash.
+   */
+  public function testTileStripReadsFields(): void {
+    $this->setCurrentUser($this->owner);
+    $strip = $this->buildTileStrip(['status' => [], 'hive' => [], 'queen_year' => ['label' => 'Year'], 'origin' => []], ['extra-class']);
+
+    $this->assertSame('container', $strip['#type']);
+    $this->assertContains('hivelog-stat-tiles', $strip['#attributes']['class']);
+    $this->assertContains('hivelog-stat-tiles--facts', $strip['#attributes']['class']);
+    $this->assertContains('extra-class', $strip['#attributes']['class']);
+
+    $this->assertSame('hivelog:stat-tile', $strip['status']['#component']);
+    $this->assertSame('Active', $strip['status']['#props']['value']);
+    $this->assertSame('', $strip['status']['#props']['url']);
+    $this->assertSame('Test Hive', $strip['hive']['#props']['value']);
+    $this->assertNotSame('', $strip['hive']['#props']['url'], 'A reference tile links to the record the viewer may see.');
+    $this->assertSame('Year', $strip['queen_year']['#props']['label']);
+    $this->assertSame('2025', $strip['queen_year']['#props']['value']);
+    $this->assertSame('—', $strip['origin']['#props']['value'], 'An empty field shows a dash.');
+  }
+
+  /**
+   * Tests options: omit_empty, explicit value, variant, suppressed link.
+   */
+  public function testTileStripOptions(): void {
+    $this->setCurrentUser($this->owner);
+    $strip = $this->buildTileStrip([
+      'origin' => ['omit_empty' => TRUE],
+      'role' => ['label' => 'Role', 'value' => 'Owner', 'sublabel' => 'ok', 'variant' => 'ok'],
+      'nothing' => ['label' => 'Nothing', 'value' => NULL],
+      'hive' => ['url' => FALSE],
+    ]);
+
+    $this->assertArrayNotHasKey('origin', $strip);
+    $this->assertSame('Owner', $strip['role']['#props']['value']);
+    $this->assertSame('ok', $strip['role']['#props']['sublabel_variant']);
+    $this->assertSame('—', $strip['nothing']['#props']['value']);
+    $this->assertSame('', $strip['hive']['#props']['url']);
+  }
+
+  /**
+   * Tests an unviewable reference has no link, and an empty strip is empty.
+   */
+  public function testTileStripWithoutAccessAndEmpty(): void {
+    $stranger = User::create(['name' => 'stranger', 'mail' => 'stranger@example.com']);
+    $stranger->save();
+    $this->setCurrentUser($stranger);
+    $strip = $this->buildTileStrip(['hive' => []]);
+    $this->assertSame('', $strip['hive']['#props']['url']);
+
+    $this->assertSame([], $this->buildTileStrip(['origin' => ['omit_empty' => TRUE]]));
+  }
+
+  /**
+   * Tests a long value is cut to one tile's worth.
+   */
+  public function testTileStripTruncatesLongValues(): void {
+    $this->setCurrentUser($this->owner);
+    $strip = $this->buildTileStrip(['long' => ['label' => 'Long', 'value' => str_repeat('word ', 40)]]);
+    $this->assertLessThanOrEqual(80, mb_strlen($strip['long']['#props']['value']));
+    $this->assertStringEndsWith('…', $strip['long']['#props']['value']);
+  }
+
 }
