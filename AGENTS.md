@@ -942,8 +942,7 @@ suppresses that. Values over 80 characters are cut with an ellipsis. The wrapper
 adds; the apiary page keeps `hivelog-apiary-facts` for theme continuity. The sub-line variants are `default`,
 `critical`, `warning` and `ok`. Long prose (notes, descriptions) is never a tile: it goes in a **note block** (task 0265), `buildProseBlock($title, $body)` or, from a field through the controller's own `formatFieldValue()`, `buildFieldProseBlock($title, $entity, $field)` in `HivelogDetailPageTrait`: an H2 and the text full width under a left rule, no table, empty when there is no text (`.hivelog-prose`, library `hivelog/prose`). Pages still showing such a field as a one-row table are moved over by task 0266. Pages on it so far:
 the apiary page, the queen page (task 0258: Status, Hive, Year · Colour, Breed, Temperament, Introduced with
-"n months in hive", Purchase cost; unset optional ones are omitted with `omit_empty`; notes are a note block (task 0266) and origin stays a
-"Details" table until it becomes a tile, task 0267) and the queen observation page (Queen, Date, Health, Temperament, Actively laying; notes are a note block), and the
+"n months in hive", Purchase cost; unset optional ones are omitted with `omit_empty`; Origin, a short string, is a tile after Temperament (task 0267); notes are a note block, task 0266; no table is left) and the queen observation page (Queen, Date, Health, Temperament, Actively laying; notes are a note block), and the
 inspection page (task 0259): a header strip (Hive, Date, Inspector) then one strip under each existing H2 (Queen status,
 Brood/honey/pollen, Colony condition, Varroa and disease, Management), built with `buildTileSection($title, $entity,
 $tiles)` (an H2 plus a strip, empty when nothing is recorded so the section vanishes); External check (the field's own label, directly after the header strip: it happens before the hive is opened), Action taken

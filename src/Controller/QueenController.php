@@ -109,9 +109,10 @@ class QueenController extends ControllerBase {
       'actions' => $this->buildActions($queen),
     ];
 
-    // The queen's short facts are one strip of stat tiles (task 0258); only
-    // origin and notes, which are free text, stay as a table. The queen's name
-    // is the page title, so no tile repeats it.
+    // The queen's short facts are one strip of stat tiles (task 0258), origin
+    // included (task 0267: a short string, cut at 80 characters by the strip);
+    // only the notes, which are prose, are a note block. The queen's name is
+    // the page title, so no tile repeats it.
     $marking = implode(' · ', array_filter([
       $queen->get('queen_year')->getString(),
       $queen->get('queen_colour')->getString() !== '' ? $queen->getColourName() : '',
@@ -125,6 +126,7 @@ class QueenController extends ControllerBase {
       'marking' => ['label' => $this->t('Year · Colour'), 'value' => $marking, 'omit_empty' => TRUE],
       'breed' => ['omit_empty' => TRUE],
       'temperament' => ['omit_empty' => TRUE],
+      'origin' => ['omit_empty' => TRUE],
       'introduction_date' => [
         'label' => $this->t('Introduced'),
         'sublabel' => $this->timeInHive($queen),
@@ -143,12 +145,7 @@ class QueenController extends ControllerBase {
       $build['facts'] = $facts;
     }
 
-    // Notes is prose, so it is a note block (task 0266). Origin stays in a
-    // small Details table until it becomes a tile (task 0267), so the page
-    // does not lose it in between.
-    if (!$queen->get('origin')->isEmpty()) {
-      $build['details'] = $this->buildSection($this->t('Details'), $queen, ['origin']);
-    }
+    // Notes is prose, so it is a note block (task 0266).
     $notes = $this->buildFieldProseBlock($this->t('Notes'), $queen, 'notes');
     if ($notes) {
       $build['notes'] = $notes;

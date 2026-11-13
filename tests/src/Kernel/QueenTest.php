@@ -328,12 +328,13 @@ class QueenTest extends KernelTestBase {
 
     // Section render arrays are keyed in the expected order.
     $this->assertArrayHasKey('actions', $build);
-    // Short facts are a strip of stat tiles (task 0258); notes are a note block
-    // (task 0266) and origin stays a small table until task 0267.
+    // Short facts, origin included (task 0267), are a strip of stat tiles
+    // (task 0258); notes are a note block (task 0266). No table is left.
     $this->assertArrayHasKey('facts', $build);
-    $this->assertArrayHasKey('details', $build);
+    $this->assertSame('Origin', $build['facts']['origin']['#props']['label']);
+    $this->assertSame('Highlands Apiaries', $build['facts']['origin']['#props']['value']);
     $this->assertArrayHasKey('notes', $build);
-    foreach (['overview', 'identity', 'acquisition'] as $gone) {
+    foreach (['overview', 'identity', 'acquisition', 'details'] as $gone) {
       $this->assertArrayNotHasKey($gone, $build);
     }
     $this->assertEquals('component', $build['actions']['#type']);
@@ -343,9 +344,7 @@ class QueenTest extends KernelTestBase {
     $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
 
     $this->assertStringContainsString('hivelog-stat-tile', $html);
-    $this->assertStringContainsString('Details', $html);
-    // Origin is still the shared section table; Notes is a note block.
-    $this->assertStringContainsString('>Field<', $html);
+    $this->assertStringNotContainsString('>Field<', $html);
     $this->assertStringContainsString('hivelog-prose', $html);
 
     // Formatted values.
@@ -398,7 +397,7 @@ class QueenTest extends KernelTestBase {
     $this->assertSame('', $build['facts']['hive']['#props']['url']);
     $this->assertArrayNotHasKey('introduction_date', $build['facts']);
     $this->assertArrayNotHasKey('marking', $build['facts']);
-    $this->assertArrayNotHasKey('details', $build, 'No origin: no Details table.');
+    $this->assertArrayNotHasKey('origin', $build['facts'], 'No origin: no Origin tile.');
   }
 
   /**
