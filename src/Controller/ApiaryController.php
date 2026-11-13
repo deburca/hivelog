@@ -150,10 +150,6 @@ class ApiaryController extends ControllerBase {
    */
   protected function buildSummary(Apiary $apiary): array {
     $empty = (string) $this->t('—');
-    $text = function (string $field) use ($apiary, $empty): array {
-      $value = trim((string) $apiary->get($field)->value);
-      return ['#plain_text' => $value !== '' ? $value : $empty];
-    };
     $label = fn(string $field): string => (string) $apiary->get($field)->getFieldDefinition()->getLabel();
 
     $visibility = $apiary->get('visibility')->value;
@@ -177,13 +173,12 @@ class ApiaryController extends ControllerBase {
     $tiles['#type'] = 'container';
     $tiles['#attributes'] = ['class' => ['hivelog-stat-tiles', 'hivelog-apiary-facts']];
 
-    // Members and notes are the long, rarely needed rows: they fold behind one
-    // line so the facts above stay a compact strip (task 0255).
-    $more = [];
-
-    // Who the members are is for people who manage the apiary, as with the
-    // membership access handler (owners only see the rows).
+    // Members fold behind one line so the facts above stay a compact strip
+    // (task 0255); only for people who manage the apiary, as with the
+    // membership access handler (owners see the rows). Notes are left out of
+    // this display for now, and Manage members sits beside Edit at the top.
     $cache_tags = $apiary->getCacheTags();
+    $more = [];
     if ($apiary->access('update', $this->currentUser)) {
       $members = [];
       foreach ($apiary->getApiaryMembers() as $membership) {
@@ -192,34 +187,12 @@ class ApiaryController extends ControllerBase {
           $members[] = $member->getDisplayName() . ' (' . ApiaryMembership::roleLabel($membership->getRole()) . ')';
         }
       }
-      $more[] = [
-        (string) $this->t('Members'),
-        [
-          'summary' => ['#plain_text' => $members ? implode(', ', $members) : $empty],
-          'manage' => [
-            '#type' => 'link',
-            '#title' => $this->t('Manage members'),
-            '#url' => $apiary->toUrl('edit-form', ['fragment' => 'members']),
-            '#attributes' => ['class' => ['button', 'button--default']],
-            '#prefix' => ' <span class="hivelog-inline-actions">',
-            '#suffix' => '</span>',
-            '#attached' => ['library' => ['hivelog/buttons']],
-          ],
-        ],
+      $more = [
+        'summary' => ['#type' => 'html_tag', '#tag' => 'summary', '#value' => $this->t('Members')],
+        'list' => ['#type' => 'html_tag', '#tag' => 'p', '#value' => Html::escape($members ? implode(', ', $members) : $empty)],
       ];
       $cache_tags[] = 'apiary_membership_list';
     }
-    $more[] = [$label('notes'), $text('notes')];
-
-    $table = fn(array $table_rows, array $classes): array => [
-      '#type' => 'table',
-      '#rows' => array_map(
-        fn(array $row): array => [['data' => ['#plain_text' => $row[0]]], ['data' => $row[1]]],
-        $table_rows
-      ),
-      '#attributes' => ['class' => $classes],
-      '#attached' => ['library' => ['hivelog/tables']],
-    ];
 
     return [
       '#type' => 'container',
@@ -230,17 +203,11 @@ class ApiaryController extends ControllerBase {
         '#value' => $this->t('Details'),
       ],
       'facts' => $tiles,
-      'more' => [
+      'more' => $more ? [
         '#type' => 'html_tag',
         '#tag' => 'details',
         '#attributes' => ['class' => ['hivelog-apiary-more']],
-        'summary' => [
-          '#type' => 'html_tag',
-          '#tag' => 'summary',
-          '#value' => $this->t('Members and notes'),
-        ],
-        'table' => $table($more, ['hivelog-detail-table', 'hivelog-apiary-table']),
-      ],
+      ] + $more : [],
       '#cache' => [
         'tags' => $cache_tags,
         'contexts' => ['user', 'user.permissions'],
@@ -299,15 +266,48 @@ class ApiaryController extends ControllerBase {
   }
 
   /**
+   * The page's Edit / Delete cluster plus Manage members beside it.
+   *
+   * Manage members opens the members section of the apiary edit form, so it
+   * needs the same `update` access as Edit (owners).
+   */
+  protected function buildApiaryActions(Apiary $apiary): array {
+    $actions = $this->buildActions($apiary);
+    if (!$actions || !$apiary->access('update', $this->currentUser)) {
+      return $actions;
+    }
+    // The group drops its own wrapper; the container carries it for both.
+    unset($actions['#prefix'], $actions['#suffix'], $actions['#weight']);
+    return [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['hivelog-page-actions']],
+      '#weight' => -10,
+      'group' => $actions,
+      'members' => [
+        '#type' => 'component',
+        '#component' => 'hivelog:button',
+        '#props' => [
+          'label' => (string) $this->t('Manage members'),
+          'url' => $apiary->toUrl('edit-form', ['fragment' => 'members'])->toString(),
+          'variant' => 'default',
+        ],
+      ],
+    ];
+  }
+
+  /**
    * Names the current user's relationship to an apiary, for the summary.
    */
   protected function currentUserRole(Apiary $apiary): string {
-    if ($this->currentUser->hasPermission('administer hivelog')) {
-      return (string) $this->t('Administrator');
-    }
+    // The role within this apiary first (Owner, Beekeeper, Novice), even for an
+    // administrator who is also a member; the site-wide role only when the
+    // user has no membership here.
     $role = $apiary->getRoleOf($this->currentUser);
     if ($role !== NULL) {
       return (string) ApiaryMembership::roleLabel($role);
+    }
+    if ($this->currentUser->hasPermission('administer hivelog')) {
+      return (string) $this->t('Administrator');
     }
     return (string) $this->t('Visitor');
   }
@@ -322,7 +322,7 @@ class ApiaryController extends ControllerBase {
     // (ADR-0012, AGENTS.md "Routing, controllers and forms"); Apiary/Hive
     // were the two canonical pages that had no page-owned button group at
     // all, relying entirely on the Navigation module's top bar.
-    $build['actions'] = $this->buildActions($apiary);
+    $build['actions'] = $this->buildApiaryActions($apiary);
 
     // Summary of the apiary itself (location, visibility, the viewer's role,
     // members): the page otherwise opens straight onto its hives.
