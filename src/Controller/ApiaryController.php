@@ -189,7 +189,11 @@ class ApiaryController extends ControllerBase {
       }
       $more = [
         'summary' => ['#type' => 'html_tag', '#tag' => 'summary', '#value' => $this->t('Members')],
-        'list' => ['#type' => 'html_tag', '#tag' => 'p', '#value' => Html::escape($members ? implode(', ', $members) : $empty)],
+        'list' => [
+          '#type' => 'html_tag',
+          '#tag' => 'p',
+          '#value' => Html::escape($members ? implode(', ', $members) : $empty),
+        ],
       ];
       $cache_tags[] = 'apiary_membership_list';
     }
