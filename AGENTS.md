@@ -1028,7 +1028,15 @@ count it used to state already had. Core's own:
   contribute via `hook_hivelog_app_nav_items()`.
 - `hivelog.stat_tile_builder` (`HivelogStatTileBuilder`) — merges the
   "at a glance" stat tiles a canonical page shows, from
-  `hook_hivelog_apiary_stat_tiles()` / `hook_hivelog_hive_stat_tiles()`.
+  `hook_hivelog_apiary_stat_tiles()` / `hook_hivelog_hive_stat_tiles()`. The Hive page also
+  shows core's own fact tiles (task 0257, `coreTilesForHive()`: Status, Type · Material, Temperament,
+  Queen, Empty weight, weighted -50 to -10 so they precede every submodule tile). They are **web-only**:
+  `tilesForHive()`, which `hivelog_api`'s `computed/hive/{hive}/stat-tiles` serves, stays submodule
+  tiles alone, because the app reads the same facts from the hive and queen records. The Queen tile
+  links to the active queen (sub-line her name and breed), or reads "No queen" with an add link;
+  Empty weight reads "Unknown" with "Incomplete" or "Not yet composed" when `getEmptyWeightKg()` is
+  NULL (`Hive::hasComponents()` tells the two apart). The Queen section under it keeps only its
+  heading and buttons.
 - `hivelog.alert_collector` (`HivelogAlertCollector`, task 0202) — the
   "Needs attention" alerts: the seasonal-calendar pass, low-stock inventory,
   and whatever submodules contribute through

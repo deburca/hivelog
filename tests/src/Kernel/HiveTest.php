@@ -454,25 +454,22 @@ class HiveTest extends KernelTestBase {
   }
 
   /**
-   * Tests the hive page's queen table carries the generic detail class.
+   * Tests the queen's facts are a stat tile, not a table, on the hive page.
    *
-   * Task 0131: `HiveController::buildQueenSection()` builds its own table
-   * directly (not via `HivelogDetailPageTrait::buildSection()`), so it
-   * needs its own `hivelog-detail-table` addition alongside the existing
-   * `hivelog-queen-table` class.
+   * Task 0257: the Queen section keeps its heading and buttons only.
    */
-  public function testHiveViewQueenTableHasGenericDetailClass(): void {
+  public function testHiveViewShowsQueenAsStatTile(): void {
     $this->installConfig(['system']);
 
     $hive = Hive::create([
-      'name' => 'Queen Table Hive',
+      'name' => 'Queen Tile Hive',
       'apiary' => $this->apiary->id(),
       'status' => 'active',
     ]);
     $hive->save();
 
     Queen::create([
-      'name' => 'Q-detail-class',
+      'name' => 'Q-tile',
       'hive' => $hive->id(),
       'queen_year' => 2025,
       'status' => 'active',
@@ -483,8 +480,9 @@ class HiveTest extends KernelTestBase {
     $build = $controller->view($hive);
     $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
 
-    $this->assertStringContainsString('hivelog-detail-table', $html);
-    $this->assertStringContainsString('hivelog-queen-table', $html);
+    $this->assertStringContainsString('hivelog-stat-tile', $html);
+    $this->assertStringContainsString('2025 · Blue', $html);
+    $this->assertStringNotContainsString('hivelog-queen-table', $html);
   }
 
   /**
@@ -619,7 +617,9 @@ class HiveTest extends KernelTestBase {
     $this->assertStringContainsString('Buckfast', $html);
     // The queen's marking colour is derived from the hatch year.
     $this->assertStringContainsString('Green', $html);
-    $this->assertStringContainsString('2024-05-01', $html);
+    // The Introduced date is on the queen's own page now, not the hive page
+    // (task 0257 replaced the queen table with a stat tile).
+    $this->assertStringNotContainsString('2024-05-01', $html);
     $this->assertStringContainsString('Edit Queen', $html);
     $this->assertStringContainsString('View all Queens', $html);
     // Add Observation now lives on the Queen Observations column's own

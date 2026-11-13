@@ -54,7 +54,7 @@ class HivelogStatTileBuilderTest extends KernelTestBase {
   }
 
   /**
-   * Tests the row is empty when no implementation contributes a tile.
+   * Tests no submodule tile and no apiary tile when nothing contributes one.
    */
   public function testEmptyWhenNoTilesContributed(): void {
     $apiary = Apiary::create(['name' => 'Test Apiary']);
@@ -62,8 +62,11 @@ class HivelogStatTileBuilderTest extends KernelTestBase {
     $hive = Hive::create(['name' => 'Test Hive', 'apiary' => $apiary->id(), 'status' => 'active']);
     $hive->save();
 
+    // Core's own fact tiles (task 0257) are always on the hive page; what no
+    // implementation contributes is the submodule part, which is also all the
+    // API's tilesForHive() serves.
     $builder = \Drupal::service('hivelog.stat_tile_builder');
-    $this->assertSame([], $builder->buildForHive($hive));
+    $this->assertSame([], $builder->tilesForHive($hive));
     $this->assertSame([], $builder->buildForApiary($apiary));
   }
 
