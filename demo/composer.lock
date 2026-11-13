@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e562155ea1748c93538f54a38244130e",
+    "content-hash": "6ba4653c31340abe42d64976de0a9775",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -1522,6 +1522,60 @@
                 "source": "https://github.com/drupal/core-recommended/tree/11.4.11"
             },
             "time": "2026-10-21T10:18:50+00:00"
+        },
+        {
+            "name": "drupal/cva",
+            "version": "1.0.2",
+            "source": {
+                "type": "git",
+                "url": "https://git.drupalcode.org/project/cva.git",
+                "reference": "1.0.2"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://ftp.drupal.org/files/projects/cva-1.0.2.zip",
+                "reference": "1.0.2",
+                "shasum": "22686b107ed6e0f775f36de7f66509489a700fd7"
+            },
+            "require": {
+                "drupal/core": ">=11",
+                "twig/html-extra": "^3.12"
+            },
+            "type": "drupal-module",
+            "extra": {
+                "drupal": {
+                    "version": "1.0.2",
+                    "datestamp": "1793730319",
+                    "security-coverage": {
+                        "status": "covered",
+                        "message": "Covered by Drupal's security advisory policy"
+                    }
+                }
+            },
+            "notification-url": "https://packages.drupal.org/8/downloads",
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "lauriii",
+                    "homepage": "https://www.drupal.org/user/1078742"
+                },
+                {
+                    "name": "pameeela",
+                    "homepage": "https://www.drupal.org/user/1431110"
+                },
+                {
+                    "name": "phenaproxima",
+                    "homepage": "https://www.drupal.org/user/205645"
+                }
+            ],
+            "description": "Provides html_cva Twig function for managing component variants using Class Variance Authority pattern.",
+            "homepage": "https://www.drupal.org/project/cva",
+            "support": {
+                "source": "https://git.drupalcode.org/project/cva"
+            },
+            "published-time": "2026-11-03T18:24:57+00:00"
         },
         {
             "name": "drupal/geofield",
@@ -7938,5 +7992,5 @@
         "php": ">=8.3"
     },
     "platform-dev": {},
-    "plugin-api-version": "2.9.0"
+    "plugin-api-version": "2.11.0"
 }
