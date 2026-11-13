@@ -89,21 +89,21 @@ class QueenObservationController extends ControllerBase {
       'actions' => $this->buildActions($queen_observation),
     ];
 
-    $build += [
-      'overview' => $this->buildSection($this->t('Overview'), $queen_observation, [
-        'queen',
-        'observation_date',
-        'uid',
-      ]),
-      'observations' => $this->buildSection($this->t('Observations'), $queen_observation, [
-        'health',
-        'temperament',
-        'active',
-      ]),
-      'notes' => $this->buildSection($this->t('Notes'), $queen_observation, [
-        'notes',
-      ]),
-    ];
+    // The short facts are one strip of stat tiles (task 0258); notes stay text.
+    $facts = $this->buildTileStrip($queen_observation, [
+      'queen' => [],
+      'observation_date' => [],
+      'health' => ['omit_empty' => TRUE],
+      'temperament' => ['omit_empty' => TRUE],
+      'active' => ['label' => $this->t('Actively laying')],
+    ]);
+    if ($facts) {
+      $build['facts'] = $facts;
+    }
+
+    $build['notes'] = $this->buildSection($this->t('Notes'), $queen_observation, [
+      'notes',
+    ]);
 
     // Photos grid (displayed after notes when images are present).
     $photos = $this->buildPhotosGrid($queen_observation);

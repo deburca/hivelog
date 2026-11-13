@@ -204,17 +204,21 @@ class QueenObservationTest extends KernelTestBase {
     $build = $controller->view($observation);
 
     $this->assertArrayHasKey('actions', $build);
-    $this->assertArrayHasKey('overview', $build);
-    $this->assertArrayHasKey('observations', $build);
+    // The short facts are one strip of stat tiles (task 0258), not tables.
+    $this->assertArrayHasKey('facts', $build);
+    $this->assertArrayNotHasKey('overview', $build);
+    $this->assertArrayNotHasKey('observations', $build);
     $this->assertArrayHasKey('notes', $build);
+    $this->assertSame('Actively laying', $build['facts']['active']['#props']['label']);
+    $this->assertSame('Yes', $build['facts']['active']['#props']['value']);
     $this->assertEquals('component', $build['actions']['#type']);
     $this->assertEquals('hivelog:button-group', $build['actions']['#component']);
     $this->assertCount(2, $build['actions']['#props']['buttons']);
 
     $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
-    $this->assertStringContainsString('Overview', $html);
-    $this->assertStringContainsString('Observations', $html);
+    $this->assertStringContainsString('hivelog-stat-tile', $html);
     $this->assertStringContainsString('Notes', $html);
+    $this->assertStringContainsString('2025-06-15', $html);
     // Human-readable enum labels.
     $this->assertStringContainsString('Excellent', $html);
     $this->assertStringContainsString('Calm', $html);

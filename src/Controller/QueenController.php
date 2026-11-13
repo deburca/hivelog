@@ -2,6 +2,7 @@
 
 namespace Drupal\hivelog\Controller;
 
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Controller\ControllerBase;
@@ -45,6 +46,11 @@ class QueenController extends ControllerBase {
   protected RendererInterface $renderer;
 
   /**
+   * The time service (for "n months in hive").
+   */
+  protected TimeInterface $time;
+
+  /**
    * Constructs a QueenController.
    */
   public function __construct(
@@ -52,6 +58,7 @@ class QueenController extends ControllerBase {
     EntityFormBuilderInterface $entity_form_builder,
     DateFormatterInterface $date_formatter,
     RendererInterface $renderer,
+    TimeInterface $time,
   ) {
     // $entityTypeManager and $entityFormBuilder are untyped properties
     // inherited from ControllerBase; assign them rather than redeclaring
@@ -60,6 +67,7 @@ class QueenController extends ControllerBase {
     $this->entityFormBuilder = $entity_form_builder;
     $this->dateFormatter = $date_formatter;
     $this->renderer = $renderer;
+    $this->time = $time;
   }
 
   /**
@@ -71,6 +79,7 @@ class QueenController extends ControllerBase {
       $container->get('entity.form_builder'),
       $container->get('date.formatter'),
       $container->get('renderer'),
+      $container->get('datetime.time'),
     );
   }
 
@@ -100,29 +109,44 @@ class QueenController extends ControllerBase {
       'actions' => $this->buildActions($queen),
     ];
 
-    $build += [
-      'overview' => $this->buildSection($this->t('Overview'), $queen, [
-        'name',
-        'status',
-        'hive',
-        'uid',
-      ]),
-      'identity' => $this->buildSection($this->t('Identity'), $queen, [
-        'origin',
-        'queen_year',
-        'queen_colour',
-        'breed',
-        'temperament',
-      ]),
-      'acquisition' => $this->buildSection($this->t('Acquisition'), $queen, [
-        'purchase_cost',
-        'purchase_date',
-        'introduction_date',
-      ]),
-      'notes' => $this->buildSection($this->t('Notes'), $queen, [
-        'notes',
-      ]),
-    ];
+    // The queen's short facts are one strip of stat tiles (task 0258); only
+    // origin and notes, which are free text, stay as a table. The queen's name
+    // is the page title, so no tile repeats it.
+    $marking = implode(' · ', array_filter([
+      $queen->get('queen_year')->getString(),
+      $queen->get('queen_colour')->getString() !== '' ? $queen->getColourName() : '',
+    ]));
+    $cost = $queen->get('purchase_cost')->isEmpty()
+      ? ''
+      : number_format((float) $queen->get('purchase_cost')->getString(), 2);
+    $facts = $this->buildTileStrip($queen, [
+      'status' => [],
+      'hive' => $queen->get('hive')->isEmpty() ? ['value' => (string) $this->t('Unassigned')] : [],
+      'marking' => ['label' => $this->t('Year · Colour'), 'value' => $marking, 'omit_empty' => TRUE],
+      'breed' => ['omit_empty' => TRUE],
+      'temperament' => ['omit_empty' => TRUE],
+      'introduction_date' => [
+        'label' => $this->t('Introduced'),
+        'sublabel' => $this->timeInHive($queen),
+        'omit_empty' => TRUE,
+      ],
+      'purchase_cost' => [
+        'label' => $this->t('Purchase cost'),
+        'value' => $cost,
+        'sublabel' => $queen->get('purchase_date')->isEmpty()
+          ? ''
+          : $this->t('Bought @date', ['@date' => $queen->get('purchase_date')->getString()]),
+        'omit_empty' => TRUE,
+      ],
+    ]);
+    if ($facts) {
+      $build['facts'] = $facts;
+    }
+
+    $build['details'] = $this->buildSection($this->t('Details'), $queen, ['origin', 'notes']);
+    if ($queen->get('origin')->isEmpty() && $queen->get('notes')->isEmpty()) {
+      unset($build['details']);
+    }
 
     // Observations list: rendered at the end of the page in the same style
     // as the inspections table on the hive page. 'observations' is the
@@ -236,6 +260,38 @@ class QueenController extends ControllerBase {
     $cache->applyTo($build);
 
     return $build;
+  }
+
+  /**
+   * How long an active queen has been in the hive, for the Introduced tile.
+   *
+   * Empty unless the queen is active, installed and has an introduction date
+   * in the past.
+   */
+  protected function timeInHive(Queen $queen): string {
+    if ($queen->get('status')->getString() !== 'active' || $queen->get('hive')->isEmpty()
+      || $queen->get('introduction_date')->isEmpty()) {
+      return '';
+    }
+    try {
+      $introduced = new \DateTimeImmutable($queen->get('introduction_date')->getString() . ' 00:00:00 UTC');
+    }
+    catch (\Exception) {
+      return '';
+    }
+    $now = (new \DateTimeImmutable('@' . $this->time->getRequestTime()));
+    if ($now < $introduced) {
+      return '';
+    }
+    $diff = $introduced->diff($now);
+    $months = $diff->y * 12 + $diff->m;
+    if ($months < 1) {
+      return (string) $this->t('Less than a month in hive');
+    }
+    if ($months < 24) {
+      return (string) $this->formatPlural($months, '1 month in hive', '@count months in hive');
+    }
+    return (string) $this->t('@count years in hive', ['@count' => intdiv($months, 12)]);
   }
 
   /**
