@@ -54,8 +54,9 @@ trait HivelogStatTileStripTrait {
   /**
    * Builds the strip.
    *
-   * @param \Drupal\Core\Entity\FieldableEntityInterface $entity
-   *   The record the fields belong to.
+   * @param \Drupal\Core\Entity\FieldableEntityInterface|null $entity
+   *   The record the fields belong to, or NULL for a strip of computed values
+   *   only (every tile then carries its own `value`).
    * @param array<int|string, array|string> $tiles
    *   Tile descriptions (see the trait docblock). A plain string entry is
    *   shorthand for a field name with no options.
@@ -65,9 +66,11 @@ trait HivelogStatTileStripTrait {
    * @return array
    *   A container render array, or an empty array when no tile has a value.
    */
-  protected function buildTileStrip(FieldableEntityInterface $entity, array $tiles, array $extra_classes = []): array {
+  protected function buildTileStrip(?FieldableEntityInterface $entity, array $tiles, array $extra_classes = []): array {
     $cache = new CacheableMetadata();
-    $cache->addCacheableDependency($entity);
+    if ($entity) {
+      $cache->addCacheableDependency($entity);
+    }
     $strip = [];
 
     foreach ($tiles as $key => $definition) {
@@ -76,7 +79,7 @@ trait HivelogStatTileStripTrait {
         $definition = [];
       }
       $field_name = $definition['field'] ?? (string) $key;
-      $field = $entity->hasField($field_name) ? $entity->get($field_name) : NULL;
+      $field = $entity && $entity->hasField($field_name) ? $entity->get($field_name) : NULL;
 
       if (array_key_exists('value', $definition)) {
         $value = trim((string) $definition['value']);

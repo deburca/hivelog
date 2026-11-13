@@ -11,6 +11,7 @@ use Drupal\Core\Link;
 use Drupal\Core\Url;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\HivelogCalendarChecklistBuilder;
+use Drupal\hivelog\HivelogStatTileStripTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -28,6 +29,8 @@ use Symfony\Component\HttpFoundation\RequestStack;
  * and docs/project-management/decisions/0034-honey-wax-propolis-yield-and-potential-income.md.
  */
 class InventoryReportController extends ControllerBase {
+
+  use HivelogStatTileStripTrait;
 
   /**
    * The request stack.
@@ -89,28 +92,10 @@ class InventoryReportController extends ControllerBase {
     // (costReportTitle()) as a second, redundant heading.
     $build['year_selector'] = $this->yearSelector('hivelog.apiary.inventory_cost_report', ['apiary' => $apiary->id()], $year, $this->financeLinks(TRUE));
 
-    $build['summary'] = [
-      '#type' => 'table',
-      '#weight' => 2,
-      '#header' => [
-        $this->t('Total consumable cost'),
-        $this->t('Total active depreciation'),
-        $this->t('Total cost'),
-        $this->t('Total potential income'),
-        $this->t('Net'),
-      ],
-      '#rows' => [
-        [
-          number_format($consumable_total, 2),
-          number_format($depreciation_total, 2),
-          number_format($cost_total, 2),
-          number_format($income_total, 2),
-          number_format($net, 2),
-        ],
-      ],
-      '#attributes' => ['class' => ['hivelog-inventory-report-table']],
-      '#attached' => ['library' => ['hivelog/tables']],
-    ];
+    // The totals are one strip of stat tiles (task 0261), in the order the old
+    // table's columns ran, ending in the net.
+    $build['summary'] = $this->totalsStrip($consumable_total, $depreciation_total, $cost_total, $income_total, $net)
+      + ['#weight' => 2];
 
     $breakdown_rows = [];
     foreach ($consumables as $row) {
@@ -292,6 +277,13 @@ class InventoryReportController extends ControllerBase {
       ];
     }
 
+    // The all-apiaries totals as stat tiles above the per-apiary table (task
+    // 0261); the table still gives each apiary's own figures and a total row.
+    if ($rows) {
+      $build['totals'] = $this->totalsStrip($sum['consumable'], $sum['depreciation'], $sum['cost'], $sum['income'], $sum['net'])
+        + ['#weight' => 1];
+    }
+
     $build['summary'] = [
       '#type' => 'table',
       '#weight' => 2,
@@ -346,6 +338,33 @@ class InventoryReportController extends ControllerBase {
     $cache->applyTo($build);
 
     return $build;
+  }
+
+  /**
+   * Builds the totals strip shared by both reports (task 0261).
+   *
+   * Consumable cost and active depreciation make up the total cost; the net is
+   * income less cost, tinted critical when negative and ok when positive. The
+   * figures are the same two-decimal numbers the tables show.
+   *
+   * @return array
+   *   A container render array of stat tiles.
+   */
+  protected function totalsStrip(float $consumable, float $depreciation, float $cost, float $income, float $net): array {
+    $net_tile = ['label' => $this->t('Net'), 'value' => number_format($net, 2)];
+    if ($net < 0) {
+      $net_tile += ['sublabel' => $this->t('Loss'), 'variant' => 'critical'];
+    }
+    elseif ($net > 0) {
+      $net_tile += ['sublabel' => $this->t('Surplus'), 'variant' => 'ok'];
+    }
+    return $this->buildTileStrip(NULL, [
+      'consumable' => ['label' => $this->t('Consumable cost'), 'value' => number_format($consumable, 2)],
+      'depreciation' => ['label' => $this->t('Active depreciation'), 'value' => number_format($depreciation, 2)],
+      'cost' => ['label' => $this->t('Total cost'), 'value' => number_format($cost, 2)],
+      'income' => ['label' => $this->t('Potential income'), 'value' => number_format($income, 2)],
+      'net' => $net_tile,
+    ]);
   }
 
   /**

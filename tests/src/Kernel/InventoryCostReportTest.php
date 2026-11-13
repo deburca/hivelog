@@ -596,6 +596,43 @@ class InventoryCostReportTest extends KernelTestBase {
     // 1000 / 5 years = 200.00 depreciation, 0.00 income, net = -200.00.
     $this->assertStringContainsString('200.00', $html);
     $this->assertStringContainsString('-200.00', $html);
+
+    // The totals are a strip of stat tiles (task 0261), not a one-row table;
+    // a loss is tinted critical.
+    $this->assertSame('container', $build['summary']['#type']);
+    $props = fn(string $tile): array => $build['summary'][$tile]['#props'];
+    $this->assertSame('200.00', $props('depreciation')['value']);
+    $this->assertSame('200.00', $props('cost')['value']);
+    $this->assertSame('0.00', $props('income')['value']);
+    $this->assertSame('-200.00', $props('net')['value']);
+    $this->assertSame('Loss', $props('net')['sublabel']);
+    $this->assertSame('critical', $props('net')['sublabel_variant']);
+  }
+
+  /**
+   * Tests a surplus year is tinted ok and a year with no activity is untinted.
+   */
+  public function testNetTileIsOkForSurplusAndPlainForZero(): void {
+    $role = Role::create(['id' => 'admin', 'label' => 'Admin']);
+    $role->grantPermission('administer hivelog');
+    $role->save();
+    $user = User::create(['name' => 'admin', 'mail' => 'admin@example.com']);
+    $user->addRole('admin');
+    $user->save();
+    \Drupal::currentUser()->setAccount($user);
+
+    $controller = \Drupal::service('class_resolver')->getInstanceFromDefinition(InventoryReportController::class);
+    $method = new \ReflectionMethod($controller, 'totalsStrip');
+    $method->setAccessible(TRUE);
+
+    $surplus = $method->invoke($controller, 10.0, 20.0, 30.0, 100.0, 70.0);
+    $this->assertSame('ok', $surplus['net']['#props']['sublabel_variant']);
+    $this->assertSame('Surplus', $surplus['net']['#props']['sublabel']);
+
+    $zero = $method->invoke($controller, 0.0, 0.0, 0.0, 0.0, 0.0);
+    $this->assertSame('0.00', $zero['net']['#props']['value']);
+    $this->assertSame('', $zero['net']['#props']['sublabel']);
+    $this->assertSame('default', $zero['net']['#props']['sublabel_variant']);
   }
 
   /**
