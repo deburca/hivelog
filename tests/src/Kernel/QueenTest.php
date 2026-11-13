@@ -328,11 +328,12 @@ class QueenTest extends KernelTestBase {
 
     // Section render arrays are keyed in the expected order.
     $this->assertArrayHasKey('actions', $build);
-    // Short facts are a strip of stat tiles (task 0258); origin and notes stay
-    // a table.
+    // Short facts are a strip of stat tiles (task 0258); notes are a note block
+    // (task 0266) and origin stays a small table until task 0267.
     $this->assertArrayHasKey('facts', $build);
     $this->assertArrayHasKey('details', $build);
-    foreach (['overview', 'identity', 'acquisition', 'notes'] as $gone) {
+    $this->assertArrayHasKey('notes', $build);
+    foreach (['overview', 'identity', 'acquisition'] as $gone) {
       $this->assertArrayNotHasKey($gone, $build);
     }
     $this->assertEquals('component', $build['actions']['#type']);
@@ -343,8 +344,9 @@ class QueenTest extends KernelTestBase {
 
     $this->assertStringContainsString('hivelog-stat-tile', $html);
     $this->assertStringContainsString('Details', $html);
-    // The Details table is the shared section table.
+    // Origin is still the shared section table; Notes is a note block.
     $this->assertStringContainsString('>Field<', $html);
+    $this->assertStringContainsString('hivelog-prose', $html);
 
     // Formatted values.
     // The queen's name is the page title (the theme's H1), not repeated in the body.
@@ -396,7 +398,7 @@ class QueenTest extends KernelTestBase {
     $this->assertSame('', $build['facts']['hive']['#props']['url']);
     $this->assertArrayNotHasKey('introduction_date', $build['facts']);
     $this->assertArrayNotHasKey('marking', $build['facts']);
-    $this->assertArrayNotHasKey('details', $build, 'No origin or notes: no Details table.');
+    $this->assertArrayNotHasKey('details', $build, 'No origin: no Details table.');
   }
 
   /**

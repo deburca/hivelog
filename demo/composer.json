@@ -15,6 +15,7 @@
         "cweagans/composer-patches": "^2.0",
         "drupal/core-composer-scaffold": "^11.3",
         "drupal/core-recommended": "^11.3",
+        "drupal/cva": "^1",
         "drupal/geofield": "^10.3",
         "drupal/key": "^1.22",
         "drupal/leaflet": "^10.4",

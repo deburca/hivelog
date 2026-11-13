@@ -218,6 +218,9 @@ class QueenObservationTest extends KernelTestBase {
     $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
     $this->assertStringContainsString('hivelog-stat-tile', $html);
     $this->assertStringContainsString('Notes', $html);
+    // Notes are a note block (task 0266), line breaks kept.
+    $this->assertStringContainsString('hivelog-prose', $html);
+    $this->assertStringContainsString('Line 1.<br', $html);
     $this->assertStringContainsString('2025-06-15', $html);
     // Human-readable enum labels.
     $this->assertStringContainsString('Excellent', $html);
