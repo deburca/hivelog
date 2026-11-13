@@ -211,6 +211,10 @@ class ApiaryPrimaryOwnerTest extends KernelTestBase {
     $summary = (string) \Drupal::service('renderer')->renderInIsolation($build['overview']['summary']);
     $this->assertStringContainsString('CBR number', $summary);
     $this->assertStringContainsString('111', $summary);
+    // The member list is not on the page (task 0268): Manage members opens it.
+    $this->assertStringNotContainsString('<details', $summary);
+    $this->assertStringNotContainsString((string) $this->second->getDisplayName(), $summary);
+    $this->assertEquals('Manage members', $build['actions']['members']['#props']['label']);
   }
 
   /**
