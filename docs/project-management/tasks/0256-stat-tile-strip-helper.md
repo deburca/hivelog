@@ -1,13 +1,13 @@
 ---
 type: task
 tags: [hivelog/task]
-status: review
+status: done
 priority: high
 project: "[[hive-log-frontend-polish]]"
 area: theme
 created: 2026-11-13
 branch: feat/stat-tile-strip-helper
-release:
+release: 4.3.0
 depends-on:
 blocked-by: []
 ---

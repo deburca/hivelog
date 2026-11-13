@@ -1,13 +1,13 @@
 ---
 type: task
 tags: [hivelog/task]
-status: review
+status: done
 priority: medium
 project: "[[hive-log-frontend-polish]]"
 area: theme
 created: 2026-11-13
 branch: feat/prose-block-detail-pages
-release:
+release: 4.3.0
 depends-on: ["[[0256-stat-tile-strip-helper]]", "[[0265-prose-note-block]]"]
 blocked-by: []
 ---
