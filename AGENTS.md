@@ -957,7 +957,11 @@ stock" at or under its threshold; consumables only) then Type, Category, Status,
 purchased and Apiary; the purchase shows Item, Date, Quantity (with the item's unit), Unit price, Total cost, Supplier,
 Apiary and, once disposed, a **Disposed** tile (the date, the reason as a warning sub-line), with Notes as text; the
 product shows Unit, Expected price, Status and Apiary. `tileNumber()` formats money (2 decimals) and quantities (3,
-trailing zeros trimmed) for those tiles.
+trailing zeros trimmed) for those tiles. `buildTileStrip()` also takes a NULL entity for a strip of computed values
+only. The cost and yield reports (task 0261) open with a totals strip from `InventoryReportController::totalsStrip()`:
+Consumable cost, Active depreciation, Total cost, Potential income and Net (critical "Loss" when negative, ok
+"Surplus" when positive, plain at zero), the same two-decimal figures the tables use; the combined report adds the strip
+above its per-apiary table, which keeps its own rows and "All apiaries" total row.
 
 #### Heading hierarchy (task 0128)
 

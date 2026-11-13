@@ -148,6 +148,40 @@ class CombinedFinancialReportTest extends KernelTestBase {
   }
 
   /**
+   * The all-apiaries totals are a strip of stat tiles above the table.
+   */
+  public function testTotalsStripAboveTheTable(): void {
+    $this->makeAdmin();
+    $year = (int) date('Y');
+    $a = Apiary::create(['name' => 'Ravnholt Home']);
+    $a->save();
+    $b = Apiary::create(['name' => 'Sondermarken']);
+    $b->save();
+    $this->addOneYearDurable($a, 'Extractor', $year, 500);
+    $this->addOneYearDurable($b, 'Wax press', $year, 300);
+
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(InventoryReportController::class);
+    $build = $controller->combinedReport();
+
+    $this->assertSame('container', $build['totals']['#type']);
+    $this->assertSame('-800.00', $build['totals']['net']['#props']['value']);
+    $this->assertSame('critical', $build['totals']['net']['#props']['sublabel_variant']);
+    $this->assertSame('800.00', $build['totals']['cost']['#props']['value']);
+    $this->assertLessThan($build['summary']['#weight'], $build['totals']['#weight']);
+  }
+
+  /**
+   * With no apiaries there is no totals strip, only the empty table.
+   */
+  public function testNoTotalsStripWithoutApiaries(): void {
+    $this->makeAdmin();
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(InventoryReportController::class);
+    $this->assertArrayNotHasKey('totals', $controller->combinedReport());
+  }
+
+  /**
    * The summary marks its label column and tags the total row for styling.
    */
   public function testSummaryTableAlignmentHooks(): void {
