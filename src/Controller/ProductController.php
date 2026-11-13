@@ -64,15 +64,20 @@ class ProductController extends ControllerBase {
       'actions' => $this->buildActions($product),
     ];
 
-    $build += [
-      'overview' => $this->buildSection($this->t('Overview'), $product, [
-        'apiary',
-        'name',
-        'unit',
-        'expected_unit_price',
-        'status',
-      ]),
-    ];
+    // The facts are one strip of stat tiles (task 0260); the name is the title.
+    $facts = $this->buildTileStrip($product, [
+      'unit' => ['omit_empty' => TRUE],
+      'expected_unit_price' => [
+        'label' => $this->t('Expected price'),
+        'value' => $this->tileNumber($product->get('expected_unit_price')->getString()),
+        'omit_empty' => TRUE,
+      ],
+      'status' => ['omit_empty' => TRUE],
+      'apiary' => [],
+    ]);
+    if ($facts) {
+      $build['facts'] = $facts;
+    }
 
     $cache = CacheableMetadata::createFromRenderArray($build)
       ->addCacheContexts(['user.permissions'])

@@ -64,45 +64,48 @@ class InventoryItemController extends ControllerBase {
       'actions' => $this->buildActions($inventory_item),
     ];
 
-    $build += [
-      'overview' => $this->buildSection($this->t('Overview'), $inventory_item, [
-        'apiary',
-        'name',
-        'category',
-        'unit',
-        'weight_kg',
-        'status',
-      ]),
-      'type' => $this->buildSection($this->t('Type & Depreciation'), $inventory_item, [
-        'item_type',
-        'useful_life_years',
-      ]),
-    ];
-
-    // Stock on hand isn't a stored field — it's computed from the
-    // purchase (and, eventually, usage) ledger, so it gets its own
-    // section rather than going through buildRows()'s field-driven path.
-    if ($inventory_item->get('item_type')->value === 'consumable') {
+    // The facts are one strip of stat tiles (task 0260). Stock on hand leads: it
+    // is computed from the purchase ledger, and is the number a beekeeper opens
+    // this page for. The item's name is the page title.
+    $unit = $inventory_item->get('unit')->getString();
+    $tiles = [];
+    if ($inventory_item->get('item_type')->getString() === 'consumable') {
       $stock = $inventory_item->getStockOnHand();
-      $unit = $inventory_item->get('unit')->value;
-      $stock_display = $stock === NULL ? (string) $this->t('Unknown') : rtrim(rtrim(number_format($stock, 3, '.', ''), '0'), '.') . ' ' . $unit;
-      if ($inventory_item->isLowStock()) {
-        $stock_display = (string) $this->t('@stock (Low Stock)', ['@stock' => $stock_display]);
-      }
-      $build['stock'] = [
-        '#type' => 'container',
-        '#attributes' => ['class' => ['hivelog-inventory-item-section']],
-        'heading' => [
-          '#type' => 'html_tag',
-          // H2 (task 0128) — a top-level section, sibling to buildSection()'s
-          // own Overview/Type & Depreciation headings.
-          '#tag' => 'h2',
-          '#value' => $this->t('Stock on Hand'),
-        ],
-        'value' => [
-          '#markup' => '<p>' . $stock_display . '</p>',
-        ],
+      $low = $inventory_item->isLowStock();
+      $tiles['stock'] = [
+        'label' => $this->t('Stock on hand'),
+        'value' => $stock === NULL ? (string) $this->t('Unknown') : trim($this->tileNumber($stock, 3, TRUE) . ' ' . $unit),
+        'sublabel' => $low ? $this->t('Low stock') : '',
+        'variant' => $low ? 'critical' : 'default',
       ];
+    }
+    $purchased = $inventory_item->getTotalPurchasedQuantity();
+    $weight = $this->tileNumber($inventory_item->get('weight_kg')->getString(), 3, TRUE);
+    $life = (int) $inventory_item->get('useful_life_years')->getString();
+    $tiles += [
+      'item_type' => ['label' => $this->t('Type')],
+      'category' => ['omit_empty' => TRUE],
+      'status' => ['omit_empty' => TRUE],
+      'weight_kg' => [
+        'label' => $this->t('Unit weight'),
+        'value' => $weight !== '' ? $weight . ' kg' : '',
+        'omit_empty' => TRUE,
+      ],
+      'useful_life_years' => [
+        'label' => $this->t('Useful life'),
+        'value' => $life > 0 ? (string) $this->formatPlural($life, '1 year', '@count years') : '',
+        'omit_empty' => TRUE,
+      ],
+      'purchased' => [
+        'label' => $this->t('Total purchased'),
+        'value' => $purchased > 0 ? trim($this->tileNumber($purchased, 3, TRUE) . ' ' . $unit) : '',
+        'omit_empty' => TRUE,
+      ],
+      'apiary' => [],
+    ];
+    $facts = $this->buildTileStrip($inventory_item, $tiles);
+    if ($facts) {
+      $build['facts'] = $facts;
     }
 
     $cache = CacheableMetadata::createFromRenderArray($build)

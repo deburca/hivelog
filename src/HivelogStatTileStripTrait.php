@@ -124,6 +124,27 @@ trait HivelogStatTileStripTrait {
   }
 
   /**
+   * A number as a tile value: fixed decimals, optionally without trailing zeros.
+   *
+   * Used by the money and quantity tiles. An empty string (no value) stays
+   * empty, so `omit_empty` still applies.
+   *
+   * @param string|float|int|null $value
+   *   The stored number.
+   * @param int $decimals
+   *   How many decimals to show.
+   * @param bool $trim
+   *   Drop trailing zeros, so a quantity of 25.000 reads "25".
+   */
+  protected function tileNumber(string|float|int|null $value, int $decimals = 2, bool $trim = FALSE): string {
+    if ($value === NULL || $value === '') {
+      return '';
+    }
+    $text = number_format((float) $value, $decimals, '.', '');
+    return $trim && str_contains($text, '.') ? rtrim(rtrim($text, '0'), '.') : $text;
+  }
+
+  /**
    * A non-empty field's value as plain text for a tile.
    *
    * Booleans become Yes/No, an allowed-value list its label, a reference the

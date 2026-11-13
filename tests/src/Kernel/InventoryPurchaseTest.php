@@ -205,7 +205,7 @@ class InventoryPurchaseTest extends KernelTestBase {
   }
 
   /**
-   * Tests that the canonical view groups fields into Overview/Cost/Notes.
+   * Tests that the canonical view shows a stat-tile strip and the notes.
    *
    * Task 0140: `InventoryPurchaseController` had no dedicated kernel test
    * at all before this. No disposal date is set here, so the Disposal
@@ -228,10 +228,13 @@ class InventoryPurchaseTest extends KernelTestBase {
     $controller = \Drupal::service('class_resolver')->getInstanceFromDefinition(InventoryPurchaseController::class);
     $build = $controller->view($purchase);
 
-    $this->assertArrayHasKey('overview', $build);
-    $this->assertArrayHasKey('cost', $build);
+    $this->assertArrayHasKey('facts', $build);
+    $this->assertArrayNotHasKey('overview', $build);
+    $this->assertArrayNotHasKey('cost', $build);
     $this->assertArrayHasKey('notes', $build);
     $this->assertArrayNotHasKey('disposal', $build);
+    $this->assertArrayNotHasKey('disposal_date', $build['facts']);
+    $this->assertSame('25 kg', $build['facts']['quantity']['#props']['value']);
 
     $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
     $this->assertStringContainsString('Granulated Sugar', $html);
@@ -241,7 +244,7 @@ class InventoryPurchaseTest extends KernelTestBase {
   }
 
   /**
-   * Tests that the Disposal section renders once a disposal date is set.
+   * Tests that a Disposed tile shows once a disposal date is set.
    */
   public function testPurchaseViewRendersDisposalSectionWhenPresent(): void {
     $purchase = InventoryPurchase::create([
@@ -258,7 +261,9 @@ class InventoryPurchaseTest extends KernelTestBase {
     $controller = \Drupal::service('class_resolver')->getInstanceFromDefinition(InventoryPurchaseController::class);
     $build = $controller->view($purchase);
 
-    $this->assertArrayHasKey('disposal', $build);
+    $disposed = $build['facts']['disposal_date']['#props'];
+    $this->assertSame('Disposed', $disposed['label']);
+    $this->assertSame('warning', $disposed['sublabel_variant']);
     $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
     $this->assertStringContainsString('2025-06-01', $html);
     $this->assertStringContainsString('Frame broke beyond repair.', $html);

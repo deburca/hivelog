@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\hivelog\Controller;
 
 use Drupal\Component\Utility\Html;
+use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Datetime\DateFormatterInterface;
@@ -74,32 +75,40 @@ class InventoryPurchaseController extends ControllerBase {
       'actions' => $this->buildActions($inventory_purchase),
     ];
 
-    $build += [
-      'overview' => $this->buildSection($this->t('Overview'), $inventory_purchase, [
-        'apiary',
-        'item',
-        'purchase_date',
-      ]),
-      'cost' => $this->buildSection($this->t('Cost'), $inventory_purchase, [
-        'quantity',
-        'unit_price',
-        'total_cost',
-        'supplier',
-      ]),
-      'notes' => $this->buildSection($this->t('Notes'), $inventory_purchase, [
-        'notes',
-      ]),
-    ];
-
-    // Disposal is its own section, shown only once a disposal date is
-    // actually recorded — matching how ApiaryController's Stock on Hand
-    // section only appears for consumables, rather than always rendering
-    // an empty section for the common (never-disposed) case.
-    if (!$inventory_purchase->get('disposal_date')->isEmpty()) {
-      $build['disposal'] = $this->buildSection($this->t('Disposal'), $inventory_purchase, [
-        'disposal_date',
-        'disposal_reason',
-      ]);
+    // Short facts are one strip of stat tiles (task 0260); notes stay text.
+    $item = $inventory_purchase->get('item')->entity;
+    $unit = $item instanceof FieldableEntityInterface ? $item->get('unit')->getString() : '';
+    $disposed = !$inventory_purchase->get('disposal_date')->isEmpty();
+    $reason = trim((string) preg_replace('/\s+/', ' ', $inventory_purchase->get('disposal_reason')->getString()));
+    $quantity = $this->tileNumber($inventory_purchase->get('quantity')->getString(), 3, TRUE);
+    $facts = $this->buildTileStrip($inventory_purchase, [
+      'item' => [],
+      'purchase_date' => ['label' => $this->t('Date')],
+      'quantity' => ['value' => trim($quantity . ' ' . $unit), 'omit_empty' => TRUE],
+      'unit_price' => [
+        'label' => $this->t('Unit price'),
+        'value' => $this->tileNumber($inventory_purchase->get('unit_price')->getString()),
+        'omit_empty' => TRUE,
+      ],
+      'total_cost' => [
+        'label' => $this->t('Total cost'),
+        'value' => $this->tileNumber($inventory_purchase->get('total_cost')->getString()),
+        'omit_empty' => TRUE,
+      ],
+      'supplier' => ['omit_empty' => TRUE],
+      'disposal_date' => [
+        'label' => $this->t('Disposed'),
+        'sublabel' => $disposed ? Unicode::truncate($reason, 60, TRUE, TRUE) : '',
+        'variant' => 'warning',
+        'omit_empty' => TRUE,
+      ],
+      'apiary' => [],
+    ]);
+    if ($facts) {
+      $build['facts'] = $facts;
+    }
+    if (!$inventory_purchase->get('notes')->isEmpty()) {
+      $build['notes'] = $this->buildSection($this->t('Notes'), $inventory_purchase, ['notes']);
     }
 
     $cache = CacheableMetadata::createFromRenderArray($build)
