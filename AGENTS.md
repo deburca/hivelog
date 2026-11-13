@@ -940,7 +940,7 @@ the record when the viewer may view it (a value is never its own link: a link in
 suppresses that. Values over 80 characters are cut with an ellipsis. The wrapper carries `hivelog-stat-tiles--facts`
 (smaller value, label at the bottom, two to a row on a phone; the rules are in `stat-tile.css`) and any class a caller
 adds; the apiary page keeps `hivelog-apiary-facts` for theme continuity. The sub-line variants are `default`,
-`critical`, `warning` and `ok`. Long prose (notes, descriptions) stays text, never a tile. Pages on it so far:
+`critical`, `warning` and `ok`. Long prose (notes, descriptions) is never a tile: it goes in a **note block** (task 0265), `buildProseBlock($title, $body)` or, from a field through the controller's own `formatFieldValue()`, `buildFieldProseBlock($title, $entity, $field)` in `HivelogDetailPageTrait`: an H2 and the text full width under a left rule, no table, empty when there is no text (`.hivelog-prose`, library `hivelog/prose`). Pages still showing such a field as a one-row table are moved over by task 0266. Pages on it so far:
 the apiary page, the queen page (task 0258: Status, Hive, Year · Colour, Breed, Temperament, Introduced with
 "n months in hive", Purchase cost; unset optional ones are omitted with `omit_empty`; origin and notes stay a
 "Details" table) and the queen observation page (Queen, Date, Health, Temperament, Actively laying; notes stay text), and the
@@ -1011,6 +1011,7 @@ the module stays palette-free). The supported surface:
   are gone), the
   `hivelog-inventory-report-table` / `-breakdown` / `-trend` report
   tables, `.hivelog-filter-form`, `.hivelog-list-heading`, the generic
+  `.hivelog-prose` note block, the generic
   `.hivelog-detail-table` / `.hivelog-detail-section` every detail-page
   label/value table and its section wrapper carry alongside their
   per-entity class (task 0131), and the SDC roots

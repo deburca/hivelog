@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\hivelog;
 
+use Drupal\Component\Utility\Html;
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\user\UserInterface;
@@ -118,6 +119,66 @@ trait HivelogDetailPageTrait {
       ],
       'facts' => $strip,
     ];
+  }
+
+  /**
+   * Builds a note block: free text shown beside a strip of stat tiles.
+   *
+   * A tile cuts its value at 80 characters and has no room for line breaks or
+   * bullets, so long text (notes, a description) is shown here instead of as a
+   * one-row label/value table (task 0265). An H2 heading (task 0128) and the
+   * text full width, with no label column. The block is empty when there is no
+   * text, so a page shows it only when something was written.
+   *
+   * @param \Drupal\Core\StringTranslation\TranslatableMarkup|string $title
+   *   The block heading.
+   * @param array|string $body
+   *   A render array (already escaped, e.g. line breaks or a bullet list), or
+   *   a plain string, which is escaped and keeps its line breaks.
+   *
+   * @return array
+   *   A container render array, or an empty array when $body is empty.
+   */
+  protected function buildProseBlock($title, array|string $body): array {
+    if (is_string($body)) {
+      if (trim($body) === '') {
+        return [];
+      }
+      $body = ['#markup' => nl2br(Html::escape($body))];
+    }
+    elseif (!$body) {
+      return [];
+    }
+    return [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['hivelog-detail-section', 'hivelog-prose']],
+      '#attached' => ['library' => ['hivelog/prose']],
+      'heading' => [
+        '#type' => 'html_tag',
+        '#tag' => 'h2',
+        '#value' => $title,
+      ],
+      'body' => [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['hivelog-prose__body']],
+        'text' => $body,
+      ],
+    ];
+  }
+
+  /**
+   * Builds a note block from one field, formatted as the page formats it.
+   *
+   * Uses the controller's own formatFieldValue(), so notes keep their line
+   * breaks and a calendar action's description keeps its bullets. Empty when
+   * the field has no value.
+   */
+  protected function buildFieldProseBlock($title, FieldableEntityInterface $entity, string $field_name): array {
+    $field = $entity->get($field_name);
+    if ($field->isEmpty()) {
+      return [];
+    }
+    return $this->buildProseBlock($title, $this->formatFieldValue($entity, $field_name, $field));
   }
 
   /**
