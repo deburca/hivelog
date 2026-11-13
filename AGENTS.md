@@ -951,7 +951,13 @@ and Notes stay tables, shown only when written. **Inspection severity** (`HiveIn
 where a value is plainly good or bad alone: honey stores low = warning, none = critical; brood pattern poor = warning;
 population weak = warning; disease signs none = ok "Clear", nosema/chalkbrood/sacbrood/other = warning, AFB/EFB =
 critical "Serious disease". Varroa count, queen cells, temperament and pollen carry none (what is high depends on the
-counting method and season, which are not recorded); add a rule there, not in a template.
+counting method and season, which are not recorded); add a rule there, not in a template. The inventory item,
+inventory purchase and product pages follow (task 0260): the item leads with a **Stock on hand** tile (critical "Low
+stock" at or under its threshold; consumables only) then Type, Category, Status, Unit weight, Useful life, Total
+purchased and Apiary; the purchase shows Item, Date, Quantity (with the item's unit), Unit price, Total cost, Supplier,
+Apiary and, once disposed, a **Disposed** tile (the date, the reason as a warning sub-line), with Notes as text; the
+product shows Unit, Expected price, Status and Apiary. `tileNumber()` formats money (2 decimals) and quantities (3,
+trailing zeros trimmed) for those tiles.
 
 #### Heading hierarchy (task 0128)
 

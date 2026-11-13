@@ -521,7 +521,7 @@ class InventoryItemTest extends KernelTestBase {
   }
 
   /**
-   * Tests that the canonical view groups fields into Overview / Type sections.
+   * Tests that the canonical view shows its facts as a stat-tile strip.
    *
    * Task 0140: `InventoryItemController` had no dedicated kernel test at
    * all before this. A durable item is used here specifically because
@@ -543,14 +543,17 @@ class InventoryItemTest extends KernelTestBase {
     $controller = \Drupal::service('class_resolver')->getInstanceFromDefinition(InventoryItemController::class);
     $build = $controller->view($item);
 
-    $this->assertArrayHasKey('overview', $build);
-    $this->assertArrayHasKey('type', $build);
-    $this->assertArrayNotHasKey('stock', $build);
+    // The facts are one strip of stat tiles (task 0260); a durable item has
+    // no stock tile.
+    $this->assertArrayHasKey('facts', $build);
+    $this->assertArrayNotHasKey('overview', $build);
+    $this->assertArrayNotHasKey('type', $build);
+    $this->assertArrayNotHasKey('stock', $build['facts']);
+    $this->assertSame('Durable', $build['facts']['item_type']['#props']['value']);
+    $this->assertSame('5 years', $build['facts']['useful_life_years']['#props']['value']);
 
     $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
-    $this->assertStringContainsString('Frames', $html);
     $this->assertStringContainsString('Test Apiary', $html);
-    $this->assertStringContainsString('5', $html);
   }
 
   /**
@@ -572,12 +575,13 @@ class InventoryItemTest extends KernelTestBase {
     $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
 
     $this->assertStringContainsString('4.25 kg', $html);
+    $this->assertStringContainsString('Unit weight', $html);
   }
 
   /**
-   * Tests that an unset weight renders as an em dash, not blank or an error.
+   * Tests that an unset weight leaves out the Unit weight tile, without error.
    */
-  public function testItemViewShowsEmDashWhenWeightUnset(): void {
+  public function testItemViewOmitsWeightTileWhenUnset(): void {
     $item = InventoryItem::create([
       'apiary' => $this->apiary->id(),
       'name' => 'No Weight Item',
@@ -588,9 +592,7 @@ class InventoryItemTest extends KernelTestBase {
 
     $controller = \Drupal::service('class_resolver')->getInstanceFromDefinition(InventoryItemController::class);
     $build = $controller->view(InventoryItem::load($item->id()));
-    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
-
-    $this->assertStringContainsString('—', $html);
+    $this->assertArrayNotHasKey('weight_kg', $build['facts']);
   }
 
   /**
@@ -615,10 +617,37 @@ class InventoryItemTest extends KernelTestBase {
     $controller = \Drupal::service('class_resolver')->getInstanceFromDefinition(InventoryItemController::class);
     $build = $controller->view(InventoryItem::load($item->id()));
 
-    $this->assertArrayHasKey('stock', $build);
-    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
-    $this->assertStringContainsString('Stock on Hand', $html);
-    $this->assertStringContainsString('25', $html);
+    $props = $build['facts']['stock']['#props'];
+    $this->assertSame('Stock on hand', $props['label']);
+    $this->assertSame('25 kg', $props['value']);
+    $this->assertSame('', $props['sublabel']);
+    $this->assertSame('25 kg', $build['facts']['purchased']['#props']['value']);
+  }
+
+  /**
+   * Tests a consumable at or under its threshold carries a critical sub-line.
+   */
+  public function testItemViewFlagsLowStock(): void {
+    $item = InventoryItem::create([
+      'apiary' => $this->apiary->id(),
+      'name' => 'Sugar',
+      'unit' => 'kg',
+      'item_type' => 'consumable',
+      'low_stock_threshold' => 30,
+    ]);
+    $item->save();
+    InventoryPurchase::create([
+      'apiary' => $this->apiary->id(),
+      'item' => $item->id(),
+      'purchase_date' => '2026-03-01',
+      'quantity' => 25,
+      'unit_price' => 1.5,
+    ])->save();
+
+    $controller = \Drupal::service('class_resolver')->getInstanceFromDefinition(InventoryItemController::class);
+    $props = $controller->view(InventoryItem::load($item->id()))['facts']['stock']['#props'];
+    $this->assertSame('Low stock', $props['sublabel']);
+    $this->assertSame('critical', $props['sublabel_variant']);
   }
 
   /**

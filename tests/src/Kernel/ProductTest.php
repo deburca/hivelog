@@ -227,7 +227,7 @@ class ProductTest extends KernelTestBase {
   }
 
   /**
-   * Tests that the canonical view renders the Overview section with real data.
+   * Tests that the canonical view renders its stat-tile strip with real data.
    *
    * Task 0140: `ProductController` had no dedicated kernel test at all
    * before this.
@@ -245,10 +245,11 @@ class ProductTest extends KernelTestBase {
     $controller = \Drupal::service('class_resolver')->getInstanceFromDefinition(ProductController::class);
     $build = $controller->view($product);
 
-    $this->assertArrayHasKey('overview', $build);
+    $this->assertArrayHasKey('facts', $build);
+    $this->assertArrayNotHasKey('overview', $build);
+    $this->assertSame('Expected price', $build['facts']['expected_unit_price']['#props']['label']);
 
     $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
-    $this->assertStringContainsString('Beeswax Bar', $html);
     $this->assertStringContainsString('Test Apiary', $html);
     $this->assertStringContainsString('bar', $html);
     $this->assertStringContainsString('6.50', $html);
