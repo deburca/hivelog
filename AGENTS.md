@@ -940,7 +940,10 @@ the record when the viewer may view it (a value is never its own link: a link in
 suppresses that. Values over 80 characters are cut with an ellipsis. The wrapper carries `hivelog-stat-tiles--facts`
 (smaller value, label at the bottom, two to a row on a phone; the rules are in `stat-tile.css`) and any class a caller
 adds; the apiary page keeps `hivelog-apiary-facts` for theme continuity. The sub-line variants are `default`,
-`critical`, `warning` and `ok`. Long prose (notes, descriptions) stays text, never a tile.
+`critical`, `warning` and `ok`. Long prose (notes, descriptions) stays text, never a tile. Pages on it so far:
+the apiary page, the queen page (task 0258: Status, Hive, Year · Colour, Breed, Temperament, Introduced with
+"n months in hive", Purchase cost; unset optional ones are omitted with `omit_empty`; origin and notes stay a
+"Details" table) and the queen observation page (Queen, Date, Health, Temperament, Actively laying; notes stay text).
 
 #### Heading hierarchy (task 0128)
 

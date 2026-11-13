@@ -328,27 +328,27 @@ class QueenTest extends KernelTestBase {
 
     // Section render arrays are keyed in the expected order.
     $this->assertArrayHasKey('actions', $build);
-    $this->assertArrayHasKey('overview', $build);
-    $this->assertArrayHasKey('identity', $build);
-    $this->assertArrayHasKey('acquisition', $build);
-    $this->assertArrayHasKey('notes', $build);
+    // Short facts are a strip of stat tiles (task 0258); origin and notes stay
+    // a table.
+    $this->assertArrayHasKey('facts', $build);
+    $this->assertArrayHasKey('details', $build);
+    foreach (['overview', 'identity', 'acquisition', 'notes'] as $gone) {
+      $this->assertArrayNotHasKey($gone, $build);
+    }
     $this->assertEquals('component', $build['actions']['#type']);
     $this->assertEquals('hivelog:button-group', $build['actions']['#component']);
     $this->assertCount(2, $build['actions']['#props']['buttons']);
 
     $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
 
-    // Section headings.
-    $this->assertStringContainsString('Overview', $html);
-    $this->assertStringContainsString('Identity', $html);
-    $this->assertStringContainsString('Acquisition', $html);
-    $this->assertStringContainsString('Notes', $html);
-    // Field / Value column headers from the shared section tables.
+    $this->assertStringContainsString('hivelog-stat-tile', $html);
+    $this->assertStringContainsString('Details', $html);
+    // The Details table is the shared section table.
     $this->assertStringContainsString('>Field<', $html);
-    $this->assertStringContainsString('>Value<', $html);
 
     // Formatted values.
-    $this->assertStringContainsString('Q-2024-007', $html);
+    // The queen's name is the page title (the theme's H1), not repeated in the body.
+    $this->assertStringNotContainsString('Q-2024-007', $html);
     $this->assertStringContainsString('Highlands Apiaries', $html);
     // Status and breed are shown using their human-readable labels, not
     // the raw machine names.
@@ -360,6 +360,9 @@ class QueenTest extends KernelTestBase {
     $this->assertStringContainsString('42.50', $html);
     $this->assertStringContainsString('2024-04-01', $html);
     $this->assertStringContainsString('2024-05-10', $html);
+    $this->assertStringContainsString('2024 · Green', $html);
+    // Introduced 2024-05-10: some months or years in the hive, whenever this runs.
+    $this->assertStringContainsString(' in hive', $html);
     // Notes preserve line breaks as <br />.
     $this->assertStringContainsString('Line 1.<br', $html);
 
@@ -372,6 +375,58 @@ class QueenTest extends KernelTestBase {
     $this->assertNotFalse($edit_pos);
     $this->assertNotFalse($delete_pos);
     $this->assertLessThan($delete_pos, $edit_pos);
+  }
+
+  /**
+   * A queen with no hive shows "Unassigned" and no time-in-hive line.
+   */
+  public function testQueenViewUnassignedAndBareQueen(): void {
+    $this->installConfig(['system']);
+    $user = User::create(['name' => 'bare-queen-tester', 'mail' => 'bare-queen-tester@example.com']);
+    $user->save();
+    \Drupal::currentUser()->setAccount($user);
+
+    $queen = Queen::create(['name' => 'Q-bare', 'status' => 'inactive']);
+    $queen->save();
+
+    $controller = \Drupal::service('class_resolver')->getInstanceFromDefinition(QueenController::class);
+    $build = $controller->view($queen);
+
+    $this->assertSame('Unassigned', $build['facts']['hive']['#props']['value']);
+    $this->assertSame('', $build['facts']['hive']['#props']['url']);
+    $this->assertArrayNotHasKey('introduction_date', $build['facts']);
+    $this->assertArrayNotHasKey('marking', $build['facts']);
+    $this->assertArrayNotHasKey('details', $build, 'No origin or notes: no Details table.');
+  }
+
+  /**
+   * The Introduced tile counts months, then years, in the hive.
+   */
+  public function testQueenViewTimeInHive(): void {
+    $this->installConfig(['system']);
+    $user = User::create(['name' => 'in-hive-tester', 'mail' => 'in-hive-tester@example.com']);
+    $user->save();
+    \Drupal::currentUser()->setAccount($user);
+    $controller = \Drupal::service('class_resolver')->getInstanceFromDefinition(QueenController::class);
+
+    $sublabel = function (string $date, string $status = 'active') use ($controller): string {
+      $queen = Queen::create([
+        'name' => 'Q-' . $date,
+        'hive' => $this->hive->id(),
+        'introduction_date' => $date,
+        'status' => $status,
+      ]);
+      $queen->save();
+      return $controller->view($queen)['facts']['introduction_date']['#props']['sublabel'];
+    };
+
+    $now = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
+    $this->assertSame('Less than a month in hive', $sublabel($now->modify('-3 days')->format('Y-m-d')));
+    $this->assertSame('1 month in hive', $sublabel($now->modify('-45 days')->format('Y-m-d')));
+    $this->assertSame('6 months in hive', $sublabel($now->modify('-190 days')->format('Y-m-d')));
+    $this->assertSame('3 years in hive', $sublabel($now->modify('-1150 days')->format('Y-m-d')));
+    $this->assertSame('', $sublabel($now->modify('-190 days')->format('Y-m-d'), 'inactive'));
+    $this->assertSame('', $sublabel($now->modify('+10 days')->format('Y-m-d')));
   }
 
   /**
@@ -466,9 +521,9 @@ class QueenTest extends KernelTestBase {
   }
 
   /**
-   * Empty fields render as an em-dash rather than being hidden.
+   * Empty optional facts are left out of the strip (task 0258).
    */
-  public function testQueenViewShowsEmDashForEmptyFields(): void {
+  public function testQueenViewOmitsEmptyFacts(): void {
     $this->installConfig(['system']);
 
     $user = User::create([
@@ -489,9 +544,12 @@ class QueenTest extends KernelTestBase {
     $build = $controller->view($queen);
     $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
 
-    // At least one em-dash should appear for the empty origin / breed /
-    // purchase_date / etc. rows.
-    $this->assertStringContainsString('—', $html);
+    // Status always shows; breed, temperament, cost and the like do not appear
+    // as dash-filled tiles.
+    $this->assertStringContainsString('Active', $html);
+    $this->assertArrayNotHasKey('breed', $build['facts']);
+    $this->assertArrayNotHasKey('purchase_cost', $build['facts']);
+    $this->assertStringNotContainsString('—', $html);
   }
 
   /**
