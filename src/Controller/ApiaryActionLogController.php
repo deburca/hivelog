@@ -114,14 +114,8 @@ class ApiaryActionLogController extends ControllerBase {
     ];
 
     $build += [
-      'overview' => $this->buildSection($this->t('Overview'), $apiary_action_log, [
-        'apiary',
-        'calendar_action',
-        'year',
-        'status',
-      ]),
+      'facts' => $this->buildTileStrip($apiary_action_log, $this->factTiles($apiary_action_log)),
       'details' => $this->buildSection($this->t('Details'), $apiary_action_log, [
-        'week_completed',
         'notes',
         'uid',
       ]),
@@ -133,6 +127,28 @@ class ApiaryActionLogController extends ControllerBase {
     $cache->applyTo($build);
 
     return $build;
+  }
+
+  /**
+   * The fact tiles for the log (task 0262).
+   *
+   * Status (done is ok, pending a warning), year and week, the action it
+   * reports on.
+   */
+  protected function factTiles(ApiaryActionLog $apiary_action_log): array {
+    $status = $apiary_action_log->get('status')->getString();
+    $year = $apiary_action_log->get('year')->getString();
+    $week = $apiary_action_log->get('week_completed')->getString();
+    $when = implode(' · ', array_filter([$year, $week !== '' ? 'W' . $week : '']));
+    return [
+      'status' => match ($status) {
+        'done' => ['variant' => 'ok'],
+        'pending' => ['variant' => 'warning', 'sublabel' => $this->t('Not reported')],
+        default => [],
+      } + ['omit_empty' => TRUE],
+      'when' => ['label' => $this->t('Year · Week'), 'value' => $when, 'omit_empty' => TRUE],
+      'calendar_action' => ['label' => $this->t('Action')],
+    ];
   }
 
   /**

@@ -433,18 +433,7 @@ class CalendarActionController extends ControllerBase {
     ];
 
     $build += [
-      'overview' => $this->buildSection($this->t('Overview'), $calendar_action, [
-        'apiary',
-        'title',
-        'category',
-        'enabled',
-        'scope',
-      ]),
-      'schedule' => $this->buildSection($this->t('Schedule'), $calendar_action, [
-        'week_start',
-        'week_end',
-        'recurring',
-      ]),
+      'facts' => $this->buildTileStrip($calendar_action, $this->factTiles($calendar_action)),
       'description' => $this->buildSection($this->t('Description'), $calendar_action, [
         'description',
       ]),
@@ -470,6 +459,33 @@ class CalendarActionController extends ControllerBase {
     $cache->applyTo($build);
 
     return $build;
+  }
+
+  /**
+   * The fact tiles for a calendar action (task 0262).
+   *
+   * Category, scope, the week window (sub-line "Recurring" when it repeats
+   * each year) and whether the action is enabled; a disabled one is a warning.
+   */
+  protected function factTiles(CalendarAction $calendar_action): array {
+    $start = $calendar_action->get('week_start')->getString();
+    $end = $calendar_action->get('week_end')->getString();
+    $window = $start === '' ? '' : 'W' . $start . ($end !== '' && $end !== $start ? '–W' . $end : '');
+    $enabled = (bool) $calendar_action->get('enabled')->getString();
+    $recurring = (bool) $calendar_action->get('recurring')->getString();
+    return [
+      'category' => ['omit_empty' => TRUE],
+      'scope' => ['omit_empty' => TRUE],
+      'window' => [
+        'label' => $this->t('Window'),
+        'value' => $window,
+        'omit_empty' => TRUE,
+      ] + ($recurring ? ['sublabel' => $this->t('Recurring')] : []),
+      'enabled' => [
+        'label' => $this->t('Status'),
+        'value' => $enabled ? $this->t('Enabled') : $this->t('Disabled'),
+      ] + ($enabled ? [] : ['sublabel' => $this->t('Not scheduled'), 'variant' => 'warning']),
+    ];
   }
 
   /**
