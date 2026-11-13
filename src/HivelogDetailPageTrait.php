@@ -83,6 +83,44 @@ trait HivelogDetailPageTrait {
   }
 
   /**
+   * Builds a detail-page section whose body is a strip of stat tiles.
+   *
+   * The tile counterpart of buildSection() (task 0259): the same wrapper
+   * classes and an H2 heading, then `buildTileStrip()`'s row in place of the
+   * Field / Value table. Empty when no tile has a value, so a section with
+   * nothing recorded does not appear.
+   *
+   * @param \Drupal\Core\StringTranslation\TranslatableMarkup|string $title
+   *   The section heading.
+   * @param \Drupal\Core\Entity\FieldableEntityInterface $entity
+   *   The record the tiles read.
+   * @param array $tiles
+   *   Tile descriptions for buildTileStrip().
+   *
+   * @return array
+   *   A container render array, or an empty array.
+   */
+  protected function buildTileSection($title, FieldableEntityInterface $entity, array $tiles): array {
+    $strip = $this->buildTileStrip($entity, $tiles);
+    if (!$strip) {
+      return [];
+    }
+    $prefix = $this->detailPageClassPrefix($entity);
+    return [
+      '#type' => 'container',
+      '#attributes' => [
+        'class' => ['hivelog-detail-section', "hivelog-{$prefix}-section"],
+      ],
+      'heading' => [
+        '#type' => 'html_tag',
+        '#tag' => 'h2',
+        '#value' => $title,
+      ],
+      'facts' => $strip,
+    ];
+  }
+
+  /**
    * Builds rows for a section table.
    */
   protected function buildRows(FieldableEntityInterface $entity, array $fields): array {

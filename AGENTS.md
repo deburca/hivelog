@@ -943,7 +943,15 @@ adds; the apiary page keeps `hivelog-apiary-facts` for theme continuity. The sub
 `critical`, `warning` and `ok`. Long prose (notes, descriptions) stays text, never a tile. Pages on it so far:
 the apiary page, the queen page (task 0258: Status, Hive, Year · Colour, Breed, Temperament, Introduced with
 "n months in hive", Purchase cost; unset optional ones are omitted with `omit_empty`; origin and notes stay a
-"Details" table) and the queen observation page (Queen, Date, Health, Temperament, Actively laying; notes stay text).
+"Details" table) and the queen observation page (Queen, Date, Health, Temperament, Actively laying; notes stay text), and the
+inspection page (task 0259): a header strip (Hive, Date, Inspector) then one strip under each existing H2 (Queen status,
+Brood/honey/pollen, Colony condition, Varroa and disease, Management), built with `buildTileSection($title, $entity,
+$tiles)` (an H2 plus a strip, empty when nothing is recorded so the section vanishes); External check, Action taken
+and Notes stay tables, shown only when written. **Inspection severity** (`HiveInspectionController::severity()`), only
+where a value is plainly good or bad alone: honey stores low = warning, none = critical; brood pattern poor = warning;
+population weak = warning; disease signs none = ok "Clear", nosema/chalkbrood/sacbrood/other = warning, AFB/EFB =
+critical "Serious disease". Varroa count, queen cells, temperament and pollen carry none (what is high depends on the
+counting method and season, which are not recorded); add a rule there, not in a template.
 
 #### Heading hierarchy (task 0128)
 

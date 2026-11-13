@@ -90,45 +90,80 @@ class HiveInspectionController extends ControllerBase {
       'actions' => $this->buildActions($hive_inspection),
     ];
 
-    $build += [
-      'overview' => $this->buildSection($this->t('Overview'), $hive_inspection, [
-        'hive',
-        'inspection_date',
-        'uid',
-      ]),
-      'external_check' => $this->buildSection($this->t('External check'), $hive_inspection, [
-        'external_check',
-      ]),
-      'queen_status' => $this->buildSection($this->t('Queen status'), $hive_inspection, [
-        'queen_seen',
-        'queen_cells',
-        'eggs_seen',
-      ]),
-      'brood_and_stores' => $this->buildSection($this->t('Brood, honey and pollen'), $hive_inspection, [
-        'brood_pattern',
-        'honey_stores',
-        'pollen_stores',
-      ]),
-      'colony_condition' => $this->buildSection($this->t('Colony condition'), $hive_inspection, [
-        'temperament',
-        'population',
-      ]),
-      'health' => $this->buildSection($this->t('Varroa and disease'), $hive_inspection, [
-        'varroa_check',
-        'varroa_count',
-        'disease_signs',
-      ]),
-      'management' => $this->buildSection($this->t('Management'), $hive_inspection, [
-        'weight',
-        'fed',
-        'feed_type',
-        'supers',
-        'action_taken',
-      ]),
-      'notes' => $this->buildSection($this->t('Notes'), $hive_inspection, [
-        'notes',
-      ]),
+    // The short facts are strips of stat tiles under their existing headings
+    // (task 0259); only free text stays as tables. An unrecorded optional fact
+    // is left out, and a section with none disappears.
+    $inspection = $hive_inspection;
+    $facts = $this->buildTileStrip($inspection, [
+      'hive' => [],
+      'inspection_date' => ['label' => $this->t('Date')],
+      'uid' => ['label' => $this->t('Inspector'), 'omit_empty' => TRUE],
+    ]);
+    if ($facts) {
+      $build['facts'] = $facts;
+    }
+
+    $weight = $inspection->get('weight')->isEmpty() ? '' : $inspection->get('weight')->getString() . ' kg';
+    $fed_with = $inspection->get('fed')->getString() === '1' ? $inspection->get('feed_type')->getString() : '';
+    $sections = [
+      'queen_status' => [
+        'title' => $this->t('Queen status'),
+        'tiles' => [
+          'queen_seen' => ['omit_empty' => TRUE],
+          'queen_cells' => ['omit_empty' => TRUE],
+          'eggs_seen' => ['omit_empty' => TRUE],
+        ],
+      ],
+      'brood_and_stores' => [
+        'title' => $this->t('Brood, honey and pollen'),
+        'tiles' => [
+          'brood_pattern' => ['omit_empty' => TRUE] + $this->severity($inspection, 'brood_pattern'),
+          'honey_stores' => ['omit_empty' => TRUE] + $this->severity($inspection, 'honey_stores'),
+          'pollen_stores' => ['omit_empty' => TRUE],
+        ],
+      ],
+      'colony_condition' => [
+        'title' => $this->t('Colony condition'),
+        'tiles' => [
+          'temperament' => ['omit_empty' => TRUE],
+          'population' => ['omit_empty' => TRUE] + $this->severity($inspection, 'population'),
+        ],
+      ],
+      'health' => [
+        'title' => $this->t('Varroa and disease'),
+        'tiles' => [
+          'varroa_check' => ['omit_empty' => TRUE],
+          'varroa_count' => ['omit_empty' => TRUE],
+          'disease_signs' => ['omit_empty' => TRUE] + $this->severity($inspection, 'disease_signs'),
+        ],
+      ],
+      'management' => [
+        'title' => $this->t('Management'),
+        'tiles' => [
+          'weight' => ['value' => $weight, 'omit_empty' => TRUE],
+          'fed' => ['sublabel' => $fed_with, 'omit_empty' => TRUE],
+          'supers' => ['omit_empty' => TRUE],
+        ],
+      ],
     ];
+    foreach ($sections as $key => $section) {
+      $built = $this->buildTileSection($section['title'], $inspection, $section['tiles']);
+      if ($built) {
+        $build[$key] = $built;
+      }
+    }
+
+    // Free text keeps its tables, each shown only when something was written.
+    $prose = [
+      'external_check' => $this->t('External check'),
+      'action_taken' => $this->t('Action taken'),
+      'notes' => $this->t('Notes'),
+    ];
+    foreach ($prose as $field => $title) {
+      if (!$inspection->get($field)->isEmpty()) {
+        $build[$field] = $this->buildSection($title, $inspection, [$field]);
+      }
+    }
 
     // Photos grid (displayed after the notes section when images are present).
     $photos = $this->buildPhotosGrid($hive_inspection);
@@ -146,6 +181,46 @@ class HiveInspectionController extends ControllerBase {
     $cache->applyTo($build);
 
     return $build;
+  }
+
+  /**
+   * A tile's severity sub-line for the values that clearly call for one.
+   *
+   * Only where a value is plainly good or bad on its own (task 0259): low or
+   * no honey stores, a poor brood pattern, a weak colony, any disease sign
+   * (serious for foulbrood), and "None" for disease as an `ok` "Clear". Varroa
+   * count, queen cells, temperament and pollen carry none: what counts as high
+   * depends on the counting method and the season, which are not recorded.
+   *
+   * @return array
+   *   `sublabel` and `variant` for the tile, or an empty array.
+   */
+  protected function severity(HiveInspection $inspection, string $field): array {
+    $value = $inspection->get($field)->getString();
+    $disease = [$this->t('Disease sign'), 'warning'];
+    $serious = [$this->t('Serious disease'), 'critical'];
+    $map = [
+      'brood_pattern' => ['poor' => [$this->t('Poor brood'), 'warning']],
+      'honey_stores' => [
+        'low' => [$this->t('Low stores'), 'warning'],
+        'none' => [$this->t('No stores'), 'critical'],
+      ],
+      'population' => ['weak' => [$this->t('Weak colony'), 'warning']],
+      'disease_signs' => [
+        'none' => [$this->t('Clear'), 'ok'],
+        'afb' => $serious,
+        'efb' => $serious,
+        'nosema' => $disease,
+        'chalkbrood' => $disease,
+        'sacbrood' => $disease,
+        'other' => $disease,
+      ],
+    ];
+    if (!isset($map[$field][$value])) {
+      return [];
+    }
+    [$text, $variant] = $map[$field][$value];
+    return ['sublabel' => $text, 'variant' => $variant];
   }
 
   /**

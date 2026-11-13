@@ -411,8 +411,11 @@ class HiveInspectionTest extends KernelTestBase {
       ->getInstanceFromDefinition(HiveInspectionController::class);
     $build = $controller->view($inspection);
 
-    $this->assertArrayHasKey('overview', $build);
+    // Short facts are stat-tile strips (task 0259); free text keeps tables.
+    $this->assertArrayHasKey('facts', $build);
+    $this->assertArrayNotHasKey('overview', $build);
     $this->assertArrayHasKey('external_check', $build);
+    $this->assertArrayHasKey('action_taken', $build);
     $this->assertArrayHasKey('queen_status', $build);
     $this->assertArrayHasKey('brood_and_stores', $build);
     $this->assertArrayHasKey('colony_condition', $build);
@@ -421,7 +424,7 @@ class HiveInspectionTest extends KernelTestBase {
     $this->assertArrayHasKey('notes', $build);
 
     $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
-    $this->assertStringContainsString('Overview', $html);
+    $this->assertStringContainsString('hivelog-stat-tile', $html);
     $this->assertStringContainsString('External check', $html);
     $this->assertStringContainsString('Queen status', $html);
     $this->assertStringContainsString('Brood, honey and pollen', $html);
@@ -443,6 +446,55 @@ class HiveInspectionTest extends KernelTestBase {
     $this->assertStringContainsString('hivelog-inspection-section', $html);
     $this->assertStringContainsString('hivelog-detail-table', $html);
     $this->assertStringContainsString('hivelog-inspection-table', $html);
+  }
+
+  /**
+   * Tests severity sub-lines, and that unrecorded facts and sections vanish.
+   */
+  public function testInspectionViewSeverityAndOmittedFacts(): void {
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(HiveInspectionController::class);
+    $props = fn(array $build, string $section, string $tile): array => $build[$section]['facts'][$tile]['#props'];
+
+    $inspection = HiveInspection::create([
+      'hive' => $this->hive->id(),
+      'inspection_date' => '2024-06-15',
+      'honey_stores' => 'none',
+      'brood_pattern' => 'poor',
+      'population' => 'weak',
+      'disease_signs' => 'afb',
+      'varroa_check' => TRUE,
+      'varroa_count' => 40,
+      'fed' => TRUE,
+      'feed_type' => 'Syrup',
+    ]);
+    $inspection->save();
+    $build = $controller->view($inspection);
+
+    $this->assertSame('critical', $props($build, 'brood_and_stores', 'honey_stores')['sublabel_variant']);
+    $this->assertSame('No stores', $props($build, 'brood_and_stores', 'honey_stores')['sublabel']);
+    $this->assertSame('warning', $props($build, 'brood_and_stores', 'brood_pattern')['sublabel_variant']);
+    $this->assertSame('warning', $props($build, 'colony_condition', 'population')['sublabel_variant']);
+    $this->assertSame('critical', $props($build, 'health', 'disease_signs')['sublabel_variant']);
+    $this->assertSame('Serious disease', $props($build, 'health', 'disease_signs')['sublabel']);
+    // A varroa count has no severity: the method and season are not recorded.
+    $this->assertSame('default', $props($build, 'health', 'varroa_count')['sublabel_variant']);
+    $this->assertSame('Syrup', $props($build, 'management', 'fed')['sublabel']);
+    // Nothing written for these, so neither the tables nor the tiles show.
+    $this->assertArrayNotHasKey('external_check', $build);
+    $this->assertArrayNotHasKey('notes', $build);
+    $this->assertArrayNotHasKey('temperament', $build['colony_condition']['facts']);
+
+    $clear = HiveInspection::create([
+      'hive' => $this->hive->id(),
+      'inspection_date' => '2024-06-16',
+      'honey_stores' => 'adequate',
+      'disease_signs' => 'none',
+    ]);
+    $clear->save();
+    $build = $controller->view($clear);
+    $this->assertSame('ok', $props($build, 'health', 'disease_signs')['sublabel_variant']);
+    $this->assertSame('default', $props($build, 'brood_and_stores', 'honey_stores')['sublabel_variant']);
   }
 
   /**
