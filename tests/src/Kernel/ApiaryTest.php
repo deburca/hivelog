@@ -267,10 +267,14 @@ class ApiaryTest extends KernelTestBase {
       ->getInstanceFromDefinition(ApiaryController::class);
     $build = $controller->view($apiary);
 
-    $this->assertEquals('hivelog:button-group', $build['actions']['#component']);
-    $labels = array_column($build['actions']['#props']['buttons'], 'label');
+    // Edit / Delete are one group; Manage members (owners, so anyone with
+    // `update`) is a separate button beside it.
+    $this->assertEquals('hivelog:button-group', $build['actions']['group']['#component']);
+    $labels = array_column($build['actions']['group']['#props']['buttons'], 'label');
     $this->assertContains('Edit', $labels);
     $this->assertContains('Delete', $labels);
+    $this->assertEquals('hivelog:button', $build['actions']['members']['#component']);
+    $this->assertEquals('Manage members', $build['actions']['members']['#props']['label']);
   }
 
   /**

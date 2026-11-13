@@ -20,6 +20,7 @@
  *   .hivelog-entity-form .form-actions   add / edit entity forms
  *   .hivelog-confirm-form .form-actions  delete / confirmation forms
  *   .hivelog-inline-actions              a button placed inside a form or a detail row
+ *   .hivelog-page-actions                a canonical page's own button row (Edit / Delete / extras)
  *   .hivelog-table-actions               table row operations cells
  *   .hivelog-button-group                grouped button clusters (View/Edit/Delete)
  *   .hivelog-attention__row              dashboard "Needs attention" row actions
@@ -47,6 +48,7 @@
   .hivelog-entity-form .form-actions,
   .hivelog-confirm-form .form-actions,
   .hivelog-inline-actions,
+  .hivelog-page-actions,
   .hivelog-table-actions,
   .hivelog-button-group,
   .hivelog-attention__row,
@@ -81,6 +83,7 @@
   .hivelog-entity-form .form-actions,
   .hivelog-confirm-form .form-actions,
   .hivelog-inline-actions,
+  .hivelog-page-actions,
   .hivelog-table-actions,
   .hivelog-attention__row,
   .hivelog-dashboard__welcome-actions,
@@ -99,6 +102,7 @@
   .hivelog-entity-form .form-actions,
   .hivelog-confirm-form .form-actions,
   .hivelog-inline-actions,
+  .hivelog-page-actions,
   .hivelog-table-actions,
   .hivelog-button-group,
   .hivelog-attention__row,
@@ -120,6 +124,7 @@
   .hivelog-entity-form .form-actions,
   .hivelog-confirm-form .form-actions,
   .hivelog-inline-actions,
+  .hivelog-page-actions,
   .hivelog-table-actions,
   .hivelog-button-group,
   .hivelog-attention__row,
@@ -141,6 +146,7 @@
   .hivelog-entity-form .form-actions,
   .hivelog-confirm-form .form-actions,
   .hivelog-inline-actions,
+  .hivelog-page-actions,
   .hivelog-table-actions,
   .hivelog-button-group,
   .hivelog-attention__row,
@@ -162,6 +168,7 @@
   .hivelog-entity-form .form-actions,
   .hivelog-confirm-form .form-actions,
   .hivelog-inline-actions,
+  .hivelog-page-actions,
   .hivelog-table-actions,
   .hivelog-button-group,
   .hivelog-attention__row,
@@ -183,6 +190,7 @@
   .hivelog-entity-form .form-actions,
   .hivelog-confirm-form .form-actions,
   .hivelog-inline-actions,
+  .hivelog-page-actions,
   .hivelog-table-actions,
   .hivelog-button-group,
   .hivelog-attention__row,
@@ -325,5 +333,9 @@
 
 /* The Edit / Delete cluster at the top of a canonical page. */
 .hivelog-page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
   margin-block: 0 1.5rem;
 }
