@@ -37,6 +37,14 @@ tables:
     - hivelog/buttons
     - hivelog/responsive
 
+prose:
+  version: 1.x
+  css:
+    component:
+      css/hivelog.prose.css: {}
+  dependencies:
+    - hivelog/responsive
+
 filter_form:
   version: 1.x
   css:
