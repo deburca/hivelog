@@ -106,6 +106,21 @@ class ActionPagesStatTilesTest extends KernelTestBase {
   }
 
   /**
+   * Tests the description is a note block with its bullets, and absent when empty.
+   */
+  public function testCalendarActionDescriptionIsANoteBlock(): void {
+    $action = $this->action(['description' => "Harvest supers.\n- Check capping\n- Leave stores"]);
+    $build = $this->controller(CalendarActionController::class)->view($action);
+    $this->assertArrayHasKey('description', $build);
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build['description']);
+    $this->assertStringContainsString('hivelog-prose', $html);
+    $this->assertStringContainsString('<li>Check capping</li>', $html);
+
+    $bare = $this->controller(CalendarActionController::class)->view($this->action(['description' => '', 'title' => 'Bare']));
+    $this->assertArrayNotHasKey('description', $bare);
+  }
+
+  /**
    * Tests a disabled, one-off, single-week action.
    */
   public function testDisabledCalendarAction(): void {

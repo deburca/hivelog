@@ -103,6 +103,17 @@ class HiveInspectionController extends ControllerBase {
       $build['facts'] = $facts;
     }
 
+    // External check happens before the hive is opened, so it comes first,
+    // under the field's own label (the same one the edit form shows).
+    $external = $this->buildFieldProseBlock(
+      $inspection->get('external_check')->getFieldDefinition()->getLabel(),
+      $inspection,
+      'external_check',
+    );
+    if ($external) {
+      $build['external_check'] = $external;
+    }
+
     $weight = $inspection->get('weight')->isEmpty() ? '' : $inspection->get('weight')->getString() . ' kg';
     $fed_with = $inspection->get('fed')->getString() === '1' ? $inspection->get('feed_type')->getString() : '';
     $sections = [
@@ -153,15 +164,12 @@ class HiveInspectionController extends ControllerBase {
       }
     }
 
-    // Free text keeps its tables, each shown only when something was written.
-    $prose = [
-      'external_check' => $this->t('External check'),
-      'action_taken' => $this->t('Action taken'),
-      'notes' => $this->t('Notes'),
-    ];
-    foreach ($prose as $field => $title) {
-      if (!$inspection->get($field)->isEmpty()) {
-        $build[$field] = $this->buildSection($title, $inspection, [$field]);
+    // Free text goes in note blocks (task 0266), each shown only when something
+    // was written: Action taken and Notes after the tiles.
+    foreach (['action_taken' => $this->t('Action taken'), 'notes' => $this->t('Notes')] as $field => $title) {
+      $block = $this->buildFieldProseBlock($title, $inspection, $field);
+      if ($block) {
+        $build[$field] = $block;
       }
     }
 

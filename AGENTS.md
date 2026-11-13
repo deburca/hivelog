@@ -942,12 +942,12 @@ suppresses that. Values over 80 characters are cut with an ellipsis. The wrapper
 adds; the apiary page keeps `hivelog-apiary-facts` for theme continuity. The sub-line variants are `default`,
 `critical`, `warning` and `ok`. Long prose (notes, descriptions) is never a tile: it goes in a **note block** (task 0265), `buildProseBlock($title, $body)` or, from a field through the controller's own `formatFieldValue()`, `buildFieldProseBlock($title, $entity, $field)` in `HivelogDetailPageTrait`: an H2 and the text full width under a left rule, no table, empty when there is no text (`.hivelog-prose`, library `hivelog/prose`). Pages still showing such a field as a one-row table are moved over by task 0266. Pages on it so far:
 the apiary page, the queen page (task 0258: Status, Hive, Year · Colour, Breed, Temperament, Introduced with
-"n months in hive", Purchase cost; unset optional ones are omitted with `omit_empty`; origin and notes stay a
-"Details" table) and the queen observation page (Queen, Date, Health, Temperament, Actively laying; notes stay text), and the
+"n months in hive", Purchase cost; unset optional ones are omitted with `omit_empty`; notes are a note block (task 0266) and origin stays a
+"Details" table until it becomes a tile, task 0267) and the queen observation page (Queen, Date, Health, Temperament, Actively laying; notes are a note block), and the
 inspection page (task 0259): a header strip (Hive, Date, Inspector) then one strip under each existing H2 (Queen status,
 Brood/honey/pollen, Colony condition, Varroa and disease, Management), built with `buildTileSection($title, $entity,
-$tiles)` (an H2 plus a strip, empty when nothing is recorded so the section vanishes); External check, Action taken
-and Notes stay tables, shown only when written. **Inspection severity** (`HiveInspectionController::severity()`), only
+$tiles)` (an H2 plus a strip, empty when nothing is recorded so the section vanishes); External check (the field's own label, directly after the header strip: it happens before the hive is opened), Action taken
+and Notes are note blocks (task 0266), each shown only when written, Action taken and Notes after the tiles. **Inspection severity** (`HiveInspectionController::severity()`), only
 where a value is plainly good or bad alone: honey stores low = warning, none = critical; brood pattern poor = warning;
 population weak = warning; disease signs none = ok "Clear", nosema/chalkbrood/sacbrood/other = warning, AFB/EFB =
 critical "Serious disease". Varroa count, queen cells, temperament and pollen carry none (what is high depends on the
@@ -961,7 +961,7 @@ trailing zeros trimmed) for those tiles. `buildTileStrip()` also takes a NULL en
 only. The cost and yield reports (task 0261) open with a totals strip from `InventoryReportController::totalsStrip()`:
 Consumable cost, Active depreciation, Total cost, Potential income and Net (critical "Loss" when negative, ok
 "Surplus" when positive, plain at zero), the same two-decimal figures the tables use; the combined report adds the strip
-above its per-apiary table, which keeps its own rows and "All apiaries" total row. The calendar action page (task 0262) shows Category, Scope, Window ("W14–W18", sub-line "Recurring") and Status (a disabled action is a warning), and the hive and apiary action log pages Status (done ok, pending warning, ignored plain), Year · Week, Action and, hive logs only, Inspection; a log's notes and reporter stay in a Details table, and the description, requirements and yields stay as they were.
+above its per-apiary table, which keeps its own rows and "All apiaries" total row. The calendar action page (task 0262) shows Category, Scope, Window ("W14–W18", sub-line "Recurring") and Status (a disabled action is a warning), and the hive and apiary action log pages Status (done ok, pending warning, ignored plain), Year · Week, Action and, hive logs only, Inspection; a log's notes and reporter stay in a Details table, the description is a note block (bullets kept, left out when empty, task 0266), and the requirements and yields stay as they were.
 
 #### Heading hierarchy (task 0128)
 

@@ -434,10 +434,11 @@ class CalendarActionController extends ControllerBase {
 
     $build += [
       'facts' => $this->buildTileStrip($calendar_action, $this->factTiles($calendar_action)),
-      'description' => $this->buildSection($this->t('Description'), $calendar_action, [
-        'description',
-      ]),
     ];
+    $description = $this->buildFieldProseBlock($this->t('Description'), $calendar_action, 'description');
+    if ($description) {
+      $build['description'] = $description;
+    }
 
     [$requirements_section, $requirements] = $this->buildRequirementsSection($calendar_action);
     $build['requirements'] = $requirements_section;

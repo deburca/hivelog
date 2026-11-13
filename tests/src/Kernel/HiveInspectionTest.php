@@ -411,7 +411,8 @@ class HiveInspectionTest extends KernelTestBase {
       ->getInstanceFromDefinition(HiveInspectionController::class);
     $build = $controller->view($inspection);
 
-    // Short facts are stat-tile strips (task 0259); free text keeps tables.
+    // Short facts are stat-tile strips (task 0259); free text is in note blocks
+    // (task 0266), External check first because it comes before opening.
     $this->assertArrayHasKey('facts', $build);
     $this->assertArrayNotHasKey('overview', $build);
     $this->assertArrayHasKey('external_check', $build);
@@ -431,8 +432,12 @@ class HiveInspectionTest extends KernelTestBase {
     $this->assertStringContainsString('Colony condition', $html);
     $this->assertStringContainsString('Varroa and disease', $html);
     $this->assertStringContainsString('Management', $html);
-    $this->assertStringContainsString('Field', $html);
-    $this->assertStringContainsString('Value', $html);
+    // No label/value table is left: every section is a strip or a note block.
+    $this->assertStringNotContainsString('>Field<', $html);
+    $this->assertStringContainsString('hivelog-prose', $html);
+    $keys = array_keys(array_filter($build, 'is_array'));
+    $expected = ['facts', 'external_check', 'queen_status', 'management', 'action_taken', 'notes'];
+    $this->assertSame($expected, array_values(array_intersect($keys, $expected)));
     $this->assertStringNotContainsString('Queen Brood', $html);
     $this->assertStringContainsString('Strong flight activity with pollen coming in.', $html);
     $this->assertStringContainsString('28.75 kg', $html);
@@ -441,11 +446,9 @@ class HiveInspectionTest extends KernelTestBase {
 
     // Task 0131: every section wrapper and table also carries the generic
     // hivelog-detail-* class alongside its existing hivelog-inspection-*
-    // class.
+    // class (the tile sections; free text is a note block).
     $this->assertStringContainsString('hivelog-detail-section', $html);
     $this->assertStringContainsString('hivelog-inspection-section', $html);
-    $this->assertStringContainsString('hivelog-detail-table', $html);
-    $this->assertStringContainsString('hivelog-inspection-table', $html);
   }
 
   /**

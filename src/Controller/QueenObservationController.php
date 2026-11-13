@@ -101,9 +101,10 @@ class QueenObservationController extends ControllerBase {
       $build['facts'] = $facts;
     }
 
-    $build['notes'] = $this->buildSection($this->t('Notes'), $queen_observation, [
-      'notes',
-    ]);
+    $notes = $this->buildFieldProseBlock($this->t('Notes'), $queen_observation, 'notes');
+    if ($notes) {
+      $build['notes'] = $notes;
+    }
 
     // Photos grid (displayed after notes when images are present).
     $photos = $this->buildPhotosGrid($queen_observation);

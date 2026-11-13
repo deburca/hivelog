@@ -143,9 +143,15 @@ class QueenController extends ControllerBase {
       $build['facts'] = $facts;
     }
 
-    $build['details'] = $this->buildSection($this->t('Details'), $queen, ['origin', 'notes']);
-    if ($queen->get('origin')->isEmpty() && $queen->get('notes')->isEmpty()) {
-      unset($build['details']);
+    // Notes is prose, so it is a note block (task 0266). Origin stays in a
+    // small Details table until it becomes a tile (task 0267), so the page
+    // does not lose it in between.
+    if (!$queen->get('origin')->isEmpty()) {
+      $build['details'] = $this->buildSection($this->t('Details'), $queen, ['origin']);
+    }
+    $notes = $this->buildFieldProseBlock($this->t('Notes'), $queen, 'notes');
+    if ($notes) {
+      $build['notes'] = $notes;
     }
 
     // Observations list: rendered at the end of the page in the same style
