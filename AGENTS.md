@@ -260,7 +260,7 @@ inside it" (beekeeper or owner): the scoped add routes use `_entity_access: apia
 rows are the source of truth: `Apiary::getApiaryMembers()` queries `apiary_membership` by its
 `apiary` field (a membership points at the apiary, so Apiary has no stored members field;
 `hivelog_update_10034` removed the unused `apiary_memberships` storage). The apiary canonical page
-shows the members, with a Manage members link, only to owners; add/edit/delete is via the Members
+lists no members (task 0268); it shows a Manage members link, only to owners, and add/edit/delete is via the Members
 item in the Access tab of the Apiary edit form (`ApiaryMemberManagerForm`, built on
 `hivelog:entity-table`). `hivelog_update_10032` converted old beekeepers rows to memberships;
 `hivelog_update_10035` renames stored roles (`viewer` → `novice`, `editor` → `keeper`) and gives

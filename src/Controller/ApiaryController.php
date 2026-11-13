@@ -148,11 +148,9 @@ class ApiaryController extends ControllerBase {
    *   The apiary.
    *
    * @return array
-   *   A render array: a heading and a label/value table.
+   *   A render array: a heading and a strip of stat tiles.
    */
   protected function buildSummary(Apiary $apiary): array {
-    $empty = (string) $this->t('—');
-
     // The facts are the same stat tiles the dashboard and the hive page use
     // (informational: no destination), so the page reads like the others. The
     // shared strip helper builds them (task 0256); hivelog-apiary-facts is
@@ -165,31 +163,6 @@ class ApiaryController extends ControllerBase {
       'role' => ['label' => $this->t('Your role'), 'value' => $this->currentUserRole($apiary)],
     ], ['hivelog-apiary-facts']);
 
-    // Members fold behind one line so the facts above stay a compact strip
-    // (task 0255); only for people who manage the apiary, as with the
-    // membership access handler (owners see the rows). Notes are left out of
-    // this display for now, and Manage members sits beside Edit at the top.
-    $cache_tags = $apiary->getCacheTags();
-    $more = [];
-    if ($apiary->access('update', $this->currentUser)) {
-      $members = [];
-      foreach ($apiary->getApiaryMembers() as $membership) {
-        $member = $membership->getMember();
-        if ($member) {
-          $members[] = $member->getDisplayName() . ' (' . ApiaryMembership::roleLabel($membership->getRole()) . ')';
-        }
-      }
-      $more = [
-        'summary' => ['#type' => 'html_tag', '#tag' => 'summary', '#value' => $this->t('Members')],
-        'list' => [
-          '#type' => 'html_tag',
-          '#tag' => 'p',
-          '#value' => Html::escape($members ? implode(', ', $members) : $empty),
-        ],
-      ];
-      $cache_tags[] = 'apiary_membership_list';
-    }
-
     return [
       '#type' => 'container',
       '#attributes' => ['class' => ['hivelog-detail-section', 'hivelog-apiary-section']],
@@ -199,13 +172,11 @@ class ApiaryController extends ControllerBase {
         '#value' => $this->t('Details'),
       ],
       'facts' => $tiles,
-      'more' => $more ? [
-        '#type' => 'html_tag',
-        '#tag' => 'details',
-        '#attributes' => ['class' => ['hivelog-apiary-more']],
-      ] + $more : [],
+      // The role tile reads the viewer's membership, so a change to any
+      // membership refreshes it. The member list itself is not on this page:
+      // Manage members (beside Edit) opens it (task 0268).
       '#cache' => [
-        'tags' => $cache_tags,
+        'tags' => array_merge($apiary->getCacheTags(), ['apiary_membership_list']),
         'contexts' => ['user', 'user.permissions'],
       ],
     ];
