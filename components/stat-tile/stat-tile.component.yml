@@ -40,7 +40,7 @@ props:
     sublabel_variant:
       type: string
       title: Sub-line variant
-      description: 'One of: default, critical, warning — tints the sub-line.'
+      description: 'One of: default, critical, warning, ok — tints the sub-line.'
       default: default
       examples:
         - critical

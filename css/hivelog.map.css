@@ -64,31 +64,6 @@
   }
 }
 
-/* A fact is text, not a headline figure: a smaller value keeps the strip one
-   row high on desktop and two tiles wide on a phone. */
-.hivelog-stat-tiles.hivelog-apiary-facts .hivelog-stat-tile {
-  flex-basis: 9.5rem;
-  padding: 0.6rem 0.8rem 0.7rem;
-}
-
-.hivelog-stat-tiles.hivelog-apiary-facts .hivelog-stat-tile__value {
-  font-size: 1.05rem;
-  line-height: 1.25;
-  overflow-wrap: break-word;
-}
-
-@media (max-width: 480px) {
-  .hivelog-stat-tiles.hivelog-apiary-facts .hivelog-stat-tile {
-    flex-basis: calc(50% - 0.375rem);
-  }
-}
-
-/* The facts' labels sit at the bottom of the tile, so tiles of different value
-   heights (a two-line location beside one-line values) line up on one baseline. */
-.hivelog-stat-tiles.hivelog-apiary-facts .hivelog-stat-tile__label {
-  margin-top: auto;
-}
-
 .hivelog-apiary-more > p {
   margin: 0.4rem 0 0;
 }

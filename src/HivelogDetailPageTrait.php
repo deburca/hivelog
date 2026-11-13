@@ -38,6 +38,7 @@ use Drupal\user\UserInterface;
 trait HivelogDetailPageTrait {
 
   use HivelogEntityActionsTrait;
+  use HivelogStatTileStripTrait;
 
   /**
    * Builds a consistently formatted detail-page section.

@@ -104,3 +104,35 @@
 .hivelog-stat-tile__sub--warning {
   color: var(--hivelog-warning);
 }
+
+.hivelog-stat-tile__sub--ok {
+  color: var(--hivelog-ok);
+}
+
+/* The facts strip (task 0256; was the apiary page's alone). Built by
+   HivelogStatTileStripTrait::buildTileStrip(), so any detail page can use it.
+
+   A fact is text, not a headline figure: a smaller value keeps the strip one
+   row high on desktop and two tiles wide on a phone. */
+.hivelog-stat-tiles--facts .hivelog-stat-tile {
+  flex-basis: 9.5rem;
+  padding: 0.6rem 0.8rem 0.7rem;
+}
+
+.hivelog-stat-tiles--facts .hivelog-stat-tile__value {
+  font-size: 1.05rem;
+  line-height: 1.25;
+  overflow-wrap: break-word;
+}
+
+@media (max-width: 480px) {
+  .hivelog-stat-tiles--facts .hivelog-stat-tile {
+    flex-basis: calc(50% - 0.375rem);
+  }
+}
+
+/* The facts' labels sit at the bottom of the tile, so tiles of different value
+   heights (a two-line location beside one-line values) line up on one baseline. */
+.hivelog-stat-tiles--facts .hivelog-stat-tile__label {
+  margin-top: auto;
+}
