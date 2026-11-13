@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Drupal\hivelog;
 
+use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\DependencyInjection\ClassResolverInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\hivelog\Entity\Apiary;
+use Drupal\hivelog\Controller\InventoryReportController;
 use Drupal\hivelog\Entity\Hive;
 
 /**
@@ -23,7 +27,9 @@ use Drupal\hivelog\Entity\Hive;
  * submodule tile. Those are for the web page only: `tilesForHive()`, which
  * the mobile API serves, still returns the submodules' tiles alone, since
  * the app reads the same facts from the hive record itself. The Apiary page
- * has no core tiles here (its fact strip is `HivelogStatTileStripTrait`).
+ * shows core's own activity tiles (task 0263, `coreTilesForApiary()`): the
+ * dashboard's figures for one apiary. Its fact strip is separate
+ * (`HivelogStatTileStripTrait`).
  */
 class HivelogStatTileBuilder {
 
@@ -31,6 +37,9 @@ class HivelogStatTileBuilder {
 
   public function __construct(
     protected ModuleHandlerInterface $moduleHandler,
+    protected EntityTypeManagerInterface $entityTypeManager,
+    protected HivelogAlertCollector $alertCollector,
+    protected ClassResolverInterface $classResolver,
   ) {}
 
   /**
@@ -180,7 +189,114 @@ class HivelogStatTileBuilder {
    *   contributed a tile for this apiary.
    */
   public function buildForApiary(Apiary $apiary): array {
-    return $this->build($this->moduleHandler->invokeAll('hivelog_apiary_stat_tiles', [$apiary]));
+    $build = $this->build($this->coreTilesForApiary($apiary) + $this->moduleHandler->invokeAll('hivelog_apiary_stat_tiles', [$apiary]));
+    if ($build) {
+      // The core tiles count records of several types and read what the viewer
+      // may see, so the row changes with any of them.
+      $cache = new CacheableMetadata();
+      $cache->addCacheContexts(['user.permissions'])->addCacheableDependency($apiary);
+      $types = [
+        'hive', 'hive_inspection', 'calendar_action', 'apiary_action_log', 'hive_action_log',
+        'inventory_item', 'inventory_purchase', 'inventory_usage', 'harvest_yield', 'product',
+      ];
+      foreach ($types as $type) {
+        $cache->addCacheTags($this->entityTypeManager->getDefinition($type)->getListCacheTags());
+      }
+      $cache->applyTo($build);
+    }
+    return $build;
+  }
+
+  /**
+   * Gets core's activity tiles for an apiary (task 0263), as descriptors.
+   *
+   * The dashboard's figures, for this one apiary: active hives, open seasonal
+   * tasks (critical when some are overdue), inspections this month and net
+   * year to date. Weighted -50 to -20, before every submodule tile. Net YTD is
+   * left out unless the viewer may open the apiary's financial report, the same
+   * rule as the route.
+   *
+   * @param \Drupal\hivelog\Entity\Apiary $apiary
+   *   The apiary.
+   *
+   * @return array[]
+   *   Tile descriptors keyed `hivelog_*`.
+   */
+  public function coreTilesForApiary(Apiary $apiary): array {
+    $id = (int) $apiary->id();
+    $year = (int) date('Y');
+    $week = (int) date('W');
+    $cache = new CacheableMetadata();
+
+    $active_hives = (int) $this->entityTypeManager->getStorage('hive')->getQuery()
+      ->accessCheck(TRUE)
+      ->condition('apiary', $id)
+      ->condition('status', 'active')
+      ->count()
+      ->execute();
+    $seasonal = $this->alertCollector->collectSeasonalAlerts([$id => $apiary], $year, $week, $cache);
+
+    $tiles = [
+      'hivelog_hives' => [
+        'value' => (string) $active_hives,
+        'label' => $this->t('Active hives'),
+        'url' => Url::fromRoute('entity.apiary.canonical', ['apiary' => $id], ['fragment' => 'hives']),
+        'weight' => -50,
+      ],
+    ];
+
+    $calendar = Url::fromRoute('hivelog.apiary.calendar_action.collection', ['apiary' => $id]);
+    $tiles['hivelog_open_tasks'] = [
+      'value' => (string) $seasonal['open_total'],
+      'label' => $this->t('Open seasonal tasks'),
+      'weight' => -40,
+    ] + ($calendar->access() ? ['url' => $calendar] : [])
+      + ($seasonal['open_overdue'] ? [
+        'sublabel' => $this->t('@n overdue', ['@n' => $seasonal['open_overdue']]),
+        'sublabel_variant' => 'critical',
+      ] : []);
+
+    $tiles['hivelog_inspections_month'] = [
+      'value' => (string) $this->inspectionsThisMonth([$id]),
+      'label' => $this->t('Inspections this month'),
+      'weight' => -30,
+    ];
+
+    $report = Url::fromRoute('hivelog.apiary.inventory_cost_report', ['apiary' => $id]);
+    if ($report->access()) {
+      $totals = $this->classResolver->getInstanceFromDefinition(InventoryReportController::class)
+        ->computeApiaryYearTotals($apiary, $year);
+      $tiles['hivelog_net_ytd'] = [
+        'value' => number_format($totals['net'], 0),
+        'label' => $this->t('Net YTD'),
+        'url' => $report,
+        'weight' => -20,
+      ];
+    }
+    return $tiles;
+  }
+
+  /**
+   * Counts inspections dated this month under the given apiaries.
+   *
+   * Counted under the apiary each was written under (its stamp), so a hive
+   * that has since moved does not take its history with it (task 0231). Shared
+   * by the dashboard and the apiary page (task 0263).
+   *
+   * @param array<int|string> $apiary_ids
+   *   The apiary ids.
+   */
+  public function inspectionsThisMonth(array $apiary_ids): int {
+    if (!$apiary_ids) {
+      return 0;
+    }
+    return (int) $this->entityTypeManager->getStorage('hive_inspection')->getQuery()
+      ->accessCheck(TRUE)
+      ->condition('apiary', $apiary_ids, 'IN')
+      ->condition('inspection_date', date('Y-m-01'), '>=')
+      ->condition('inspection_date', date('Y-m-01', strtotime('first day of next month')), '<')
+      ->count()
+      ->execute();
   }
 
   /**

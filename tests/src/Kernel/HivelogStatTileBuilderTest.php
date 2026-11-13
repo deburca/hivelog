@@ -50,11 +50,22 @@ class HivelogStatTileBuilderTest extends KernelTestBase {
     $this->installEntitySchema('apiary');
     $this->installEntitySchema('apiary_membership');
     $this->installEntitySchema('hive');
+    $this->installEntitySchema('hive_inspection');
+    $this->installEntitySchema('calendar_action');
+    $this->installEntitySchema('calendar_action_item_requirement');
+    $this->installEntitySchema('calendar_action_product_yield');
+    $this->installEntitySchema('inventory_item');
+    $this->installEntitySchema('inventory_purchase');
+    $this->installEntitySchema('inventory_usage');
+    $this->installEntitySchema('product');
+    $this->installEntitySchema('harvest_yield');
+    $this->installEntitySchema('hive_action_log');
+    $this->installEntitySchema('apiary_action_log');
     $this->installSchema('file', ['file_usage']);
   }
 
   /**
-   * Tests no submodule tile and no apiary tile when nothing contributes one.
+   * Tests no submodule tile is served when nothing contributes one.
    */
   public function testEmptyWhenNoTilesContributed(): void {
     $apiary = Apiary::create(['name' => 'Test Apiary']);
@@ -67,7 +78,10 @@ class HivelogStatTileBuilderTest extends KernelTestBase {
     // API's tilesForHive() serves.
     $builder = \Drupal::service('hivelog.stat_tile_builder');
     $this->assertSame([], $builder->tilesForHive($hive));
-    $this->assertSame([], $builder->buildForApiary($apiary));
+    // The apiary page has core's activity tiles (task 0263), and no submodule's.
+    $row = $builder->buildForApiary($apiary);
+    $this->assertArrayHasKey('hivelog_hives', $row);
+    $this->assertArrayNotHasKey('nanoprobe_sensors', $row);
   }
 
   /**

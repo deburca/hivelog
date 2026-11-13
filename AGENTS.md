@@ -1057,7 +1057,12 @@ count it used to state already had. Core's own:
   links to the active queen (sub-line her name and breed), or reads "No queen" with an add link;
   Empty weight reads "Unknown" with "Incomplete" or "Not yet composed" when `getEmptyWeightKg()` is
   NULL (`Hive::hasComponents()` tells the two apart). The Queen section under it keeps only its
-  heading and buttons.
+  heading and buttons. The Apiary page likewise shows core's activity tiles (task 0263,
+  `coreTilesForApiary()`, weighted -50 to -20): Active hives (to the page's own `#hives`), Open seasonal
+  tasks (from `HivelogAlertCollector::collectSeasonalAlerts()` for this one apiary, critical when some are
+  overdue, linking to the full calendar), Inspections this month and Net YTD (only where the viewer may open
+  the apiary's financial report). `inspectionsThisMonth()` lives here and the dashboard calls it, so the two
+  figures are one query, counted by the apiary stamp.
 - `hivelog.alert_collector` (`HivelogAlertCollector`, task 0202) — the
   "Needs attention" alerts: the seasonal-calendar pass, low-stock inventory,
   and whatever submodules contribute through

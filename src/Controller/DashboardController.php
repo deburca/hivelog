@@ -15,6 +15,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\hivelog\HivelogAlertCollector;
 use Drupal\hivelog\HivelogCalendarChecklistBuilder;
+use Drupal\hivelog\HivelogStatTileBuilder;
 use Drupal\user\UserInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -59,6 +60,11 @@ class DashboardController extends ControllerBase {
   protected HivelogAlertCollector $alertCollector;
 
   /**
+   * The stat tile builder (shared figures).
+   */
+  protected HivelogStatTileBuilder $statTileBuilder;
+
+  /**
    * Constructs a DashboardController.
    */
   public function __construct(
@@ -68,6 +74,7 @@ class DashboardController extends ControllerBase {
     DateFormatterInterface $date_formatter,
     HivelogCalendarChecklistBuilder $calendar_checklist_builder,
     HivelogAlertCollector $alert_collector,
+    HivelogStatTileBuilder $stat_tile_builder,
   ) {
     // $entityTypeManager / $currentUser are untyped properties inherited
     // from ControllerBase; assign them rather than redeclaring them.
@@ -77,6 +84,7 @@ class DashboardController extends ControllerBase {
     $this->dateFormatter = $date_formatter;
     $this->calendarChecklistBuilder = $calendar_checklist_builder;
     $this->alertCollector = $alert_collector;
+    $this->statTileBuilder = $stat_tile_builder;
   }
 
   /**
@@ -90,6 +98,7 @@ class DashboardController extends ControllerBase {
       $container->get('date.formatter'),
       $container->get('hivelog.calendar_checklist_builder'),
       $container->get('hivelog.alert_collector'),
+      $container->get('hivelog.stat_tile_builder'),
     );
   }
 
@@ -436,31 +445,6 @@ class DashboardController extends ControllerBase {
   }
 
   /**
-   * Counts this month's inspections in the given apiaries.
-   *
-   * Counted under the apiary each was written under (its stamp), so a hive that
-   * has since moved does not take its history with it (task 0231).
-   *
-   * @param array<int|string> $apiary_ids
-   *   The apiary ids.
-   *
-   * @return int
-   *   The number of inspections dated this month.
-   */
-  protected function inspectionsThisMonth(array $apiary_ids): int {
-    if (!$apiary_ids) {
-      return 0;
-    }
-    return (int) $this->entityTypeManager->getStorage('hive_inspection')->getQuery()
-      ->accessCheck(TRUE)
-      ->condition('apiary', $apiary_ids, 'IN')
-      ->condition('inspection_date', date('Y-m-01'), '>=')
-      ->condition('inspection_date', date('Y-m-01', strtotime('first day of next month')), '<')
-      ->count()
-      ->execute();
-  }
-
-  /**
    * Extracts a trimmed CBR number from a user, if any.
    */
   protected function extractCbr(?UserInterface $user): string {
@@ -534,7 +518,7 @@ class DashboardController extends ControllerBase {
       ->count()
       ->execute();
 
-    $inspections_this_month = $this->inspectionsThisMonth($apiary_ids);
+    $inspections_this_month = $this->statTileBuilder->inspectionsThisMonth($apiary_ids);
 
     // With exactly one apiary the tile jumps straight to it; otherwise to
     // the list.
