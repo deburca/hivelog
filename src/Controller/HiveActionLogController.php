@@ -111,16 +111,9 @@ class HiveActionLogController extends ControllerBase {
     ];
 
     $build += [
-      'overview' => $this->buildSection($this->t('Overview'), $hive_action_log, [
-        'hive',
-        'calendar_action',
-        'year',
-        'status',
-      ]),
+      'facts' => $this->buildTileStrip($hive_action_log, $this->factTiles($hive_action_log)),
       'details' => $this->buildSection($this->t('Details'), $hive_action_log, [
-        'week_completed',
         'notes',
-        'inspection',
         'uid',
       ]),
     ];
@@ -135,6 +128,29 @@ class HiveActionLogController extends ControllerBase {
     $cache->applyTo($build);
 
     return $build;
+  }
+
+  /**
+   * The fact tiles for the log (task 0262).
+   *
+   * Status (done is ok, pending a warning), year and week, the action it
+   * reports on and, for a hive log, the linked inspection.
+   */
+  protected function factTiles(HiveActionLog $hive_action_log): array {
+    $status = $hive_action_log->get('status')->getString();
+    $year = $hive_action_log->get('year')->getString();
+    $week = $hive_action_log->get('week_completed')->getString();
+    $when = implode(' · ', array_filter([$year, $week !== '' ? 'W' . $week : '']));
+    return [
+      'status' => match ($status) {
+        'done' => ['variant' => 'ok'],
+        'pending' => ['variant' => 'warning', 'sublabel' => $this->t('Not reported')],
+        default => [],
+      } + ['omit_empty' => TRUE],
+      'when' => ['label' => $this->t('Year · Week'), 'value' => $when, 'omit_empty' => TRUE],
+      'calendar_action' => ['label' => $this->t('Action')],
+      'inspection' => ['omit_empty' => TRUE],
+    ];
   }
 
   /**

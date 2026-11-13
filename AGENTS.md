@@ -961,7 +961,7 @@ trailing zeros trimmed) for those tiles. `buildTileStrip()` also takes a NULL en
 only. The cost and yield reports (task 0261) open with a totals strip from `InventoryReportController::totalsStrip()`:
 Consumable cost, Active depreciation, Total cost, Potential income and Net (critical "Loss" when negative, ok
 "Surplus" when positive, plain at zero), the same two-decimal figures the tables use; the combined report adds the strip
-above its per-apiary table, which keeps its own rows and "All apiaries" total row.
+above its per-apiary table, which keeps its own rows and "All apiaries" total row. The calendar action page (task 0262) shows Category, Scope, Window ("W14–W18", sub-line "Recurring") and Status (a disabled action is a warning), and the hive and apiary action log pages Status (done ok, pending warning, ignored plain), Year · Week, Action and, hive logs only, Inspection; a log's notes and reporter stay in a Details table, and the description, requirements and yields stay as they were.
 
 #### Heading hierarchy (task 0128)
 
