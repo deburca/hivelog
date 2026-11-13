@@ -163,9 +163,9 @@ class HiveController extends ControllerBase {
 ]);
     }
 
-    // "At a glance" stat tiles — optional submodules only (e.g. nexus's
-    // AI Insight, nanoprobe's per-sensor vitals); hivelog core
-    // contributes none of its own here. See hivelog.api.php's
+    // "At a glance" stat tiles: core's own facts (status, type, temperament,
+    // queen, empty weight; task 0257) then optional submodules' (e.g. nexus's
+    // AI Insight, nanoprobe's per-sensor vitals). See hivelog.api.php's
     // hook_hivelog_hive_stat_tiles() and ADR-0099. Weight -1 keeps this
     // first regardless of the other sections' own weights.
     $stat_tiles = $this->statTileBuilder->buildForHive($hive);
@@ -742,33 +742,10 @@ class HiveController extends ControllerBase {
       ],
     ];
 
-    if ($queen) {
-      $colour = $queen->get('queen_colour')->value;
-      $colour_label = $colour ? $queen->getColourName() : $this->t('Not set');
-
-      $breed = $queen->get('breed')->value;
-      $breed_label = $breed
-        ? ($queen->get('breed')->getSetting('allowed_values')[$breed] ?? $breed)
-        : $this->t('Not set');
-
-      $section['details'] = [
-        '#type' => 'table',
-        '#header' => [$this->t('Field'), $this->t('Value')],
-        // hivelog-detail-table is the generic class every detail-page
-        // label/value table shares (task 0131); hivelog-queen-table is
-        // kept alongside it per AGENTS.md "Theming HiveLog".
-        '#attributes' => ['class' => ['hivelog-detail-table', 'hivelog-queen-table']],
-        '#attached' => ['library' => ['hivelog/tables']],
-        '#rows' => [
-          [$this->t('Queen ID'), $queen->toLink()->toString()],
-          [$this->t('Breed'), $breed_label],
-          [$this->t('Colour'), $colour_label],
-          [$this->t('Year'), $queen->get('queen_year')->value ?: $this->t('Not set')],
-          [$this->t('Introduced'), $queen->get('introduction_date')->value ?: $this->t('Not set')],
-        ],
-      ];
-    }
-    else {
+    // The queen's facts (year, colour, breed, a link to the queen) are the Queen
+    // stat tile at the top of the page (task 0257), so with a queen this section
+    // is only its heading and buttons.
+    if (!$queen) {
       $section['empty'] = [
         '#markup' => '<p>' . $this->t('No active queen is recorded for this hive.') . '</p>',
       ];

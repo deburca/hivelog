@@ -157,6 +157,22 @@ class Hive extends ContentEntityBase implements EntityChangedInterface, EntityOw
   }
 
   /**
+   * Whether any component is recorded for this hive (task 0257).
+   *
+   * Tells "not yet composed" from "incomplete" when getEmptyWeightKg() is NULL.
+   */
+  public function hasComponents(): bool {
+    if ($this->isNew()) {
+      return FALSE;
+    }
+    return (bool) $this->entityTypeManager()->getStorage('hive_component')->getQuery()
+      ->accessCheck(FALSE)
+      ->condition('hive', $this->id())
+      ->range(0, 1)
+      ->execute();
+  }
+
+  /**
    * {@inheritdoc}
    */
   public static function baseFieldDefinitions(EntityTypeInterface $entity_type) {
