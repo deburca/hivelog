@@ -11,6 +11,7 @@ use Drupal\hivelog\Entity\ApiaryActionLog;
 use Drupal\hivelog\Entity\CalendarAction;
 use Drupal\hivelog\Entity\CalendarActionItemRequirement;
 use Drupal\hivelog\Entity\CalendarActionProductYield;
+use Drupal\hivelog\Entity\HarvestYield;
 use Drupal\hivelog\Entity\Hive;
 use Drupal\hivelog\Entity\HiveActionLog;
 use Drupal\hivelog\Entity\HiveInspection;
@@ -90,6 +91,7 @@ class HivelogDeleteBlockRelationshipsTest extends KernelTestBase {
     $this->installEntitySchema('inventory_item');
     $this->installEntitySchema('inventory_purchase');
     $this->installEntitySchema('product');
+    $this->installEntitySchema('harvest_yield');
     // Deliberately not installed: inventory_usage, harvest_yield and
     // every submodule child type (sensor_device, hive_insight, …) —
     // none of this test's own rows need them, and
@@ -279,23 +281,55 @@ class HivelogDeleteBlockRelationshipsTest extends KernelTestBase {
   }
 
   /**
-   * Row #6: Apiary blocked by a Product.
+   * Row #6: Apiary blocked by a Product something was harvested as.
+   *
+   * A product with no harvest does not block (task 0270): every new apiary
+   * is given Honey and Beeswax, and they are deleted with it.
    */
-  public function testApiaryBlockedByProduct(): void {
+  public function testApiaryBlockedByProductInUse(): void {
     $apiary = $this->createApiary();
+    $products = \Drupal::entityTypeManager()->getStorage('product');
+    $this->assertCount(2, $products->loadByProperties(['apiary' => $apiary->id()]), 'The starter products.');
+    $this->assertTrue($apiary->access('delete', $this->owner), 'Unused products do not block.');
+
     $product = Product::create([
       'apiary' => $apiary->id(),
-      'name' => 'Honey',
+      'name' => 'Heather honey',
       'unit' => 'kg',
       'expected_unit_price' => 12,
       'uid' => $this->owner->id(),
     ]);
     $product->save();
+    $this->resetDeleteCaches();
+    $this->assertTrue($apiary->access('delete', $this->owner), 'Still unused.');
 
+    $log = ApiaryActionLog::create([
+      'apiary' => $apiary->id(),
+      'calendar_action' => $this->createCalendarAction($apiary)->id(),
+      'year' => (int) date('Y'),
+      'status' => 'done',
+      'uid' => $this->owner->id(),
+    ]);
+    $log->save();
+    $yield = HarvestYield::create([
+      'product' => $product->id(),
+      'quantity' => 5,
+      'apiary_action_log' => $log->id(),
+    ]);
+    $yield->save();
+    $this->resetDeleteCaches();
+
+    // Only the product in use is named; the two starter products are not.
     $this->assertDeleteBlocked($apiary, '1 product');
-    $product->delete();
+
+    $yield->delete();
+    $log->delete();
     $this->resetDeleteCaches();
     $this->assertTrue($apiary->access('delete', $this->owner));
+
+    // Deleting the apiary takes its unused products with it.
+    $apiary->delete();
+    $this->assertSame([], $products->loadByProperties(['apiary' => $apiary->id()]));
   }
 
   // -------------------------------------------------------------------------

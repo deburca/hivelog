@@ -71,6 +71,21 @@ class CalendarAction extends ContentEntityBase implements EntityChangedInterface
   use EntityOwnerTrait;
 
   /**
+   * What the starter calendar's two honey harvests produce (task 0270).
+   *
+   * A log's yield fields exist only for a product the action is expected to
+   * yield, so without these a new apiary's first harvest could record
+   * nothing. The quantity is 0, not a guess: how much a hive gives is the
+   * beekeeper's to say, and 0 keeps expected income at nothing until they
+   * do. The products are created in the apiary's catalogue if it has none of
+   * that name and unit, with no price.
+   */
+  const STARTER_HARVEST_YIELDS = [
+    ['product' => ['name' => 'Honey', 'unit' => 'kg'], 'quantity' => 0],
+    ['product' => ['name' => 'Beeswax', 'unit' => 'kg'], 'quantity' => 0],
+  ];
+
+  /**
    * Illustrative starter calendar seeded on new apiaries.
    *
    * Deliberately as exhaustive as practical: it is trivial for a beekeeper
@@ -90,6 +105,10 @@ class CalendarAction extends ContentEntityBase implements EntityChangedInterface
    * entry by roughly half a year; this is a known, documented limitation
    * (see ADR-0025 Consequences), not a bug — hemisphere-aware seeding is
    * an explicit non-goal of this task.
+   *
+   * An entry may carry `yields` (and `requirements`), in the shape
+   * HivelogCalendarCopier writes: the harvests do, so a new apiary can record
+   * honey the first time a harvest is reported (task 0270).
    *
    * @see \Drupal\hivelog\Entity\CalendarAction::seedDefaultsForApiary()
    */
@@ -262,6 +281,7 @@ class CalendarAction extends ContentEntityBase implements EntityChangedInterface
       'category' => 'harvest_spring',
       'week_start' => 25,
       'week_end' => 27,
+      'yields' => self::STARTER_HARVEST_YIELDS,
     ],
     [
       'title' => 'Mid-Season Health & Brood Disease Check',
@@ -290,6 +310,7 @@ class CalendarAction extends ContentEntityBase implements EntityChangedInterface
       'category' => 'harvest_summer',
       'week_start' => 31,
       'week_end' => 33,
+      'yields' => self::STARTER_HARVEST_YIELDS,
     ],
     [
       'title' => 'Varroa Treatment (Late Summer)',

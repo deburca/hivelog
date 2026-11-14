@@ -15,7 +15,9 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * Adds another apiary's calendar (or the starter one) to this apiary (0249).
  *
  * Additive: actions the apiary already has are skipped and nothing is
- * deleted or changed, so running it twice is harmless. The source list comes
+ * deleted or changed, so running it twice is harmless. A skipped action is
+ * given a requirement or yield it lacks (task 0270), and the message says
+ * how many were added. The source list comes
  * from `HivelogCalendarCopier::sourceOptions()`, so a new kind of source
  * shows up here without a change to this form.
  */
@@ -59,7 +61,7 @@ class CalendarCopyForm extends FormBase {
     $form['#attached']['library'][] = 'hivelog/forms';
 
     $form['intro'] = [
-      '#markup' => '<p>' . $this->t('Adds the actions of another calendar to this apiary\'s. An action this apiary already has (same title, scope and starting week) is skipped, and nothing is changed or removed. Items and products an action needs are matched by name and unit, and added to this apiary\'s catalogue if missing, with no stock and no price history.') . '</p>',
+      '#markup' => '<p>' . $this->t('Adds the actions of another calendar to this apiary\'s. An action this apiary already has (same title, scope and starting week) is skipped: it is not changed, but it is given a required item or expected yield the other calendar has for it and it lacks. Nothing is removed. Items and products an action needs are matched by name and unit, and added to this apiary\'s catalogue if missing, with no stock and no price history.') . '</p>',
     ];
     $form['source'] = [
       '#type' => 'select',
@@ -102,6 +104,14 @@ class CalendarCopyForm extends FormBase {
       'Added @count calendar actions to @apiary (@skipped already there).',
       ['@apiary' => $this->apiary->label(), '@skipped' => $result['skipped']],
     ));
+    // Say so when recipe rows were added, above all when no action was: the
+    // message would otherwise read as if nothing had happened (task 0270).
+    if ($result['requirements'] || $result['yields']) {
+      $this->messenger()->addStatus($this->t('Also added @requirements required item(s) and @yields expected yield(s) to its actions.', [
+        '@requirements' => $result['requirements'],
+        '@yields' => $result['yields'],
+      ]));
+    }
     $form_state->setRedirect('hivelog.apiary.calendar_action.collection', ['apiary' => $this->apiary->id()]);
   }
 
