@@ -1079,7 +1079,7 @@ count it used to state already had. Core's own:
   "at a glance" stat tiles a canonical page shows, from
   `hook_hivelog_apiary_stat_tiles()` / `hook_hivelog_hive_stat_tiles()`. The Hive page also
   shows core's own fact tiles (task 0257, `coreTilesForHive()`: Status, Type · Material, Temperament,
-  Queen, Empty weight, weighted -50 to -10 so they precede every submodule tile). They are **web-only**:
+  Queen, Empty weight, Harvest this year, weighted -50 to 0 so they precede every submodule tile). They are **web-only**:
   `tilesForHive()`, which `hivelog_api`'s `computed/hive/{hive}/stat-tiles` serves, stays submodule
   tiles alone, because the app reads the same facts from the hive and queen records. The Queen tile
   links to the active queen (sub-line her name and breed), or reads "No queen" with an add link;
