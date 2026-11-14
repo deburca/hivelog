@@ -5,10 +5,14 @@ declare(strict_types=1);
 namespace Drupal\Tests\hivelog\Kernel;
 
 use Drupal\Core\Datetime\DrupalDateTime;
+use Drupal\hivelog\Controller\HiveController;
 use Drupal\hivelog\Entity\Apiary;
+use Drupal\hivelog\Entity\CalendarAction;
 use Drupal\hivelog\Entity\HarvestYield;
 use Drupal\hivelog\Entity\Hive;
+use Drupal\hivelog\Entity\HiveActionLog;
 use Drupal\hivelog\Entity\Product;
+use Drupal\hivelog\HivelogCalendarChecklistBuilder;
 use Drupal\hivelog\HivelogStatTileBuilder;
 use Drupal\KernelTests\KernelTestBase;
 use PHPUnit\Framework\Attributes\Group;
@@ -103,7 +107,7 @@ class HiveHarvestHistoryTest extends KernelTestBase {
     $tileBuilder = new HivelogStatTileBuilder(
       $this->container->get('module_handler'),
       $this->container->get('entity_type.manager'),
-      $this->container->get('hivelog.alert_collector') ?? \Drupal::service('hivelog.alert_collector'),
+      $this->container->get('hivelog.alert_collector') ?? $this->container->get('hivelog.alert_collector'),
       $this->container->get('class_resolver'),
     );
 
@@ -164,20 +168,20 @@ class HiveHarvestHistoryTest extends KernelTestBase {
       $this->container->get('entity.form_builder'),
       $this->container->get('form_builder'),
       $this->container->get('file_url_generator'),
-      new \Symfony\Component\HttpFoundation\RequestStack(),
+      new RequestStack(),
       $this->container->get('renderer'),
       new HivelogStatTileBuilder(
         $this->container->get('module_handler'),
         $this->container->get('entity_type.manager'),
-        $this->container->get('hivelog.alert_collector') ?? \Drupal::service('hivelog.alert_collector'),
+        $this->container->get('hivelog.alert_collector') ?? $this->container->get('hivelog.alert_collector'),
         $this->container->get('class_resolver'),
       ),
-      new \Drupal\hivelog\HivelogCalendarChecklistBuilder(
+    new HivelogCalendarChecklistBuilder(
         $this->container->get('entity_type.manager'),
-        \Drupal::service('hivelog.stat_tile_builder') ?? new HivelogStatTileBuilder(
+        $this->container->get('hivelog.stat_tile_builder') ?? new HivelogStatTileBuilder(
           $this->container->get('module_handler'),
           $this->container->get('entity_type.manager'),
-          $this->container->get('hivelog.alert_collector') ?? \Drupal::service('hivelog.alert_collector'),
+          $this->container->get('hivelog.alert_collector') ?? $this->container->get('hivelog.alert_collector'),
           $this->container->get('class_resolver'),
         ),
       ),
@@ -271,8 +275,8 @@ class HiveHarvestHistoryTest extends KernelTestBase {
     // Should still show only direct harvests (3 rows: 2 years + total).
     $tableProps = $result['table']['#props'];
     $grandTotalRow = end($tableProps['rows']);
-    // The grand total for Honey should be 18 (direct) not 28 (direct + calendar).
-    // Wait — the product is 'Honey' and we added both direct and calendar yields
+    // The grand total for Honey should be 18 (direct) not 28.
+    // Wait — the product is 'Honey' and both direct and calendar yields
     // for the same product. The history table only shows direct harvests, so
     // the column for Honey should show 18 as grand total.
     $this->assertStringContainsString('18', $grandTotalRow[1]);

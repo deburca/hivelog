@@ -131,7 +131,7 @@ class HivelogStatTileBuilder {
     $breed = $queen->get('breed')->getString();
     $tile = [
       'value' => $value !== '' ? $value : (string) $queen->label(),
-      // The queen's name, and the breed when recorded; the Introduced date is on
+      // The queen's name and breed; the Introduced date is on on
       // the queen's own page (task 0257 dropped the hive page's queen table).
       'sublabel' => implode(' · ', array_filter([
         (string) $queen->label(),

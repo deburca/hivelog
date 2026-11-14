@@ -161,8 +161,8 @@ class HiveController extends ControllerBase {
       array_splice($build['actions']['#props']['buttons'], $edit_position, 0, [[
         'label' => (string) $this->t('Move to another apiary'),
         'url' => Url::fromRoute('hivelog.hive.move', ['hive' => $hive->id()])->toString(),
-      ]
-]);
+      ],
+    ]);
     }
 
     // "At a glance" stat tiles: core's own facts (status, type, temperament,
