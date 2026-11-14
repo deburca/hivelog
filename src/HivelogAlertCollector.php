@@ -169,9 +169,13 @@ class HivelogAlertCollector {
     }
 
     if ($hive_scoped) {
+      // Only hives holding a colony have seasonal work (task 0269): a dead,
+      // sold, merged or inactive hive raises no rows and is not counted as
+      // open. See Hive::isActive().
       $hive_ids = $etm->getStorage('hive')->getQuery()
         ->accessCheck(TRUE)
         ->condition('apiary', $apiary_ids, 'IN')
+        ->condition('status', 'active')
         ->execute();
       /** @var \Drupal\hivelog\Entity\Hive[] $hives */
       $hives = $hive_ids ? array_filter(

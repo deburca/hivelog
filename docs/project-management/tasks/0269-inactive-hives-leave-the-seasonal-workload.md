@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: backlog
+status: done
 priority: high
 project: "[[beekeeper-centred-simplification-and-gaps]]"
 area: entity
@@ -25,18 +25,22 @@ Only the "Active hives" counts (`HivelogStatTileBuilder`, `DashboardController`)
 A beekeeper who records a loss expects the hive to go quiet, not to be nagged about it.
 
 ## Acceptance criteria
-- [ ] Hives whose status is not `active` are left out of seasonal alerts, the open-task counts and the apiary's hive-scoped checklist totals (decide and document whether `inactive` counts as out)
-- [ ] The hive page of a non-active hive shows its calendar as history only, with no open tasks
-- [ ] Setting a hive to `dead`, `sold` or `merged` retires its active queen (status `inactive`, `hive` reference kept), through the form and the API alike
-- [ ] Apiary and collection hive lists hide non-active hives by default, with a filter to show them
-- [ ] `computed/alerts` in `hivelog_api` returns the same narrowed rows
-- [ ] Kernel tests for alerts, counts and the queen retirement
-- [ ] `AGENTS.md` updated if entity types, routes, services, hooks or conventions changed
-- [ ] phpcs clean; phpstan clean; kernel tests pass (`--group hivelog`)
+- [x] Hives whose status is not `active` are left out of seasonal alerts, the open-task counts and the dashboard's "reported by every hive" check. Decision: `inactive` is out too; the rule is `status = active` (`Hive::isActive()`)
+- [x] The hive page of a non-active hive shows its calendar as history only, with no open tasks
+- [x] Setting a hive to `dead`, `sold` or `merged` retires its active queen (status `inactive`, `hive` reference kept), through the form and the API alike (`Hive::postSave()`). An `inactive` hive keeps its queen
+- [x] Apiary and collection hive lists hide non-active hives by default, with a filter to show them (Status: Any)
+- [x] `computed/alerts` in `hivelog_api` returns the same narrowed rows (it calls the same collector; no test of its own)
+- [x] Kernel tests for alerts, counts and the queen retirement (`EndedHiveWorkloadTest`)
+- [x] `AGENTS.md` updated if entity types, routes, services, hooks or conventions changed
+- [x] phpcs clean; phpstan clean; kernel tests pass (`--group hivelog`)
 
 ## Implementation notes
-- Key files: `src/HivelogAlertCollector.php`, `src/HivelogCalendarChecklistBuilder.php`, `src/Entity/Hive.php`, `src/HiveListBuilder.php`, `src/Form/HivelogHiveFilterForm.php`
+- Key files: `src/Entity/Hive.php`, `src/HivelogAlertCollector.php`, `src/HivelogCalendarChecklistBuilder.php`, `src/Controller/HiveController.php`, `src/Controller/ApiaryController.php`, `src/Controller/DashboardController.php`, `src/Form/HivelogHiveFilterForm.php`, `src/HiveListBuilder.php`, `modules/nexus/src/NexusInsightGenerator.php`
 - Update hook needed? No schema change. An end date for the colony belongs to [[0187-colony-event-entity-and-timeline]], not here.
+- Also done: `nexus` generates no insight for a hive that is not active (not covered by a test).
+- Not done: nothing stops a queen being made `active` on an ended hive; the hive's next save retires her. A constraint on `queen.hive` would close it.
+- Not done: sensor alerts (`nanoprobe`) and the insights dashboard section still look at every hive.
+- Behaviour change to note in the release: `/hivelog/hives` and the apiary's hive table now open on active hives only.
 
 ## Related
 - Project:: [[beekeeper-centred-simplification-and-gaps]]

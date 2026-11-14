@@ -11,6 +11,7 @@ use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\ApiaryMembership;
 use Drupal\hivelog\Entity\Hive;
@@ -449,9 +450,7 @@ class ApiaryController extends ControllerBase {
       '#props' => [
         'headers' => array_map('strval', $header),
         'rows' => $rows,
-        'empty_message' => (string) (!empty($filters)
-          ? $this->t('No hives match the current filters.')
-          : $this->t('No hives have been added to this apiary yet.')),
+        'empty_message' => (string) $this->hivesEmptyMessage($apiary, $filters, (bool) $rows),
       ],
       '#weight' => 12,
       // The queen and last-inspection columns change with those records.
@@ -1220,6 +1219,29 @@ class ApiaryController extends ControllerBase {
    */
   protected function escapeLike(string $value): string {
     return addcslashes($value, '\\%_');
+  }
+
+  /**
+   * The hive table's empty-state message.
+   *
+   * The table lists active hives unless a status is chosen (task 0269), so
+   * an apiary whose hives have all ended is not one with no hives: say so,
+   * and say where the others are.
+   *
+   * @param \Drupal\hivelog\Entity\Apiary $apiary
+   *   The apiary being viewed.
+   * @param array $filters
+   *   The filters the user set (HivelogHiveFilterForm::extract()).
+   * @param bool $has_rows
+   *   Whether the table has rows; nothing is counted when it has.
+   */
+  protected function hivesEmptyMessage(Apiary $apiary, array $filters, bool $has_rows): TranslatableMarkup {
+    if ($filters) {
+      return $this->t('No hives match the current filters.');
+    }
+    return !$has_rows && HivelogHiveFilterForm::hasViewableHiveNotActive($this->entityTypeManager->getStorage('hive'), $apiary)
+      ? $this->t('This apiary has no active hives. Choose "Any" under Status to see the others.')
+      : $this->t('No hives have been added to this apiary yet.');
   }
 
 }

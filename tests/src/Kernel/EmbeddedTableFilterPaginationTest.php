@@ -688,8 +688,9 @@ class EmbeddedTableFilterPaginationTest extends KernelTestBase {
       'status' => 'active',
     ])->save();
 
+    // Not `active`: that is the default (task 0269), not a filter to keep.
     $this->pushRequestWithQuery([
-      'status' => 'active',
+      'status' => 'inactive',
       'name' => 'Hive',
     ]);
     $controller = \Drupal::service('class_resolver')
@@ -698,7 +699,7 @@ class EmbeddedTableFilterPaginationTest extends KernelTestBase {
 
     $filter = $build['hives_filter'];
     $this->assertEquals('get', $filter['#method']);
-    $this->assertEquals('active', $filter['filters']['status']['#default_value']);
+    $this->assertEquals('inactive', $filter['filters']['status']['#default_value']);
     $this->assertEquals('Hive', $filter['filters']['name']['#default_value']);
 
     // The Add Hive action lives in the heading row (top-right of the list

@@ -8,6 +8,7 @@ use Drupal\Core\Entity\Attribute\ContentEntityType;
 use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityChangedInterface;
 use Drupal\Core\Entity\EntityChangedTrait;
+use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
@@ -59,6 +60,55 @@ class Hive extends ContentEntityBase implements EntityChangedInterface, EntityOw
 
   use EntityChangedTrait;
   use EntityOwnerTrait;
+
+  /**
+   * Statuses that mean the colony is gone for good (task 0269).
+   *
+   * `inactive` is not one of them: it is a hive standing empty or in store,
+   * which may be put back into use. Neither kind carries seasonal work, see
+   * isActive(); only these also retire the hive's queen, see postSave().
+   */
+  public const ENDED_STATUSES = ['dead', 'sold', 'merged'];
+
+  /**
+   * Whether this hive holds a colony that needs looking after.
+   *
+   * The one rule behind every "does this hive count" question (task 0269):
+   * seasonal alerts, the open-task counts, the checklist's open rows, the
+   * "Active hives" tiles and the default of the hive lists all mean
+   * `status = active`. A query should use the same condition, not a list of
+   * the statuses to leave out, so a status added later is out by default.
+   */
+  public function isActive(): bool {
+    return $this->get('status')->value === 'active';
+  }
+
+  /**
+   * Whether the colony is gone for good: dead, sold or merged.
+   */
+  public function hasEnded(): bool {
+    return in_array($this->get('status')->value, static::ENDED_STATUSES, TRUE);
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * Retires the active queen of a hive that has ended (task 0269). A dead,
+   * sold or merged hive has no reigning queen, and leaving the queen `active`
+   * kept it on the hive page as the current queen and in every "active
+   * queens" list. The queen's `hive` reference is kept, exactly as when a
+   * new queen demotes the old one (Queen::preSave()), so the observations
+   * stay with the hive's history. It runs on every save of an ended hive,
+   * not only on the change, so a queen made active on one afterwards is
+   * retired by the hive's next save. `inactive` hives keep their queen: that
+   * status is also used for a colony set aside for a while.
+   */
+  public function postSave(EntityStorageInterface $storage, $update = TRUE) {
+    parent::postSave($storage, $update);
+    if ($this->hasEnded() && ($queen = $this->getActiveQueen())) {
+      $queen->set('status', 'inactive')->save();
+    }
+  }
 
   /**
    * Returns the currently active queen for this hive, if any.

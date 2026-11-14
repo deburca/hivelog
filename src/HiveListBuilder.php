@@ -91,7 +91,13 @@ class HiveListBuilder extends HivelogListBuilder {
    * {@inheritdoc}
    */
   protected function hasActiveFilters(): bool {
-    return (bool) $this->currentFilters();
+    if ($this->currentFilters()) {
+      return TRUE;
+    }
+    // With no filter set the list still shows active hives only (task
+    // 0269). If it is empty while other hives exist, "there are no hives
+    // yet" would be untrue, so it reads as a filter that matched nothing.
+    return HivelogHiveFilterForm::hasViewableHiveNotActive($this->getStorage());
   }
 
   /**

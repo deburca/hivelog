@@ -313,6 +313,22 @@ class HiveController extends ControllerBase {
     $build['calendar_filter']['#weight'] = 26;
 
     $calendar_filters = $this->calendarChecklistBuilder->extractCalendarFilters();
+    // A hive that is not active has no open work (task 0269): the section is
+    // its history. The default "unreported" view would always be empty, so
+    // it shows everything reported for the year instead, and says why.
+    $hive_is_active = $hive->isActive();
+    if (!$hive_is_active && $calendar_filters['status'] === 'pending') {
+      $calendar_filters['status'] = 'all';
+    }
+    if (!$hive_is_active) {
+      $build['calendar_history_note'] = [
+        '#type' => 'html_tag',
+        '#tag' => 'p',
+        '#value' => $this->t('This hive is not active, so it has no open seasonal actions. Only actions already reported are shown.'),
+        '#attributes' => ['class' => ['hivelog-calendar-history-note']],
+        '#weight' => 25.5,
+      ];
+    }
     $checklist = $this->calendarChecklistBuilder->buildForHive($hive, $calendar_filters['year'], $calendar_filters['status']);
     $show_timing = ($calendar_filters['year'] === $current_year);
 
@@ -426,7 +442,9 @@ class HiveController extends ControllerBase {
       '#props' => [
         'headers' => array_map('strval', $checklist_header),
         'rows' => $checklist_rows,
-        'empty_message' => (string) $this->calendarChecklistBuilder->emptyMessage('hive', $checklist['total_enabled'], $calendar_filters['status']),
+        'empty_message' => (string) ($hive_is_active
+          ? $this->calendarChecklistBuilder->emptyMessage('hive', $checklist['total_enabled'], $calendar_filters['status'])
+          : $this->t('No seasonal actions were reported for this hive in @year.', ['@year' => $calendar_filters['year']])),
       ],
       '#weight' => 27,
     ];

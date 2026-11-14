@@ -83,10 +83,15 @@ class FilterPanelTest extends KernelTestBase {
    * The bar says how many filters are set, so a closed panel explains a short list.
    */
   public function testBarCountsTheFiltersThatAreSet(): void {
+    // `status=active` is the hive list's default (task 0269), so it is not
+    // counted; any other status is a filter the user set.
     $html = $this->renderHiveFilter(['status' => 'active']);
+    $this->assertStringNotContainsString('hivelog-filter-panel__count', $html);
+
+    $html = $this->renderHiveFilter(['status' => 'dead']);
     $this->assertStringContainsString('<span class="hivelog-filter-panel__count">1 active</span>', $html);
 
-    $html = $this->renderHiveFilter(['status' => 'active', 'name' => 'VV']);
+    $html = $this->renderHiveFilter(['status' => 'dead', 'name' => 'VV']);
     $this->assertStringContainsString('<span class="hivelog-filter-panel__count">2 active</span>', $html);
   }
 
