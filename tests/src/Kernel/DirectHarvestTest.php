@@ -131,6 +131,9 @@ class DirectHarvestTest extends KernelTestBase {
     $harvest->save();
 
     $this->assertTrue($harvest->isDirect());
+    // Reloaded, the stored "3.000" still reads "3" in the label.
+    $reloaded = HarvestYield::load($harvest->id());
+    $this->assertSame('Heather honey — 3 kg', (string) $reloaded->label());
     $this->assertEquals($this->apiary->id(), $harvest->get('apiary')->target_id);
     $this->assertSame(date('Y-m-d'), $harvest->get('harvest_date')->value);
     // The price is snapshotted as for a yield reported with a log.

@@ -84,9 +84,18 @@ class HarvestYield extends ContentEntityBase implements EntityChangedInterface, 
     $product = $this->get('product')->entity;
     return t('@product — @quantity @unit', [
       '@product' => $product ? $product->label() : t('Unknown product'),
-      '@quantity' => $this->get('quantity')->value ?? '0',
+      // "7.5", not the stored "7.500": the label is read in breadcrumbs,
+      // messages and the delete form's title.
+      '@quantity' => static::trimQuantity((string) ($this->get('quantity')->value ?? '0')),
       '@unit' => $product ? $product->get('unit')->value : '',
     ]);
+  }
+
+  /**
+   * Drops a decimal quantity's trailing zeros: "7.500" reads "7.5".
+   */
+  public static function trimQuantity(string $quantity): string {
+    return str_contains($quantity, '.') ? rtrim(rtrim($quantity, '0'), '.') : $quantity;
   }
 
   /**
