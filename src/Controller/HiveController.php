@@ -19,6 +19,7 @@ use Drupal\hivelog\Form\HivelogInspectionFilterForm;
 use Drupal\hivelog\Form\HivelogQueenObservationFilterForm;
 use Drupal\hivelog\HivelogCalendarChecklistBuilder;
 use Drupal\hivelog\HivelogEntityActionsTrait;
+use Drupal\hivelog\HivelogHarvestSectionTrait;
 use Drupal\hivelog\HivelogStatTileBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -29,6 +30,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
 class HiveController extends ControllerBase {
 
   use HivelogEntityActionsTrait;
+  use HivelogHarvestSectionTrait;
 
   /**
    * Default number of inspections shown per page in the embedded list.
@@ -305,6 +307,9 @@ class HiveController extends ControllerBase {
         ],
       ];
     }
+
+    // Harvests recorded directly, outside the calendar (task 0271).
+    $build['harvests'] = $this->buildHarvestSection($hive) + ['#weight' => 28];
 
     $build['calendar_filter'] = $this->formBuilder->getForm(
       HivelogCalendarFilterForm::class,

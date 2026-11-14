@@ -64,7 +64,7 @@ class ApiaryPrimaryOwnerTest extends KernelTestBase {
   protected function setUp(): void {
     parent::setUp();
     foreach ([
-      'user', 'file', 'apiary', 'apiary_membership', 'hive', 'hive_inspection', 'queen',
+      'user', 'file', 'apiary', 'apiary_membership', 'hive', 'harvest_yield', 'hive_inspection', 'queen',
       'queen_observation', 'calendar_action', 'hive_action_log', 'apiary_action_log',
       'inventory_item', 'inventory_purchase', 'inventory_usage', 'product', 'hive_component',
     ] as $type) {

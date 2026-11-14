@@ -809,20 +809,30 @@ class InventoryReportController extends ControllerBase {
   protected function yieldBreakdown(Apiary $apiary, int $year): array {
     ['apiary_log_ids' => $apiary_log_ids, 'hive_log_ids' => $hive_log_ids] = $this->apiaryYearLogIds($apiary, $year);
 
-    if (!$apiary_log_ids && !$hive_log_ids) {
-      return [];
-    }
-
     $yield_storage = $this->entityTypeManager->getStorage('harvest_yield');
-    $query = $yield_storage->getQuery()->accessCheck(FALSE);
-    $or = $query->orConditionGroup();
-    if ($apiary_log_ids) {
-      $or->condition('apiary_action_log', array_values($apiary_log_ids), 'IN');
+    $yield_ids = [];
+    if ($apiary_log_ids || $hive_log_ids) {
+      $query = $yield_storage->getQuery()->accessCheck(FALSE);
+      $or = $query->orConditionGroup();
+      if ($apiary_log_ids) {
+        $or->condition('apiary_action_log', array_values($apiary_log_ids), 'IN');
+      }
+      if ($hive_log_ids) {
+        $or->condition('hive_action_log', array_values($hive_log_ids), 'IN');
+      }
+      $yield_ids = $query->condition($or)->execute();
     }
-    if ($hive_log_ids) {
-      $or->condition('hive_action_log', array_values($hive_log_ids), 'IN');
-    }
-    $yield_ids = $query->condition($or)->execute();
+    // A harvest recorded directly (task 0271) has no log: it counts in the
+    // apiary it was recorded in (its own stamp, so a hive that moved later
+    // does not take it along) and the year of its date.
+    $yield_ids += $yield_storage->getQuery()
+      ->accessCheck(FALSE)
+      ->condition('apiary', $apiary->id())
+      ->notExists('hive_action_log')
+      ->notExists('apiary_action_log')
+      ->condition('harvest_date', $year . '-01-01', '>=')
+      ->condition('harvest_date', $year . '-12-31', '<=')
+      ->execute();
     if (!$yield_ids) {
       return [];
     }

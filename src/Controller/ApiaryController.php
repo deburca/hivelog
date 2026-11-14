@@ -20,6 +20,7 @@ use Drupal\hivelog\Form\HivelogHiveFilterForm;
 use Drupal\hivelog\HivelogCalendarChecklistBuilder;
 use Drupal\hivelog\HivelogOwnerWarning;
 use Drupal\hivelog\HivelogEntityActionsTrait;
+use Drupal\hivelog\HivelogHarvestSectionTrait;
 use Drupal\hivelog\HivelogStatTileBuilder;
 use Drupal\hivelog\HivelogStatTileStripTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -31,6 +32,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
 class ApiaryController extends ControllerBase {
 
   use HivelogEntityActionsTrait;
+  use HivelogHarvestSectionTrait;
   use HivelogStatTileStripTrait;
 
   /**
@@ -887,6 +889,10 @@ class ApiaryController extends ControllerBase {
       '#element' => static::PRODUCTS_PAGER_ELEMENT,
       '#weight' => 32,
     ];
+
+    // Harvests recorded directly, outside the calendar (task 0271): this
+    // apiary's own and its hives'.
+    $build['harvests'] = $this->buildHarvestSection($apiary) + ['#weight' => 33];
 
     // Explicit cache metadata.
     // - url.query_args: pager + filter state, and now the calendar

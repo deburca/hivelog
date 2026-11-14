@@ -47,6 +47,9 @@ final class HivelogEntityHierarchy {
     'calendar_action_product_yield' => 'calendar_action',
     'hive_component' => 'hive',
     'apiary_membership' => 'apiary',
+    // A harvest recorded directly (task 0271). resolveParent() prefers its
+    // hive when it has one; this is the field every such harvest has.
+    'harvest_yield' => 'apiary',
   ];
 
   /**
@@ -186,6 +189,11 @@ final class HivelogEntityHierarchy {
    */
   public static function resolveParent(FieldableEntityInterface $entity): ?EntityInterface {
     $parent_field = self::PARENT_FIELD[$entity->getEntityTypeId()] ?? NULL;
+    // A harvest taken from one hive belongs under that hive; one for the
+    // whole apiary under the apiary (task 0271).
+    if ($entity->getEntityTypeId() === 'harvest_yield' && !$entity->get('hive')->isEmpty()) {
+      $parent_field = 'hive';
+    }
     return $parent_field ? $entity->get($parent_field)->entity : NULL;
   }
 

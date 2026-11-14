@@ -66,6 +66,8 @@ class HiveCalendarChecklistTest extends KernelTestBase {
     $this->installEntitySchema('apiary');
     $this->installEntitySchema('apiary_membership');
     $this->installEntitySchema('hive');
+    // The hive and apiary pages list harvests recorded directly (task 0271).
+    $this->installEntitySchema('harvest_yield');
     $this->installEntitySchema('hive_inspection');
     // Task 0163: HiveController::view() now unconditionally queries
     // hive_component for every hive page render.

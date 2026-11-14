@@ -12,6 +12,8 @@ use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\hivelog\Form\HarvestYieldForm;
+use Drupal\hivelog\Form\HivelogEntityDeleteForm;
 use Drupal\hivelog\HarvestYieldAccessControlHandler;
 use Drupal\hivelog\HivelogEntityStorage;
 use Drupal\user\EntityOwnerInterface;
@@ -29,10 +31,19 @@ use Drupal\user\EntityOwnerTrait;
  * one level removed (outputs instead of inputs) — see that entity's
  * docblock for the identical shape this one follows.
  *
- * There is no dedicated add/edit/delete UI for this entity — rows are
- * created, updated, and removed entirely as a side effect of saving a
+ * A yield reported with a planned action has no form of its own: its row is
+ * created, updated and removed as a side effect of saving a
  * HiveActionLogForm/ApiaryActionLogForm (see HarvestYieldFormTrait),
  * mirroring InventoryUsage's own system-managed rows.
+ *
+ * A harvest can also be recorded **directly** (task 0271), with no calendar
+ * action behind it: taking supers off outside the planned weeks, cut comb,
+ * a little propolis. Such a row has no log; it carries its own `apiary`
+ * (always), `hive` (when it came from one hive) and `harvest_date`, and has
+ * add, edit and delete forms (HarvestYieldForm). `isDirect()` tells the two
+ * kinds apart. Its `apiary` is a stamp like a hive action log's: set when
+ * the row is created and never changed, so a hive that moves later leaves
+ * the harvest with the apiary it was taken in.
  */
 #[ContentEntityType(
   id: 'harvest_yield',
@@ -43,6 +54,11 @@ use Drupal\user\EntityOwnerTrait;
   handlers: [
     'storage' => HivelogEntityStorage::class,
     'access' => HarvestYieldAccessControlHandler::class,
+    'form' => [
+      'add' => HarvestYieldForm::class,
+      'edit' => HarvestYieldForm::class,
+      'delete' => HivelogEntityDeleteForm::class,
+    ],
   ],
   base_table: 'hivelog_harvest_yield',
   admin_permission: 'administer hivelog',
@@ -50,6 +66,10 @@ use Drupal\user\EntityOwnerTrait;
     'id' => 'id',
     'uuid' => 'uuid',
     'owner' => 'uid',
+  ],
+  links: [
+    'edit-form' => '/hivelog/harvest/{harvest_yield}/edit',
+    'delete-form' => '/hivelog/harvest/{harvest_yield}/delete',
   ],
 )]
 class HarvestYield extends ContentEntityBase implements EntityChangedInterface, EntityOwnerInterface {
@@ -70,18 +90,30 @@ class HarvestYield extends ContentEntityBase implements EntityChangedInterface, 
   }
 
   /**
+   * Whether this harvest was recorded directly, not with an action log.
+   */
+  public function isDirect(): bool {
+    return !$this->get('hive_action_log')->target_id && !$this->get('apiary_action_log')->target_id;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function preSave(EntityStorageInterface $storage) {
     parent::preSave($storage);
 
-    // Defensive invariant: exactly one of hive_action_log/apiary_action_log
-    // must be set — mirrors the parallel-siblings style HiveActionLog/
-    // ApiaryActionLog already use instead of a polymorphic reference.
+    // Defensive invariant: a yield has exactly one source. Either one of
+    // hive_action_log/apiary_action_log (mirroring the parallel-siblings
+    // style HiveActionLog/ApiaryActionLog use instead of a polymorphic
+    // reference), or neither and an apiary of its own: a harvest recorded
+    // directly (task 0271).
     $hive_log_id = $this->get('hive_action_log')->target_id;
     $apiary_log_id = $this->get('apiary_action_log')->target_id;
-    if (($hive_log_id && $apiary_log_id) || (!$hive_log_id && !$apiary_log_id)) {
+    if ($hive_log_id && $apiary_log_id) {
       throw new \InvalidArgumentException('Harvest yield must be linked to exactly one of a hive action log or an apiary action log.');
+    }
+    if ($this->isDirect()) {
+      $this->prepareDirectHarvest();
     }
 
     // Snapshot the product's expected unit price at creation time only —
@@ -93,6 +125,51 @@ class HarvestYield extends ContentEntityBase implements EntityChangedInterface, 
     if ($this->isNew() || $this->get('unit_price_snapshot')->isEmpty()) {
       $product = $this->get('product')->entity;
       $this->set('unit_price_snapshot', $product ? $product->get('expected_unit_price')->value : 0);
+    }
+  }
+
+  /**
+   * The stored version of this harvest, while it is being saved.
+   *
+   * `getOriginal()` exists from Drupal 11.2, where reading the `original`
+   * property is deprecated; the module supports 11.0 and 11.1 too.
+   */
+  protected function originalHarvest(): ?self {
+    $original = method_exists($this, 'getOriginal') ? $this->getOriginal() : ($this->original ?? NULL);
+    return $original instanceof self ? $original : NULL;
+  }
+
+  /**
+   * Completes and checks a harvest recorded directly (task 0271).
+   *
+   * The friendly errors are the field constraints'; these throws are the
+   * backstop for a caller that never validates.
+   */
+  protected function prepareDirectHarvest(): void {
+    $hive = $this->get('hive')->entity;
+    $hive = $hive instanceof Hive ? $hive : NULL;
+    if ($this->isNew()) {
+      // The apiary is a stamp: taken from the hive when the harvest is
+      // recorded, and not followed if the hive moves later.
+      if ($hive && $this->get('apiary')->isEmpty()) {
+        $this->set('apiary', $hive->get('apiary')->target_id);
+      }
+      if ($hive && (int) $hive->get('apiary')->target_id !== (int) $this->get('apiary')->target_id) {
+        throw new \InvalidArgumentException('A harvest\'s hive must belong to the apiary the harvest is recorded in.');
+      }
+      if ($this->get('harvest_date')->isEmpty()) {
+        $this->set('harvest_date', date('Y-m-d'));
+      }
+    }
+    elseif (($original = $this->originalHarvest()) && (int) $original->get('apiary')->target_id !== (int) $this->get('apiary')->target_id) {
+      throw new \InvalidArgumentException('A harvest\'s apiary cannot be changed.');
+    }
+    if ($this->get('apiary')->isEmpty()) {
+      throw new \InvalidArgumentException('Harvest yield must be linked to a hive action log, an apiary action log or, when recorded directly, an apiary.');
+    }
+    $product = $this->get('product')->entity;
+    if ($product instanceof Product && (int) $product->get('apiary')->target_id !== (int) $this->get('apiary')->target_id) {
+      throw new \InvalidArgumentException('A harvest\'s product must belong to the apiary the harvest is recorded in.');
     }
   }
 
@@ -113,6 +190,7 @@ class HarvestYield extends ContentEntityBase implements EntityChangedInterface, 
         'type' => 'entity_reference_label',
         'weight' => 0,
       ])
+      ->setDisplayOptions('form', ['type' => 'entity_reference_autocomplete', 'weight' => 0])
       ->setDisplayConfigurable('view', TRUE);
 
     $fields['quantity'] = BaseFieldDefinition::create('decimal')
@@ -123,6 +201,38 @@ class HarvestYield extends ContentEntityBase implements EntityChangedInterface, 
       ->setSetting('scale', 3)
       ->setSetting('min', 0)
       ->setDisplayOptions('view', ['label' => 'inline', 'type' => 'number_decimal', 'weight' => 1])
+      ->setDisplayOptions('form', ['type' => 'number', 'weight' => 1])
+      ->setDisplayConfigurable('view', TRUE);
+
+    // The next four are for a harvest recorded directly (task 0271); a
+    // yield reported with an action log leaves them empty and takes its
+    // apiary, hive and year from the log.
+    $fields['harvest_date'] = BaseFieldDefinition::create('datetime')
+      ->setLabel(t('Date'))
+      ->setDescription(t('The day of the harvest.'))
+      ->setSetting('datetime_type', 'date')
+      ->setDisplayOptions('view', ['label' => 'inline', 'type' => 'datetime_default', 'weight' => 2])
+      ->setDisplayOptions('form', ['type' => 'datetime_default', 'weight' => 2])
+      ->setDisplayConfigurable('view', TRUE);
+
+    $fields['apiary'] = BaseFieldDefinition::create('entity_reference')
+      ->setLabel(t('Apiary'))
+      ->setDescription(t('The apiary a directly recorded harvest was taken in. Set when it is recorded and never changed.'))
+      ->setSetting('target_type', 'apiary')
+      ->setDisplayOptions('view', ['label' => 'inline', 'type' => 'entity_reference_label', 'weight' => 5])
+      ->setDisplayConfigurable('view', TRUE);
+
+    $fields['hive'] = BaseFieldDefinition::create('entity_reference')
+      ->setLabel(t('Hive'))
+      ->setDescription(t('The hive a directly recorded harvest came from, if it was one hive.'))
+      ->setSetting('target_type', 'hive')
+      ->setDisplayOptions('view', ['label' => 'inline', 'type' => 'entity_reference_label', 'weight' => 6])
+      ->setDisplayConfigurable('view', TRUE);
+
+    $fields['notes'] = BaseFieldDefinition::create('string_long')
+      ->setLabel(t('Notes'))
+      ->setDisplayOptions('view', ['label' => 'above', 'type' => 'basic_string', 'weight' => 7])
+      ->setDisplayOptions('form', ['type' => 'string_textarea', 'weight' => 3, 'settings' => ['rows' => 3]])
       ->setDisplayConfigurable('view', TRUE);
 
     $fields['hive_action_log'] = BaseFieldDefinition::create('entity_reference')
@@ -166,6 +276,16 @@ class HarvestYield extends ContentEntityBase implements EntityChangedInterface, 
     $fields['changed'] = BaseFieldDefinition::create('changed')
       ->setLabel(t('Changed'))
       ->setDescription(t('The time this yield record was last updated.'));
+
+    // Create access is a global permission and cannot see which hive or
+    // apiary a new harvest points at; these apply the scoped add routes'
+    // own rule to every caller (tasks 0198/0200, see AGENTS.md).
+    $fields['hive']->addConstraint('HivelogParentAccess');
+    $fields['apiary']->addConstraint('HivelogParentAccess');
+    $fields['product']->addConstraint('HivelogSameApiary', [
+      'against' => 'apiary',
+      'message' => 'The selected product must belong to the apiary this harvest is recorded in.',
+    ]);
 
     return $fields;
   }
