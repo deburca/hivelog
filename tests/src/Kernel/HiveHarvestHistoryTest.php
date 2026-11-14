@@ -17,6 +17,7 @@ use Drupal\hivelog\HivelogStatTileBuilder;
 use Drupal\KernelTests\KernelTestBase;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Tests harvest history display on hive and apiary pages.
@@ -163,7 +164,7 @@ class HiveHarvestHistoryTest extends KernelTestBase {
    */
   public function testHarvestHistoryTable(): void {
     // Create a new controller instance for this test.
-    $controller = new \Drupal\hivelog\Controller\HiveController(
+    $controller = new HiveController(
       $this->container->get('entity_type.manager'),
       $this->container->get('entity.form_builder'),
       $this->container->get('form_builder'),
@@ -249,14 +250,14 @@ class HiveHarvestHistoryTest extends KernelTestBase {
     $this->assertEquals('Grand total', $lastRow[0]);
 
     // Harvest from action log should NOT appear.
-    $calendarAction = \Drupal\hivelog\Entity\CalendarAction::create([
+    $calendarAction = CalendarAction::create([
       'apiary' => $this->apiary->id(),
       'title' => 'Harvest',
       'week_start' => 28,
     ]);
     $calendarAction->save();
 
-    $hiveLog = \Drupal\hivelog\Entity\HiveActionLog::create([
+    $hiveLog = HiveActionLog::create([
       'hive' => $this->hive->id(),
       'calendar_action' => $calendarAction->id(),
       'status' => 'done',
