@@ -288,6 +288,25 @@ final class HivelogDeleteDependencyRegistry {
       'treatment' => self::WARN,
       'manage' => NULL,
     ],
+    // Task 0271, amending ADR-0034 — a harvest recorded directly hangs off
+    // its hive or apiary, not a log. It is a real record of what was taken,
+    // so it blocks like an inspection or an action log does.
+    [
+      'adr_row' => '0034-1',
+      'parent' => 'hive',
+      'child' => 'harvest_yield',
+      'field' => 'hive',
+      'treatment' => self::BLOCK,
+      'manage' => 'parent-canonical#harvests',
+    ],
+    [
+      'adr_row' => '0034-2',
+      'parent' => 'apiary',
+      'child' => 'harvest_yield',
+      'field' => 'apiary',
+      'treatment' => self::BLOCK,
+      'manage' => 'parent-canonical#harvests',
+    ],
     // ADR-0108 (task 0223) — apiary membership rows live outside the main
     // inventory table so they can be numbered independently.
     [

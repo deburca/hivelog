@@ -11,6 +11,7 @@ use Drupal\hivelog\Entity\ApiaryActionLog;
 use Drupal\hivelog\Entity\CalendarAction;
 use Drupal\hivelog\Entity\CalendarActionItemRequirement;
 use Drupal\hivelog\Entity\CalendarActionProductYield;
+use Drupal\hivelog\Entity\HarvestYield;
 use Drupal\hivelog\Entity\Hive;
 use Drupal\hivelog\Entity\HiveActionLog;
 use Drupal\hivelog\Entity\HiveComponent;
@@ -148,6 +149,7 @@ class RouteEntityAccessTest extends KernelTestBase {
     $this->installEntitySchema('calendar_action_item_requirement');
     $this->installEntitySchema('calendar_action_product_yield');
     $this->installEntitySchema('hive_component');
+    $this->installEntitySchema('harvest_yield');
     $this->installSchema('file', ['file_usage']);
     \Drupal::service('router.builder')->rebuild();
 
@@ -161,7 +163,7 @@ class RouteEntityAccessTest extends KernelTestBase {
       'calendar action', 'hive action log', 'apiary action log',
       'inventory item', 'inventory purchase', 'product',
       'calendar action item requirement', 'calendar action product yield',
-      'hive component',
+      'hive component', 'harvest yield',
     ] as $phrase) {
       $permissions[] = 'view own ' . $phrase;
       $permissions[] = 'edit own ' . $phrase;
@@ -331,6 +333,17 @@ class RouteEntityAccessTest extends KernelTestBase {
     ]);
     $component->save();
     $this->fixtures['hive_component'] = $component;
+
+    // A harvest recorded directly on the hive (task 0271).
+    $harvest = HarvestYield::create([
+      'hive' => $hive->id(),
+      'product' => $product->id(),
+      'quantity' => 4,
+      'harvest_date' => '2026-07-01',
+      'uid' => $this->owner->id(),
+    ]);
+    $harvest->save();
+    $this->fixtures['harvest_yield'] = $harvest;
   }
 
   /**

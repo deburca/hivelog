@@ -66,6 +66,8 @@ class HiveTest extends KernelTestBase {
     $this->installEntitySchema('apiary');
     $this->installEntitySchema('apiary_membership');
     $this->installEntitySchema('hive');
+    // The hive and apiary pages list harvests recorded directly (task 0271).
+    $this->installEntitySchema('harvest_yield');
     $this->installEntitySchema('hive_inspection');
     $this->installQueenEntitySchema();
     $this->installEntitySchema('calendar_action');

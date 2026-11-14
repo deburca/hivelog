@@ -834,6 +834,63 @@ entity.inventory_purchase.delete_form:
       inventory_purchase:
         type: entity:inventory_purchase
 
+# Harvest recorded directly, with no calendar action (task 0271). No
+# collection and no canonical page: a harvest is added from its hive or
+# apiary, and edited or deleted from there.
+hivelog.harvest.add_for_hive:
+  path: '/hivelog/hive/{hive}/harvest/add'
+  defaults:
+    _controller: '\Drupal\hivelog\Controller\HarvestYieldController::addForHive'
+    _title: 'Record Harvest'
+  requirements:
+    _permission: 'add harvest yield+administer hivelog'
+    _entity_access: 'hive.update'
+    _entity_create_access: 'harvest_yield'
+  options:
+    parameters:
+      hive:
+        type: entity:hive
+
+hivelog.harvest.add_for_apiary:
+  path: '/hivelog/apiary/{apiary}/harvest/add'
+  defaults:
+    _controller: '\Drupal\hivelog\Controller\HarvestYieldController::addForApiary'
+    _title: 'Record Harvest'
+  requirements:
+    _permission: 'add harvest yield+administer hivelog'
+    _entity_access: 'apiary.write'
+    _entity_create_access: 'harvest_yield'
+  options:
+    parameters:
+      apiary:
+        type: entity:apiary
+
+entity.harvest_yield.edit_form:
+  path: '/hivelog/harvest/{harvest_yield}/edit'
+  defaults:
+    _entity_form: 'harvest_yield.edit'
+    _title: 'Edit Harvest'
+  requirements:
+    _permission: 'edit own harvest yield+edit any harvest yield+administer hivelog'
+    _entity_access: 'harvest_yield.update'
+  options:
+    parameters:
+      harvest_yield:
+        type: entity:harvest_yield
+
+entity.harvest_yield.delete_form:
+  path: '/hivelog/harvest/{harvest_yield}/delete'
+  defaults:
+    _entity_form: 'harvest_yield.delete'
+    _title: 'Delete Harvest'
+  requirements:
+    _permission: 'delete own harvest yield+delete any harvest yield+administer hivelog'
+    _entity_access: 'harvest_yield.delete'
+  options:
+    parameters:
+      harvest_yield:
+        type: entity:harvest_yield
+
 # Product routes.
 entity.product.collection:
   path: '/hivelog/products'

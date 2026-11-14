@@ -1341,3 +1341,26 @@ function hivelog_update_10038(&$sandbox) {
   Apiary::resetRoleCache();
   return t('Recorded when @count owner membership(s) became owner memberships.', ['@count' => $filled]);
 }
+
+/**
+ * Lets a harvest be recorded directly, without a calendar action.
+ *
+ * Task 0271. Installs `harvest_date`, `apiary`, `hive` and `notes` on harvest
+ * yields. Existing yields were all reported with an action log and keep these
+ * empty. Safe to run twice.
+ */
+function hivelog_update_10039(&$sandbox) {
+  $update_manager = \Drupal::entityDefinitionUpdateManager();
+  $definition = \Drupal::entityTypeManager()->getDefinition('harvest_yield');
+  $fields = $definition->getClass()::baseFieldDefinitions($definition);
+  $installed = [];
+  foreach (['harvest_date', 'apiary', 'hive', 'notes'] as $field) {
+    if (!$update_manager->getFieldStorageDefinition($field, 'harvest_yield')) {
+      $update_manager->installFieldStorageDefinition($field, 'harvest_yield', 'hivelog', $fields[$field]);
+      $installed[] = $field;
+    }
+  }
+  return $installed
+    ? t('Added @fields to harvest yields.', ['@fields' => implode(', ', $installed)])
+    : t('Harvest yields already have the direct-harvest fields.');
+}

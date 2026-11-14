@@ -342,10 +342,26 @@ entities mirror each other one level removed (inputs vs. outputs):
 - `CalendarActionProductYield` — references a `CalendarAction` and a
   `Product` (must belong to the same apiary). The "recipe" estimate:
   this action typically produces this much of this product.
-- `HarvestYield` — references a `Product` and exactly one of
-  `hive_action_log` / `apiary_action_log`. How much of a product was
-  *really* produced when that log was reported `done`. No add/edit/delete
-  UI of its own, same as `InventoryUsage`.
+- `HarvestYield` — references a `Product` and has exactly one source. Either
+  one of `hive_action_log` / `apiary_action_log`: how much of a product was
+  *really* produced when that log was reported `done`, written by the log's
+  own form like `InventoryUsage`, with no UI of its own. Or neither (task
+  0271, `isDirect()`): a harvest **recorded directly**, outside the calendar,
+  which carries its own `apiary` (always; a stamp, set on creation and never
+  changed), `hive` (when from one hive), `harvest_date` and `notes`
+  (`hivelog_update_10039`). Direct harvests have add routes under their
+  parent (`hivelog.harvest.add_for_hive` → `/hivelog/hive/{hive}/harvest/add`,
+  `hivelog.harvest.add_for_apiary` → `/hivelog/apiary/{apiary}/harvest/add`),
+  edit and delete forms (`HarvestYieldForm`), no collection and no canonical
+  page; they are listed in the "Harvests" section (anchor `#harvests`,
+  `HivelogHarvestSectionTrait`) of the hive and apiary pages, which carries
+  the "Record harvest" button. `hive` and `apiary` carry `HivelogParentAccess`,
+  `product` carries `HivelogSameApiary` against `apiary`. The cost and yield
+  report counts a direct harvest by its `apiary` and the year of its date
+  (`InventoryReportController::yieldBreakdown()`). It blocks deleting its hive
+  and apiary (registry rows `0034-1`, `0034-2`).
+  `HivelogEntityHierarchy::resolveParent()` gives its hive when it has one,
+  else its apiary.
 
 **Hive composition and weight** (ADR-0106) — what physical components a
 hive is built from, so its empty weight can be netted out of a raw scale

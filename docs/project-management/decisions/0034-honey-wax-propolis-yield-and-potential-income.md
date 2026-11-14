@@ -150,3 +150,26 @@ worth the extra bookkeeping, but is explicitly out of scope here.
   [[honey-wax-propolis-yield-and-potential-income]] project note for the
   task breakdown. A future ADR would be needed for an actual sales ledger
   (real transactions, not the aggregate assumption this ADR settles for).
+
+## Amendment, 2026-11-14: a harvest can be recorded directly
+Decided in [[0271-record-a-harvest-directly]]. As written, a `HarvestYield`
+exists only as a side effect of reporting a calendar action log, so a
+harvest outside the planned weeks could not be recorded without inventing a
+calendar action and a yield recipe for it.
+
+- A `HarvestYield` now has one of three sources: a hive action log, an
+  apiary action log, or **neither**, in which case it is a harvest recorded
+  directly and carries its own `apiary` (always), `hive` (when it came from
+  one hive), `harvest_date` and `notes`.
+- The alternative, an "unplanned" action log created behind the form, was
+  rejected: a log needs a calendar action, so every apiary would need a
+  hidden one, and it would show up in checklists, alerts and the calendar.
+- The direct harvest's `apiary` is a stamp, set when it is recorded and
+  never changed, as a hive action log's is. Reports count it in that apiary
+  and in the year of its date; a hive that moves later does not take it
+  along.
+- The price snapshot rule is unchanged: `unit_price_snapshot` is taken from
+  the product when the row is created.
+- A directly recorded harvest blocks deleting its hive and its apiary
+  (delete-registry rows `0034-1` and `0034-2`), like an inspection or an
+  action log.
