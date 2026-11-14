@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: review
+status: done
 priority: high
 project: "[[beekeeper-centred-simplification-and-gaps]]"
 area: routing
@@ -31,7 +31,7 @@ for it. Harvesting is one of the five things a beekeeper does; it should be one 
 - [x] Kernel tests (`DirectHarvestTest`, fixture added to `RouteEntityAccessTest`)
 - [x] `AGENTS.md` updated if entity types, routes, services, hooks or conventions changed
 - [x] phpcs clean; phpstan clean; kernel tests pass (`--group hivelog`)
-- [ ] `ddev drush updb -y && ddev drush cr` clean (schema changed: `hivelog_update_10039`): not run
+- [x] `ddev drush updb -y && ddev drush cr` clean (schema changed: `hivelog_update_10039`): run on the local hvg site, 2026-11-14
 
 ## Implementation notes
 - Key files: `src/Entity/HarvestYield.php`, `src/Form/HarvestYieldForm.php`, `src/Controller/HarvestYieldController.php`, `src/HivelogHarvestSectionTrait.php`, `src/Controller/InventoryReportController.php`, `src/Delete/HivelogDeleteDependencyRegistry.php`, `src/HivelogEntityHierarchy.php`, `hivelog.routing.yml`, `hivelog.install`
