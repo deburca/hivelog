@@ -207,9 +207,12 @@ class HivelogStatTileBuilder {
         $total += $quantity;
       }
       if ($unit === '') {
-        $product = $product_storage->load($harvest->get('product')->target_id);
+        $product = $this->entityTypeManager
+          ->getStorage('product')->load($harvest->get('product')->target_id);
         if ($product) {
-          $unit = (string) $product->get('unit')->value;
+          /** @var \Drupal\hivelog\Entity\Product $typed_product */
+          $typed_product = $product;
+          $unit = (string) $typed_product->get('unit')->value;
         }
       }
     }

@@ -5,12 +5,6 @@ declare(strict_types=1);
 namespace Drupal\Tests\hivelog\Kernel;
 
 use Drupal\Core\Datetime\DrupalDateTime;
-use Drupal\Core\Entity\EntityFormBuilderInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\File\FileUrlGeneratorInterface;
-use Drupal\Core\Form\FormBuilderInterface;
-use Drupal\Core\Render\RendererInterface;
-use Drupal\Core\StringTranslation\StringTranslationManager;
 use Drupal\hivelog\Controller\HiveController;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\CalendarAction;
@@ -23,7 +17,6 @@ use Drupal\hivelog\HivelogStatTileBuilder;
 use Drupal\KernelTests\KernelTestBase;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
-use ReflectionMethod;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
@@ -289,7 +282,7 @@ class HiveHarvestHistoryTest extends KernelTestBase {
       new HivelogCalendarChecklistBuilder(
         $this->container->get('entity_type.manager'),
         new RequestStack(),
-        new StringTranslationManager(),
+        \Drupal::service('string_translation'),
       ),
     );
   }
@@ -298,7 +291,7 @@ class HiveHarvestHistoryTest extends KernelTestBase {
    * Invokes the protected buildHarvestHistory() via reflection.
    */
   protected function invokeBuildHarvestHistory(HiveController $controller, Hive $hive): array {
-    $method = new ReflectionMethod(HiveController::class, 'buildHarvestHistory');
+    $method = new \ReflectionMethod(HiveController::class, 'buildHarvestHistory');
     $method->setAccessible(TRUE);
     return $method->invoke($controller, $hive);
   }

@@ -162,7 +162,7 @@ class HiveController extends ControllerBase {
         'label' => (string) $this->t('Move to another apiary'),
         'url' => Url::fromRoute('hivelog.hive.move', ['hive' => $hive->id()])->toString(),
       ],
-    ]);
+      ]);
     }
 
     // "At a glance" stat tiles: core's own facts (status, type, temperament,
@@ -794,7 +794,7 @@ class HiveController extends ControllerBase {
       return [];
     }
 
-    $storage = $this->entityTypeManager ->getStorage('harvest_yield');
+    $storage = $this->entityTypeManager->getStorage('harvest_yield');
     // Get all direct harvests for this hive.
     $ids = $storage->getQuery()
       ->accessCheck(TRUE)
@@ -808,14 +808,14 @@ class HiveController extends ControllerBase {
       return [];
     }
 
-    $harvests = \Drupal::entityTypeManager()
-        ->getStorage('harvest_yield')->loadMultiple($ids);
+    $harvests = $this->entityTypeManager
+      ->getStorage('harvest_yield')->loadMultiple($ids);
     /** @var array<int, \Drupal\hivelog\Entity\HarvestYield> $typed_harvests */
     $typed_harvests = $harvests;
     // Group by product → year.
     $grouped = [];
     foreach ($typed_harvests as $harvest) {
-      $product = $this->entityTypeManager ->getStorage('product')->load($harvest->get('product')->target_id);
+      $product = $this->entityTypeManager->getStorage('product')->load($harvest->get('product')->target_id);
       if (!$product || !$harvest->access('view')) {
         continue;
       }
@@ -837,13 +837,13 @@ class HiveController extends ControllerBase {
     }
 
     // Sort years descending.
-    foreach ($grouped as $pid =>&$data) {
+    foreach ($grouped as $pid => &$data) {
       krsort($data['totals']);
     }
 
     // Build header: Year + columns for each product.
     $headers = [$this->t('Year')];
-    foreach ($grouped as $pid =>$data) {
+    foreach ($grouped as $pid => $data) {
       $headers[] = $this->t('@product (@unit)', [
         '@product' => $data['product'],
         '@unit' => $data['unit'],
@@ -865,7 +865,7 @@ class HiveController extends ControllerBase {
 
     // Compute per-product grand totals.
     $product_sums = [];
-    foreach ($grouped as $pid =>&$data) {
+    foreach ($grouped as $pid => &$data) {
       foreach ($data['totals'] as $qty) {
         if (!isset($product_sums[$pid])) {
           $product_sums[$pid] = 0.0;
@@ -879,7 +879,7 @@ class HiveController extends ControllerBase {
     foreach ($all_years as $year) {
       $cells = [(string) $year];
       $year_sum = 0.0;
-      foreach ($grouped as $pid =>$data) {
+      foreach ($grouped as $pid => $data) {
         $qty = $data['totals'][$year] ?? 0.0;
         $cells[] = rtrim(rtrim(number_format($qty, 3, '.', ''), '0'), '.') . ($data['unit'] ? ' ' . $data['unit'] : '');
         $year_sum += $qty;
@@ -895,7 +895,7 @@ class HiveController extends ControllerBase {
 
     // Grand total row.
     $total_cells = [($this->t('Grand total'))];
-    foreach ($grouped as $pid =>$data) {
+    foreach ($grouped as $pid => $data) {
       $qty = $product_sums[$pid] ?? 0.0;
       $total_cells[] = rtrim(rtrim(number_format($qty, 3, '.', ''), '0'), '.') . ($data['unit'] ? ' ' . $data['unit'] : '');
     }
@@ -923,7 +923,7 @@ class HiveController extends ControllerBase {
         ],
       ],
       '#cache' => [
-        'tags' => array_values(array_unique($this->entityTypeManager ->getDefinition('harvest_yield')->getListCacheTags())),
+        'tags' => array_values(array_unique($this->entityTypeManager->getDefinition('harvest_yield')->getListCacheTags())),
       ],
     ];
   }
