@@ -73,6 +73,14 @@ class ProductTest extends KernelTestBase {
 
     $this->apiary = Apiary::create(['name' => 'Test Apiary']);
     $this->apiary->save();
+
+    // A new apiary is given Honey and Beeswax by its starter calendar (task
+    // 0270). These tests are about products they create, so they start from
+    // an empty catalogue.
+    foreach (['calendar_action_product_yield', 'product'] as $type) {
+      $storage = \Drupal::entityTypeManager()->getStorage($type);
+      $storage->delete($storage->loadMultiple());
+    }
   }
 
   /**
@@ -384,6 +392,26 @@ class ProductTest extends KernelTestBase {
       }
     }
     $this->assertTrue($found, sprintf('Expected a validation violation on "%s".', $property_prefix));
+  }
+
+  /**
+   * The add form suggests common products and units, and creates nothing.
+   *
+   * Task 0270.
+   */
+  public function testAddFormSuggestsCommonProducts(): void {
+    $before = \Drupal::entityTypeManager()->getStorage('product')->getQuery()->accessCheck(FALSE)->count()->execute();
+    $build = \Drupal::service('entity.form_builder')->getForm(Product::create(['apiary' => $this->apiary->id()]), 'add');
+
+    $this->assertSame('hivelog-product-name-suggestions', $build['name']['widget'][0]['value']['#attributes']['list']);
+    $this->assertSame('hivelog-product-unit-suggestions', $build['unit']['widget'][0]['value']['#attributes']['list']);
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+    $this->assertStringContainsString('<datalist id="hivelog-product-name-suggestions"', $html);
+    foreach (['Honey', 'Beeswax', 'Propolis', 'Pollen', 'Royal jelly'] as $name) {
+      $this->assertStringContainsString('<option value="' . $name . '"', $html);
+    }
+    $this->assertStringContainsString('<option value="kg"', $html);
+    $this->assertSame($before, \Drupal::entityTypeManager()->getStorage('product')->getQuery()->accessCheck(FALSE)->count()->execute());
   }
 
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\hivelog\Delete;
 
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Url;
 
 /**
@@ -83,6 +84,12 @@ final class HivelogDeleteDependencyRegistry {
    * action, so there is no single target) are BLOCK rows precisely
    * like the others but deliberately keep `manage: NULL` for this
    * reason.
+   *
+   * A BLOCK row may also carry `cascade_unused` (task 0270): `type` and
+   * `field` name records that mean a child is in use (a product's harvest
+   * yields). Only children in use block; the rest are deleted with the
+   * parent, as a CASCADE row's are. `splitByUse()` is the one place that
+   * decides which is which, for the counter and the executor alike.
    */
   protected const ROWS = [
     [
@@ -132,6 +139,10 @@ final class HivelogDeleteDependencyRegistry {
       'field' => 'apiary',
       'treatment' => self::BLOCK,
       'manage' => 'parent-canonical#products',
+      // A product nothing was ever harvested as goes with its apiary (task
+      // 0270): every new apiary is given Honey and Beeswax, and they must
+      // not make it undeletable. One with harvest history still blocks.
+      'cascade_unused' => ['type' => 'harvest_yield', 'field' => 'product'],
     ],
     [
       'adr_row' => '9',
@@ -369,6 +380,44 @@ final class HivelogDeleteDependencyRegistry {
       $url->setOption('fragment', $fragment);
     }
     return $url;
+  }
+
+  /**
+   * Splits a `cascade_unused` row's children into those in use and the rest.
+   *
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The entity type manager.
+   * @param array $row
+   *   A registry row carrying `cascade_unused`.
+   * @param array $ids
+   *   Child entity ids.
+   * @param bool $use_type_installed
+   *   Whether the `cascade_unused` type's schema is installed. It always is
+   *   on a real site; a kernel test may leave it out, and then nothing can
+   *   be in use.
+   *
+   * @return array{used: array, unused: array}
+   *   The ids, in the order given.
+   */
+  public static function splitByUse(EntityTypeManagerInterface $entity_type_manager, array $row, array $ids, bool $use_type_installed = TRUE): array {
+    $ids = array_values($ids);
+    $in_use = [];
+    if ($ids && $use_type_installed) {
+      $field = $row['cascade_unused']['field'];
+      $results = $entity_type_manager->getStorage($row['cascade_unused']['type'])->getAggregateQuery()
+        ->accessCheck(FALSE)
+        ->condition($field, $ids, 'IN')
+        ->groupBy($field)
+        ->execute();
+      foreach ($results as $result) {
+        $in_use[(int) ($result[$field] ?? $result[$field . '_target_id'] ?? 0)] = TRUE;
+      }
+    }
+    $split = ['used' => [], 'unused' => []];
+    foreach ($ids as $id) {
+      $split[isset($in_use[(int) $id]) ? 'used' : 'unused'][] = $id;
+    }
+    return $split;
   }
 
 }

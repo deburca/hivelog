@@ -75,6 +75,24 @@ class HivelogDeleteDependencyCounter {
         ->accessCheck(FALSE)
         ->condition($row['field'], $entity->id())
         ->execute();
+      // Children that are not in use go with the parent (task 0270): they
+      // are counted as a cascade, and only the ones in use can block.
+      if (isset($row['cascade_unused']) && $ids) {
+        $split = HivelogDeleteDependencyRegistry::splitByUse(
+          $this->entityTypeManager,
+          $row,
+          $ids,
+          (bool) $this->installedSchemaRepository->getLastInstalledDefinition($row['cascade_unused']['type']),
+        );
+        if ($split['unused']) {
+          $counted[] = [
+            'treatment' => HivelogDeleteDependencyRegistry::CASCADE,
+            'manage' => NULL,
+            'total' => count($split['unused']),
+          ] + $row;
+        }
+        $ids = $split['used'];
+      }
       $total = count($ids);
       if ($total === 0) {
         continue;

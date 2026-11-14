@@ -25,7 +25,8 @@ use Drupal\hivelog\Entity\CalendarAction;
  *
  * Applying is additive and idempotent: an action the target already has
  * (same title, scope and start week) is skipped, nothing is ever deleted, and
- * a second run adds nothing. Access is the caller's to check; this service
+ * a second run adds nothing. A skipped action is not altered, but it is given
+ * a requirement or yield the source has and it lacks (task 0270). Access is the caller's to check; this service
  * only filters a source apiary's actions to those the account may view.
  */
 class HivelogCalendarCopier {
@@ -130,50 +131,93 @@ class HivelogCalendarCopier {
     $result = ['created' => 0, 'skipped' => 0, 'requirements' => 0, 'yields' => 0];
     $existing = [];
     foreach ($this->actionsOf($target) as $action) {
-      $existing[$this->identity($action->get('title')->value, $action->get('scope')->value, $action->get('week_start')->value)] = TRUE;
+      $existing[$this->identity($action->get('title')->value, $action->get('scope')->value, $action->get('week_start')->value)] = $action;
     }
 
+    // Actions first, their requirements and yields afterwards: a recipe row
+    // that cannot be written must not cost the apiary the rest of its
+    // calendar.
+    $recipes = [];
     foreach ($this->definitions($source, $account ?? $this->currentUser) as $definition) {
       $key = $this->identity($definition['title'], $definition['scope'], $definition['week_start']);
       if (isset($existing[$key])) {
         $result['skipped']++;
-        continue;
       }
-      $existing[$key] = TRUE;
-
-      $values = ['apiary' => $target->id()];
-      foreach (self::ACTION_FIELDS as $field) {
-        if (isset($definition[$field])) {
-          $values[$field] = $definition[$field];
+      else {
+        $values = ['apiary' => $target->id()];
+        foreach (self::ACTION_FIELDS as $field) {
+          if (isset($definition[$field])) {
+            $values[$field] = $definition[$field];
+          }
         }
+        $existing[$key] = $this->entityTypeManager->getStorage('calendar_action')->create($values + [
+          'recurring' => TRUE,
+          'enabled' => TRUE,
+        ]);
+        $existing[$key]->save();
+        $result['created']++;
       }
-      $action = $this->entityTypeManager->getStorage('calendar_action')->create($values + [
-        'recurring' => TRUE,
-        'enabled' => TRUE,
-      ]);
-      $action->save();
-      $result['created']++;
-
-      foreach ($definition['requirements'] ?? [] as $requirement) {
-        $item = $this->matchingCatalogEntry('inventory_item', $requirement['item'], $target);
-        $this->entityTypeManager->getStorage('calendar_action_item_requirement')->create([
-          'calendar_action' => $action->id(),
-          'item' => $item->id(),
-          'quantity' => $requirement['quantity'],
-        ])->save();
-        $result['requirements']++;
-      }
-      foreach ($definition['yields'] ?? [] as $yield) {
-        $product = $this->matchingCatalogEntry('product', $yield['product'], $target);
-        $this->entityTypeManager->getStorage('calendar_action_product_yield')->create([
-          'calendar_action' => $action->id(),
-          'product' => $product->id(),
-          'quantity' => $yield['quantity'],
-        ])->save();
-        $result['yields']++;
+      if (!empty($definition['requirements']) || !empty($definition['yields'])) {
+        $recipes[] = [$existing[$key], $definition];
       }
     }
+
+    // An action the apiary already had is not altered, but it does get a
+    // requirement or yield it lacks (task 0270): that is how an apiary made
+    // before the starter calendar had yields is given them. A row it already
+    // has, whatever its quantity, is left alone, so a second run adds
+    // nothing.
+    foreach ($recipes as [$action, $definition]) {
+      $result['requirements'] += $this->addMissingRecipeRows($action, 'calendar_action_item_requirement', 'item', 'inventory_item', $definition['requirements'] ?? [], $target);
+      $result['yields'] += $this->addMissingRecipeRows($action, 'calendar_action_product_yield', 'product', 'product', $definition['yields'] ?? [], $target);
+    }
     return $result;
+  }
+
+  /**
+   * Gives an action the requirement or yield rows it does not have yet.
+   *
+   * @param \Drupal\hivelog\Entity\CalendarAction $action
+   *   The action in the target apiary.
+   * @param string $row_type
+   *   The row entity type: `calendar_action_item_requirement` or
+   *   `calendar_action_product_yield`.
+   * @param string $field
+   *   The row's catalogue reference, `item` or `product`; also the key of
+   *   the catalogue values in each definition row.
+   * @param string $catalog_type
+   *   The catalogue entity type, `inventory_item` or `product`.
+   * @param array<int, array<string, mixed>> $rows
+   *   The definition rows: catalogue values under `$field`, and `quantity`.
+   * @param \Drupal\hivelog\Entity\Apiary $target
+   *   The apiary whose catalogue is used.
+   *
+   * @return int
+   *   How many rows were created.
+   */
+  protected function addMissingRecipeRows(CalendarAction $action, string $row_type, string $field, string $catalog_type, array $rows, Apiary $target): int {
+    if (!$rows) {
+      return 0;
+    }
+    $present = [];
+    foreach ($this->childrenOf($row_type, $action) as $row) {
+      $present[(int) $row->get($field)->target_id] = TRUE;
+    }
+    $created = 0;
+    foreach ($rows as $row) {
+      $entry = $this->matchingCatalogEntry($catalog_type, $row[$field], $target);
+      if (isset($present[(int) $entry->id()])) {
+        continue;
+      }
+      $this->entityTypeManager->getStorage($row_type)->create([
+        'calendar_action' => $action->id(),
+        $field => $entry->id(),
+        'quantity' => $row['quantity'],
+      ])->save();
+      $present[(int) $entry->id()] = TRUE;
+      $created++;
+    }
+    return $created;
   }
 
   /**

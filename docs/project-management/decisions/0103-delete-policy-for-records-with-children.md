@@ -187,6 +187,26 @@ All three confirmed 2026-09-24, as recommended:
   core's cancel-account flow. **Confirmed out of scope** for this ADR
   and task 0134.
 
+## Amendment, 2026-11-14: unused products go with their apiary
+Row 6 (Apiary → Product, BLOCK) is narrowed, by user decision during
+[[0270-starter-product-catalogue-and-harvest-yields]]. That task gives every
+new apiary a Honey and a Beeswax product, and under row 6 as written a new
+apiary could then not be deleted until both were removed by hand.
+
+- A product **nothing was ever harvested as** (no `HarvestYield` references
+  it) is deleted together with its apiary, as a CASCADE row's children are,
+  and is listed in the delete form's cascade section.
+- A product **with harvest history** still blocks, exactly as before. The
+  block exists to protect real records, and an unused catalogue entry is
+  not one.
+- Row 4 (Apiary → InventoryItem) is unchanged: nothing seeds inventory
+  items.
+
+In the registry this is a `cascade_unused` key on the BLOCK row, naming the
+record type and field that mean "in use"
+(`HivelogDeleteDependencyRegistry::splitByUse()`); another BLOCK row could
+carry one, but none does.
+
 ## Related
 - Project:: [[page-structure-consistency]]
 - Decisions:: [[0020-access-parity-custom-routes]]
@@ -197,4 +217,5 @@ All three confirmed 2026-09-24, as recommended:
   [[0144-delete-warn-historical-references]],
   [[0145-orphan-report-and-cleanup-command]],
   [[0127-shared-delete-form-base]],
-  [[0116-breadcrumb-builder-parent-map-refactor]]
+  [[0116-breadcrumb-builder-parent-map-refactor]],
+  [[0270-starter-product-catalogue-and-harvest-yields]]

@@ -61,6 +61,12 @@ class HivelogDeleteDependencyExecutor {
         case HivelogDeleteDependencyRegistry::DETACH:
           $this->detach($entity, $row);
           break;
+
+        case HivelogDeleteDependencyRegistry::BLOCK:
+          if (isset($row['cascade_unused'])) {
+            $this->cascadeUnused($entity, $row);
+          }
+          break;
       }
     }
   }
@@ -96,6 +102,34 @@ class HivelogDeleteDependencyExecutor {
         break;
       }
       $storage->delete($storage->loadMultiple($ids));
+    }
+  }
+
+  /**
+   * Deletes `$row`'s children that are not in use (task 0270).
+   *
+   * For a BLOCK row carrying `cascade_unused`. A child in use is left: on a
+   * delete through the UI there is none, because it would have blocked; a
+   * programmatic delete that skipped the access check leaves it as any
+   * other BLOCK row's children are left.
+   */
+  protected function cascadeUnused(EntityInterface $entity, array $row): void {
+    if (!$this->installedSchemaRepository->getLastInstalledDefinition($row['child'])) {
+      return;
+    }
+    $storage = $this->entityTypeManager->getStorage($row['child']);
+    $ids = $storage->getQuery()
+      ->accessCheck(FALSE)
+      ->condition($row['field'], $entity->id())
+      ->execute();
+    $split = HivelogDeleteDependencyRegistry::splitByUse(
+      $this->entityTypeManager,
+      $row,
+      $ids,
+      (bool) $this->installedSchemaRepository->getLastInstalledDefinition($row['cascade_unused']['type']),
+    );
+    foreach (array_chunk($split['unused'], self::CHUNK_SIZE) as $chunk) {
+      $storage->delete($storage->loadMultiple($chunk));
     }
   }
 

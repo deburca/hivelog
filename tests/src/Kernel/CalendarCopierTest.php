@@ -241,4 +241,109 @@ class CalendarCopierTest extends KernelTestBase {
     $this->copier()->apply($apiary, 'preset:nowhere');
   }
 
+  /**
+   * Loads the yields of an apiary's action, keyed by product name.
+   *
+   * @return array<string, string>
+   *   Expected quantity by product name.
+   */
+  protected function yieldsOf(Apiary $apiary, string $title): array {
+    $action = $this->actionTitled($apiary, $title);
+    $yields = [];
+    foreach (\Drupal::entityTypeManager()->getStorage('calendar_action_product_yield')->loadByProperties(['calendar_action' => $action->id()]) as $row) {
+      assert($row instanceof ContentEntityInterface);
+      $product = $row->get('product')->entity;
+      assert($product instanceof ContentEntityInterface);
+      $this->assertSame($apiary->id(), $product->get('apiary')->target_id);
+      $yields[$product->label() . ' (' . $product->get('unit')->value . ')'] = (string) (float) $row->get('quantity')->value;
+    }
+    ksort($yields);
+    return $yields;
+  }
+
+  /**
+   * Counts an apiary's products.
+   */
+  protected function productCount(Apiary $apiary): int {
+    return (int) \Drupal::entityTypeManager()->getStorage('product')
+      ->getQuery()->accessCheck(FALSE)->condition('apiary', $apiary->id())->count()->execute();
+  }
+
+  /**
+   * A new apiary can record honey and wax from its first harvest (task 0270).
+   */
+  public function testStarterHarvestsYieldHoneyAndBeeswax(): void {
+    $this->setUpCurrentUser(['uid' => 1], [], TRUE);
+    $apiary = Apiary::create(['name' => 'Plain']);
+    $apiary->save();
+
+    $expected = ['Beeswax (kg)' => '0', 'Honey (kg)' => '0'];
+    $this->assertSame($expected, $this->yieldsOf($apiary, 'Harvest Spring Honey'));
+    $this->assertSame($expected, $this->yieldsOf($apiary, 'Harvest Summer Honey'));
+    // One Honey and one Beeswax, shared by both harvests, and nothing else.
+    $this->assertSame(2, $this->productCount($apiary));
+    $this->assertSame([], $this->yieldsOf($apiary, 'Midwinter Cluster Check'));
+
+    // Applying the starter again adds nothing.
+    $result = $this->copier()->apply($apiary, HivelogCalendarCopier::SOURCE_DEFAULT);
+    $this->assertSame(0, $result['created']);
+    $this->assertSame(0, $result['yields']);
+    $this->assertSame(2, $this->productCount($apiary));
+  }
+
+  /**
+   * An apiary made before the starter had yields gets them by copying it.
+   */
+  public function testExistingApiaryIsGivenTheStarterYields(): void {
+    $this->setUpCurrentUser(['uid' => 1], [], TRUE);
+    $apiary = Apiary::create(['name' => 'Old']);
+    $apiary->save();
+    // Put it back to how an apiary looked before: the actions, no yields,
+    // and a Honey product of the beekeeper's own with a price.
+    $etm = \Drupal::entityTypeManager();
+    $etm->getStorage('calendar_action_product_yield')->delete($etm->getStorage('calendar_action_product_yield')->loadMultiple());
+    $etm->getStorage('product')->delete($etm->getStorage('product')->loadByProperties(['name' => 'Beeswax']));
+    $honeys = $etm->getStorage('product')->loadByProperties(['apiary' => $apiary->id(), 'name' => 'Honey']);
+    $honey = reset($honeys);
+    assert($honey instanceof ContentEntityInterface);
+    $honey->set('expected_unit_price', '12.50')->save();
+    $spring = $this->actionTitled($apiary, 'Harvest Spring Honey');
+    $spring->set('description', 'My own words')->save();
+    $before = $this->actionCount($apiary);
+
+    $result = $this->copier()->apply($apiary, HivelogCalendarCopier::SOURCE_DEFAULT);
+
+    $this->assertSame(0, $result['created']);
+    $this->assertSame($before, $result['skipped']);
+    $this->assertSame(4, $result['yields']);
+    $this->assertSame(['Beeswax (kg)' => '0', 'Honey (kg)' => '0'], $this->yieldsOf($apiary, 'Harvest Spring Honey'));
+    // The beekeeper's own Honey is used, not a second one, and is unchanged.
+    $this->assertSame(2, $this->productCount($apiary));
+    $honey = $etm->getStorage('product')->load($honey->id());
+    assert($honey instanceof ContentEntityInterface);
+    $this->assertSame('12.50', $honey->get('expected_unit_price')->value);
+    // The action itself is not altered.
+    $this->assertSame('My own words', $this->actionTitled($apiary, 'Harvest Spring Honey')->get('description')->value);
+  }
+
+  /**
+   * A yield the apiary already has keeps the quantity the beekeeper set.
+   */
+  public function testAnExistingYieldIsLeftAlone(): void {
+    $this->setUpCurrentUser(['uid' => 1], [], TRUE);
+    $apiary = Apiary::create(['name' => 'Tuned']);
+    $apiary->save();
+    $etm = \Drupal::entityTypeManager();
+    $spring = $this->actionTitled($apiary, 'Harvest Spring Honey');
+    foreach ($etm->getStorage('calendar_action_product_yield')->loadByProperties(['calendar_action' => $spring->id()]) as $row) {
+      assert($row instanceof ContentEntityInterface);
+      $row->set('quantity', '18.000')->save();
+    }
+
+    $result = $this->copier()->apply($apiary, HivelogCalendarCopier::SOURCE_DEFAULT);
+
+    $this->assertSame(0, $result['yields']);
+    $this->assertSame(['Beeswax (kg)' => '18', 'Honey (kg)' => '18'], $this->yieldsOf($apiary, 'Harvest Spring Honey'));
+  }
+
 }
