@@ -819,7 +819,7 @@ class HiveController extends ControllerBase {
       if (!$product || !$harvest->access('view')) {
         continue;
       }
-      $pid = (int) $product->id();
+      $pid = $product->id();
       $pname = (string) $product->label();
       $punit = (string) $product->get('unit')->value;
       $year = substr((string) $harvest->get('harvest_date')->value, 0, 4);
@@ -835,7 +835,6 @@ class HiveController extends ControllerBase {
     if (!$grouped) {
       return [];
     }
-
     // Sort years descending.
     foreach ($grouped as $pid => &$data) {
       krsort($data['totals']);

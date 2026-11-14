@@ -99,8 +99,10 @@ class HivelogStatTileBuilder {
     $tiles['hivelog_queen'] = $this->queenTile($hive) + ['label' => $this->t('Queen'), 'weight' => -20];
     $tiles['hivelog_empty_weight'] = $this->emptyWeightTile($hive)
       + ['label' => $this->t('Empty weight'), 'weight' => -10];
-    $tiles['hivelog_harvest'] = $this->harvestThisYearTile($hive)
-      + ['label' => $this->t('Harvest this year'), 'weight' => 0];
+    $harvestTile = $this->harvestThisYearTile($hive);
+    if ($harvestTile) {
+      $tiles['hivelog_harvest'] = $harvestTile + ['label' => $this->t('Harvest this year'), 'weight' => 0];
+    }
     return $tiles;
   }
 
@@ -212,7 +214,7 @@ class HivelogStatTileBuilder {
         if ($product) {
           /** @var \Drupal\hivelog\Entity\Product $typed_product */
           $typed_product = $product;
-          $unit = (string) $typed_product->get('unit')->value;
+          $unit = (string) ($typed_product->get('unit')->value ?? '');
         }
       }
     }
