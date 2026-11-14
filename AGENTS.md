@@ -200,6 +200,18 @@ submodule's own entity types are in "Submodules".
   `HiveComponent` rows (see "Hive composition and weight" below); it
   returns `NULL` — never `0.0` or a partial sum — when the hive has no
   components or any referenced item has no `weight_kg`.
+  **Only an `active` hive carries work** (task 0269, `Hive::isActive()`): seasonal
+  alerts and the open-task counts (`HivelogAlertCollector`, so `computed/alerts` too),
+  the dashboard's "reported by every hive" check, `nexus`'s insight generation and the
+  "Active hives" tiles all use `status = active`, never a list of statuses to leave
+  out. `inactive` is a hive set aside; `dead`, `sold` and `merged`
+  (`Hive::ENDED_STATUSES`, `hasEnded()`) are final, and saving a hive in one of them
+  retires its active queen in `Hive::postSave()` (her `hive` reference kept, as on a
+  demotion). The checklist of a hive that is not active holds reported rows only
+  (`HivelogCalendarChecklistBuilder::buildForHive()`), and its page shows them as
+  history with a note. `HivelogHiveFilterForm` lists active hives by default: no
+  `status` means active, `status=all` (`STATUS_ANY`) means every status, and an
+  empty table says "no active hives" when other hives exist.
 - `HiveInspection` — references a `Hive` and carries the full inspection
   payload (external check, queen, brood, stores, health, management, notes).
 - `Queen` — references a `Hive` via `hive` entity_reference (optional).

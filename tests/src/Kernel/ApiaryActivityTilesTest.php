@@ -39,7 +39,7 @@ class ApiaryActivityTilesTest extends KernelTestBase {
     parent::setUp();
     $this->installConfig(['system']);
     foreach ([
-      'user', 'file', 'apiary', 'apiary_membership', 'hive', 'hive_inspection',
+      'user', 'file', 'apiary', 'apiary_membership', 'hive', 'hive_inspection', 'queen',
       'calendar_action', 'calendar_action_item_requirement', 'calendar_action_product_yield',
       'inventory_item', 'inventory_purchase', 'inventory_usage', 'product', 'harvest_yield',
       'hive_action_log', 'apiary_action_log',

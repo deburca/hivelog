@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\hivelog\Form;
 
 use Drupal\Core\Entity\EntityFieldManagerInterface;
+use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\Query\QueryInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -30,6 +31,11 @@ use Symfony\Component\HttpFoundation\RequestStack;
  * context; only the filter/list side of this page works without one).
  */
 class HivelogHiveFilterForm extends FormBase {
+
+  /**
+   * The `status` query value that lists hives of every status (task 0269).
+   */
+  public const STATUS_ANY = 'all';
 
   /**
    * The entity field manager.
@@ -78,10 +84,17 @@ class HivelogHiveFilterForm extends FormBase {
       '#attributes' => ['class' => ['hivelog-filter-form__filters']],
     ];
 
+    // Active hives are the default (task 0269): the empty value means
+    // "active", so a plain visit hides hives that are dead, sold, merged or
+    // inactive, and the default does not count as a filter the user set.
+    // "Any" is the explicit value static::STATUS_ANY.
+    $statuses = $hive_fields['status']->getSetting('allowed_values');
+    $active_label = $statuses['active'];
+    unset($statuses['active']);
     $form['filters']['status'] = [
       '#type' => 'select',
       '#title' => $this->t('Status'),
-      '#options' => ['' => $this->t('- Any -')] + $hive_fields['status']->getSetting('allowed_values'),
+      '#options' => ['' => $active_label, static::STATUS_ANY => $this->t('- Any -')] + $statuses,
       '#default_value' => $filters['status'] ?? '',
     ];
 
@@ -176,15 +189,52 @@ class HivelogHiveFilterForm extends FormBase {
         $filters[$key] = $value;
       }
     }
+    // "Active" is the default, not a filter (task 0269): an explicit
+    // `status=active` (an old bookmark) reads the same as no status at all.
+    if (($filters['status'] ?? '') === 'active') {
+      unset($filters['status']);
+    }
     return $filters;
+  }
+
+  /**
+   * Whether the default (active only) view is hiding a hive from this user.
+   *
+   * For the empty-state message: a list with no active hives is not a list
+   * with no hives if others exist (task 0269). Only hives the current user
+   * may view count, so the message never gives away a hive that is hidden
+   * from them; the entity query has no access of its own for this type.
+   *
+   * @param \Drupal\Core\Entity\EntityStorageInterface $storage
+   *   The hive storage.
+   * @param \Drupal\hivelog\Entity\Apiary|null $apiary
+   *   Limit the question to one apiary, or NULL for every hive.
+   */
+  public static function hasViewableHiveNotActive(EntityStorageInterface $storage, ?Apiary $apiary = NULL): bool {
+    $query = $storage->getQuery()
+      ->accessCheck(TRUE)
+      ->condition('status', 'active', '<>')
+      ->range(0, 50);
+    if ($apiary) {
+      $query->condition('apiary', $apiary->id());
+    }
+    foreach ($storage->loadMultiple($query->execute()) as $hive) {
+      if ($hive->access('view')) {
+        return TRUE;
+      }
+    }
+    return FALSE;
   }
 
   /**
    * Applies hive filter values (from `extract()`) to an entity query.
    */
   public static function apply(QueryInterface $query, array $filters): void {
-    if (isset($filters['status'])) {
-      $query->condition('status', $filters['status']);
+    // No status means active hives only; STATUS_ANY lifts the condition
+    // (task 0269).
+    $status = $filters['status'] ?? 'active';
+    if ($status !== static::STATUS_ANY) {
+      $query->condition('status', $status);
     }
     if (isset($filters['breed'])) {
       // Breed lives on the active queen, not the hive, so resolve matching

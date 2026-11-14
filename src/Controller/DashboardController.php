@@ -809,9 +809,12 @@ class DashboardController extends ControllerBase {
     }
 
     $etm = $this->entityTypeManager;
+    // Active hives only (task 0269): a hive that has ended will never report,
+    // and must not keep an action from counting as reported by every hive.
     $hive_ids = $etm->getStorage('hive')->getQuery()
       ->accessCheck(TRUE)
       ->condition('apiary', $apiary_ids, 'IN')
+      ->condition('status', 'active')
       ->execute();
     if (!$hive_ids) {
       return [];

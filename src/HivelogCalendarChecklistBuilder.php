@@ -108,14 +108,15 @@ class HivelogCalendarChecklistBuilder {
    *   One of `pending`, `done`, `ignored`, or `all`.
    *
    * @return array{total_enabled: int, rows: array}
-   *   See `buildChecklist()`'s own return docblock.
+   *   See `buildChecklist()`'s own return docblock. For a hive that is not
+   *   active, `rows` holds reported (done or ignored) rows only.
    */
   public function buildForHive(Hive $hive, int $year, string $status_filter): array {
     $apiary_id = $hive->get('apiary')->target_id;
     if (!$apiary_id) {
       return ['total_enabled' => 0, 'rows' => []];
     }
-    return $this->buildChecklist(
+    $checklist = $this->buildChecklist(
       'hive',
       $apiary_id,
       'hive_action_log',
@@ -124,6 +125,13 @@ class HivelogCalendarChecklistBuilder {
       $year,
       $status_filter,
     );
+    // A hive without a colony has no open work (task 0269): its checklist is
+    // what was reported, and nothing else. Unreported rows are dropped
+    // whatever the status filter, so "All" shows the history too.
+    if (!$hive->isActive()) {
+      $checklist['rows'] = array_filter($checklist['rows'], fn(array $row) => $row['status'] !== 'pending');
+    }
+    return $checklist;
   }
 
   /**

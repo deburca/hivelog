@@ -188,6 +188,8 @@ PROMPT;
     $hive_ids = $hive_storage->getQuery()
       ->accessCheck(FALSE)
       ->condition('apiary', $apiary_ids, 'IN')
+      // No insight is generated for a hive without a colony (task 0269).
+      ->condition('status', 'active')
       ->execute();
 
     return $hive_ids ? array_values($hive_storage->loadMultiple($hive_ids)) : [];
