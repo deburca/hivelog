@@ -429,7 +429,9 @@ class ApiaryController extends ControllerBase {
         ->condition('harvest_date', (int) date('Y') . '-01-01', '>=')
         ->condition('harvest_date', (int) date('Y') . '-12-31', '<=')
         ->execute();
-      foreach ($this->entityTypeManager->getStorage('harvest_yield')->loadMultiple($yield_ids) as $harvest) {
+      foreach ($this->entityTypeManager->getStorage('harvest_yield')->loadMultiple($yield_ids) as $_harvest) {
+        /** @var \Drupal\hivelog\Entity\HarvestYield $harvest */
+        $harvest = $_harvest;
         $hive_id = (int) $harvest->get('hive')->target_id;
         if ($hive_id && isset($hives[$hive_id])) {
           $harvest_totals[$hive_id] = ($harvest_totals[$hive_id] ?? 0.0) + (float) $harvest->get('quantity')->value;

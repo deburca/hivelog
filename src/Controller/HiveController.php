@@ -808,10 +808,13 @@ class HiveController extends ControllerBase {
       return [];
     }
 
-    $harvests = $storage->loadMultiple($ids);
+    $harvests = \Drupal::entityTypeManager()
+        ->getStorage('harvest_yield')->loadMultiple($ids);
+    /** @var array<int, \Drupal\hivelog\Entity\HarvestYield> $typed_harvests */
+    $typed_harvests = $harvests;
     // Group by product → year.
     $grouped = [];
-    foreach ($harvests as $harvest) {
+    foreach ($typed_harvests as $harvest) {
       $product = $this->entityTypeManager ->getStorage('product')->load($harvest->get('product')->target_id);
       if (!$product || !$harvest->access('view')) {
         continue;

@@ -5,6 +5,12 @@ declare(strict_types=1);
 namespace Drupal\Tests\hivelog\Kernel;
 
 use Drupal\Core\Datetime\DrupalDateTime;
+use Drupal\Core\Entity\EntityFormBuilderInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\File\FileUrlGeneratorInterface;
+use Drupal\Core\Form\FormBuilderInterface;
+use Drupal\Core\Render\RendererInterface;
+use Drupal\Core\StringTranslation\StringTranslationManager;
 use Drupal\hivelog\Controller\HiveController;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\CalendarAction;
@@ -17,6 +23,7 @@ use Drupal\hivelog\HivelogStatTileBuilder;
 use Drupal\KernelTests\KernelTestBase;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+use ReflectionMethod;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
@@ -108,13 +115,14 @@ class HiveHarvestHistoryTest extends KernelTestBase {
     $tileBuilder = new HivelogStatTileBuilder(
       $this->container->get('module_handler'),
       $this->container->get('entity_type.manager'),
-      $this->container->get('hivelog.alert_collector') ?? $this->container->get('hivelog.alert_collector'),
+      $this->container->get('hivelog.alert_collector') ?? \Drupal::service('hivelog.alert_collector'),
       $this->container->get('class_resolver'),
     );
 
     // No harvests → tile should not be present (empty array).
     $coreTiles = $tileBuilder->coreTilesForHive($this->hive);
-    $this->assertArrayNotHasKey('hivelog_harvest', $coreTiles, 'No harvest this year tile when there are no harvests.');
+    $this->assertArrayNotHasKey('hivelog_harvest', $coreTiles,
+      'No harvest this year tile when there are no harvests.');
 
     // Create a harvest from this year.
     $harvest = HarvestYield::create([
@@ -128,7 +136,8 @@ class HiveHarvestHistoryTest extends KernelTestBase {
 
     // Now the tile should appear.
     $coreTiles = $tileBuilder->coreTilesForHive($this->hive);
-    $this->assertArrayHasKey('hivelog_harvest', $coreTiles, 'Harvest this year tile present when harvests exist.');
+    $this->assertArrayHasKey('hivelog_harvest', $coreTiles,
+      'Harvest this year tile present when harvests exist.');
     $this->assertEquals('18 kg', $coreTiles['hivelog_harvest']['value']);
 
     // Add another product.
@@ -164,32 +173,10 @@ class HiveHarvestHistoryTest extends KernelTestBase {
    */
   public function testHarvestHistoryTable(): void {
     // Create a new controller instance for this test.
-    $controller = new HiveController(
-      $this->container->get('entity_type.manager'),
-      $this->container->get('entity.form_builder'),
-      $this->container->get('form_builder'),
-      $this->container->get('file_url_generator'),
-      new RequestStack(),
-      $this->container->get('renderer'),
-      new HivelogStatTileBuilder(
-        $this->container->get('module_handler'),
-        $this->container->get('entity_type.manager'),
-        $this->container->get('hivelog.alert_collector') ?? $this->container->get('hivelog.alert_collector'),
-        $this->container->get('class_resolver'),
-      ),
-    new HivelogCalendarChecklistBuilder(
-        $this->container->get('entity_type.manager'),
-        $this->container->get('hivelog.stat_tile_builder') ?? new HivelogStatTileBuilder(
-          $this->container->get('module_handler'),
-          $this->container->get('entity_type.manager'),
-          $this->container->get('hivelog.alert_collector') ?? $this->container->get('hivelog.alert_collector'),
-          $this->container->get('class_resolver'),
-        ),
-      ),
-    );
+    $controller = $this->createController();
 
     // No harvests → buildHarvestHistory should return empty array.
-    $result = $controller->buildHarvestHistory($this->hive);
+    $result = $this->invokeBuildHarvestHistory($controller, $this->hive);
     $this->assertEmpty($result, 'Empty result when no harvests exist.');
 
     // Add this year's harvest.
@@ -222,7 +209,7 @@ class HiveHarvestHistoryTest extends KernelTestBase {
     ]);
     $wax->save();
 
-    $result = $controller->buildHarvestHistory($this->hive);
+    $result = $this->invokeBuildHarvestHistory($controller, $this->hive);
     $this->assertNotEmpty($result, 'Result populated when harvests exist.');
     $this->assertArrayHasKey('table', $result);
     $tableProps = $result['table']['#props'];
@@ -235,19 +222,19 @@ class HiveHarvestHistoryTest extends KernelTestBase {
     $this->assertCount(3, $tableProps['rows']);
 
     // Last year first (descending).
-    $lastYear = (int) date('Y') - 1;
-    $this->assertEquals((string) $lastYear, $tableProps['rows'][0]['cells'][0]);
+    $lastYear = (string) ((int) date('Y') - 1);
+    $this->assertEquals($lastYear, $tableProps['rows'][0]['cells'][0]);
 
     // This year row.
     $thisYear = (string) date('Y');
     $this->assertEquals($thisYear, $tableProps['rows'][1]['cells'][0]);
-    // Honey 20 (= 18 + 2 kg from beeswax? No: beeswax is a different product).
-    // Actually the columns are per-product. Year N has "25" for Honey only.
+    // Year -1 has 25 kg for Honey only.
     $this->assertStringContainsString('25', $tableProps['rows'][0]['cells'][1]);
 
     // Grand total row should have "18" and "2".
-    $lastRow = $tableProps['rows'][2]['cells'];
-    $this->assertEquals('Grand total', $lastRow[0]);
+    $lastRow = end($tableProps['rows']);
+    $this->assertEquals('Grand total', $lastRow['cells'][0]);
+    $this->assertStringContainsString('18', $lastRow['cells'][1]);
 
     // Harvest from action log should NOT appear.
     $calendarAction = CalendarAction::create([
@@ -272,15 +259,48 @@ class HiveHarvestHistoryTest extends KernelTestBase {
     ]);
     $calendarYield->save();
 
-    $result = $controller->buildHarvestHistory($this->hive);
+    $result = $this->invokeBuildHarvestHistory($controller, $this->hive);
     // Should still show only direct harvests (3 rows: 2 years + total).
     $tableProps = $result['table']['#props'];
     $grandTotalRow = end($tableProps['rows']);
     // The grand total for Honey should be 18 (direct) not 28.
-    // Wait — the product is 'Honey' and both direct and calendar yields
-    // for the same product. The history table only shows direct harvests, so
-    // the column for Honey should show 18 as grand total.
-    $this->assertStringContainsString('18', $grandTotalRow[1]);
+    $this->assertStringContainsString('18', $grandTotalRow['cells'][1]);
+  }
+
+  /**
+   * Creates a HiveController for testing.
+   */
+  protected function createController(): HiveController {
+    $statTileBuilder = new HivelogStatTileBuilder(
+      $this->container->get('module_handler'),
+      $this->container->get('entity_type.manager'),
+      \Drupal::service('hivelog.alert_collector'),
+      $this->container->get('class_resolver'),
+    );
+
+    return new HiveController(
+      $this->container->get('entity_type.manager'),
+      $this->container->get('entity.form_builder'),
+      $this->container->get('form_builder'),
+      $this->container->get('file_url_generator'),
+      new RequestStack(),
+      $this->container->get('renderer'),
+      $statTileBuilder,
+      new HivelogCalendarChecklistBuilder(
+        $this->container->get('entity_type.manager'),
+        new RequestStack(),
+        new StringTranslationManager(),
+      ),
+    );
+  }
+
+  /**
+   * Invokes the protected buildHarvestHistory() via reflection.
+   */
+  protected function invokeBuildHarvestHistory(HiveController $controller, Hive $hive): array {
+    $method = new ReflectionMethod(HiveController::class, 'buildHarvestHistory');
+    $method->setAccessible(TRUE);
+    return $method->invoke($controller, $hive);
   }
 
 }

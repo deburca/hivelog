@@ -199,7 +199,9 @@ class HivelogStatTileBuilder {
     // Sum quantities across all products for this hive/year.
     $total = 0.0;
     $unit = '';
-    foreach ($yield_storage->loadMultiple($direct_ids) as $harvest) {
+    foreach ($yield_storage->loadMultiple($direct_ids) as $_harvest) {
+      /** @var \Drupal\hivelog\Entity\HarvestYield $harvest */
+      $harvest = $_harvest;
       $quantity = (float) $harvest->get('quantity')->value;
       if ($quantity > 0) {
         $total += $quantity;
