@@ -110,6 +110,11 @@ class HivelogStatTileBuilder {
   protected function queenTile(Hive $hive): array {
     $queen = $hive->getActiveQueen();
     if (!$queen) {
+      // A hive without a colony is not missing a queen (task 0269): no
+      // warning, and no invitation to add one.
+      if (!$hive->isActive()) {
+        return ['value' => (string) $this->t('No queen')];
+      }
       $add = Url::fromRoute('hivelog.queen.add', ['hive' => $hive->id()]);
       return [
         'value' => (string) $this->t('No queen'),

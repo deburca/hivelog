@@ -259,6 +259,9 @@ class EndedHiveWorkloadTest extends KernelTestBase {
     $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
 
     $this->assertStringContainsString('This hive is not active', $html);
+    // A hive without a colony is not asked for a queen.
+    $this->assertStringContainsString('No queen', $html);
+    $this->assertStringNotContainsString('Add a queen', $html);
     $this->assertStringContainsString('Reported action', $html);
     $this->assertStringNotContainsString('Never reported action', $html);
   }
