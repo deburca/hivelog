@@ -6,6 +6,7 @@ namespace Drupal\Tests\hivelog\Kernel;
 
 use Drupal\Core\Access\AccessResultForbidden;
 use Drupal\Core\Entity\EntityStorageException;
+use Drupal\Core\Routing\RouteMatch;
 use Drupal\hivelog\Controller\ApiaryController;
 use Drupal\hivelog\Controller\HiveController;
 use Drupal\hivelog\Controller\InventoryReportController;
@@ -14,6 +15,7 @@ use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\HarvestYield;
 use Drupal\hivelog\Entity\Hive;
 use Drupal\hivelog\Entity\Product;
+use Drupal\hivelog\HivelogEntityHierarchy;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\user\Entity\User;
 use PHPUnit\Framework\Attributes\Group;
@@ -21,6 +23,7 @@ use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
+use Symfony\Component\Routing\Route;
 
 /**
  * Tests a harvest recorded directly, with no calendar action (task 0271).
@@ -283,6 +286,23 @@ class DirectHarvestTest extends KernelTestBase {
     // The parents are set by the page, not typed.
     $this->assertArrayNotHasKey('hive', $form);
     $this->assertArrayNotHasKey('apiary', $form);
+  }
+
+  /**
+   * A harvest's edit and delete pages sit under its hive, or its apiary.
+   *
+   * The breadcrumb and the Cancel link both read this.
+   */
+  public function testHarvestPagesBelongUnderHiveOrApiary(): void {
+    $from_hive = $this->harvest();
+    $for_apiary = $this->harvest(['hive' => NULL, 'apiary' => $this->apiary->id()]);
+
+    $route_match = new RouteMatch('entity.harvest_yield.edit_form', new Route('/hivelog/harvest/{harvest_yield}/edit'), ['harvest_yield' => $from_hive]);
+    $subject = HivelogEntityHierarchy::resolveSubject($route_match, 'entity.harvest_yield.edit_form');
+    $this->assertSame($from_hive, $subject);
+
+    $this->assertSame('hive', HivelogEntityHierarchy::resolveParent($from_hive)->getEntityTypeId());
+    $this->assertSame('apiary', HivelogEntityHierarchy::resolveParent($for_apiary)->getEntityTypeId());
   }
 
 }

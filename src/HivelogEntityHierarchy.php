@@ -142,6 +142,7 @@ final class HivelogEntityHierarchy {
     'calendar_action_item_requirement',
     'calendar_action_product_yield',
     'hive_component',
+    'harvest_yield',
   ];
 
   /**
