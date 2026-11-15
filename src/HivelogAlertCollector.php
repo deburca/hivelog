@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\hivelog;
 
+use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
@@ -60,12 +61,136 @@ class HivelogAlertCollector {
   public function collect(array $apiaries, int $year, int $current_week, CacheableMetadata $cache): array {
     $seasonal = $this->collectSeasonalAlerts($apiaries, $year, $current_week, $cache);
     $low_stock = $this->collectLowStockAlerts($apiaries, $cache);
+    $inspection = $this->collectInspectionAlerts($apiaries, $current_week, $cache);
     $contributed = $this->collectSensorAlerts($apiaries, $cache);
 
-    $alerts = array_merge($seasonal['alerts'], $low_stock, $contributed);
+    $alerts = array_merge($seasonal['alerts'], $low_stock, $inspection, $contributed);
     usort($alerts, fn($a, $b) => $a['sort'] <=> $b['sort']);
 
     return ['alerts' => $alerts, 'seasonal' => $seasonal, 'low_stock' => $low_stock];
+  }
+
+  /**
+   * Collects inspection-lapse alerts across the given apiaries.
+   *
+   * Only during the inspection season (weeks 14 to 40) and only for active
+   * hives whose last inspection is older than 14 days, producing a warning
+   * row for each such hive.
+   *
+   * @param \Drupal\hivelog\Entity\Apiary[] $apiaries
+   *   Viewable apiaries keyed by id.
+   * @param int $current_week
+   *   The current ISO week number.
+   * @param \Drupal\Core\Cache\CacheableMetadata $cache
+   *   Collects list cache tags and per-row dependencies.
+   *
+   * @return array[]
+   *   Alert row descriptors, shaped like collectLowStockAlerts()'s rows.
+   */
+  public function collectInspectionAlerts(array $apiaries, int $current_week, CacheableMetadata $cache): array {
+    // Season: only alert during the active beekeeping window.
+    $season_start = 14;
+    $season_end   = 40;
+    if ($current_week < $season_start || $current_week > $season_end) {
+      return [];
+    }
+
+    $threshold_days = 14;
+
+    $etm        = $this->entityTypeManager;
+    $apiary_ids = array_keys($apiaries);
+
+    // Load active hives across all visible apiaries.
+    $hive_ids = $etm->getStorage('hive')->getQuery()
+      ->accessCheck(FALSE)
+      ->condition('apiary', $apiary_ids, 'IN')
+      ->condition('status', 'active')
+      ->execute();
+
+    if (!$hive_ids) {
+      return [];
+    }
+
+    /** @var \Drupal\hivelog\Entity\Hive[] $hives */
+    $hives = array_filter(
+      $etm->getStorage('hive')->loadMultiple($hive_ids),
+      fn($hive) => $hive->access('view')
+    );
+
+    if (!$hives) {
+      return [];
+    }
+
+    // Build a lookup of hive UUID to latest inspection date string, one query per hive.
+    $latest_dates = [];
+    foreach ($hives as $hive) {
+      $id_list = $etm
+        ->getStorage('hive_inspection')
+        ->getQuery()
+        ->accessCheck(TRUE)
+        ->condition('hive', $hive->id())
+        ->sort('inspection_date', 'DESC')
+        ->range(0, 1)
+        ->execute();
+      if ($id_list && ($first_id = reset($id_list))) {
+        /** @var \Drupal\hivelog\Entity\HiveInspection|null $latest */
+        $latest = $etm->getStorage('hive_inspection')->load((string) $first_id);
+        if ($latest) {
+          /** @var int|float|string|null $raw_date */
+          $raw_date                  = $latest->get('inspection_date')->value;
+          $latest_dates[$hive->id()] = (string) $raw_date;
+        }
+      }
+    }
+
+    $cache->addCacheTags($etm->getDefinition('hive')->getListCacheTags());
+    $cache->addCacheTags($etm->getDefinition('hive_inspection')->getListCacheTags());
+
+    $alerts = [];
+    foreach ($hives as $hive) {
+      $apiary_id = (int) $hive->get('apiary')->target_id;
+      if (!isset($apiaries[$apiary_id])) {
+        continue;
+      }
+      $hive_apiary = $apiaries[$apiary_id];
+
+      // Skip hives never inspected.
+      if (!isset($latest_dates[$hive->id()])) {
+        continue;
+      }
+
+      $last_date = $latest_dates[$hive->id()];
+      $last_dt   = new DrupalDateTime($last_date);
+      $diff_days = (int) DrupalDateTime::createFromTimestamp(time())
+        ->diff($last_dt)->format('%a');
+
+      // Within season but past the threshold.
+      if ($diff_days > $threshold_days) {
+        $detail = (string) $this->t('Last inspected @date · @days days ago', [
+          '@date' => $last_dt->format('Y-m-d'),
+          '@days' => $diff_days,
+        ]);
+        $alerts[] = [
+          'severity'    => 'warning',
+          // Days past the threshold, as on the hive page's tile. Plain
+          // text: a %placeholder would wrap the number in <em>.
+          'chip'        => (string) $this->formatPlural(
+            $diff_days - $threshold_days,
+            '1 day overdue',
+            '@count days overdue',
+          ),
+          'title'       => (string) $hive->label(),
+          'kind'        => 'inspection_lapse',
+          'subject'     => ['apiary' => $hive_apiary, 'hive' => $hive, 'detail' => $detail],
+          'context'     => $this->attentionContext($hive_apiary, $hive, $detail),
+          'action_label' => (string) $this->t('Inspect now'),
+          'action_url'  => Url::fromRoute('hivelog.inspection.add', ['hive' => $hive->id()])->toString(),
+          'sort'        => [-1, -$diff_days],
+        ];
+      }
+    }
+
+    return $alerts;
   }
 
   /**

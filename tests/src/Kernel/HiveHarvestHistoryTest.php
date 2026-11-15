@@ -73,6 +73,14 @@ class HiveHarvestHistoryTest extends KernelTestBase {
     $this->installEntitySchema('hive_action_log');
     $this->installEntitySchema('hive_component');
     $this->installEntitySchema('calendar_action');
+    // The hive's tiles read its inspections (task 0273), and the hive page,
+    // rendered whole below, reads the rest.
+    foreach ([
+      'hive_inspection', 'inventory_item', 'inventory_purchase', 'inventory_usage',
+      'calendar_action_item_requirement', 'calendar_action_product_yield', 'apiary_action_log',
+    ] as $type) {
+      $this->installEntitySchema($type);
+    }
     $this->installSchema('file', ['file_usage']);
 
     // Create and set an admin user.

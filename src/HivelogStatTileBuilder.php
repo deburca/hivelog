@@ -6,6 +6,7 @@ namespace Drupal\hivelog;
 
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\DependencyInjection\ClassResolverInterface;
+use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
@@ -102,6 +103,10 @@ class HivelogStatTileBuilder {
     $harvestTile = $this->harvestThisYearTile($hive);
     if ($harvestTile) {
       $tiles['hivelog_harvest'] = $harvestTile + ['label' => $this->t('Harvest this year'), 'weight' => 0];
+    }
+    $inspected = $this->lastInspectedTile($hive);
+    if ($inspected) {
+      $tiles['hivelog_last_inspected'] = $inspected + ['label' => $this->t('Last inspected'), 'weight' => 10];
     }
     return $tiles;
   }
@@ -227,6 +232,61 @@ class HivelogStatTileBuilder {
       'value' => rtrim(rtrim(number_format($total, 3, '.', ''), '0'), '.') . ($unit ? ' ' . $unit : ''),
       'url' => Url::fromRoute('entity.hive.canonical', ['hive' => $hive->id()], ['fragment' => 'harvest_history']),
     ];
+  }
+
+  /**
+   * The "Last inspected" tile with a warning sub-line when overdue.
+   */
+  protected function lastInspectedTile(Hive $hive): array {
+    if ($hive->isNew()) {
+      return [];
+    }
+
+    $id_list = $this->entityTypeManager
+      ->getStorage('hive_inspection')
+      ->getQuery()
+      ->accessCheck(TRUE)
+      ->condition('hive', $hive->id())
+      ->sort('inspection_date', 'DESC')
+      ->range(0, 1)
+      ->execute();
+
+    if (!$id_list) {
+      return [];
+    }
+
+    /** @var string $first_id */
+    $first_id = reset($id_list);
+    /** @var \Drupal\hivelog\Entity\HiveInspection|null $latest */
+    $latest = $this->entityTypeManager->getStorage('hive_inspection')->load($first_id);
+    if (!$latest) {
+      return [];
+    }
+
+    /** @var int|float|string|null $raw_date */
+    $raw_date  = $latest->get('inspection_date')->value;
+    $date_str  = (string) $raw_date;
+    $last_dt   = new DrupalDateTime($date_str);
+    $diff_days = (int) DrupalDateTime::createFromTimestamp(time())
+      ->diff($last_dt)->format('%a');
+
+    // Threshold (task 0273).
+    $threshold_days = 14;
+
+    $tile = ['value' => $last_dt->format('Y-m-d')];
+
+    if ($diff_days > $threshold_days) {
+      // Days past the threshold, not days since the inspection: 20 days
+      // ago with a 14-day threshold is 6 days overdue.
+      $tile['sublabel'] = (string) $this->formatPlural(
+        $diff_days - $threshold_days,
+        '1 day overdue',
+        '@count days overdue',
+      );
+      $tile['sublabel_variant'] = 'warning';
+    }
+
+    return $tile;
   }
 
   /**
