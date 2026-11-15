@@ -358,9 +358,13 @@ entities mirror each other one level removed (inputs vs. outputs):
   parent (`hivelog.harvest.add_for_hive` → `/hivelog/hive/{hive}/harvest/add`,
   `hivelog.harvest.add_for_apiary` → `/hivelog/apiary/{apiary}/harvest/add`),
   edit and delete forms (`HarvestYieldForm`), no collection and no canonical
-  page; they are listed in the "Harvests" section (anchor `#harvests`,
-  `HivelogHarvestSectionTrait`) of the hive and apiary pages, which carries
-  the "Record harvest" button. `hive` and `apiary` carry `HivelogParentAccess`,
+  page. The "Harvests" section (anchor `#harvests`,
+  `HivelogHarvestSectionTrait`) of the hive and apiary pages lists **every**
+  harvest (task 0286), with a Source column ("Calendar: <action>" linking to
+  the log, or "Recorded directly") and the "Record harvest" button; a direct
+  harvest is edited and deleted there, a logged one through "Edit in log".
+  The apiary's Products table has a "Harvested this year" column
+  (`HivelogHarvestTotals::byProductForApiary()`). `hive` and `apiary` carry `HivelogParentAccess`,
   `product` carries `HivelogSameApiary` against `apiary`. The cost and yield
   report counts a direct harvest by its `apiary` and the year of its date
   (`InventoryReportController::yieldBreakdown()`). It blocks deleting its hive
@@ -1106,7 +1110,7 @@ count it used to state already had. Core's own:
   the sub-line and says "+N other products"; the Harvest History section (`#harvest_history`,
   `HiveController::buildHarvestHistory()`) has a column per product, a row per year and an "All
   years" row, and no total across columns. Products with the same name and unit are one column. Both
-  count harvests recorded directly only. The Queen section under it keeps only its
+  count every harvest of the hive, reported with the calendar or recorded directly (task 0286). The Queen section under it keeps only its
   heading and buttons. The Apiary page likewise shows core's activity tiles (task 0263,
   `coreTilesForApiary()`, weighted -50 to -20): Active hives (to the page's own `#hives`), Open seasonal
   tasks (from `HivelogAlertCollector::collectSeasonalAlerts()` for this one apiary, critical when some are
