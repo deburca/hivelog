@@ -441,9 +441,9 @@ class CalendarActionTest extends KernelTestBase {
     $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
 
     $this->assertArrayHasKey('yields', $build);
-    $this->assertStringContainsString('Expected Yield', $html);
-    $this->assertStringContainsString('Add Expected Yield', $html);
-    $this->assertStringContainsString('No expected yield has been recorded for this calendar action yet.', $html);
+    $this->assertStringContainsString('Expected Harvest', $html);
+    $this->assertStringContainsString('Add Expected Harvest', $html);
+    $this->assertStringContainsString('No expected harvest has been set for this calendar action yet.', $html);
   }
 
   /**
@@ -554,7 +554,7 @@ class CalendarActionTest extends KernelTestBase {
     $this->assertStringContainsString('500g Honey Jars', $html);
     $this->assertStringContainsString('Honey', $html);
     $this->assertStringContainsString('Required Items', $html);
-    $this->assertStringContainsString('Expected Yield', $html);
+    $this->assertStringContainsString('Expected Harvest', $html);
   }
 
 }

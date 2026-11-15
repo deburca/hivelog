@@ -43,12 +43,12 @@ class CalendarActionProductYieldForm extends ContentEntityForm {
     $status = $entity->save();
 
     if ($status === SAVED_NEW) {
-      $this->messenger()->addStatus($this->t('Yield %label has been added.', [
+      $this->messenger()->addStatus($this->t('Expected harvest %label has been added.', [
         '%label' => $entity->label(),
       ]));
     }
     else {
-      $this->messenger()->addStatus($this->t('Yield %label has been updated.', [
+      $this->messenger()->addStatus($this->t('Expected harvest %label has been updated.', [
         '%label' => $entity->label(),
       ]));
     }

@@ -502,7 +502,7 @@ class HivelogDeleteBlockRelationshipsTest extends KernelTestBase {
     ]);
     $yield->save();
 
-    $this->assertDeleteBlocked($product, '1 calendar action product yield');
+    $this->assertDeleteBlocked($product, '1 expected harvest');
     $yield->delete();
     $this->resetDeleteCaches();
     $this->assertTrue($product->access('delete', $this->owner));

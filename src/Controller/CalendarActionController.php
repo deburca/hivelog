@@ -668,14 +668,14 @@ class CalendarActionController extends ControllerBase {
           // H2 (task 0128) — a top-level section, sibling to
           // buildSection()'s own Overview/Schedule/Description headings.
           '#tag' => 'h2',
-          '#value' => $this->t('Expected Yield'),
+          '#value' => $this->t('Expected Harvest'),
           '#attributes' => ['class' => ['hivelog-list-heading__title']],
         ],
         'add' => [
           '#type' => 'component',
           '#component' => 'hivelog:button',
           '#props' => [
-            'label' => (string) $this->t('Add Expected Yield'),
+            'label' => (string) $this->t('Add Expected Harvest'),
             'url' => Url::fromRoute('hivelog.calendar_action_product_yield.add', ['calendar_action' => $calendar_action->id()])->toString(),
             'variant' => 'primary',
             'extra_classes' => 'hivelog-list-heading__action',
@@ -688,7 +688,7 @@ class CalendarActionController extends ControllerBase {
         '#props' => [
           'headers' => array_map('strval', $header),
           'rows' => $rows,
-          'empty_message' => (string) $this->t('No expected yield has been recorded for this calendar action yet.'),
+          'empty_message' => (string) $this->t('No expected harvest has been set for this calendar action yet.'),
         ],
       ],
     ];

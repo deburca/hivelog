@@ -47,10 +47,10 @@ use Drupal\user\EntityOwnerTrait;
  */
 #[ContentEntityType(
   id: 'harvest_yield',
-  label: new TranslatableMarkup('Harvest Yield'),
-  label_collection: new TranslatableMarkup('Harvest Yields'),
-  label_singular: new TranslatableMarkup('harvest yield record'),
-  label_plural: new TranslatableMarkup('harvest yield records'),
+  label: new TranslatableMarkup('Harvest'),
+  label_collection: new TranslatableMarkup('Harvests'),
+  label_singular: new TranslatableMarkup('harvest'),
+  label_plural: new TranslatableMarkup('harvests'),
   handlers: [
     'storage' => HivelogEntityStorage::class,
     'access' => HarvestYieldAccessControlHandler::class,

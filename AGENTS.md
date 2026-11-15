@@ -339,10 +339,15 @@ entities mirror each other one level removed (inputs vs. outputs):
 - `CalendarActionItemRequirement` — references a `CalendarAction` and an
   `InventoryItem` (must belong to the same apiary). The "recipe" estimate:
   this action typically requires this much of this item.
-- `CalendarActionProductYield` — references a `CalendarAction` and a
-  `Product` (must belong to the same apiary). The "recipe" estimate:
-  this action typically produces this much of this product.
-- `HarvestYield` — references a `Product` and has exactly one source. Either
+- `CalendarActionProductYield` — called **Expected harvest** in the interface
+  (task 0288, ADR-0110). References a `CalendarAction` and a `Product` (must
+  belong to the same apiary). The "recipe" estimate: this action typically
+  produces this much of this product. It is the plan; nothing counts as
+  harvested until the action is reported done.
+- `HarvestYield` — called **Harvest** in the interface (task 0288, ADR-0110:
+  the plan is an "Expected harvest", the fact a "Harvest"; machine names,
+  routes, permission keys and tables keep "yield"). References a `Product`
+  and has exactly one source. Either
   one of `hive_action_log` / `apiary_action_log`: how much of a product was
   *really* produced when that log was reported `done`, written by the log's
   own form like `InventoryUsage`, with no UI of its own. Or neither (task

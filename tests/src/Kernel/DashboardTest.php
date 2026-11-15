@@ -1105,7 +1105,9 @@ class DashboardTest extends KernelTestBase {
 
     $html = $this->renderBuild($this->controller()->view());
 
-    $this->assertStringContainsString('Harvest yield', $html);
+    // The record is called a Harvest (task 0288, ADR-0110).
+    $this->assertStringContainsString('Harvest', $html);
+    $this->assertStringNotContainsString('Harvest yield', $html);
     $this->assertStringContainsString('/hivelog/apiary-action-log/' . $log->id(), $html);
   }
 

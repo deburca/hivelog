@@ -76,8 +76,8 @@ trait HarvestYieldFormTrait {
 
     $form['harvest_yield_fieldset'] = [
       '#type' => 'details',
-      '#title' => $this->t('Yield Produced'),
-      '#description' => $this->t('Pre-filled from the calendar action\'s expected yield — adjust to what was actually produced. Leave a field at 0 to record none produced.'),
+      '#title' => $this->t('Harvest'),
+      '#description' => $this->t('Pre-filled from the calendar action\'s expected harvest — adjust to what was actually taken. Leave a field at 0 to record none.'),
       '#group' => $vertical_tabs_group,
       '#weight' => 3,
       '#open' => FALSE,

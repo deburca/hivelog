@@ -22,7 +22,7 @@ class ProductDeleteForm extends HivelogEntityDeleteForm {
    * {@inheritdoc}
    */
   protected function warnDescription(): ?TranslatableMarkup {
-    return $this->t('If you delete anyway, these records will show as "Unknown product" wherever they appear, but will still count toward past yield reports.');
+    return $this->t('If you delete anyway, these records will show as "Unknown product" wherever they appear, but will still count toward past harvest reports.');
   }
 
   /**

@@ -878,7 +878,7 @@ class DashboardController extends ControllerBase {
       'hive_action_log' => $this->t('Action log'),
       'apiary_action_log' => $this->t('Action log'),
       'inventory_purchase' => $this->t('Purchase'),
-      'harvest_yield' => $this->t('Harvest yield'),
+      'harvest_yield' => $this->t('Harvest'),
     ];
 
     $entries = [];
