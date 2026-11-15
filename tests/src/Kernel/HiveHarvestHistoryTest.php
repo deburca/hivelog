@@ -18,6 +18,7 @@ use PHPUnit\Framework\Attributes\Group;
  * Tests harvest history display on hive and apiary pages.
  */
 #[Group('hivelog')]
+#[\PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses]
 class HiveHarvestHistoryTest extends KernelTestBase {
 
   /**

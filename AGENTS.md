@@ -1093,13 +1093,16 @@ count it used to state already had. Core's own:
   figures are one query, counted by the apiary stamp.
 - `hivelog.alert_collector` (`HivelogAlertCollector`, task 0202) — the
   "Needs attention" alerts: the seasonal-calendar pass, low-stock inventory,
-  and whatever submodules contribute through
+  inspection-lapse (task 0273), and whatever submodules contribute through
   `hook_hivelog_needs_attention_alerts()`. Moved out of `DashboardController`
   so the dashboard and the mobile API serve the same rows. Each row is the
   descriptor the dashboard renders plus two optional data keys, `kind` and
   `subject` (`apiary`, `hive`, `detail`, and `calendar_action` on seasonal
   rows), so a caller that is not a web page needs no markup. A new alert source
-  should set both. `hivelog.stat_tile_builder` likewise exposes
+  should set both. The inspection-lapse alert (task 0273) checks active hives
+  across all viewable apiaries, querying the latest `hive_inspection.date` per
+  hive and producing warning rows when past 14 days during weeks 14–40.
+  `hivelog.stat_tile_builder` likewise exposes
   `tilesForHive()`, the tile descriptors as data.
 - `hivelog.delete_dependency_counter` (`HivelogDeleteDependencyCounter`,
   task 0134) — counts a parent entity's children per
