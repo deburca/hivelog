@@ -10,6 +10,7 @@ use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\CalendarAction;
 use Drupal\hivelog\Entity\CalendarActionItemRequirement;
 use Drupal\hivelog\Entity\CalendarActionProductYield;
+use Drupal\hivelog\Entity\HarvestYield;
 use Drupal\hivelog\Entity\Hive;
 use Drupal\hivelog\Entity\HiveActionLog;
 use Drupal\hivelog\Entity\InventoryItem;
@@ -398,6 +399,167 @@ class HarvestYieldReportingIntegrationTest extends KernelTestBase {
       ->count()
       ->execute();
     $this->assertEquals(1, $yield_count);
+  }
+
+  /**
+   * Loads the harvests of a log, keyed by product id.
+   *
+   * @return \Drupal\hivelog\Entity\HarvestYield[]
+   *   The harvests.
+   */
+  protected function harvestsOf(HiveActionLog $log): array {
+    $by_product = [];
+    foreach (HarvestYield::loadMultiple() as $harvest) {
+      if ((int) $harvest->get('hive_action_log')->target_id === (int) $log->id()) {
+        $by_product[(int) $harvest->get('product')->target_id] = $harvest;
+      }
+    }
+    return $by_product;
+  }
+
+  /**
+   * Creates another product in the test apiary.
+   */
+  protected function otherProduct(string $name = 'Propolis', string $unit = 'g', array $values = []): Product {
+    $product = Product::create($values + ['apiary' => $this->apiary->id(), 'name' => $name, 'unit' => $unit]);
+    $product->save();
+    return $product;
+  }
+
+  /**
+   * A new done log for the test action.
+   */
+  protected function newLog(?CalendarAction $action = NULL): HiveActionLog {
+    return HiveActionLog::create([
+      'hive' => $this->hive->id(),
+      'calendar_action' => ($action ?? $this->calendarAction)->id(),
+      'year' => (int) date('Y'),
+      'status' => 'done',
+    ]);
+  }
+
+  /**
+   * The block has a date, and offers the apiary's other active products.
+   *
+   * Task 0287.
+   */
+  public function testBlockHasDateAndOffersOtherProducts(): void {
+    $propolis = $this->otherProduct();
+    $retired = $this->otherProduct('Old mead', 'bottle', ['status' => 'discontinued']);
+    $elsewhere = Apiary::create(['name' => 'Other Apiary']);
+    $elsewhere->save();
+    $foreign = Product::create(['apiary' => $elsewhere->id(), 'name' => 'Their honey', 'unit' => 'kg']);
+    $foreign->save();
+
+    $build = \Drupal::service('entity.form_builder')->getForm($this->newLog(), 'add');
+
+    $this->assertSame(date('Y-m-d'), $build['harvest_yield_date']['#default_value']);
+    $options = $build['harvest_yield_new_product']['#options'];
+    $this->assertArrayHasKey($propolis->id(), $options);
+    $this->assertSame('Propolis (g)', (string) $options[$propolis->id()]);
+    // Not the product already expected, a discontinued one, or another
+    // apiary's.
+    $this->assertArrayNotHasKey($this->product->id(), $options);
+    $this->assertArrayNotHasKey($retired->id(), $options);
+    $this->assertArrayNotHasKey($foreign->id(), $options);
+    $this->assertArrayHasKey('harvest_yield_new_quantity', $build);
+  }
+
+  /**
+   * A product the action did not plan for can be recorded, with the date.
+   */
+  public function testUnplannedProductCanBeRecorded(): void {
+    $propolis = $this->otherProduct();
+    $form_object = $this->buildFormObject($this->newLog());
+    $form_state = (new FormState())
+      ->setValue('harvest_yield_' . $this->product->id(), 18)
+      ->setValue('harvest_yield_new_product', $propolis->id())
+      ->setValue('harvest_yield_new_quantity', 250)
+      ->setValue('harvest_yield_date', date('Y') . '-08-03');
+    $form_object->save([], $form_state);
+
+    $log = HiveActionLog::load($form_object->getEntity()->id());
+    $harvests = $this->harvestsOf($log);
+    $this->assertCount(2, $harvests);
+    $this->assertEquals(250, (float) $harvests[(int) $propolis->id()]->get('quantity')->value);
+    foreach ($harvests as $harvest) {
+      $this->assertSame(date('Y') . '-08-03', $harvest->get('harvest_date')->value);
+      $this->assertEquals($this->hive->id(), $harvest->get('hive')->target_id);
+      $this->assertEquals($this->apiary->id(), $harvest->get('apiary')->target_id);
+    }
+
+    // On the edit form the unplanned product has a field of its own, with
+    // what was recorded, and the block keeps the harvest's date.
+    $build = \Drupal::service('entity.form_builder')->getForm($log, 'edit');
+    $this->assertEquals(250, (float) $build['harvest_yield_' . $propolis->id()]['#default_value']);
+    $this->assertSame(date('Y') . '-08-03', $build['harvest_yield_date']['#default_value']);
+    $this->assertArrayNotHasKey($propolis->id(), $build['harvest_yield_new_product']['#options'] ?? []);
+
+    // Changing the date moves every row; a zero removes the unplanned one.
+    $edit_form = \Drupal::entityTypeManager()->getFormObject('hive_action_log', 'edit');
+    $edit_form->setEntity($log);
+    $edit_form->save([], (new FormState())
+      ->setValue('harvest_yield_' . $this->product->id(), 18)
+      ->setValue('harvest_yield_' . $propolis->id(), 0)
+      ->setValue('harvest_yield_date', date('Y') . '-08-10'));
+    \Drupal::entityTypeManager()->getStorage('harvest_yield')->resetCache();
+    $harvests = $this->harvestsOf($log);
+    $this->assertSame([(int) $this->product->id()], array_keys($harvests));
+    $this->assertSame(date('Y') . '-08-10', $harvests[(int) $this->product->id()]->get('harvest_date')->value);
+  }
+
+  /**
+   * A product that is not one of the apiary's active products is ignored.
+   */
+  public function testProductFromElsewhereIsIgnored(): void {
+    $elsewhere = Apiary::create(['name' => 'Other Apiary']);
+    $elsewhere->save();
+    $foreign = Product::create(['apiary' => $elsewhere->id(), 'name' => 'Their honey', 'unit' => 'kg']);
+    $foreign->save();
+
+    $form_object = $this->buildFormObject($this->newLog());
+    $form_object->save([], (new FormState())
+      ->setValue('harvest_yield_' . $this->product->id(), 0)
+      ->setValue('harvest_yield_new_product', $foreign->id())
+      ->setValue('harvest_yield_new_quantity', 5));
+
+    $this->assertSame([], $this->harvestsOf(HiveActionLog::load($form_object->getEntity()->id())));
+  }
+
+  /**
+   * A harvest action with no expected harvest still offers the block.
+   *
+   * An action that is not a harvest and expects none does not.
+   */
+  public function testBlockNeedsNoExpectedHarvestOnHarvestAction(): void {
+    $harvest_action = CalendarAction::create([
+      'apiary' => $this->apiary->id(),
+      'title' => 'Take the ivy honey',
+      'week_start' => 42,
+      'category' => 'harvest_summer',
+    ]);
+    $harvest_action->save();
+    $other_action = CalendarAction::create([
+      'apiary' => $this->apiary->id(),
+      'title' => 'Mouse guards',
+      'week_start' => 42,
+      'category' => 'winter_prep',
+    ]);
+    $other_action->save();
+
+    $build = \Drupal::service('entity.form_builder')->getForm($this->newLog($harvest_action), 'add');
+    $this->assertArrayHasKey('harvest_yield_fieldset', $build);
+    $this->assertArrayHasKey($this->product->id(), $build['harvest_yield_new_product']['#options']);
+
+    $form_object = $this->buildFormObject($this->newLog($harvest_action));
+    $form_object->save([], (new FormState())
+      ->setValue('harvest_yield_new_product', $this->product->id())
+      ->setValue('harvest_yield_new_quantity', 9));
+    $harvests = $this->harvestsOf(HiveActionLog::load($form_object->getEntity()->id()));
+    $this->assertEquals(9, (float) $harvests[(int) $this->product->id()]->get('quantity')->value);
+
+    $build = \Drupal::service('entity.form_builder')->getForm($this->newLog($other_action), 'add');
+    $this->assertArrayNotHasKey('harvest_yield_fieldset', $build);
   }
 
 }

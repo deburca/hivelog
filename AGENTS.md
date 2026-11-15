@@ -380,7 +380,15 @@ entities mirror each other one level removed (inputs vs. outputs):
   reads harvests by their own apiary and date in one query, and the log
   reference only says where a harvest came from. Do not join harvests through
   their logs to find an apiary, hive or year. `InventoryUsage` has no such
-  fields and is still joined through its log.
+  fields and is still joined through its log. **The action log form's
+  "Harvest" block** (task 0287, `HarvestYieldFormTrait`) has one date
+  (`harvest_yield_date`), a quantity per product the action expects or the log
+  already has a harvest of (`harvest_yield_<product id>`), and one row to add a
+  product the action did not plan for (`harvest_yield_new_product`,
+  `harvest_yield_new_quantity`; the apiary's active products only, enforced
+  again on save). It is offered when the action has an expected harvest, the
+  log already has a harvest, or the action's category starts with `harvest`.
+  No JavaScript: one unplanned product a save.
 
 **Hive composition and weight** (ADR-0106) — what physical components a
 hive is built from, so its empty weight can be netted out of a raw scale

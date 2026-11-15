@@ -5,15 +5,19 @@ declare(strict_types=1);
 namespace Drupal\hivelog\Form;
 
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\hivelog\Entity\HarvestYield;
+use Drupal\hivelog\Entity\Product;
 
 /**
  * Shared harvest-yield integration for HiveActionLogForm/ApiaryActionLogForm.
  *
- * Adds pre-filled, editable "how much did you actually produce" quantity
- * fields — one per CalendarActionProductYield on the log's calendar
- * action — and, on save, creates/updates/removes the corresponding
- * HarvestYield rows. Structurally identical to InventoryUsageFormTrait,
+ * Adds the "Harvest" block to a log's form (ADR-0110, task 0287): a date, a
+ * pre-filled, editable quantity per product the action expects
+ * (CalendarActionProductYield) or already has a harvest of, and a row to
+ * add a product it did not plan for. On save it creates/updates/removes the
+ * corresponding HarvestYield rows. Structurally identical to InventoryUsageFormTrait,
  * one level removed (outputs instead of inputs); kept as a deliberate
  * parallel sibling rather than unifying the two into one generic trait,
  * consistent with how HiveActionLog/ApiaryActionLog are themselves
@@ -31,7 +35,18 @@ use Drupal\Core\Form\FormStateInterface;
 trait HarvestYieldFormTrait {
 
   /**
-   * Adds the "Yield Produced" fieldset, if any yield recipe rows exist.
+   * Adds the "Harvest" block: what was taken when the action was done.
+   *
+   * The same three things as "Record harvest" (ADR-0110, task 0287): a
+   * product, a quantity and a date. One quantity per product the action
+   * expects, pre-filled with the expected amount; one per product already
+   * recorded for this log; and one more row to add a product the action did
+   * not plan for, so an expected harvest is a convenience and not a
+   * prerequisite. One date for the block: a log is one occasion.
+   *
+   * The block is offered when the action has an expected harvest, when the
+   * log already has a harvest, or when the action is a harvest by category;
+   * a varroa treatment does not grow a Harvest tab.
    *
    * @param array $form
    *   The form render array, altered by reference.
@@ -43,20 +58,40 @@ trait HarvestYieldFormTrait {
    */
   protected function buildYieldFields(array &$form, EntityInterface $log, string $vertical_tabs_group): void {
     $yield_recipes = $this->yieldRecipesForLog($log);
-    if (!$yield_recipes) {
+    $existing_by_product = $this->existingYieldByProduct($log);
+    if (!$yield_recipes && !$existing_by_product && !$this->isHarvestAction($log)) {
       return;
     }
+    $done_only = ['visible' => [':input[name="status"]' => ['value' => 'done']]];
 
-    $existing_by_product = $this->existingYieldByProduct($log);
-
-    $field_names = [];
+    // Product id => [product, default quantity]: expected first, then any
+    // harvest already recorded for a product nobody planned.
+    $rows = [];
     foreach ($yield_recipes as $yield_recipe) {
       $product = $yield_recipe->get('product')->entity;
-      $product_id = $product->id();
-      $default = isset($existing_by_product[$product_id])
-        ? $existing_by_product[$product_id]->get('quantity')->value
-        : $yield_recipe->get('quantity')->value;
+      if ($product) {
+        $rows[$product->id()] = [$product, $yield_recipe->get('quantity')->value];
+      }
+    }
+    $date = NULL;
+    foreach ($existing_by_product as $product_id => $existing) {
+      $product = $existing->get('product')->entity;
+      if ($product) {
+        $rows[$product_id] = [$product, $existing->get('quantity')->value];
+      }
+      $date ??= $existing->get('harvest_date')->value;
+    }
 
+    $field_names = [];
+    $form['harvest_yield_date'] = [
+      '#type' => 'date',
+      '#title' => $this->t('Harvest date'),
+      '#default_value' => $date ?: HarvestYield::defaultDateForLog($log),
+      '#states' => $done_only,
+    ];
+    $field_names[] = 'harvest_yield_date';
+
+    foreach ($rows as $product_id => [$product, $default]) {
       $field_name = 'harvest_yield_' . $product_id;
       $form[$field_name] = [
         '#type' => 'number',
@@ -65,19 +100,45 @@ trait HarvestYieldFormTrait {
         '#min' => 0,
         '#step' => 'any',
         '#default_value' => $default,
-        '#states' => [
-          'visible' => [
-            ':input[name="status"]' => ['value' => 'done'],
-          ],
-        ],
+        '#states' => $done_only,
       ];
       $field_names[] = $field_name;
+    }
+
+    // One more product, for what the action did not plan. A plain select and
+    // a number: no JavaScript, one extra product a save.
+    $others = array_diff_key($this->harvestableProducts($log), $rows);
+    if ($others) {
+      $form['harvest_yield_new_product'] = [
+        '#type' => 'select',
+        '#title' => $rows ? $this->t('Another product') : $this->t('Product'),
+        '#options' => array_map(
+          fn($product) => $this->t('@product (@unit)', [
+            '@product' => $product->label(),
+            '@unit' => $product->get('unit')->value,
+          ]),
+          $others,
+        ),
+        '#empty_option' => $this->t('- None -'),
+        '#states' => $done_only,
+      ];
+      $form['harvest_yield_new_quantity'] = [
+        '#type' => 'number',
+        '#title' => $this->t('Quantity'),
+        '#min' => 0,
+        '#step' => 'any',
+        '#states' => $done_only,
+      ];
+      $field_names[] = 'harvest_yield_new_product';
+      $field_names[] = 'harvest_yield_new_quantity';
     }
 
     $form['harvest_yield_fieldset'] = [
       '#type' => 'details',
       '#title' => $this->t('Harvest'),
-      '#description' => $this->t('Pre-filled from the calendar action\'s expected harvest — adjust to what was actually taken. Leave a field at 0 to record none.'),
+      '#description' => $yield_recipes
+        ? $this->t('Pre-filled from the calendar action\'s expected harvest — adjust to what was actually taken. Leave a field at 0 to record none.')
+        : $this->t('What was taken. Leave a field empty or at 0 to record none.'),
       '#group' => $vertical_tabs_group,
       '#weight' => 3,
       '#open' => FALSE,
@@ -97,6 +158,13 @@ trait HarvestYieldFormTrait {
    * any previously recorded yield for it is removed entirely, since it
    * no longer represents a real production event.
    *
+   * A quantity is read for every product the action expects, every product
+   * already recorded for the log, and the one product added in the block
+   * (task 0287). The added product must be one of the apiary's own active
+   * products; anything else is ignored. The block's date is written to every
+   * row; with no date submitted a new row takes the entity's default and an
+   * existing row keeps its own.
+   *
    * @param \Drupal\Core\Entity\EntityInterface $log
    *   The just-saved HiveActionLog or ApiaryActionLog.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
@@ -114,26 +182,43 @@ trait HarvestYieldFormTrait {
       return;
     }
 
-    $yield_recipes = $this->yieldRecipesForLog($log);
-    if (!$yield_recipes) {
+    // Product id => submitted quantity.
+    $submitted = [];
+    foreach ($this->yieldRecipesForLog($log) as $yield_recipe) {
+      $product_id = $yield_recipe->get('product')->target_id;
+      if ($product_id) {
+        $submitted[$product_id] = $form_state->getValue('harvest_yield_' . $product_id);
+      }
+    }
+    foreach (array_keys($existing_by_product) as $product_id) {
+      $submitted[$product_id] ??= $form_state->getValue('harvest_yield_' . $product_id);
+    }
+    $new_product = $form_state->getValue('harvest_yield_new_product');
+    if ($new_product && !isset($submitted[$new_product]) && isset($this->harvestableProducts($log)[$new_product])) {
+      $submitted[$new_product] = $form_state->getValue('harvest_yield_new_quantity');
+    }
+    if (!$submitted) {
       return;
     }
+
+    $date = $form_state->getValue('harvest_yield_date');
+    $date = is_string($date) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) ? $date : NULL;
 
     $yield_storage = $this->entityTypeManager->getStorage('harvest_yield');
     $access_handler = $this->entityTypeManager->getAccessControlHandler('harvest_yield');
     $log_field = $log->getEntityTypeId() === 'hive_action_log' ? 'hive_action_log' : 'apiary_action_log';
 
-    foreach ($yield_recipes as $yield_recipe) {
-      $product = $yield_recipe->get('product')->entity;
-      $product_id = $product->id();
-      $submitted = $form_state->getValue('harvest_yield_' . $product_id);
-      $quantity = ($submitted === '' || $submitted === NULL) ? 0.0 : (float) $submitted;
+    foreach ($submitted as $product_id => $value) {
+      $quantity = ($value === '' || $value === NULL) ? 0.0 : (float) $value;
       $existing = $existing_by_product[$product_id] ?? NULL;
 
       if ($quantity > 0) {
         if ($existing) {
           if ($existing->access('update')) {
             $existing->set('quantity', $quantity);
+            if ($date) {
+              $existing->set('harvest_date', $date);
+            }
             $existing->save();
           }
         }
@@ -142,13 +227,60 @@ trait HarvestYieldFormTrait {
             'product' => $product_id,
             'quantity' => $quantity,
             $log_field => $log->id(),
-          ])->save();
+          ] + ($date ? ['harvest_date' => $date] : []))->save();
         }
       }
       elseif ($existing && $existing->access('delete')) {
         $existing->delete();
       }
     }
+  }
+
+  /**
+   * Whether the log's calendar action is a harvest by category.
+   */
+  protected function isHarvestAction(EntityInterface $log): bool {
+    $calendar_action = $log instanceof FieldableEntityInterface ? $log->get('calendar_action')->entity : NULL;
+    return $calendar_action instanceof FieldableEntityInterface
+      && str_starts_with((string) $calendar_action->get('category')->value, 'harvest');
+  }
+
+  /**
+   * The products a harvest for this log may name, keyed by product id.
+   *
+   * The active products of the apiary the log belongs to: a hive log's own
+   * apiary stamp (its hive's apiary before it is saved), an apiary log's
+   * apiary.
+   *
+   * @return \Drupal\hivelog\Entity\Product[]
+   *   Products, by name.
+   */
+  protected function harvestableProducts(EntityInterface $log): array {
+    if (!$log instanceof FieldableEntityInterface) {
+      return [];
+    }
+    $apiary_id = $log->get('apiary')->target_id;
+    if (!$apiary_id && $log->hasField('hive')) {
+      $hive = $log->get('hive')->entity;
+      $apiary_id = $hive instanceof FieldableEntityInterface ? $hive->get('apiary')->target_id : NULL;
+    }
+    if (!$apiary_id) {
+      return [];
+    }
+    $storage = $this->entityTypeManager->getStorage('product');
+    $ids = $storage->getQuery()
+      ->accessCheck(TRUE)
+      ->condition('apiary', $apiary_id)
+      ->condition('status', 'discontinued', '<>')
+      ->sort('name')
+      ->execute();
+    $products = [];
+    foreach ($storage->loadMultiple($ids) as $product) {
+      if ($product instanceof Product) {
+        $products[$product->id()] = $product;
+      }
+    }
+    return $products;
   }
 
   /**
