@@ -11,6 +11,11 @@ use Drupal\hivelog\Entity\Hive;
 use Drupal\hivelog\Entity\Product;
 use Drupal\user\Entity\User;
 use Drupal\hivelog\HivelogStatTileBuilder;
+use Drupal\hivelog\Controller\HiveController;
+use Drupal\hivelog\HivelogHarvestTotals;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
 use Drupal\KernelTests\KernelTestBase;
 use PHPUnit\Framework\Attributes\Group;
 
@@ -191,8 +196,11 @@ class HiveHarvestHistoryTest extends KernelTestBase {
       'harvest_date' => (new DrupalDateTime(date('Y') . '-08-10'))->format('Y-m-d'),
     ])->save();
 
+    // Honey and beeswax are not added together, although both are in kg
+    // (task 0284): the tile shows the main product and names it.
     $coreTiles = $tileBuilder->coreTilesForHive($this->hive);
-    $this->assertEquals('20 kg', $coreTiles['hivelog_harvest']['value']);
+    $this->assertEquals('18 kg', $coreTiles['hivelog_harvest']['value']);
+    $this->assertEquals('Honey · +1 other product', (string) $coreTiles['hivelog_harvest']['sublabel']);
 
     // Last year harvest (should NOT be counted).
     HarvestYield::create([
@@ -204,7 +212,99 @@ class HiveHarvestHistoryTest extends KernelTestBase {
     ])->save();
 
     $coreTiles = $tileBuilder->coreTilesForHive($this->hive);
-    $this->assertEquals('20 kg', $coreTiles['hivelog_harvest']['value']);
+    $this->assertEquals('18 kg', $coreTiles['hivelog_harvest']['value']);
+  }
+
+  /**
+   * Records a direct harvest on the test hive.
+   */
+  protected function harvest(Product $product, float $quantity, string $date): void {
+    HarvestYield::create([
+      'product' => $product->id(),
+      'quantity' => $quantity,
+      'hive' => $this->hive->id(),
+      'apiary' => $this->apiary->id(),
+      'harvest_date' => $date,
+    ])->save();
+  }
+
+  /**
+   * A single product is named in the tile's sub-line.
+   */
+  public function testTileNamesItsProduct(): void {
+    $this->harvest($this->honeyProduct, 7.5, date('Y') . '-06-15');
+    $tile = \Drupal::service('hivelog.stat_tile_builder')->coreTilesForHive($this->hive)['hivelog_harvest'];
+
+    $this->assertSame('7.5 kg', $tile['value']);
+    $this->assertSame('Honey', (string) $tile['sublabel']);
+  }
+
+  /**
+   * Products in different units are never added together (task 0284).
+   */
+  public function testProductsInDifferentUnitsAreNotSummed(): void {
+    $comb = Product::create([
+      'apiary' => $this->apiary->id(),
+      'name' => 'Cut comb',
+      'unit' => 'jar',
+      'expected_unit_price' => 8,
+    ]);
+    $comb->save();
+    $year = (int) date('Y');
+    // Honey: 10 kg at 12 = 120. Comb: 4 jars at 8 = 32. Honey is the main
+    // product; "14 kg" would be nonsense.
+    $this->harvest($this->honeyProduct, 10, $year . '-06-15');
+    $this->harvest($comb, 4, $year . '-07-01');
+    $this->harvest($comb, 2, ($year - 1) . '-07-01');
+
+    $tile = \Drupal::service('hivelog.stat_tile_builder')->coreTilesForHive($this->hive)['hivelog_harvest'];
+    $this->assertSame('10 kg', $tile['value']);
+    $this->assertSame('Honey · +1 other product', (string) $tile['sublabel']);
+
+    $totals = HivelogHarvestTotals::perProduct(\Drupal::entityTypeManager(), $this->hive);
+    $this->assertSame(['honey|kg', 'cut comb|jar'], array_keys($totals));
+    $this->assertSame(10.0, $totals['honey|kg']['quantity']);
+    $this->assertSame(6.0, $totals['cut comb|jar']['quantity']);
+    $this->assertSame([(string) $year => 4.0, (string) ($year - 1) => 2.0], $totals['cut comb|jar']['by_year']);
+  }
+
+  /**
+   * The history table has a column per product and no cross-product total.
+   */
+  public function testHistoryTableHasNoCrossProductTotal(): void {
+    $comb = Product::create(['apiary' => $this->apiary->id(), 'name' => 'Cut comb', 'unit' => 'jar']);
+    $comb->save();
+    $year = (int) date('Y');
+    $this->harvest($this->honeyProduct, 10, $year . '-06-15');
+    $this->harvest($this->honeyProduct, 5, ($year - 1) . '-06-15');
+    $this->harvest($comb, 4, $year . '-07-01');
+
+    $request = Request::create('/hivelog/hive/' . $this->hive->id());
+    $request->setSession(new Session(new MockArraySessionStorage()));
+    \Drupal::service('request_stack')->push($request);
+    $build = \Drupal::service('class_resolver')->getInstanceFromDefinition(HiveController::class)->view($this->hive);
+    $table = $build['harvest_history']['table']['#props'];
+
+    $this->assertSame(['Year', 'Honey (kg)', 'Cut comb (jar)'], $table['headers']);
+    $this->assertSame([
+      [(string) $year, '10 kg', '4 jar'],
+      [(string) ($year - 1), '5 kg', ''],
+      ['All years', '15 kg', '4 jar'],
+    ], array_column($table['rows'], 'cells'));
+  }
+
+  /**
+   * Two products of the same name and unit are one column.
+   */
+  public function testSameNameAndUnitIsOneProduct(): void {
+    $other = Product::create(['apiary' => $this->apiary->id(), 'name' => 'honey', 'unit' => 'kg']);
+    $other->save();
+    $this->harvest($this->honeyProduct, 10, date('Y') . '-06-15');
+    $this->harvest($other, 3, date('Y') . '-07-15');
+
+    $totals = HivelogHarvestTotals::perProduct(\Drupal::entityTypeManager(), $this->hive);
+    $this->assertCount(1, $totals);
+    $this->assertSame(13.0, reset($totals)['quantity']);
   }
 
 }
