@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: review
+status: done
 priority: high
 project: "[[beekeeper-centred-simplification-and-gaps]]"
 area: entity
@@ -29,7 +29,7 @@ the truth for both kinds. This task is the storage half; nothing a beekeeper see
 - [x] `isDirect()` still means "no log"; `ApiaryAccessTrait::resolveApiary()` uses the harvest's own apiary, falling back to its product's
 - [x] Kernel tests (`HarvestStampTest`); update hook tested against rows written the old way
 - [x] `AGENTS.md` updated if entity types, routes, services, hooks or conventions changed
-- [ ] phpcs clean; phpstan clean; kernel tests pass (`--group hivelog`)
+- [x] phpcs clean; phpstan clean; kernel tests pass (`--group hivelog`)
 - [x] `ddev drush updb -y && ddev drush cr` clean: run on the local hvg site, 2026-11-15
 
 ## Implementation notes

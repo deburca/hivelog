@@ -184,8 +184,8 @@ class HivelogStatTileBuilder {
    * sub-line, and says how many other products were harvested. The Harvest
    * History section under it has every product.
    *
-   * Only direct harvests (recorded outside the calendar) count here;
-   * calendar-logged yields appear in the apiary financial report instead.
+   * Every harvest of the hive counts, reported with the calendar or
+   * recorded directly (task 0286).
    */
   protected function harvestThisYearTile(Hive $hive): array {
     $totals = HivelogHarvestTotals::perProduct($this->entityTypeManager, $hive, (int) date('Y'));

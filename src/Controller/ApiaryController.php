@@ -22,6 +22,7 @@ use Drupal\hivelog\HivelogCalendarChecklistBuilder;
 use Drupal\hivelog\HivelogOwnerWarning;
 use Drupal\hivelog\HivelogEntityActionsTrait;
 use Drupal\hivelog\HivelogHarvestSectionTrait;
+use Drupal\hivelog\HivelogHarvestTotals;
 use Drupal\hivelog\HivelogStatTileBuilder;
 use Drupal\hivelog\HivelogStatTileStripTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -861,9 +862,15 @@ class ApiaryController extends ControllerBase {
       $this->t('Name'),
       $this->t('Unit'),
       $this->t('Expected Unit Price'),
+      // Connects the catalogue to the harvests below it (task 0286): what
+      // was taken of each product this year, in the product's own unit.
+      $this->t('Harvested this year'),
       $this->t('Status'),
       $this->t('Operations'),
     ];
+    $harvested = $products
+      ? HivelogHarvestTotals::byProductForApiary($this->entityTypeManager, $apiary->id(), (int) date('Y'))
+      : [];
 
     $products_rows = [];
     foreach ($products as $product) {
@@ -884,12 +891,16 @@ class ApiaryController extends ControllerBase {
 
       $status = $product->get('status')->value;
       $price = $product->get('expected_unit_price')->value;
+      $unit = (string) $product->get('unit')->value;
 
       $products_rows[] = [
         'cells' => [
           $product->toLink()->toString(),
-          $product->get('unit')->value,
+          $unit,
           $price !== NULL && $price !== '' ? number_format((float) $price, 2) : '',
+          isset($harvested[(int) $product->id()])
+            ? HivelogHarvestTotals::format($harvested[(int) $product->id()], $unit)
+            : '',
           $product->get('status')->getSetting('allowed_values')[$status] ?? $status,
           $this->renderer->renderInIsolation($actions),
         ],
@@ -905,6 +916,8 @@ class ApiaryController extends ControllerBase {
         'empty_message' => (string) $this->t('No products have been added to this apiary yet.'),
       ],
       '#weight' => 31,
+      // "Harvested this year" changes with every harvest.
+      '#cache' => ['tags' => $this->entityTypeManager->getDefinition('harvest_yield')->getListCacheTags()],
     ];
 
     $build['products_pager'] = [
@@ -913,8 +926,8 @@ class ApiaryController extends ControllerBase {
       '#weight' => 32,
     ];
 
-    // Harvests recorded directly, outside the calendar (task 0271): this
-    // apiary's own and its hives'.
+    // Every harvest of this apiary and its hives, with a way to record one
+    // (tasks 0271, 0286).
     $build['harvests'] = $this->buildHarvestSection($apiary) + ['#weight' => 33];
 
     // Explicit cache metadata.

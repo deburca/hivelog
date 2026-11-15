@@ -312,7 +312,7 @@ class HiveController extends ControllerBase {
       ];
     }
 
-    // Harvests recorded directly, outside the calendar (task 0271).
+    // Every harvest of the hive, with a way to record one (tasks 0271, 0286).
     $build['harvests'] = $this->buildHarvestSection($hive) + ['#weight' => 28];
 
     $build['calendar_filter'] = $this->formBuilder->getForm(
@@ -787,7 +787,7 @@ class HiveController extends ControllerBase {
    * One column per product and one row per year, newest first, then a row
    * of each product's total over all years. There is no total across
    * products: their units differ and nothing converts between them (task
-   * 0284, HivelogHarvestTotals). Only harvests recorded directly are
+   * 0284, HivelogHarvestTotals). Every harvest of the hive is
    * counted.
    *
    * @param \Drupal\hivelog\Entity\Hive $hive
@@ -845,7 +845,7 @@ class HiveController extends ControllerBase {
         '#props' => [
           'headers' => array_map('strval', $headers),
           'rows' => $rows,
-          'empty_message' => (string) $this->t('No direct harvests have been recorded for this hive.'),
+          'empty_message' => (string) $this->t('No harvest has been recorded for this hive yet.'),
         ],
       ],
       '#cache' => [

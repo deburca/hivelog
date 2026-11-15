@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: backlog
+status: review
 priority: high
 project: "[[beekeeper-centred-simplification-and-gaps]]"
 area: ui
@@ -24,18 +24,20 @@ harvest has been recorded … outside the seasonal calendar", assumes the reader
 ways to record one. ADR-0110 §2.
 
 ## Acceptance criteria
-- [ ] The Harvests section lists every harvest of the hive or apiary, newest first, with a Source column: the calendar action's title linking to its log, or "Recorded directly"
-- [ ] Edit and Delete on a directly recorded row as today; a row from the calendar links to its log instead
-- [ ] `HivelogHarvestTotals::perProduct()` counts every harvest, so the tile and the Harvest History agree with the apiary's report for the hive
-- [ ] The Products table on the apiary page gains a "Harvested this year" column, per product, in the product's unit
-- [ ] The empty message no longer mentions the seasonal calendar
-- [ ] Kernel tests with one logged and one direct harvest of the same product
-- [ ] `AGENTS.md` updated if entity types, routes, services, hooks or conventions changed
-- [ ] phpcs clean; phpstan clean; kernel tests pass (`--group hivelog`)
+- [x] The Harvests section lists every harvest of the hive or apiary, newest first, with a Source column: "Calendar: <action title>" linking to its log, or "Recorded directly"
+- [x] Edit and Delete on a directly recorded row as before; a row from the calendar has "Edit in log" instead, and is not deleted from here
+- [x] `HivelogHarvestTotals::perProduct()` counts every harvest, so the tile and the Harvest History agree with the apiary's report for the hive
+- [x] The Products table on the apiary page has a "Harvested this year" column, per product, in the product's unit
+- [x] The empty message no longer mentions the seasonal calendar
+- [x] Kernel tests with logged and direct harvests of the same product (`HarvestListTest`)
+- [x] `AGENTS.md` updated if entity types, routes, services, hooks or conventions changed
+- [x] phpcs clean; phpstan clean; kernel tests pass (`--group hivelog`)
 
 ## Implementation notes
 - Key files: `src/HivelogHarvestSectionTrait.php`, `src/HivelogHarvestTotals.php`, `src/Controller/ApiaryController.php`
 - Update hook needed? No.
+- The section still shows the latest 20 harvests; it has no pager or filter.
+- A hive's totals include harvests reported for that hive only. A harvest reported for the whole apiary names no hive (ADR-0110), so it appears on the apiary page and in "Harvested this year", not in any one hive's totals.
 - Closes the "direct harvests only" note in [[0272-hive-harvest-history-and-totals]] and [[0284-harvest-totals-per-product-not-across-units]].
 
 ## Related

@@ -10,7 +10,7 @@ use Drupal\hivelog\Entity\Hive;
 use Drupal\hivelog\Entity\Product;
 
 /**
- * Totals of a hive's directly recorded harvests, one product at a time.
+ * Totals of a hive's harvests, one product at a time.
  *
  * A product's unit is free text (kg, g, jar, each) and nothing converts
  * between units, so quantities of different products are never added
@@ -27,8 +27,9 @@ final class HivelogHarvestTotals {
   /**
    * A hive's harvest totals per product, the most valuable product first.
    *
-   * Only harvests recorded directly (no action log) that the current user
-   * may view. Two products with the same name and unit are one entry: a
+   * Every harvest of the hive that the current user may view, whether it
+   * was reported with a calendar action or recorded directly (ADR-0110,
+   * task 0286), read by the harvest's own `hive` and date. Two products with the same name and unit are one entry: a
    * hive that moved apiary has "Honey (kg)" from each, and that is one
    * column to a beekeeper. The same name in another unit stays separate.
    *
@@ -51,9 +52,7 @@ final class HivelogHarvestTotals {
     $storage = $entity_type_manager->getStorage('harvest_yield');
     $query = $storage->getQuery()
       ->accessCheck(TRUE)
-      ->condition('hive', $hive->id())
-      ->notExists('hive_action_log')
-      ->notExists('apiary_action_log');
+      ->condition('hive', $hive->id());
     if ($year !== NULL) {
       $query->condition('harvest_date', $year . '-01-01', '>=')
         ->condition('harvest_date', $year . '-12-31', '<=');
@@ -108,6 +107,42 @@ final class HivelogHarvestTotals {
    */
   public static function format(float $quantity, string $unit = ''): string {
     return trim(HarvestYield::trimQuantity(number_format($quantity, 3, '.', '')) . ' ' . $unit);
+  }
+
+  /**
+   * What an apiary harvested of each product in a year, keyed by product id.
+   *
+   * For the Products table's "Harvested this year" column. Every harvest of
+   * the apiary counts, from any hive or none. One product per figure, so no
+   * units are mixed.
+   *
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The entity type manager.
+   * @param int|string $apiary_id
+   *   The apiary.
+   * @param int $year
+   *   The year.
+   *
+   * @return array<int, float>
+   *   Quantity by product id; a product with no harvest is absent.
+   */
+  public static function byProductForApiary(EntityTypeManagerInterface $entity_type_manager, int|string $apiary_id, int $year): array {
+    $results = $entity_type_manager->getStorage('harvest_yield')->getAggregateQuery()
+      ->accessCheck(FALSE)
+      ->condition('apiary', $apiary_id)
+      ->condition('harvest_date', $year . '-01-01', '>=')
+      ->condition('harvest_date', $year . '-12-31', '<=')
+      ->groupBy('product')
+      ->aggregate('quantity', 'SUM')
+      ->execute();
+    $totals = [];
+    foreach ($results as $result) {
+      $product_id = (int) ($result['product'] ?? $result['product_target_id'] ?? 0);
+      if ($product_id) {
+        $totals[$product_id] = (float) $result['quantity_sum'];
+      }
+    }
+    return $totals;
   }
 
 }

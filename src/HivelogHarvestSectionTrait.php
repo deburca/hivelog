@@ -5,17 +5,22 @@ declare(strict_types=1);
 namespace Drupal\hivelog;
 
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Url;
 use Drupal\hivelog\Entity\Apiary;
+use Drupal\hivelog\Entity\HarvestYield;
 use Drupal\hivelog\Entity\Hive;
 use Drupal\hivelog\Entity\Product;
 
 /**
- * The "Harvests" section of the hive and apiary pages (task 0271).
+ * The "Harvests" section of the hive and apiary pages (tasks 0271, 0286).
  *
- * Lists harvests recorded directly, newest first, with a "Record harvest"
- * button. A yield reported with a planned action is not listed here: it
- * belongs to its action log, in the calendar section.
+ * Lists every harvest, newest first, whichever way it was recorded
+ * (ADR-0110), with a "Record harvest" button. The Source column says where
+ * each came from: the calendar action it was reported with, linking to that
+ * log, or "Recorded directly". A directly recorded harvest is edited and
+ * deleted here; one from the calendar is managed from its log.
  *
  * The using class must have `$entityTypeManager`, `$renderer` and `t()`
  * (the hive and apiary controllers do).
@@ -42,8 +47,6 @@ trait HivelogHarvestSectionTrait {
     $ids = $storage->getQuery()
       ->accessCheck(TRUE)
       ->condition($for_hive ? 'hive' : 'apiary', $parent->id())
-      ->notExists('hive_action_log')
-      ->notExists('apiary_action_log')
       ->sort('harvest_date', 'DESC')
       ->sort('id', 'DESC')
       ->range(0, static::HARVESTS_SHOWN)
@@ -68,13 +71,26 @@ trait HivelogHarvestSectionTrait {
         $hive = $harvest->get('hive')->entity;
         $cells[] = $hive ? $hive->toLink()->toString() : '';
       }
+      $log = $harvest->get('hive_action_log')->entity ?: $harvest->get('apiary_action_log')->entity;
+      $cells[] = $this->harvestSourceCell($harvest, $log);
+      if ($log instanceof EntityInterface) {
+        // The Source cell names the log's calendar action.
+        $cache_tags = array_merge($cache_tags, $log->getCacheTags());
+      }
       $cells[] = Html::escape(trim((string) $harvest->get('notes')->value));
 
+      // A harvest from the calendar is changed where it was reported, so
+      // its quantity and its log cannot disagree.
       $buttons = [];
-      if ($harvest->access('update')) {
+      if ($log instanceof EntityInterface) {
+        if ($log->access('update')) {
+          $buttons[] = ['label' => (string) $this->t('Edit in log'), 'url' => $log->toUrl('edit-form')->toString()];
+        }
+      }
+      elseif ($harvest->isDirect() && $harvest->access('update')) {
         $buttons[] = ['label' => (string) $this->t('Edit'), 'url' => $harvest->toUrl('edit-form')->toString()];
       }
-      if ($harvest->access('delete')) {
+      if ($harvest->isDirect() && $harvest->access('delete')) {
         $buttons[] = [
           'label' => (string) $this->t('Delete'),
           'url' => $harvest->toUrl('delete-form')->toString(),
@@ -95,6 +111,7 @@ trait HivelogHarvestSectionTrait {
     if (!$for_hive) {
       $headers[] = $this->t('Hive');
     }
+    $headers[] = $this->t('Source');
     $headers[] = $this->t('Notes');
     $headers[] = $this->t('Operations');
 
@@ -126,8 +143,8 @@ trait HivelogHarvestSectionTrait {
           'headers' => array_map('strval', $headers),
           'rows' => $rows,
           'empty_message' => (string) ($for_hive
-            ? $this->t('No harvest has been recorded for this hive outside the seasonal calendar.')
-            : $this->t('No harvest has been recorded for this apiary outside the seasonal calendar.')),
+            ? $this->t('No harvest has been recorded for this hive yet.')
+            : $this->t('No harvest has been recorded for this apiary yet.')),
         ],
       ],
     ];
@@ -147,6 +164,33 @@ trait HivelogHarvestSectionTrait {
       ];
     }
     return $build;
+  }
+
+  /**
+   * Says where a harvest came from, for the Source column.
+   *
+   * @param \Drupal\hivelog\Entity\HarvestYield $harvest
+   *   The harvest.
+   * @param mixed $log
+   *   Its hive or apiary action log, or NULL.
+   *
+   * @return string
+   *   Escaped HTML: the calendar action's title, linking to the log when the
+   *   viewer may open it, or "Recorded directly".
+   */
+  protected function harvestSourceCell(HarvestYield $harvest, mixed $log): string {
+    if (!$log instanceof FieldableEntityInterface) {
+      return $harvest->isDirect()
+        ? Html::escape((string) $this->t('Recorded directly'))
+        : Html::escape((string) $this->t('Calendar'));
+    }
+    $action = $log->get('calendar_action')->entity;
+    $title = Html::escape((string) $this->t('Calendar: @action', [
+      '@action' => $action ? $action->label() : $this->t('deleted action'),
+    ]));
+    return $log->access('view')
+      ? '<a href="' . Html::escape($log->toUrl('canonical')->toString()) . '">' . $title . '</a>'
+      : $title;
   }
 
 }
