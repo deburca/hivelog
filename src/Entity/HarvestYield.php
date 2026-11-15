@@ -8,8 +8,10 @@ use Drupal\Core\Entity\Attribute\ContentEntityType;
 use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityChangedInterface;
 use Drupal\Core\Entity\EntityChangedTrait;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\hivelog\Form\HarvestYieldForm;
@@ -41,9 +43,15 @@ use Drupal\user\EntityOwnerTrait;
  * a little propolis. Such a row has no log; it carries its own `apiary`
  * (always), `hive` (when it came from one hive) and `harvest_date`, and has
  * add, edit and delete forms (HarvestYieldForm). `isDirect()` tells the two
- * kinds apart. Its `apiary` is a stamp like a hive action log's: set when
- * the row is created and never changed, so a hive that moves later leaves
- * the harvest with the apiary it was taken in.
+ * kinds apart.
+ *
+ * **Every** harvest carries its own `apiary`, `harvest_date` and, when it
+ * came from one hive, `hive` (ADR-0110, task 0285): a logged one takes them
+ * from its log when it is created (completeHarvest()). They are the truth
+ * from then on: reports and lists read a harvest's own fields, and the log
+ * reference only says where it came from. The `apiary` is a stamp like a
+ * hive action log's, set when the row is created and never changed, so a
+ * hive that moves later leaves the harvest with the apiary it was taken in.
  */
 #[ContentEntityType(
   id: 'harvest_yield',
@@ -121,9 +129,7 @@ class HarvestYield extends ContentEntityBase implements EntityChangedInterface, 
     if ($hive_log_id && $apiary_log_id) {
       throw new \InvalidArgumentException('Harvest yield must be linked to exactly one of a hive action log or an apiary action log.');
     }
-    if ($this->isDirect()) {
-      $this->prepareDirectHarvest();
-    }
+    $this->completeHarvest();
 
     // Snapshot the product's expected unit price at creation time only —
     // once set, it stays fixed even if the quantity is edited later or
@@ -149,37 +155,108 @@ class HarvestYield extends ContentEntityBase implements EntityChangedInterface, 
   }
 
   /**
-   * Completes and checks a harvest recorded directly (task 0271).
+   * Completes and checks a harvest, whichever screen wrote it.
+   *
+   * Every harvest carries its own apiary, date and, when it came from one
+   * hive, hive (ADR-0110, task 0285). They are set when the harvest is
+   * created and are the truth from then on: reports and lists read them,
+   * never the log. A harvest recorded directly is given them by its form; one
+   * reported with an action log takes them from the log here, so every
+   * caller that creates one (the log form, a script) gets a complete row.
    *
    * The friendly errors are the field constraints'; these throws are the
    * backstop for a caller that never validates.
    */
-  protected function prepareDirectHarvest(): void {
+  protected function completeHarvest(): void {
+    $log = $this->get('hive_action_log')->entity ?: $this->get('apiary_action_log')->entity;
     $hive = $this->get('hive')->entity;
     $hive = $hive instanceof Hive ? $hive : NULL;
+
     if ($this->isNew()) {
-      // The apiary is a stamp: taken from the hive when the harvest is
-      // recorded, and not followed if the hive moves later.
-      if ($hive && $this->get('apiary')->isEmpty()) {
-        $this->set('apiary', $hive->get('apiary')->target_id);
+      if ($log instanceof HiveActionLog) {
+        $log_hive = $log->get('hive')->entity;
+        if (!$hive && $log_hive instanceof Hive) {
+          $this->set('hive', $log_hive->id());
+        }
+        // The log's own stamp, not the hive's apiary now: a log written
+        // before the hive moved belongs to the apiary it was written in.
+        if ($this->get('apiary')->isEmpty()) {
+          $this->set('apiary', $log->get('apiary')->target_id ?: ($log_hive instanceof Hive ? $log_hive->get('apiary')->target_id : NULL));
+        }
       }
-      if ($hive && (int) $hive->get('apiary')->target_id !== (int) $this->get('apiary')->target_id) {
-        throw new \InvalidArgumentException('A harvest\'s hive must belong to the apiary the harvest is recorded in.');
+      elseif ($log instanceof ApiaryActionLog && $this->get('apiary')->isEmpty()) {
+        $this->set('apiary', $log->get('apiary')->target_id);
+      }
+      elseif (!$log) {
+        // Recorded directly: the apiary is taken from the hive when the
+        // harvest is recorded, and not followed if the hive moves later.
+        if ($hive && $this->get('apiary')->isEmpty()) {
+          $this->set('apiary', $hive->get('apiary')->target_id);
+        }
+        if ($hive && (int) $hive->get('apiary')->target_id !== (int) $this->get('apiary')->target_id) {
+          throw new \InvalidArgumentException('A harvest\'s hive must belong to the apiary the harvest is recorded in.');
+        }
       }
       if ($this->get('harvest_date')->isEmpty()) {
-        $this->set('harvest_date', date('Y-m-d'));
+        $this->set('harvest_date', $log ? static::defaultDateForLog($log) : date('Y-m-d'));
       }
     }
-    elseif (($original = $this->originalHarvest()) && (int) $original->get('apiary')->target_id !== (int) $this->get('apiary')->target_id) {
+    elseif (($original = $this->originalHarvest())
+      && !$original->get('apiary')->isEmpty()
+      && (int) $original->get('apiary')->target_id !== (int) $this->get('apiary')->target_id) {
       throw new \InvalidArgumentException('A harvest\'s apiary cannot be changed.');
     }
+
     if ($this->get('apiary')->isEmpty()) {
-      throw new \InvalidArgumentException('Harvest yield must be linked to a hive action log, an apiary action log or, when recorded directly, an apiary.');
+      if ($this->isDirect()) {
+        throw new \InvalidArgumentException('Harvest yield must be linked to a hive action log, an apiary action log or, when recorded directly, an apiary.');
+      }
+      // A logged harvest whose log can no longer be loaded: nothing to take
+      // an apiary from, and nothing to check the product against.
+      return;
     }
     $product = $this->get('product')->entity;
     if ($product instanceof Product && (int) $product->get('apiary')->target_id !== (int) $this->get('apiary')->target_id) {
       throw new \InvalidArgumentException('A harvest\'s product must belong to the apiary the harvest is recorded in.');
     }
+  }
+
+  /**
+   * The date a harvest reported with an action log gets when none is given.
+   *
+   * Today for a log of the current year. A log for another year (last
+   * year's action reported late) gets a date inside that year, so the
+   * harvest counts in the year it belongs to: see dateFromLogWeek().
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $log
+   *   A hive or apiary action log.
+   */
+  public static function defaultDateForLog(EntityInterface $log): string {
+    $year = $log instanceof FieldableEntityInterface ? (int) $log->get('year')->value : 0;
+    if ($year === 0 || $year === (int) date('Y')) {
+      return date('Y-m-d');
+    }
+    $week = $log instanceof FieldableEntityInterface ? $log->get('week_completed')->value : NULL;
+    return static::dateFromLogWeek($year, $week === NULL || $week === '' ? NULL : (int) $week);
+  }
+
+  /**
+   * Turns a log's year and completed week into a date (ADR-0110).
+   *
+   * The Monday of the ISO week, or 1 July when the log has no week. Week 1's
+   * Monday can fall in the previous December; the date is then 1 January, so
+   * the harvest stays in the log's year, which is what the reports count by.
+   * Also the rule hivelog_update_10040() backfills existing harvests with.
+   */
+  public static function dateFromLogWeek(int $year, ?int $week): string {
+    if ($week === NULL || $week < 1 || $week > 53) {
+      return $year . '-07-01';
+    }
+    $date = (new \DateTimeImmutable())->setISODate($year, $week)->format('Y-m-d');
+    if ((int) substr($date, 0, 4) < $year) {
+      return $year . '-01-01';
+    }
+    return (int) substr($date, 0, 4) > $year ? $year . '-12-31' : $date;
   }
 
   /**
@@ -213,9 +290,9 @@ class HarvestYield extends ContentEntityBase implements EntityChangedInterface, 
       ->setDisplayOptions('form', ['type' => 'number', 'weight' => 1])
       ->setDisplayConfigurable('view', TRUE);
 
-    // The next four are for a harvest recorded directly (task 0271); a
-    // yield reported with an action log leaves them empty and takes its
-    // apiary, hive and year from the log.
+    // The date, apiary and hive belong to every harvest (ADR-0110, task
+    // 0285): one recorded directly gets them from its form, one reported
+    // with an action log from the log, in completeHarvest().
     $fields['harvest_date'] = BaseFieldDefinition::create('datetime')
       ->setLabel(t('Date'))
       ->setDescription(t('The day of the harvest.'))
@@ -226,14 +303,14 @@ class HarvestYield extends ContentEntityBase implements EntityChangedInterface, 
 
     $fields['apiary'] = BaseFieldDefinition::create('entity_reference')
       ->setLabel(t('Apiary'))
-      ->setDescription(t('The apiary a directly recorded harvest was taken in. Set when it is recorded and never changed.'))
+      ->setDescription(t('The apiary the harvest was taken in. Set when it is recorded and never changed.'))
       ->setSetting('target_type', 'apiary')
       ->setDisplayOptions('view', ['label' => 'inline', 'type' => 'entity_reference_label', 'weight' => 5])
       ->setDisplayConfigurable('view', TRUE);
 
     $fields['hive'] = BaseFieldDefinition::create('entity_reference')
       ->setLabel(t('Hive'))
-      ->setDescription(t('The hive a directly recorded harvest came from, if it was one hive.'))
+      ->setDescription(t('The hive the harvest came from, if it was one hive.'))
       ->setSetting('target_type', 'hive')
       ->setDisplayOptions('view', ['label' => 'inline', 'type' => 'entity_reference_label', 'weight' => 6])
       ->setDisplayConfigurable('view', TRUE);

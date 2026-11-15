@@ -366,7 +366,17 @@ entities mirror each other one level removed (inputs vs. outputs):
   (`InventoryReportController::yieldBreakdown()`). It blocks deleting its hive
   and apiary (registry rows `0034-1`, `0034-2`).
   `HivelogEntityHierarchy::resolveParent()` gives its hive when it has one,
-  else its apiary.
+  else its apiary. **Every harvest carries its own `apiary`, `harvest_date` and
+  (from one hive) `hive`** (task 0285, ADR-0110), logged ones included:
+  `HarvestYield::completeHarvest()` takes them from the log when the row is
+  created (the hive log's own apiary stamp, not the hive's apiary now; today's
+  date for a log of this year, else `dateFromLogWeek()`: the Monday of the
+  completed week, 1 July without one), and `hivelog_update_10040` backfilled
+  existing rows by direct update. They are the truth from then on: the report
+  reads harvests by their own apiary and date in one query, and the log
+  reference only says where a harvest came from. Do not join harvests through
+  their logs to find an apiary, hive or year. `InventoryUsage` has no such
+  fields and is still joined through its log.
 
 **Hive composition and weight** (ADR-0106) — what physical components a
 hive is built from, so its empty weight can be netted out of a raw scale

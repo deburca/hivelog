@@ -7,6 +7,7 @@
 
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\CalendarAction;
+use Drupal\hivelog\Entity\HarvestYield;
 use Drupal\hivelog\Entity\Hive;
 use Drupal\hivelog\Entity\HiveActionLog;
 use Drupal\hivelog\Entity\HiveInspection;
@@ -1363,4 +1364,66 @@ function hivelog_update_10039(&$sandbox) {
   return $installed
     ? t('Added @fields to harvest yields.', ['@fields' => implode(', ', $installed)])
     : t('Harvest yields already have the direct-harvest fields.');
+}
+
+/**
+ * Gives every calendar harvest its own apiary, hive and date.
+ *
+ * Task 0285, ADR-0110. A harvest reported with an action log used to borrow
+ * its apiary, hive and year from the log; reports now read a harvest's own
+ * fields. Fills them in on existing rows: the apiary from the log's own stamp
+ * (a hive log's `apiary`, falling back to its hive's apiary; an apiary log's
+ * apiary), the hive from a hive log, and the date from the log's year and
+ * completed week (HarvestYield::dateFromLogWeek()). A direct update, so
+ * `changed` is not touched. Safe to run twice: only rows with no apiary or no
+ * date are written.
+ */
+function hivelog_update_10040(&$sandbox) {
+  $database = \Drupal::database();
+  if (!$database->schema()->fieldExists('hivelog_harvest_yield', 'harvest_date')) {
+    return t('Harvests have no date field yet; run hivelog_update_10039 first.');
+  }
+  $filled = 0;
+  $sources = [
+    'hive_action_log' => 'hivelog_hive_action_log',
+    'apiary_action_log' => 'hivelog_apiary_action_log',
+  ];
+  foreach ($sources as $field => $log_table) {
+    $query = $database->select('hivelog_harvest_yield', 'y');
+    $query->join($log_table, 'l', "l.id = y.$field");
+    $query->fields('y', ['id', 'apiary', 'hive', 'harvest_date']);
+    $query->addField('l', 'apiary', 'log_apiary');
+    $query->addField('l', 'year', 'log_year');
+    $query->addField('l', 'week_completed', 'log_week');
+    if ($field === 'hive_action_log') {
+      $query->addField('l', 'hive', 'log_hive');
+      $query->leftJoin('hivelog_hive', 'h', 'h.id = l.hive');
+      $query->addField('h', 'apiary', 'hive_apiary');
+    }
+    $query->condition($query->orConditionGroup()->isNull('y.apiary')->isNull('y.harvest_date'));
+    foreach ($query->execute() as $row) {
+      $values = [];
+      if ($row->apiary === NULL) {
+        $apiary = $row->log_apiary ?? ($row->hive_apiary ?? NULL);
+        if ($apiary !== NULL) {
+          $values['apiary'] = $apiary;
+        }
+      }
+      if ($row->hive === NULL && !empty($row->log_hive)) {
+        $values['hive'] = $row->log_hive;
+      }
+      if ($row->harvest_date === NULL && $row->log_year) {
+        $values['harvest_date'] = HarvestYield::dateFromLogWeek(
+          (int) $row->log_year,
+          $row->log_week === NULL ? NULL : (int) $row->log_week,
+        );
+      }
+      if ($values) {
+        $database->update('hivelog_harvest_yield')->fields($values)->condition('id', $row->id)->execute();
+        $filled++;
+      }
+    }
+  }
+  \Drupal::entityTypeManager()->getStorage('harvest_yield')->resetCache();
+  return t('Gave @count calendar harvest(s) their own apiary, hive and date.', ['@count' => $filled]);
 }

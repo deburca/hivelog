@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: review
+status: done
 priority: medium
 project: "[[beekeeper-centred-simplification-and-gaps]]"
 area: ui

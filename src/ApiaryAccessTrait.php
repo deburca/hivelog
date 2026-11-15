@@ -220,6 +220,13 @@ trait ApiaryAccessTrait {
     // HarvestYield → its product → apiary (the product's apiary never changes
     // when a hive moves, task 0231).
     if ($entity_type === 'harvest_yield') {
+      // Its own apiary since task 0285; its product's for a row not yet
+      // backfilled or whose apiary is gone.
+      // @phpstan-ignore-next-line
+      $own = $entity->get('apiary')->entity;
+      if ($own) {
+        return $own;
+      }
       // @phpstan-ignore-next-line
       $product = $entity->get('product')->entity;
       return $product ? $product->get('apiary')->entity : NULL;
