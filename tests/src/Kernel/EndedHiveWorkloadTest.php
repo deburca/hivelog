@@ -83,6 +83,8 @@ class EndedHiveWorkloadTest extends KernelTestBase {
     $this->installEntitySchema('inventory_usage');
     $this->installEntitySchema('product');
     $this->installEntitySchema('calendar_action_product_yield');
+    // The hive and apiary pages list harvests recorded directly (task 0271).
+    $this->installEntitySchema('harvest_yield');
     $this->installSchema('file', ['file_usage']);
 
     $user = User::create([
