@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\hivelog;
 
+use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\DependencyInjection\ClassResolverInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -99,6 +100,14 @@ class HivelogStatTileBuilder {
     $tiles['hivelog_queen'] = $this->queenTile($hive) + ['label' => $this->t('Queen'), 'weight' => -20];
     $tiles['hivelog_empty_weight'] = $this->emptyWeightTile($hive)
       + ['label' => $this->t('Empty weight'), 'weight' => -10];
+    $harvestTile = $this->harvestThisYearTile($hive);
+    if ($harvestTile) {
+      $tiles['hivelog_harvest'] = $harvestTile + ['label' => $this->t('Harvest this year'), 'weight' => 0];
+    }
+    $inspected = $this->lastInspectedTile($hive);
+    if ($inspected) {
+      $tiles['hivelog_last_inspected'] = $inspected + ['label' => $this->t('Last inspected'), 'weight' => 10];
+    }
     return $tiles;
   }
 
@@ -129,7 +138,7 @@ class HivelogStatTileBuilder {
     $breed = $queen->get('breed')->getString();
     $tile = [
       'value' => $value !== '' ? $value : (string) $queen->label(),
-      // The queen's name, and the breed when recorded; the Introduced date is on
+      // The queen's name and breed; the Introduced date is on
       // the queen's own page (task 0257 dropped the hive page's queen table).
       'sublabel' => implode(' · ', array_filter([
         (string) $queen->label(),
@@ -164,6 +173,119 @@ class HivelogStatTileBuilder {
       'sublabel_variant' => 'warning',
       'url' => $url,
     ];
+  }
+
+  /**
+   * The Harvest this year tile: total quantity across all products.
+   *
+   * Only direct harvests (recorded outside the calendar) count here;
+   * calendar-logged yields appear in the apiary financial report instead.
+   */
+  protected function harvestThisYearTile(Hive $hive): array {
+    if ($hive->isNew()) {
+      return [];
+    }
+
+    $year = (int) date('Y');
+    $yield_storage = $this->entityTypeManager->getStorage('harvest_yield');
+    $product_storage = $this->entityTypeManager->getStorage('product');
+
+    $direct_ids = $yield_storage->getQuery()
+      ->accessCheck(TRUE)
+      ->condition('hive', $hive->id())
+      ->notExists('hive_action_log')
+      ->notExists('apiary_action_log')
+      ->condition('harvest_date', $year . '-01-01', '>=')
+      ->condition('harvest_date', $year . '-12-31', '<=')
+      ->execute();
+
+    if (!$direct_ids) {
+      return [];
+    }
+
+    // Sum quantities across all products for this hive/year.
+    $total = 0.0;
+    $unit = '';
+    foreach ($yield_storage->loadMultiple($direct_ids) as $_harvest) {
+      /** @var \Drupal\hivelog\Entity\HarvestYield $harvest */
+      $harvest = $_harvest;
+      $quantity = (float) $harvest->get('quantity')->value;
+      if ($quantity > 0) {
+        $total += $quantity;
+      }
+      if ($unit === '') {
+        $product = $this->entityTypeManager
+          ->getStorage('product')->load($harvest->get('product')->target_id);
+        if ($product) {
+          /** @var \Drupal\hivelog\Entity\Product $typed_product */
+          $typed_product = $product;
+          $unit = (string) ($typed_product->get('unit')->value ?? '');
+        }
+      }
+    }
+
+    if ($total <= 0) {
+      return [];
+    }
+
+    return [
+      'value' => rtrim(rtrim(number_format($total, 3, '.', ''), '0'), '.') . ($unit ? ' ' . $unit : ''),
+      'url' => Url::fromRoute('entity.hive.canonical', ['hive' => $hive->id()], ['fragment' => 'harvest_history']),
+    ];
+  }
+
+  /**
+   * The "Last inspected" tile with a warning sub-line when overdue.
+   */
+  protected function lastInspectedTile(Hive $hive): array {
+    if ($hive->isNew()) {
+      return [];
+    }
+
+    $id_list = $this->entityTypeManager
+      ->getStorage('hive_inspection')
+      ->getQuery()
+      ->accessCheck(TRUE)
+      ->condition('hive', $hive->id())
+      ->sort('inspection_date', 'DESC')
+      ->range(0, 1)
+      ->execute();
+
+    if (!$id_list) {
+      return [];
+    }
+
+    /** @var string $first_id */
+    $first_id = reset($id_list);
+    /** @var \Drupal\hivelog\Entity\HiveInspection|null $latest */
+    $latest = $this->entityTypeManager->getStorage('hive_inspection')->load($first_id);
+    if (!$latest) {
+      return [];
+    }
+
+    /** @var int|float|string|null $raw_date */
+    $raw_date  = $latest->get('inspection_date')->value;
+    $date_str  = (string) $raw_date;
+    $last_dt   = new DrupalDateTime($date_str);
+    $diff_days = (int) DrupalDateTime::createFromTimestamp(time())
+      ->diff($last_dt)->format('%a');
+
+    // Threshold (task 0273).
+    $threshold_days = 14;
+
+    $tile = ['value' => $last_dt->format('Y-m-d')];
+
+    if ($diff_days > $threshold_days) {
+      $days                     = (string) $diff_days;
+      $suffix                   = $diff_days === 1 ? '' : 's';
+      $tile['sublabel']         = (string) $this->t('@days day@s overdue', [
+        '@days' => $days,
+        '@s'    => $suffix,
+      ]);
+      $tile['sublabel_variant'] = 'warning';
+    }
+
+    return $tile;
   }
 
   /**
