@@ -790,13 +790,12 @@ class InventoryReportController extends ControllerBase {
   /**
    * Builds the potential-income breakdown for an apiary/year, keyed by product id.
    *
-   * Sums `HarvestYield` rows whose owning log (hive- or apiary-scoped)
-   * belongs to this apiary and matches `$year`, mirroring
-   * `consumableCostBreakdown()`'s exact join shape via
-   * `apiaryYearLogIds()` — the only differences are the entity type
-   * (`harvest_yield` vs. `inventory_usage`) and the snapshot field
-   * (`unit_price_snapshot` vs. `unit_cost_snapshot`). Also mirrors its
-   * deleted-reference handling (task 0144, ADR-0103 #26): a yield row
+   * Sums the `HarvestYield` rows of this apiary dated in `$year`, by the
+   * harvest's own `apiary` and `harvest_date` (ADR-0110, task 0285): one
+   * query for harvests reported with an action log and those recorded
+   * directly alike. `consumableCostBreakdown()` still joins through the
+   * logs (`apiaryYearLogIds()`), because an `InventoryUsage` has no apiary
+   * or date of its own. Mirrors that method's deleted-reference handling (task 0144, ADR-0103 #26): a yield row
    * whose `product` has since been deleted is bucketed under key `0`
    * with `product: NULL` rather than dropped, so its income still
    * reaches the apiary/year totals; the caller renders that bucket as
@@ -807,29 +806,14 @@ class InventoryReportController extends ControllerBase {
    *   bucket).
    */
   protected function yieldBreakdown(Apiary $apiary, int $year): array {
-    ['apiary_log_ids' => $apiary_log_ids, 'hive_log_ids' => $hive_log_ids] = $this->apiaryYearLogIds($apiary, $year);
-
+    // Every harvest carries its own apiary and date (ADR-0110, task 0285),
+    // so this is one query, whether the harvest was reported with an action
+    // log or recorded directly. The apiary is the harvest's stamp: a hive
+    // that moved later does not take its past harvests along.
     $yield_storage = $this->entityTypeManager->getStorage('harvest_yield');
-    $yield_ids = [];
-    if ($apiary_log_ids || $hive_log_ids) {
-      $query = $yield_storage->getQuery()->accessCheck(FALSE);
-      $or = $query->orConditionGroup();
-      if ($apiary_log_ids) {
-        $or->condition('apiary_action_log', array_values($apiary_log_ids), 'IN');
-      }
-      if ($hive_log_ids) {
-        $or->condition('hive_action_log', array_values($hive_log_ids), 'IN');
-      }
-      $yield_ids = $query->condition($or)->execute();
-    }
-    // A harvest recorded directly (task 0271) has no log: it counts in the
-    // apiary it was recorded in (its own stamp, so a hive that moved later
-    // does not take it along) and the year of its date.
-    $yield_ids += $yield_storage->getQuery()
+    $yield_ids = $yield_storage->getQuery()
       ->accessCheck(FALSE)
       ->condition('apiary', $apiary->id())
-      ->notExists('hive_action_log')
-      ->notExists('apiary_action_log')
       ->condition('harvest_date', $year . '-01-01', '>=')
       ->condition('harvest_date', $year . '-12-31', '<=')
       ->execute();
