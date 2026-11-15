@@ -54,6 +54,9 @@ class HivelogCoreHiveTilesTest extends KernelTestBase {
     $types = [
       'user', 'file', 'apiary', 'apiary_membership', 'hive', 'queen',
       'inventory_item', 'inventory_purchase', 'hive_component',
+      // The hive's core tiles also read its inspections (task 0273) and its
+      // harvests (task 0272).
+      'hive_inspection', 'harvest_yield', 'product',
     ];
     foreach ($types as $type) {
       $this->installEntitySchema($type);

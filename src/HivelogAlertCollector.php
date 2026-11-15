@@ -172,10 +172,13 @@ class HivelogAlertCollector {
         ]);
         $alerts[] = [
           'severity'    => 'warning',
-          'chip'        => (string) $this->t('%day day%days overdue', [
-            '%day'    => $diff_days,
-            '%days'   => $diff_days === 1 ? '' : 's',
-          ]),
+          // Days past the threshold, as on the hive page's tile. Plain
+          // text: a %placeholder would wrap the number in <em>.
+          'chip'        => (string) $this->formatPlural(
+            $diff_days - $threshold_days,
+            '1 day overdue',
+            '@count days overdue',
+          ),
           'title'       => (string) $hive->label(),
           'kind'        => 'inspection_lapse',
           'subject'     => ['apiary' => $hive_apiary, 'hive' => $hive, 'detail' => $detail],
