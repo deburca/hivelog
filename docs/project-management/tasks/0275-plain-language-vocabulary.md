@@ -31,6 +31,7 @@ word used at the hive.
 - [ ] phpcs clean; phpstan clean; kernel tests pass (`--group hivelog`)
 
 ## Implementation notes
+- Two terms are settled elsewhere and need no decision here: "Expected harvest" (the plan on a calendar action) and "Harvest" (what was taken), by [[0110-one-harvest-record-plan-and-fact]] and [[0288-expected-harvest-and-harvest-wording]].
 - Key files: entity `label*` attributes in `src/Entity/`, `src/HivelogAppNavBuilder.php`, `src/Breadcrumb/`, `hivelog.routing.yml` titles
 - Update hook needed? No. ADR-0105 renamed the hub once already; note the reason for a second rename there.
 

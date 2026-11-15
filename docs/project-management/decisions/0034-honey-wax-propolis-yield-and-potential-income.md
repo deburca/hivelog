@@ -173,3 +173,9 @@ calendar action and a yield recipe for it.
 - A directly recorded harvest blocks deleting its hive and its apiary
   (delete-registry rows `0034-1` and `0034-2`), like an inspection or an
   action log.
+
+## Amendment, 2026-11-15: one harvest record
+[[0110-one-harvest-record-plan-and-fact]] (accepted) goes further than the
+amendment above: every harvest, logged or direct, carries its own apiary,
+hive and date, and the plan is named "Expected harvest" and the fact
+"Harvest". See that ADR.
