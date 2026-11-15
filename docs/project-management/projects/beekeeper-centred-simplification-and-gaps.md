@@ -44,6 +44,7 @@ Gaps:
 - [[0270-starter-product-catalogue-and-harvest-yields]] (high)
 - [[0271-record-a-harvest-directly]] (high)
 - [[0272-hive-harvest-history-and-totals]]
+- [[0284-harvest-totals-per-product-not-across-units]]
 - [[0273-inspection-overdue-alert]]
 - [[0274-single-hive-reminders]]
 - [[0280-queen-and-colony-acquisition-cost-in-reports]] (low)
