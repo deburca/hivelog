@@ -13,6 +13,7 @@ use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Url;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\Hive;
+use Drupal\hivelog\Entity\Product;
 use Drupal\hivelog\Entity\Queen;
 use Drupal\hivelog\Form\HivelogCalendarFilterForm;
 use Drupal\hivelog\Form\HivelogInspectionFilterForm;
@@ -161,8 +162,8 @@ class HiveController extends ControllerBase {
       array_splice($build['actions']['#props']['buttons'], $edit_position, 0, [[
         'label' => (string) $this->t('Move to another apiary'),
         'url' => Url::fromRoute('hivelog.hive.move', ['hive' => $hive->id()])->toString(),
-      ]
-]);
+      ],
+      ]);
     }
 
     // "At a glance" stat tiles: core's own facts (status, type, temperament,
@@ -211,6 +212,9 @@ class HiveController extends ControllerBase {
     // inspection history.
     $active_queen = $hive->getActiveQueen();
     $build['queen'] = $this->buildQueenSection($hive, $active_queen) + ['#weight' => 8];
+
+    // Harvest history: per-product totals across years.
+    $build['harvest_history'] = $this->buildHarvestHistory($hive) + ['#weight' => 8.5];
 
     // Hive Activity: Inspections, then Queen Observations below it, under
     // one shared "Hive Activity" heading — the two logs a beekeeper keeps
@@ -775,6 +779,153 @@ class HiveController extends ControllerBase {
     }
 
     return $section;
+  }
+
+  /**
+   * Builds the Inspections column of the hive activity section.
+   *
+   * @param \Drupal\hivelog\Entity\Hive $hive
+   *   The hive being rendered.
+   *
+   * @return array{0: array, 1: \Drupal\hivelog\Entity\HiveInspection[]}
+   *   Tuple of [render array, loaded inspection entities for cache deps].
+   */
+  protected function buildHarvestHistory(Hive $hive): array {
+    if ($hive->isNew()) {
+      return [];
+    }
+
+    $storage = $this->entityTypeManager->getStorage('harvest_yield');
+    // Get all direct harvests for this hive.
+    $ids = $storage->getQuery()
+      ->accessCheck(TRUE)
+      ->condition('hive', $hive->id())
+      ->notExists('hive_action_log')
+      ->notExists('apiary_action_log')
+      ->sort('harvest_date', 'DESC')
+      ->execute();
+
+    if (!$ids) {
+      return [];
+    }
+
+    $harvests = $this->entityTypeManager
+      ->getStorage('harvest_yield')->loadMultiple($ids);
+    /** @var array<int, \Drupal\hivelog\Entity\HarvestYield> $typed_harvests */
+    $typed_harvests = $harvests;
+    // Group by product → year.
+    $grouped = [];
+    foreach ($typed_harvests as $harvest) {
+      $product = $this->entityTypeManager->getStorage('product')->load($harvest->get('product')->target_id);
+      if (!$product instanceof Product || !$harvest->access('view')) {
+        continue;
+      }
+      $pid = $product->id();
+      $pname = (string) $product->label();
+      $punit = (string) $product->get('unit')->value;
+      $year = substr((string) $harvest->get('harvest_date')->value, 0, 4);
+      if (!isset($grouped[$pid])) {
+        $grouped[$pid] = ['product' => $pname, 'unit' => $punit, 'totals' => []];
+      }
+      if (!isset($grouped[$pid]['totals'][$year])) {
+        $grouped[$pid]['totals'][$year] = 0.0;
+      }
+      $grouped[$pid]['totals'][$year] += (float) $harvest->get('quantity')->value;
+    }
+
+    if (!$grouped) {
+      return [];
+    }
+    // Sort years descending.
+    foreach ($grouped as $pid => &$data) {
+      krsort($data['totals']);
+    }
+
+    // Build header: Year + columns for each product.
+    $headers = [$this->t('Year')];
+    foreach ($grouped as $pid => $data) {
+      $headers[] = $this->t('@product (@unit)', [
+        '@product' => $data['product'],
+        '@unit' => $data['unit'],
+      ]);
+    }
+    $headers[] = $this->t('Total');
+
+    // Collect all years.
+    $all_years = [];
+    foreach ($grouped as $data) {
+      foreach (array_keys($data['totals']) as $y) {
+        if (!in_array($y, $all_years, TRUE)) {
+          $all_years[] = $y;
+        }
+      }
+    }
+    sort($all_years, SORT_STRING);
+    $all_years = array_reverse($all_years);
+
+    // Compute per-product grand totals.
+    $product_sums = [];
+    foreach ($grouped as $pid => &$data) {
+      foreach ($data['totals'] as $qty) {
+        if (!isset($product_sums[$pid])) {
+          $product_sums[$pid] = 0.0;
+        }
+        $product_sums[$pid] += $qty;
+      }
+    }
+
+    $rows = [];
+    $grand_total = 0.0;
+    foreach ($all_years as $year) {
+      $cells = [(string) $year];
+      $year_sum = 0.0;
+      foreach ($grouped as $pid => $data) {
+        $qty = $data['totals'][$year] ?? 0.0;
+        $cells[] = rtrim(rtrim(number_format($qty, 3, '.', ''), '0'), '.') . ($data['unit'] ? ' ' . $data['unit'] : '');
+        $year_sum += $qty;
+      }
+      $cells[] = rtrim(rtrim(number_format($year_sum, 3, '.', ''), '0'), '.');
+      $grand_total += $year_sum;
+      $rows[] = ['cells' => $cells];
+    }
+
+    if ($grand_total <= 0) {
+      return [];
+    }
+
+    // Grand total row.
+    $total_cells = [($this->t('Grand total'))];
+    foreach ($grouped as $pid => $data) {
+      $qty = $product_sums[$pid] ?? 0.0;
+      $total_cells[] = rtrim(rtrim(number_format($qty, 3, '.', ''), '0'), '.') . ($data['unit'] ? ' ' . $data['unit'] : '');
+    }
+    // Sum grand total.
+    $gt = array_sum(array_values($product_sums));
+    $total_cells[] = rtrim(rtrim(number_format($gt, 3, '.', ''), '0'), '.');
+    $rows[] = ['cells' => $total_cells];
+
+    return [
+      '#type' => 'container',
+      '#attributes' => ['id' => 'harvest_history'],
+      'heading' => [
+        '#type' => 'html_tag',
+        '#tag' => 'h2',
+        '#value' => $this->t('Harvest History'),
+        '#attributes' => ['class' => ['hivelog-list-heading__title']],
+      ],
+      'table' => [
+        '#type' => 'component',
+        '#component' => 'hivelog:entity-table',
+        '#props' => [
+          'headers' => array_map('strval', $headers),
+          'rows' => $rows,
+          'empty_message' => (string) $this->t('No direct harvests have been recorded for this hive.'),
+        ],
+      ],
+      '#cache' => [
+        'tags' => array_values(array_unique($this->entityTypeManager->getDefinition('harvest_yield')->getListCacheTags())),
+      ],
+    ];
   }
 
   /**

@@ -1079,7 +1079,7 @@ count it used to state already had. Core's own:
   "at a glance" stat tiles a canonical page shows, from
   `hook_hivelog_apiary_stat_tiles()` / `hook_hivelog_hive_stat_tiles()`. The Hive page also
   shows core's own fact tiles (task 0257, `coreTilesForHive()`: Status, Type · Material, Temperament,
-  Queen, Empty weight, weighted -50 to -10 so they precede every submodule tile). They are **web-only**:
+  Queen, Empty weight, Harvest this year, weighted -50 to 0 so they precede every submodule tile). They are **web-only**:
   `tilesForHive()`, which `hivelog_api`'s `computed/hive/{hive}/stat-tiles` serves, stays submodule
   tiles alone, because the app reads the same facts from the hive and queen records. The Queen tile
   links to the active queen (sub-line her name and breed), or reads "No queen" with an add link;
@@ -1093,13 +1093,16 @@ count it used to state already had. Core's own:
   figures are one query, counted by the apiary stamp.
 - `hivelog.alert_collector` (`HivelogAlertCollector`, task 0202) — the
   "Needs attention" alerts: the seasonal-calendar pass, low-stock inventory,
-  and whatever submodules contribute through
+  inspection-lapse (task 0273), and whatever submodules contribute through
   `hook_hivelog_needs_attention_alerts()`. Moved out of `DashboardController`
   so the dashboard and the mobile API serve the same rows. Each row is the
   descriptor the dashboard renders plus two optional data keys, `kind` and
   `subject` (`apiary`, `hive`, `detail`, and `calendar_action` on seasonal
   rows), so a caller that is not a web page needs no markup. A new alert source
-  should set both. `hivelog.stat_tile_builder` likewise exposes
+  should set both. The inspection-lapse alert (task 0273) checks active hives
+  across all viewable apiaries, querying the latest `hive_inspection.date` per
+  hive and producing warning rows when past 14 days during weeks 14–40.
+  `hivelog.stat_tile_builder` likewise exposes
   `tilesForHive()`, the tile descriptors as data.
 - `hivelog.delete_dependency_counter` (`HivelogDeleteDependencyCounter`,
   task 0134) — counts a parent entity's children per

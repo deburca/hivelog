@@ -43,4 +43,7 @@ for it. Harvesting is one of the five things a beekeeper does; it should be one 
 ## Related
 - Project:: [[beekeeper-centred-simplification-and-gaps]]
 - Decisions:: [[0034-honey-wax-propolis-yield-and-potential-income]]
-- Commits:: 
+- Commits::
+
+## Gaps / Future
+- **Recorded 2026-11-15:** The Record harvest form doesn't pre-populate a default product. A beekeeper who regularly records spring vs. summer harvests must manually select between two honey products each time; no mechanism exists to tie the most-recently-used product to a hive or apiary for automatic suggestion on subsequent records. (Addressed by [[0272-hive-harvest-history-and-totals]]? Or should this be its own task?) 
