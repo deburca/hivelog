@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: backlog
+status: review
 priority: medium
 project: "[[beekeeper-centred-simplification-and-gaps]]"
 area: ui
@@ -36,38 +36,37 @@ sum across products is only meaningful when every product involved has the
 same unit, and even then honey plus wax is rarely a figure a beekeeper wants.
 
 ## Acceptance criteria
-- [ ] The "Harvest this year" tile never adds quantities of different
-      products. Decide and record which it shows: the hive's main product
-      (the one with the largest quantity) with "+ N more" as the sub-line, or
-      one line per product
-- [ ] The tile's unit is always the unit of the product whose quantity it
+- [x] The "Harvest this year" tile never adds quantities of different
+      products. Decided: it shows the hive's main product, with the product's
+      name and "+N other products" as the sub-line. "Main" is the product with
+      the highest potential income, then the most harvests, then by name;
+      quantity cannot rank products whose units differ
+- [x] The tile's unit is always the unit of the product whose quantity it
       shows
-- [ ] The Harvest History table has no cross-product Total column and no
-      cross-product grand total; the per-product "Grand total" row stays,
-      since each cell there is one product
-- [ ] Two products with the same name and unit in the table read as one
+- [x] The Harvest History table has no cross-product Total column and no
+      cross-product grand total; the per-product row stays, now labelled
+      "All years"
+- [x] Two products with the same name and unit in the table read as one
       column; two with the same unit but different names stay separate
-- [ ] If potential income is wanted as the one comparable figure across
-      products, it is a separate, labelled money column (quantity ×
-      `unit_price_snapshot`), not a quantity
-- [ ] Kernel tests with two products in different units (kg and jar) for the
+      (honey and beeswax, both kg, are not added)
+- [ ] Potential income as a labelled money column: not done. Income is used
+      only to rank products
+- [x] Kernel tests with two products in different units (kg and jar) for the
       tile and the table; `HiveHarvestHistoryTest` updated
-- [ ] `AGENTS.md` updated if entity types, routes, services, hooks or conventions changed
-- [ ] phpcs clean; phpstan clean; kernel tests pass (`--group hivelog`)
+- [x] `AGENTS.md` updated if entity types, routes, services, hooks or conventions changed
+- [x] phpcs clean; phpstan clean; kernel tests pass (`--group hivelog`)
 
 ## Implementation notes
-- Key files: `src/HivelogStatTileBuilder.php` (`harvestThisYearTile()`),
+- Key files: `src/HivelogHarvestTotals.php` (new), `src/HivelogStatTileBuilder.php` (`harvestThisYearTile()`),
   `src/Controller/HiveController.php` (`buildHarvestHistory()`),
   `tests/src/Kernel/HiveHarvestHistoryTest.php`
 - Update hook needed? No.
-- `HarvestYield::trimQuantity()` already formats a quantity without trailing
-  zeros; both places repeat `rtrim(rtrim(number_format(...)))` and could use
-  it.
+- Behaviour change against 0272: 18 kg of honey and 2 kg of beeswax read
+  "18 kg" (Honey · +1 other product), where 0272 showed "20 kg".
 - Not in scope, but adjacent: both totals count harvests recorded directly
   only. A yield reported through a calendar action log for the same hive is
   left out, so the tile can read lower than the apiary's report for that
-  hive. 0272's note says so; whether to include logged yields is its own
-  decision.
+  hive. Whether to include logged yields is its own decision.
 
 ## Related
 - Project:: [[beekeeper-centred-simplification-and-gaps]]
