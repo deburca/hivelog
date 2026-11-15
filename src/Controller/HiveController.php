@@ -13,6 +13,7 @@ use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Url;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\Hive;
+use Drupal\hivelog\Entity\Product;
 use Drupal\hivelog\Entity\Queen;
 use Drupal\hivelog\Form\HivelogCalendarFilterForm;
 use Drupal\hivelog\Form\HivelogInspectionFilterForm;
@@ -816,7 +817,7 @@ class HiveController extends ControllerBase {
     $grouped = [];
     foreach ($typed_harvests as $harvest) {
       $product = $this->entityTypeManager->getStorage('product')->load($harvest->get('product')->target_id);
-      if (!$product || !$harvest->access('view')) {
+      if (!$product instanceof Product || !$harvest->access('view')) {
         continue;
       }
       $pid = $product->id();
