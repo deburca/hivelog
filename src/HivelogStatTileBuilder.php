@@ -176,60 +176,30 @@ class HivelogStatTileBuilder {
   }
 
   /**
-   * The Harvest this year tile: total quantity across all products.
+   * The Harvest this year tile: the hive's main product, never a mixed sum.
+   *
+   * Quantities of different products are not added together (task 0284):
+   * the tile shows the year's total of the hive's main product (the one
+   * worth most, see HivelogHarvestTotals::perProduct()), names it in the
+   * sub-line, and says how many other products were harvested. The Harvest
+   * History section under it has every product.
    *
    * Only direct harvests (recorded outside the calendar) count here;
    * calendar-logged yields appear in the apiary financial report instead.
    */
   protected function harvestThisYearTile(Hive $hive): array {
-    if ($hive->isNew()) {
+    $totals = HivelogHarvestTotals::perProduct($this->entityTypeManager, $hive, (int) date('Y'));
+    if (!$totals) {
       return [];
     }
-
-    $year = (int) date('Y');
-    $yield_storage = $this->entityTypeManager->getStorage('harvest_yield');
-    $product_storage = $this->entityTypeManager->getStorage('product');
-
-    $direct_ids = $yield_storage->getQuery()
-      ->accessCheck(TRUE)
-      ->condition('hive', $hive->id())
-      ->notExists('hive_action_log')
-      ->notExists('apiary_action_log')
-      ->condition('harvest_date', $year . '-01-01', '>=')
-      ->condition('harvest_date', $year . '-12-31', '<=')
-      ->execute();
-
-    if (!$direct_ids) {
-      return [];
-    }
-
-    // Sum quantities across all products for this hive/year.
-    $total = 0.0;
-    $unit = '';
-    foreach ($yield_storage->loadMultiple($direct_ids) as $_harvest) {
-      /** @var \Drupal\hivelog\Entity\HarvestYield $harvest */
-      $harvest = $_harvest;
-      $quantity = (float) $harvest->get('quantity')->value;
-      if ($quantity > 0) {
-        $total += $quantity;
-      }
-      if ($unit === '') {
-        $product = $this->entityTypeManager
-          ->getStorage('product')->load($harvest->get('product')->target_id);
-        if ($product) {
-          /** @var \Drupal\hivelog\Entity\Product $typed_product */
-          $typed_product = $product;
-          $unit = (string) ($typed_product->get('unit')->value ?? '');
-        }
-      }
-    }
-
-    if ($total <= 0) {
-      return [];
-    }
+    $main = reset($totals);
+    $others = count($totals) - 1;
 
     return [
-      'value' => rtrim(rtrim(number_format($total, 3, '.', ''), '0'), '.') . ($unit ? ' ' . $unit : ''),
+      'value' => HivelogHarvestTotals::format($main['quantity'], $main['unit']),
+      'sublabel' => $others
+        ? $this->formatPlural($others, '@product · +1 other product', '@product · +@count other products', ['@product' => $main['name']])
+        : $main['name'],
       'url' => Url::fromRoute('entity.hive.canonical', ['hive' => $hive->id()], ['fragment' => 'harvest_history']),
     ];
   }
