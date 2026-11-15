@@ -14,7 +14,7 @@ blocked-by:
 # Task: One list of harvests, and totals that count them all
 
 ## Context
-Follows from [[0110-one-harvest-record-plan-and-fact]], which must be accepted first. Part of [[beekeeper-centred-simplification-and-gaps]].
+Follows from [[0110-one-harvest-record-plan-and-fact]], accepted 2026-11-15. Part of [[beekeeper-centred-simplification-and-gaps]].
 
 The Harvests section on the hive and apiary pages lists only harvests recorded directly, and the
 hive's "Harvest this year" tile and Harvest History count only those. A harvest reported through

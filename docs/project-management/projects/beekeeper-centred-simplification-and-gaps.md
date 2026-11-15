@@ -59,7 +59,7 @@ Simplification:
 - [[0279-quick-inspection-and-colony-strength]]
 - [[0283-calendar-weeks-shown-as-dates]] (low)
 
-One harvest record ([[0110-one-harvest-record-plan-and-fact]], proposed):
+One harvest record ([[0110-one-harvest-record-plan-and-fact]], accepted):
 - [[0288-expected-harvest-and-harvest-wording]]
 - [[0285-every-harvest-carries-its-own-apiary-hive-and-date]] (high)
 - [[0286-one-list-of-harvests-and-totals-that-count-them-all]] (high)
@@ -73,6 +73,6 @@ One harvest record ([[0110-one-harvest-record-plan-and-fact]], proposed):
 - Does the vocabulary change (0275) reach the Vinculum app at the same time?
 
 ## Related decisions
-- [[0110-one-harvest-record-plan-and-fact]] (proposed)
+- [[0110-one-harvest-record-plan-and-fact]] (accepted 2026-11-15)
 - [[0034-honey-wax-propolis-yield-and-potential-income]] (amended 2026-11-14)
 - [[0103-delete-policy-for-records-with-children]] (amended 2026-11-14)

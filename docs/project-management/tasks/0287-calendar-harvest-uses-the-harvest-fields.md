@@ -14,7 +14,7 @@ blocked-by:
 # Task: A calendar harvest uses the same fields as Record harvest
 
 ## Context
-Follows from [[0110-one-harvest-record-plan-and-fact]], which must be accepted first. Part of [[beekeeper-centred-simplification-and-gaps]].
+Follows from [[0110-one-harvest-record-plan-and-fact]], accepted 2026-11-15. Part of [[beekeeper-centred-simplification-and-gaps]].
 
 When a harvest action is reported done, the log form offers one quantity per product the action
 expects, and nothing else: no date, and no way to record a product that was not planned. An action
@@ -27,7 +27,7 @@ fields as "Record harvest".
 - [ ] It is pre-filled with one row per expected harvest, quantity as expected, date today
 - [ ] A product the action does not expect can be added to the block, from the apiary's active products; no JavaScript is required to add one row
 - [ ] A row left at zero writes nothing; lowering a saved row to zero removes it, as today
-- [ ] An apiary-scoped action's harvest names no hive (ADR open question 3)
+- [ ] An apiary-scoped action's harvest names no hive (ADR-0110)
 - [ ] The friendly errors are the entity's constraints; `validateForm()` does not repeat them
 - [ ] Kernel tests: expected rows, an added product, a zero row, edit after save
 - [ ] `AGENTS.md` updated if entity types, routes, services, hooks or conventions changed

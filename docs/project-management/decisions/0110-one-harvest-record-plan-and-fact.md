@@ -1,7 +1,7 @@
 ---
 type: decision
 tags: [hivelog/decision]
-status: proposed
+status: accepted
 date: 2026-11-15
 supersedes:
 ---
@@ -9,11 +9,12 @@ supersedes:
 # ADR-0110: One harvest record, and a plain line between plan and fact
 
 ## Status
-proposed, 2026-11-15. Written after the maintainer found the Products
-section, the Harvests section and the "product yield" on a calendar action
-hard to tell apart on the local site. Amends
+accepted, 2026-11-15, by the maintainer, as proposed the same day and with
+the three questions below answered as proposed. Written after the maintainer
+found the Products section, the Harvests section and the "product yield" on
+a calendar action hard to tell apart on the local site. Amends
 [[0034-honey-wax-propolis-yield-and-potential-income]]; does not supersede
-it. Nothing here is built until this is accepted.
+it.
 
 ## Context
 A product and a quantity meet in four places, and they mean different
@@ -132,16 +133,17 @@ Machine names, routes, permissions and tables do not change.
 - Not affected: `hivelog_api` (harvests are not an exposed resource), the
   price snapshot rule, potential income.
 
-## Open questions
-1. **What date does an existing logged harvest get?** A log has `year` and
-   `week_completed`, not a date. Proposal: the Monday of
-   `week_completed` in `year`, or 1 July of `year` when there is no week.
-   The year is what the reports use, and it is preserved either way.
-2. **Does a logged harvest's date default to today or to the action's
-   week?** Proposal: today, editable.
-3. **May a harvest for an apiary-scoped action name a hive?** Proposal: no;
-   an apiary-scoped harvest has no hive, as a direct apiary harvest has
-   none.
+## Questions settled on acceptance
+1. **The date an existing logged harvest gets.** A log has `year` and
+   `week_completed`, not a date. Decided: the Monday of `week_completed` in
+   `year`, or 1 July of `year` when there is no week. The year is what the
+   reports use, and it is preserved either way.
+2. **The default date of a new logged harvest.** Decided: today, editable.
+3. **A harvest for an apiary-scoped action names no hive**, as a direct
+   apiary harvest names none.
+
+The harvest stays inside the action log form (Decision §3); the alternative
+of opening Record harvest after "Done" was not taken.
 
 ## Follow-up tasks
 - [[0285-every-harvest-carries-its-own-apiary-hive-and-date]]

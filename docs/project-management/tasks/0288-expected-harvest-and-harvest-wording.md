@@ -14,7 +14,7 @@ blocked-by:
 # Task: Say "Expected harvest" for the plan and "Harvest" for the fact
 
 ## Context
-Follows from [[0110-one-harvest-record-plan-and-fact]], which must be accepted first. Part of [[beekeeper-centred-simplification-and-gaps]].
+Follows from [[0110-one-harvest-record-plan-and-fact]], accepted 2026-11-15. Part of [[beekeeper-centred-simplification-and-gaps]].
 
 "Product yield" on a calendar action is a plan; a "harvest yield record" is what was really
 taken. The two names read as one thing, and neither is a beekeeper's word. ADR-0110 §4 names them
