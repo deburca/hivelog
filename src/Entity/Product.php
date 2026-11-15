@@ -149,7 +149,7 @@ class Product extends ContentEntityBase implements EntityChangedInterface, Entit
 
     $fields['status'] = BaseFieldDefinition::create('list_string')
       ->setLabel(t('Status'))
-      ->setDescription(t('Discontinued products are hidden from new yield-recipe selection, but remain listed here for management.'))
+      ->setDescription(t('Discontinued products are no longer offered when adding an expected harvest or recording a harvest, but remain listed here for management.'))
       ->setRequired(TRUE)
       ->setDefaultValue('active')
       ->setSetting('allowed_values', [

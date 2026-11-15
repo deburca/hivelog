@@ -167,7 +167,7 @@ class ReportsAfterHiveMoveTest extends KernelTestBase {
 
     $new = $this->costReport($this->newApiary);
     $this->assertStringNotContainsString('Sugar Syrup', $new, 'The new apiary does not take on the old one\'s cost.');
-    $this->assertStringContainsString('No inventory cost, depreciation, or yield recorded', $new);
+    $this->assertStringContainsString('No inventory cost, depreciation, or harvest recorded', $new);
   }
 
   /**

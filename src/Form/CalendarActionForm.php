@@ -53,7 +53,7 @@ class CalendarActionForm extends ContentEntityForm {
 
     if (!$this->entity->isNew()) {
       $sections['calendar_action_yield'] = [
-        'title' => $this->t('Products & Yields'),
+        'title' => $this->t('Required items & expected harvest'),
         'weight' => 3,
         'open' => FALSE,
         'fields' => [],
@@ -88,13 +88,13 @@ class CalendarActionForm extends ContentEntityForm {
         'description' => [
           '#type' => 'html_tag',
           '#tag' => 'p',
-          '#value' => $this->t("Required Items and Expected Yield are managed from this calendar action's own page, not this edit form."),
+          '#value' => $this->t("Required Items and Expected Harvest are managed from this calendar action's own page, not this edit form."),
         ],
         'link' => [
           '#type' => 'component',
           '#component' => 'hivelog:button',
           '#props' => [
-            'label' => (string) $this->t('Go to Required Items & Expected Yield'),
+            'label' => (string) $this->t('Go to Required Items & Expected Harvest'),
             'url' => $this->entity->toUrl('canonical')->toString(),
             'variant' => 'primary',
           ],

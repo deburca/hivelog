@@ -61,7 +61,7 @@ class CalendarCopyForm extends FormBase {
     $form['#attached']['library'][] = 'hivelog/forms';
 
     $form['intro'] = [
-      '#markup' => '<p>' . $this->t('Adds the actions of another calendar to this apiary\'s. An action this apiary already has (same title, scope and starting week) is skipped: it is not changed, but it is given a required item or expected yield the other calendar has for it and it lacks. Nothing is removed. Items and products an action needs are matched by name and unit, and added to this apiary\'s catalogue if missing, with no stock and no price history.') . '</p>',
+      '#markup' => '<p>' . $this->t('Adds the actions of another calendar to this apiary\'s. An action this apiary already has (same title, scope and starting week) is skipped: it is not changed, but it is given a required item or expected harvest the other calendar has for it and it lacks. Nothing is removed. Items and products an action needs are matched by name and unit, and added to this apiary\'s catalogue if missing, with no stock and no price history.') . '</p>',
     ];
     $form['source'] = [
       '#type' => 'select',
@@ -107,7 +107,7 @@ class CalendarCopyForm extends FormBase {
     // Say so when recipe rows were added, above all when no action was: the
     // message would otherwise read as if nothing had happened (task 0270).
     if ($result['requirements'] || $result['yields']) {
-      $this->messenger()->addStatus($this->t('Also added @requirements required item(s) and @yields expected yield(s) to its actions.', [
+      $this->messenger()->addStatus($this->t('Also added @requirements required item(s) and @yields expected harvest(s) to its actions.', [
         '@requirements' => $result['requirements'],
         '@yields' => $result['yields'],
       ]));

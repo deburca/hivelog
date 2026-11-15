@@ -289,7 +289,7 @@ class InventoryCostReportTest extends KernelTestBase {
 
     $this->assertStringContainsString('Sugar Syrup', $html);
     $this->assertStringContainsString('10.00', $html);
-    $this->assertStringNotContainsString('No inventory cost, depreciation, or yield recorded', $html);
+    $this->assertStringNotContainsString('No inventory cost, depreciation, or harvest recorded', $html);
   }
 
   /**
@@ -475,7 +475,7 @@ class InventoryCostReportTest extends KernelTestBase {
     $build = $controller->costReport($this->apiary);
     $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
 
-    $this->assertStringContainsString('No inventory cost, depreciation, or yield recorded', $html);
+    $this->assertStringContainsString('No inventory cost, depreciation, or harvest recorded', $html);
     $this->assertStringContainsString('0.00', $html);
   }
 
@@ -549,7 +549,7 @@ class InventoryCostReportTest extends KernelTestBase {
 
     $this->assertStringContainsString('Honey', $html);
     $this->assertStringContainsString('180.00', $html);
-    $this->assertStringNotContainsString('No inventory cost, depreciation, or yield recorded', $html);
+    $this->assertStringNotContainsString('No inventory cost, depreciation, or harvest recorded', $html);
   }
 
   /**

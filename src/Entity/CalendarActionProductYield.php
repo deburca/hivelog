@@ -36,10 +36,10 @@ use Drupal\user\EntityOwnerTrait;
  */
 #[ContentEntityType(
   id: 'calendar_action_product_yield',
-  label: new TranslatableMarkup('Calendar Action Product Yield'),
-  label_collection: new TranslatableMarkup('Calendar Action Product Yields'),
-  label_singular: new TranslatableMarkup('calendar action product yield'),
-  label_plural: new TranslatableMarkup('calendar action product yields'),
+  label: new TranslatableMarkup('Expected harvest'),
+  label_collection: new TranslatableMarkup('Expected harvests'),
+  label_singular: new TranslatableMarkup('expected harvest'),
+  label_plural: new TranslatableMarkup('expected harvests'),
   handlers: [
     'storage' => HivelogEntityStorage::class,
     'form' => [
@@ -106,7 +106,7 @@ class CalendarActionProductYield extends ContentEntityBase implements EntityChan
 
     $fields['calendar_action'] = BaseFieldDefinition::create('entity_reference')
       ->setLabel(t('Calendar Action'))
-      ->setDescription(t('The calendar action this yield belongs to.'))
+      ->setDescription(t('The calendar action this expected harvest belongs to.'))
       ->setRequired(TRUE)
       ->setSetting('target_type', 'calendar_action')
       ->setDisplayOptions('form', [
@@ -123,7 +123,7 @@ class CalendarActionProductYield extends ContentEntityBase implements EntityChan
 
     $fields['product'] = BaseFieldDefinition::create('entity_reference')
       ->setLabel(t('Product'))
-      ->setDescription(t('The product typically produced.'))
+      ->setDescription(t('The product the action is expected to give.'))
       ->setRequired(TRUE)
       ->setSetting('target_type', 'product')
       ->setDisplayOptions('form', [
@@ -140,7 +140,7 @@ class CalendarActionProductYield extends ContentEntityBase implements EntityChan
 
     $fields['quantity'] = BaseFieldDefinition::create('decimal')
       ->setLabel(t('Quantity'))
-      ->setDescription(t('How much of the product is typically produced — per hive for a hive-scoped action, per apiary for an apiary-scoped one — in the product\'s own unit.'))
+      ->setDescription(t('How much of the product the action is expected to give — per hive for a hive-scoped action, per apiary for an apiary-scoped one — in the product\'s own unit. An estimate: nothing counts as harvested until the action is reported done.'))
       ->setRequired(TRUE)
       ->setSetting('precision', 10)
       ->setSetting('scale', 3)

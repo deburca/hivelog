@@ -117,7 +117,7 @@ class InventoryReportController extends ControllerBase {
     foreach ($yields as $row) {
       $breakdown_rows[] = [
         $row['product'] ? $row['product']->toLink()->toString() : $this->t('Unknown product'),
-        $this->t('Yield'),
+        $this->t('Harvest'),
         rtrim(rtrim(number_format($row['quantity'], 3, '.', ''), '0'), '.') . ' ' . $row['unit'],
         number_format($row['income'], 2),
       ];
@@ -137,7 +137,7 @@ class InventoryReportController extends ControllerBase {
         '#type' => 'table',
         '#header' => [$this->t('Item'), $this->t('Type'), $this->t('Quantity'), $this->t('Amount')],
         '#rows' => $breakdown_rows,
-        '#empty' => $this->t('No inventory cost, depreciation, or yield recorded for @year.', ['@year' => $year]),
+        '#empty' => $this->t('No inventory cost, depreciation, or harvest recorded for @year.', ['@year' => $year]),
         '#attributes' => ['class' => ['hivelog-inventory-report-table']],
         '#attached' => ['library' => ['hivelog/tables']],
       ],

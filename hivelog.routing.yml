@@ -1015,7 +1015,7 @@ hivelog.calendar_action_product_yield.add:
   path: '/hivelog/calendar-action/{calendar_action}/yield/add'
   defaults:
     _controller: '\Drupal\hivelog\Controller\CalendarActionController::addYieldForm'
-    _title: 'Add Expected Yield'
+    _title: 'Add Expected Harvest'
   requirements:
     _permission: 'add calendar action product yield+administer hivelog'
     _entity_access: 'calendar_action.update'
@@ -1029,7 +1029,7 @@ entity.calendar_action_product_yield.edit_form:
   path: '/hivelog/calendar-action-yield/{calendar_action_product_yield}/edit'
   defaults:
     _entity_form: 'calendar_action_product_yield.edit'
-    _title: 'Edit Yield'
+    _title: 'Edit Expected Harvest'
   requirements:
     _permission: 'edit own calendar action product yield+edit any calendar action product yield+administer hivelog'
     _entity_access: 'calendar_action_product_yield.update'
@@ -1042,7 +1042,7 @@ entity.calendar_action_product_yield.delete_form:
   path: '/hivelog/calendar-action-yield/{calendar_action_product_yield}/delete'
   defaults:
     _entity_form: 'calendar_action_product_yield.delete'
-    _title: 'Delete Yield'
+    _title: 'Delete Expected Harvest'
   requirements:
     _permission: 'delete own calendar action product yield+delete any calendar action product yield+administer hivelog'
     _entity_access: 'calendar_action_product_yield.delete'

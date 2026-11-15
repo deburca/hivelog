@@ -217,10 +217,10 @@ class DirectHarvestTest extends KernelTestBase {
     $counter = \Drupal::service('hivelog.delete_dependency_counter');
     $hive_result = $counter->blockingAccessResult($this->hive);
     $this->assertInstanceOf(AccessResultForbidden::class, $hive_result);
-    $this->assertStringContainsString('1 harvest yield record', (string) $hive_result->getReason());
+    $this->assertStringContainsString('1 harvest', (string) $hive_result->getReason());
     $apiary_result = $counter->blockingAccessResult($this->apiary);
     $this->assertInstanceOf(AccessResultForbidden::class, $apiary_result);
-    $this->assertStringContainsString('1 harvest yield record', (string) $apiary_result->getReason());
+    $this->assertStringContainsString('1 harvest', (string) $apiary_result->getReason());
 
     // Once the harvest is gone, the hive is no longer blocked by it.
     $harvest->delete();

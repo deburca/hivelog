@@ -228,35 +228,35 @@ delete any product:
 
 # Calendar action product yield permissions.
 view own calendar action product yield:
-  title: 'View own calendar action product yields'
+  title: 'View own expected harvests'
 view any calendar action product yield:
-  title: 'View any calendar action product yield'
+  title: 'View any expected harvest'
 add calendar action product yield:
-  title: 'Add calendar action product yields'
+  title: 'Add expected harvests'
 edit own calendar action product yield:
-  title: 'Edit own calendar action product yields'
+  title: 'Edit own expected harvests'
 edit any calendar action product yield:
-  title: 'Edit any calendar action product yield'
+  title: 'Edit any expected harvest'
 delete own calendar action product yield:
-  title: 'Delete own calendar action product yields'
+  title: 'Delete own expected harvests'
 delete any calendar action product yield:
-  title: 'Delete any calendar action product yield'
+  title: 'Delete any expected harvest'
 
 # Harvest yield permissions.
 view own harvest yield:
-  title: 'View own harvest yield records'
+  title: 'View own harvests'
 view any harvest yield:
-  title: 'View any harvest yield record'
+  title: 'View any harvest'
 add harvest yield:
-  title: 'Add harvest yield records'
+  title: 'Add harvests'
 edit own harvest yield:
-  title: 'Edit own harvest yield records'
+  title: 'Edit own harvests'
 edit any harvest yield:
-  title: 'Edit any harvest yield record'
+  title: 'Edit any harvest'
 delete own harvest yield:
-  title: 'Delete own harvest yield records'
+  title: 'Delete own harvests'
 delete any harvest yield:
-  title: 'Delete any harvest yield record'
+  title: 'Delete any harvest'
 
 # Apiary membership permissions (ADR-0108, task 0223).
 add apiary membership:
