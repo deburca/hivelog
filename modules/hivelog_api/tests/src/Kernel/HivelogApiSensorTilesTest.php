@@ -56,6 +56,9 @@ class HivelogApiSensorTilesTest extends HivelogApiKernelTestBase {
     foreach (['sensor_device', 'sensor_reading', 'sensor_reading_daily'] as $type) {
       $this->installEntitySchema($type);
     }
+    // Task 0272: tilesForHive() calls harvestThisYearTile() which queries
+    // the HarvestYield entity.
+    $this->installEntitySchema('harvest_yield');
   }
 
   /**

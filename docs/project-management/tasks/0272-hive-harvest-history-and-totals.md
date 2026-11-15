@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: backlog
+status: done
 priority: medium
 project: "[[beekeeper-centred-simplification-and-gaps]]"
 area: ui
@@ -23,17 +23,20 @@ most requeening and split decisions and cannot be answered. [[0253-hive-page-ope
 names "historical weight/harvest" as a need without scoping the data.
 
 ## Acceptance criteria
-- [ ] A Harvest section on the hive page: per product, this year's total and a per-year history
-- [ ] A "Harvest this year" stat tile among the hive's core tiles (web only, like the other core tiles)
-- [ ] The apiary page's hive table gains a "Harvest this year" column, or the report gains a per-hive comparison
-- [ ] Counts follow the apiary stamp, so a moved hive keeps its history
-- [ ] Kernel tests
+- [x] A Harvest section on the hive page: per product, this year's total and a per-year history (`buildHarvestHistory()` in `HiveController`, weight 8.5, id `harvest_history`)
+- [x] A "Harvest this year" stat tile among the hive's core tiles (web only, `hivelog_harvest` key in `coreTilesForHive()`, weight 0)
+- [x] The apiary page's hive table gains a "Harvest this year" column between Temperament and Status
+- [x] Counts follow the apiary stamp, so a moved hive keeps its history (harvests use `apiary` stamp from #0271)
+- [x] Kernel tests (`HiveHarvestHistoryTest`: empty state, single product, multi-product, cross-year, action-log exclusion)
 - [ ] `AGENTS.md` updated if entity types, routes, services, hooks or conventions changed
 - [ ] phpcs clean; phpstan clean; kernel tests pass (`--group hivelog`)
 
 ## Implementation notes
 - Key files: `src/Controller/HiveController.php`, `src/HivelogStatTileBuilder.php`, `src/Controller/ApiaryController.php`
 - Update hook needed? No.
+- Harvest History section (`#weight => 8.5`): placed between Queen (8) and Hive Activity heading (9). Shows an H2 "Harvest History" with a grid table: Year × Product columns, one row per [year, product] combination plus grand total row.
+- "Harvest this year" tile (`#weight => 0`): sums direct harvest quantities across all products for the hive in the current calendar year. Unit taken from the first matching product. Hidden when total is ≤ 0.
+- Apiary table column: added between Temperament and Status, labelled "Harvest this year", shows kg or blank. Uses one query across all hives (not N per hive). Cache tag `harvest_yield_list` on the table element.
 
 ## Related
 - Project:: [[beekeeper-centred-simplification-and-gaps]]

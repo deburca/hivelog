@@ -779,7 +779,7 @@ class EmbeddedTableFilterPaginationTest extends KernelTestBase {
     $build = $controller->view($apiary);
 
     $props = $build['hives_table']['#props'];
-    $this->assertSame(['Name', 'Queen', 'Last inspection', 'Temperament', 'Status', 'Operations'], $props['headers']);
+    $this->assertSame(['Name', 'Queen', 'Last inspection', 'Temperament', 'Harvest this year', 'Status', 'Operations'], $props['headers']);
     $cells = [];
     foreach ($props['rows'] as $row) {
       $cells[strip_tags((string) $row['cells'][0])] = $row['cells'];

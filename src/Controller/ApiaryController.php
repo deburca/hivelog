@@ -397,6 +397,7 @@ class ApiaryController extends ControllerBase {
       $this->t('Queen'),
       $this->t('Last inspection'),
       $this->t('Temperament'),
+      $this->t('Harvest this year'),
       $this->t('Status'),
       $this->t('Operations'),
     ];
@@ -417,6 +418,27 @@ class ApiaryController extends ControllerBase {
       }
     }
 
+    // Harvest totals for this year, per hive — one query.
+    $harvest_totals = [];
+    if ($hives && ($apiary_ids = [$apiary->id()])) {
+      $yield_ids = $this->entityTypeManager->getStorage('harvest_yield')->getQuery()
+        ->accessCheck(TRUE)
+        ->notExists('hive_action_log')
+        ->notExists('apiary_action_log')
+        ->condition('apiary', $apiary_ids, 'IN')
+        ->condition('harvest_date', (int) date('Y') . '-01-01', '>=')
+        ->condition('harvest_date', (int) date('Y') . '-12-31', '<=')
+        ->execute();
+      foreach ($this->entityTypeManager->getStorage('harvest_yield')->loadMultiple($yield_ids) as $_harvest) {
+        /** @var \Drupal\hivelog\Entity\HarvestYield $harvest */
+        $harvest = $_harvest;
+        $hive_id = (int) $harvest->get('hive')->target_id;
+        if ($hive_id && isset($hives[$hive_id])) {
+          $harvest_totals[$hive_id] = ($harvest_totals[$hive_id] ?? 0.0) + (float) $harvest->get('quantity')->value;
+        }
+      }
+    }
+
     $rows = [];
     foreach ($hives as $hive) {
       $actions = [
@@ -434,12 +456,14 @@ class ApiaryController extends ControllerBase {
         ],
       ];
       $last_inspection = $last_inspections[(int) $hive->id()] ?? NULL;
+      $harvest_total = $harvest_totals[(int) $hive->id()] ?? NULL;
       $rows[] = [
         'cells' => [
           $hive->toLink()->toString(),
           Html::escape($this->queenSummary($hive)),
           Html::escape($last_inspection ? (string) $last_inspection : (string) $this->t('Never')),
           $hive->get('temperament')->value ? $hive->get('temperament')->getSetting('allowed_values')[$hive->get('temperament')->value] ?? $hive->get('temperament')->value : '',
+          $harvest_total !== NULL ? rtrim(rtrim(number_format($harvest_total, 3, '.', ''), '0'), '.') . ' kg' : '',
           $hive->get('status')->getSetting('allowed_values')[$hive->get('status')->value] ?? $hive->get('status')->value,
           $this->renderer->renderInIsolation($actions),
         ],
@@ -456,7 +480,7 @@ class ApiaryController extends ControllerBase {
       ],
       '#weight' => 12,
       // The queen and last-inspection columns change with those records.
-      '#cache' => ['tags' => ['queen_list', 'hive_inspection_list']],
+      '#cache' => ['tags' => ['queen_list', 'hive_inspection_list', 'harvest_yield_list']],
     ];
 
     $build['hives_pager'] = [
