@@ -13,7 +13,6 @@ use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Url;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\Hive;
-use Drupal\hivelog\Entity\Product;
 use Drupal\hivelog\Entity\Queen;
 use Drupal\hivelog\Form\HivelogCalendarFilterForm;
 use Drupal\hivelog\Form\HivelogInspectionFilterForm;
@@ -21,6 +20,7 @@ use Drupal\hivelog\Form\HivelogQueenObservationFilterForm;
 use Drupal\hivelog\HivelogCalendarChecklistBuilder;
 use Drupal\hivelog\HivelogEntityActionsTrait;
 use Drupal\hivelog\HivelogHarvestSectionTrait;
+use Drupal\hivelog\HivelogHarvestTotals;
 use Drupal\hivelog\HivelogStatTileBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -782,126 +782,52 @@ class HiveController extends ControllerBase {
   }
 
   /**
-   * Builds the Inspections column of the hive activity section.
+   * Builds the Harvest History section: per product, a total for each year.
+   *
+   * One column per product and one row per year, newest first, then a row
+   * of each product's total over all years. There is no total across
+   * products: their units differ and nothing converts between them (task
+   * 0284, HivelogHarvestTotals). Only harvests recorded directly are
+   * counted.
    *
    * @param \Drupal\hivelog\Entity\Hive $hive
    *   The hive being rendered.
    *
-   * @return array{0: array, 1: \Drupal\hivelog\Entity\HiveInspection[]}
-   *   Tuple of [render array, loaded inspection entities for cache deps].
+   * @return array
+   *   The section's render array, or an empty array with no harvests.
    */
   protected function buildHarvestHistory(Hive $hive): array {
-    if ($hive->isNew()) {
+    $totals = HivelogHarvestTotals::perProduct($this->entityTypeManager, $hive);
+    if (!$totals) {
       return [];
     }
 
-    $storage = $this->entityTypeManager->getStorage('harvest_yield');
-    // Get all direct harvests for this hive.
-    $ids = $storage->getQuery()
-      ->accessCheck(TRUE)
-      ->condition('hive', $hive->id())
-      ->notExists('hive_action_log')
-      ->notExists('apiary_action_log')
-      ->sort('harvest_date', 'DESC')
-      ->execute();
-
-    if (!$ids) {
-      return [];
-    }
-
-    $harvests = $this->entityTypeManager
-      ->getStorage('harvest_yield')->loadMultiple($ids);
-    /** @var array<int, \Drupal\hivelog\Entity\HarvestYield> $typed_harvests */
-    $typed_harvests = $harvests;
-    // Group by product → year.
-    $grouped = [];
-    foreach ($typed_harvests as $harvest) {
-      $product = $this->entityTypeManager->getStorage('product')->load($harvest->get('product')->target_id);
-      if (!$product instanceof Product || !$harvest->access('view')) {
-        continue;
-      }
-      $pid = $product->id();
-      $pname = (string) $product->label();
-      $punit = (string) $product->get('unit')->value;
-      $year = substr((string) $harvest->get('harvest_date')->value, 0, 4);
-      if (!isset($grouped[$pid])) {
-        $grouped[$pid] = ['product' => $pname, 'unit' => $punit, 'totals' => []];
-      }
-      if (!isset($grouped[$pid]['totals'][$year])) {
-        $grouped[$pid]['totals'][$year] = 0.0;
-      }
-      $grouped[$pid]['totals'][$year] += (float) $harvest->get('quantity')->value;
-    }
-
-    if (!$grouped) {
-      return [];
-    }
-    // Sort years descending.
-    foreach ($grouped as $pid => &$data) {
-      krsort($data['totals']);
-    }
-
-    // Build header: Year + columns for each product.
     $headers = [$this->t('Year')];
-    foreach ($grouped as $pid => $data) {
-      $headers[] = $this->t('@product (@unit)', [
-        '@product' => $data['product'],
-        '@unit' => $data['unit'],
-      ]);
+    $years = [];
+    foreach ($totals as $total) {
+      $headers[] = $total['unit'] !== ''
+        ? $this->t('@product (@unit)', ['@product' => $total['name'], '@unit' => $total['unit']])
+        : $total['name'];
+      $years += array_fill_keys(array_keys($total['by_year']), TRUE);
     }
-    $headers[] = $this->t('Total');
-
-    // Collect all years.
-    $all_years = [];
-    foreach ($grouped as $data) {
-      foreach (array_keys($data['totals']) as $y) {
-        if (!in_array($y, $all_years, TRUE)) {
-          $all_years[] = $y;
-        }
-      }
-    }
-    sort($all_years, SORT_STRING);
-    $all_years = array_reverse($all_years);
-
-    // Compute per-product grand totals.
-    $product_sums = [];
-    foreach ($grouped as $pid => &$data) {
-      foreach ($data['totals'] as $qty) {
-        if (!isset($product_sums[$pid])) {
-          $product_sums[$pid] = 0.0;
-        }
-        $product_sums[$pid] += $qty;
-      }
-    }
+    krsort($years, SORT_STRING);
 
     $rows = [];
-    $grand_total = 0.0;
-    foreach ($all_years as $year) {
+    foreach (array_keys($years) as $year) {
       $cells = [(string) $year];
-      $year_sum = 0.0;
-      foreach ($grouped as $pid => $data) {
-        $qty = $data['totals'][$year] ?? 0.0;
-        $cells[] = rtrim(rtrim(number_format($qty, 3, '.', ''), '0'), '.') . ($data['unit'] ? ' ' . $data['unit'] : '');
-        $year_sum += $qty;
+      foreach ($totals as $total) {
+        $cells[] = isset($total['by_year'][$year])
+          ? HivelogHarvestTotals::format($total['by_year'][$year], $total['unit'])
+          : '';
       }
-      $cells[] = rtrim(rtrim(number_format($year_sum, 3, '.', ''), '0'), '.');
-      $grand_total += $year_sum;
       $rows[] = ['cells' => $cells];
     }
-
-    if ($grand_total <= 0) {
-      return [];
+    // Each cell of this row is one product over every year, so it is a sum
+    // of like with like.
+    $total_cells = [(string) $this->t('All years')];
+    foreach ($totals as $total) {
+      $total_cells[] = HivelogHarvestTotals::format($total['quantity'], $total['unit']);
     }
-
-    // Grand total row.
-    $total_cells = [($this->t('Grand total'))];
-    foreach ($grouped as $pid => $data) {
-      $qty = $product_sums[$pid] ?? 0.0;
-      $total_cells[] = rtrim(rtrim(number_format($qty, 3, '.', ''), '0'), '.') . ($data['unit'] ? ' ' . $data['unit'] : '');
-    }
-    // Sum grand total.
-    $gt = array_sum(array_values($product_sums));
-    $total_cells[] = rtrim(rtrim(number_format($gt, 3, '.', ''), '0'), '.');
     $rows[] = ['cells' => $total_cells];
 
     return [

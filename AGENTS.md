@@ -1084,7 +1084,14 @@ count it used to state already had. Core's own:
   tiles alone, because the app reads the same facts from the hive and queen records. The Queen tile
   links to the active queen (sub-line her name and breed), or reads "No queen" with an add link;
   Empty weight reads "Unknown" with "Incomplete" or "Not yet composed" when `getEmptyWeightKg()` is
-  NULL (`Hive::hasComponents()` tells the two apart). The Queen section under it keeps only its
+  NULL (`Hive::hasComponents()` tells the two apart). **Harvest totals are per product, never
+  summed across products** (task 0284, `HivelogHarvestTotals::perProduct()`): a product's unit is
+  free text and nothing converts between units, so the Harvest this year tile shows the year's total
+  of the hive's main product (highest potential income, then most harvests, then name), names it in
+  the sub-line and says "+N other products"; the Harvest History section (`#harvest_history`,
+  `HiveController::buildHarvestHistory()`) has a column per product, a row per year and an "All
+  years" row, and no total across columns. Products with the same name and unit are one column. Both
+  count harvests recorded directly only. The Queen section under it keeps only its
   heading and buttons. The Apiary page likewise shows core's activity tiles (task 0263,
   `coreTilesForApiary()`, weighted -50 to -20): Active hives (to the page's own `#hives`), Open seasonal
   tasks (from `HivelogAlertCollector::collectSeasonalAlerts()` for this one apiary, critical when some are
