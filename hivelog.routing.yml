@@ -1111,3 +1111,54 @@ hivelog.hive.move:
     parameters:
       hive:
         type: entity:hive
+
+# Hive reminders (task 0274).
+hivelog.hive_reminder.add:
+  path: '/hivelog/hive/{hive}/reminder/add'
+  defaults:
+    _entity_form: 'hive_reminder.add'
+    _title: 'Add reminder'
+  requirements:
+    _permission: 'add hive reminder+administer hivelog'
+    _entity_access: 'hive.update'
+    _entity_create_access: 'hive_reminder'
+  options:
+    parameters:
+      hive:
+        type: entity:hive
+
+entity.hive_reminder.collection:
+  path: '/hivelog/hive-reminders'
+  defaults:
+    _controller: '\Drupal\hivelog\HiveReminderListBuilder::handleList'
+    _title: 'Hive reminders'
+  requirements:
+    _permission: 'view any hive reminder+administer hivelog'
+  options:
+    _navigation_route: TRUE
+
+entity.hive_reminder.edit_form:
+  path: '/hivelog/hive-reminder/{hive_reminder}/edit'
+  defaults:
+    _entity_form: 'hive_reminder.edit'
+    _title_callback: '\Drupal\hivelog\Form\HiveReminderForm::editTitle'
+  requirements:
+    _permission: 'edit any hive reminder+administer hivelog'
+    _entity_access: 'hive_reminder.update'
+  options:
+    parameters:
+      hive_reminder:
+        type: entity:hive_reminder
+
+entity.hive_reminder.delete_form:
+  path: '/hivelog/hive-reminder/{hive_reminder}/delete'
+  defaults:
+    _entity_form: 'hive_reminder.delete'
+    _title_callback: '\Drupal\hivelog\Form\HiveReminderForm::deleteTitle'
+  requirements:
+    _permission: 'delete any hive reminder+administer hivelog'
+    _entity_access: 'hive_reminder.delete'
+  options:
+    parameters:
+      hive_reminder:
+        type: entity:hive_reminder

@@ -1427,3 +1427,19 @@ function hivelog_update_10040(&$sandbox) {
   \Drupal::entityTypeManager()->getStorage('harvest_yield')->resetCache();
   return t('Gave @count calendar harvest(s) their own apiary, hive and date.', ['@count' => $filled]);
 }
+
+/**
+ * Installs the HiveReminder entity type and schema (task 0274).
+ */
+function hivelog_update_10041() {
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+
+  if (!$definition_update_manager->getEntityType('hive_reminder')) {
+    $reminder_type = $entity_type_manager->getDefinition('hive_reminder');
+    $definition_update_manager->installEntityType($reminder_type);
+  }
+  $definition_update_manager->installEntitySchema('hive_reminder');
+
+  return t('Created the HiveReminder entity type and schema.');
+}

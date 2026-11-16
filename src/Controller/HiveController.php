@@ -217,6 +217,10 @@ class HiveController extends ControllerBase {
     // Harvest history: per-product totals across years.
     $build['harvest_history'] = $this->buildHarvestHistory($hive) + ['#weight' => 8.5];
 
+    // Reminders (task 0274): pending and due reminders for this hive.
+    [$reminders_section] = $this->buildRemindersSection($hive);
+    $build['reminders'] = $reminders_section + ['#weight' => 8.6];
+
     // Hive Activity: Inspections, then Queen Observations below it, under
     // one shared "Hive Activity" heading — the two logs a beekeeper keeps
     // during the same hive visit belong on the same page, under the same
@@ -855,7 +859,116 @@ class HiveController extends ControllerBase {
   }
 
   /**
-   * Builds the Inspections column of the hive activity section.
+   * Builds the Reminders section of the hive page.
+   *
+   * @param \Drupal\hivelog\Entity\Hive $hive
+   *   The hive being rendered.
+   *
+   * @return array{0: array}
+   *   Render array for the reminders table.
+   */
+  protected function buildRemindersSection(Hive $hive): array {
+    // Load pending reminders (most recent due first).
+    $reminder_ids = $this->entityTypeManager
+      ->getStorage('hive_reminder')
+      ->getQuery()
+      ->accessCheck(FALSE)
+      ->condition('hive', $hive->id())
+      ->condition('status', ['pending'], 'IN')
+      ->sort('due_date', 'ASC')
+      ->execute();
+
+    if (!$reminder_ids) {
+      return [[
+        '#type' => 'container',
+        '#attributes' => ['class' => ['hivelog-detail-section', 'hivelog-reminders'], 'id' => 'reminders'],
+        '#weight' => 8.6,
+        '#title' => $this->t('Reminders'),
+        '#message' => (string) $this->t('No pending reminders for this hive.'),
+      ],
+      ];
+    }
+
+    $reminders = $this->entityTypeManager
+      ->getStorage('hive_reminder')
+      ->loadMultiple($reminder_ids);
+
+    // Collect cache tags.
+    $cache_tags = ['hive_reminder_list'];
+    foreach ($reminders as $reminder) {
+      $tags = \Drupal::entityTypeManager()->getDefinition('hive_reminder')->getListCacheTags();
+      if (isset($tags[0])) {
+        $cache_tags[] = $tags[0];
+      }
+    }
+
+    // Build rows with quick-action buttons.
+    $rows = [];
+    foreach ($reminders as $reminder) {
+      $due     = $reminder->get('due_date')->value ?? '';
+      $title   = (string) $reminder->get('title')->value;
+      $buttons = [];
+
+      // "Mark done" — set status to 'done' via query param.
+      if ($reminder->access('update')) {
+        $url = $reminder->toUrl('edit-form')
+          ->setOption('query', ['status' => 'done']);
+        $buttons[] = [
+          'label' => (string) $this->t('Done'),
+          'url'   => $url->toString(),
+        ];
+      }
+
+      // "Dismiss" — set status to 'dismissed' via query param.
+      if ($reminder->access('update')) {
+        $buttons[] = [
+          'label' => (string) $this->t('Dismiss'),
+          'url'   => $reminder->toUrl('edit-form')
+            ->setOption('query', ['status' => 'dismissed'])->toString(),
+          'variant' => 'default',
+        ];
+      }
+
+      $actions = [
+        '#type' => 'component',
+        '#component' => 'hivelog:button-group',
+        '#props' => ['buttons' => $buttons],
+      ];
+
+      // Show a "Due now" chip if due today or overdue.
+      $chip = $due ? date('d M Y', strtotime($due)) : '';
+      $now  = date('Y-m-d');
+      if ($due && strtotime($due) <= strtotime($now)) {
+        $chip .= ' ' . $this->renderer->renderPlain([
+          '#type' => 'inline_template',
+          '#template' => '<span class="hivelog-stat-tile--critical">Overdue</span>',
+          '#allowed_tags' => ['span'],
+        ]);
+      }
+
+      $rows[] = [
+        'cells' => [
+          $title,
+          $chip,
+          $this->renderer->renderInIsolation($actions),
+        ],
+      ];
+    }
+
+    return [[
+      '#type' => 'container',
+      '#attributes' => ['class' => ['hivelog-detail-section', 'hivelog-reminders'], 'id' => 'reminders'],
+      '#weight' => 8.6,
+      '#title' => $this->t('Reminders'),
+      '#message' => (string) $this->t('No pending reminders for this hive.'),
+      '#cache' => ['tags' => array_unique($cache_tags)],
+      '#rows' => $rows,
+    ],
+    ];
+  }
+
+  /**
+   * Builds the inspections column for the Hive page.
    *
    * @param \Drupal\hivelog\Entity\Hive $hive
    *   The hive being rendered.

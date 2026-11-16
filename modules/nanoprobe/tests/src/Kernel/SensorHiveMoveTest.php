@@ -60,8 +60,8 @@ class SensorHiveMoveTest extends KernelTestBase {
   protected function setUp(): void {
     parent::setUp();
     foreach (['user', 'file', 'apiary', 'apiary_membership', 'hive', 'hive_component', 'inventory_item',
-      'inventory_purchase', 'sensor_device'
-] as $type) {
+      'inventory_purchase', 'sensor_device',
+    ] as $type) {
       $this->installEntitySchema($type);
     }
     $this->installSchema('file', ['file_usage']);

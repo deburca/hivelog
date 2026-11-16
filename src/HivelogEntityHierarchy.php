@@ -50,6 +50,7 @@ final class HivelogEntityHierarchy {
     // A harvest recorded directly (task 0271). resolveParent() prefers its
     // hive when it has one; this is the field every such harvest has.
     'harvest_yield' => 'apiary',
+    'hive_reminder' => 'hive',
   ];
 
   /**
@@ -102,6 +103,7 @@ final class HivelogEntityHierarchy {
     'hive_inspection',
     'queen',
     'queen_observation',
+    'hive_reminder',
     'calendar_action',
     'hive_action_log',
     'apiary_action_log',
@@ -130,6 +132,7 @@ final class HivelogEntityHierarchy {
     'hive_inspection',
     'queen',
     'queen_observation',
+    'hive_reminder',
     'calendar_action',
     'hive_action_log',
     'apiary_action_log',
