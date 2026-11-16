@@ -543,6 +543,15 @@ class HivelogAppNavBuilder {
         'section' => 'hive_inspection',
         'parent' => 'apiaries',
       ],
+      // Hive reminders (task 0274).
+      'reminders' => [
+        'title' => $this->t('Reminders'),
+        'url' => Url::fromRoute('entity.hive_reminder.collection'),
+        'weight' => 3,
+        'group' => 'records',
+        'section' => 'hive_reminder',
+        'parent' => 'apiaries',
+      ],
       'queens' => [
         'title' => $this->t('Queens'),
         'url' => Url::fromRoute('entity.queen.collection'),

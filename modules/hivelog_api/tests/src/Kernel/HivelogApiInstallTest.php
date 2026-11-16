@@ -139,7 +139,8 @@ class HivelogApiInstallTest extends KernelTestBase {
     $permissions = Role::load(HivelogApiResources::SCOPE)->getPermissions();
 
     foreach (['view own hive', 'add hive inspection', 'add queen observation', 'edit own hive action log',
-      'add hive', 'add queen'] as $wanted) {
+      'add hive', 'add queen',
+    ] as $wanted) {
       $this->assertContains($wanted, $permissions);
     }
     // Deletes: the user's own inspections and queen observations, and nothing else (task 0220).

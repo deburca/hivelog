@@ -111,8 +111,8 @@ class ApiaryMemberManagerForm extends ControllerBase {
       $buttons = [[
         'label' => (string) $this->t('Edit role'),
         'url' => Url::fromRoute('entity.apiary_membership.edit_form', $params)->toString(),
-      ]
-];
+      ],
+      ];
       if (!$is_last_owner) {
         $buttons[] = [
           'label' => (string) $this->t('Remove'),
@@ -129,12 +129,12 @@ class ApiaryMemberManagerForm extends ControllerBase {
 
       // Cells are output raw by the component, so escape the text ones.
       $rows[] = [
-      'cells' => [
-        Html::escape($account->getDisplayName()),
-        Html::escape((string) ApiaryMembership::roleLabel($membership->getRole())),
-        (string) $this->renderer->renderInIsolation($operations),
-      ]
-];
+        'cells' => [
+          Html::escape($account->getDisplayName()),
+          Html::escape((string) ApiaryMembership::roleLabel($membership->getRole())),
+          (string) $this->renderer->renderInIsolation($operations),
+        ],
+      ];
     }
 
     $build['table'] = [

@@ -218,7 +218,6 @@ class InventoryUsageTest extends KernelTestBase {
       'unit_price' => 2.0,
     ])->save();
     // Weighted average: (10*1.0 + 30*2.0) / (10+30) = 70/40 = 1.75.
-
     $usage = InventoryUsage::create([
       'item' => $this->item->id(),
       'quantity' => 2,

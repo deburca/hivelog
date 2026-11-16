@@ -59,12 +59,13 @@ class HivelogAlertCollector {
    *   individual passes, for the dashboard's stat tiles.
    */
   public function collect(array $apiaries, int $year, int $current_week, CacheableMetadata $cache): array {
-    $seasonal = $this->collectSeasonalAlerts($apiaries, $year, $current_week, $cache);
-    $low_stock = $this->collectLowStockAlerts($apiaries, $cache);
-    $inspection = $this->collectInspectionAlerts($apiaries, $current_week, $cache);
+    $seasonal    = $this->collectSeasonalAlerts($apiaries, $year, $current_week, $cache);
+    $low_stock   = $this->collectLowStockAlerts($apiaries, $cache);
+    $inspection  = $this->collectInspectionAlerts($apiaries, $current_week, $cache);
+    $reminders   = $this->collectReminderAlerts($cache);
     $contributed = $this->collectSensorAlerts($apiaries, $cache);
 
-    $alerts = array_merge($seasonal['alerts'], $low_stock, $inspection, $contributed);
+    $alerts = array_merge($seasonal['alerts'], $low_stock, $inspection, $reminders, $contributed);
     usort($alerts, fn($a, $b) => $a['sort'] <=> $b['sort']);
 
     return ['alerts' => $alerts, 'seasonal' => $seasonal, 'low_stock' => $low_stock];
@@ -452,6 +453,130 @@ class HivelogAlertCollector {
    *
    * @return array[]
    *   Alert rows, shaped exactly like collectLowStockAlerts()'s own rows.
+   */
+
+  /**
+   * Collects reminder alerts across all viewable hives (task 0274).
+   *
+   * Pending reminders due today or in the past three days produce a critical
+   * chip ("Today" / "Due"); those within seven days produce a warning chip.
+   * Past-due reminders get a critical "Overdue X day(s)" chip. All pending
+   * reminders appear regardless of season or inspection status.
+   */
+  public function collectReminderAlerts(CacheableMetadata $cache): array {
+    $storage      = $this->entityTypeManager->getStorage('hive_reminder');
+    $current_date = date('Y-m-d');
+    $reminder_ids = $storage->getQuery()
+      ->accessCheck(FALSE)
+      ->condition('status', 'pending')
+      ->execute();
+
+    if (!$reminder_ids) {
+      return [];
+    }
+
+    $reminders_list = $storage->loadMultiple($reminder_ids);
+
+    // Build a lookup of hive ID to apiary.
+    $hive_ids = array_unique(
+      array_map(
+        fn(HiveReminder $r): int => $r->get('hive')->target_id,
+        $reminders_list,
+      ),
+    );
+    if (!$hive_ids) {
+      return [];
+    }
+
+    // Load apiaries for the hives so we can scope alerts.
+    $hives      = $this->entityTypeManager
+      ->getStorage('hive')
+      ->loadMultiple($hive_ids);
+    $apiary_map = [];
+    foreach ($hives as $hive) {
+      if ($hive && !isset($apiary_map[$hive->id()])) {
+        $apiary = $hive->get('apiary')->entity;
+        if ($apiary && $apiary->hasLinkTemplate('canonical')) {
+          $apiary_map[$hive->id()] = $apiary;
+        }
+      }
+    }
+
+    // Collect cache tags.
+    $cache_tags = ['hive_reminder_list'];
+    foreach ($hives as $hive) {
+      $tags = \Drupal::entityTypeManager()->getDefinition('hive')->getListCacheTags();
+      $cache_tags[] = reset($tags);
+    }
+    $cache->addCacheTags(array_unique($cache_tags));
+
+    $alert_rows = [];
+    foreach ($reminders_list as $reminder) {
+      $due_date = $reminder->get('due_date')->value ?? '';
+      $hive_id  = $reminder->get('hive')->target_id;
+      $apiary   = $apiary_map[$hive_id] ?? NULL;
+
+      if (!$due_date || !$apiary) {
+        continue;
+      }
+
+      $diff = (int) round((strtotime($due_date) - strtotime($current_date)) / 86400);
+
+      if ($diff < 0) {
+        // Overdue.
+        $over         = abs($diff);
+        $alert_rows[] = [
+          'severity'     => 'critical',
+          'chip'         => $this->t('Overdue @count day(s)', ['@count' => $over]),
+          'title'        => (string) $reminder->get('title')->value,
+          'context'      => $this->attentionContext($apiary, $hives[$hive_id], (string) $this->t('Remind @when', ['@when' => $due_date])),
+          'action_label' => (string) $this->t('Mark done'),
+          'action_url'   => Url::fromRoute('entity.hive_reminder.edit_form', ['hive_reminder' => $reminder->id()])
+            ->setOption('query', ['status' => 'done'])->toString(),
+          'sort'       => [$diff, (int) $due_date],
+          'kind'       => 'reminder',
+          'subject'    => 'hive',
+        ];
+      }
+      elseif ($diff <= 3) {
+        // Due today or within 3 days -- critical.
+        $alert_rows[] = [
+          'severity'     => 'critical',
+          'chip'         => $diff === 0
+            ? $this->t('Today')
+            : $this->t('Due in @count day(s)', ['@count' => $diff]),
+          'title'        => (string) $reminder->get('title')->value,
+          'context'      => $this->attentionContext($apiary, $hives[$hive_id], (string) $this->t('Remind @when', ['@when' => $due_date])),
+          'action_label' => (string) $this->t('Mark done'),
+          'action_url'   => Url::fromRoute('entity.hive_reminder.edit_form', ['hive_reminder' => $reminder->id()])
+            ->setOption('query', ['status' => 'done'])->toString(),
+          'sort'       => [0, (int) $due_date],
+          'kind'       => 'reminder',
+          'subject'    => 'hive',
+        ];
+      }
+      elseif ($diff <= 7) {
+        // Within a week -- warning.
+        $alert_rows[] = [
+          'severity'     => 'warning',
+          'chip'         => $this->t('Due in @count day(s)', ['@count' => $diff]),
+          'title'        => (string) $reminder->get('title')->value,
+          'context'      => $this->attentionContext($apiary, $hives[$hive_id], (string) $this->t('Remind @when', ['@when' => $due_date])),
+          'action_label' => (string) $this->t('Dismiss'),
+          'action_url'   => Url::fromRoute('entity.hive_reminder.edit_form', ['hive_reminder' => $reminder->id()])
+            ->setOption('query', ['status' => 'dismissed'])->toString(),
+          'sort'       => [1, (int) $due_date],
+          'kind'       => 'reminder',
+          'subject'    => 'hive',
+        ];
+      }
+    }
+
+    return $alert_rows;
+  }
+
+  /**
+   * Collects sensor-related alerts from submodule hooks.
    */
   public function collectSensorAlerts(array $apiaries, CacheableMetadata $cache): array {
     return $this->moduleHandler->invokeAll('hivelog_needs_attention_alerts', [$apiaries, $cache]);
