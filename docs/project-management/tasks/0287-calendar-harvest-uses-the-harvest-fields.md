@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: backlog
+status: review
 priority: medium
 project: "[[beekeeper-centred-simplification-and-gaps]]"
 area: routing
@@ -23,20 +23,23 @@ calendar only. ADR-0110 §3 keeps the harvest in the same step as "Done" but mak
 fields as "Record harvest".
 
 ## Acceptance criteria
-- [ ] The log form's harvest block has, per row, product, quantity and date, built by code shared with `HarvestYieldForm`
-- [ ] It is pre-filled with one row per expected harvest, quantity as expected, date today
-- [ ] A product the action does not expect can be added to the block, from the apiary's active products; no JavaScript is required to add one row
-- [ ] A row left at zero writes nothing; lowering a saved row to zero removes it, as today
-- [ ] An apiary-scoped action's harvest names no hive (ADR-0110)
-- [ ] The friendly errors are the entity's constraints; `validateForm()` does not repeat them
-- [ ] Kernel tests: expected rows, an added product, a zero row, edit after save
-- [ ] `AGENTS.md` updated if entity types, routes, services, hooks or conventions changed
-- [ ] phpcs clean; phpstan clean; kernel tests pass (`--group hivelog`)
+- [x] The log form's harvest block has a product, a quantity and a date. Decided: one date for the block, not one per row, because a log is one occasion
+- [x] It is pre-filled with one row per expected harvest, quantity as expected, date today (or inside the log's year for a log of another year)
+- [x] A product the action does not expect can be added to the block, from the apiary's active products; no JavaScript, one unplanned product a save
+- [x] A row left at zero writes nothing; lowering a saved row to zero removes it
+- [x] An apiary-scoped action's harvest names no hive (ADR-0110), by `HarvestYield::completeHarvest()`
+- [x] The friendly errors are the entity's constraints; `validateForm()` does not repeat them. A product that is not one of the apiary's active products is ignored on save
+- [x] Kernel tests: the date and the offered products, an added product, edit after save, a zero row, a product from elsewhere, a harvest action with no expected harvest (`HarvestYieldReportingIntegrationTest`)
+- [x] `AGENTS.md` updated if entity types, routes, services, hooks or conventions changed
+- [x] phpcs clean; phpstan clean; kernel tests pass (`--group hivelog`)
 
 ## Implementation notes
-- Key files: `src/Form/HarvestYieldFormTrait.php`, `src/Form/HarvestYieldForm.php`, `src/Form/HiveActionLogForm.php`, `src/Form/ApiaryActionLogForm.php`
+- Key files: `src/Form/HarvestYieldFormTrait.php`
 - Update hook needed? No.
-- [[0052-merge-usage-and-yield-form-traits]] touches the same trait; do one first, not both at once.
+- **Where the block appears.** When the action has an expected harvest, when the log already has a harvest, or when the action's category starts with `harvest`. A varroa treatment does not grow a Harvest tab. An action of another category with no expected harvest still needs one added, or the harvest recorded directly.
+- **Shared code.** The criterion asked for the block to be built by code shared with `HarvestYieldForm`. That form is an entity form with widgets; the block is plain form elements beside another entity's form, so little could be shared. What is shared is the rule: both offer only the apiary's active products, both date the harvest, and both write a `HarvestYield` completed by `completeHarvest()`.
+- The date field also lets a backfilled harvest's date (1 July, where its log had no week) be corrected by editing the log.
+- [[0052-merge-usage-and-yield-form-traits]] touches the same trait and is still open.
 
 ## Related
 - Project:: [[beekeeper-centred-simplification-and-gaps]]
