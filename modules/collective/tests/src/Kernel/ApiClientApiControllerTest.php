@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\collective\Kernel;
 
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\collective\Controller\ApiClientApiController;
+use Drupal\collective\HiveContextBuilder;
 use Drupal\collective\Entity\ApiClient;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\CalendarAction;
@@ -122,8 +124,13 @@ class ApiClientApiControllerTest extends KernelTestBase {
     $this->client->save();
     $this->token = $this->client->getPlainTextToken();
 
-    $this->controller = \Drupal::service('class_resolver')
-      ->getInstanceFromDefinition(ApiClientApiController::class);
+    // The controller requires HiveContextBuilder and TimeInterface.
+    $context_builder = $this->createStub(HiveContextBuilder::class);
+    $time_interface = $this->createStub(TimeInterface::class);
+    $this->controller = new ApiClientApiController(
+      $context_builder,
+      $time_interface
+    );
   }
 
   /**

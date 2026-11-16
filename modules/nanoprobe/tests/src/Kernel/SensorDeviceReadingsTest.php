@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\nanoprobe\Kernel;
 
+use Drupal\Component\Datetime\TimeInterface;
+use Drupal\Core\Datetime\DateFormatterInterface;
+use Drupal\nanoprobe\SensorTrendChartBuilder;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\Hive;
 use Drupal\nanoprobe\Controller\SensorDeviceController;
@@ -143,7 +146,7 @@ class SensorDeviceReadingsTest extends KernelTestBase {
     $this->createReading('battery_voltage', 3.9, 2);
     $this->createReading('battery_voltage', 3.8, 0);
 
-    $controller = new SensorDeviceController();
+    $controller = $this->createController();
     $build = $controller->readings($this->device);
 
     $this->assertArrayHasKey('charts', $build);
@@ -162,7 +165,7 @@ class SensorDeviceReadingsTest extends KernelTestBase {
 
     \Drupal::request()->query->set('metric', 'weight_kg');
 
-    $controller = new SensorDeviceController();
+    $controller = $this->createController();
     $build = $controller->readings($this->device);
 
     $this->assertArrayHasKey('metric_weight_kg', $build['charts']);
@@ -182,7 +185,7 @@ class SensorDeviceReadingsTest extends KernelTestBase {
 
     \Drupal::request()->query->set('metric', 'not_a_real_metric');
 
-    $controller = new SensorDeviceController();
+    $controller = $this->createController();
     $build = $controller->readings($this->device);
 
     $this->assertArrayHasKey('metric_weight_kg', $build['charts']);
@@ -198,7 +201,7 @@ class SensorDeviceReadingsTest extends KernelTestBase {
     $far_future = date('Y-m-d', \Drupal::time()->getRequestTime() + (365 * 86400));
     \Drupal::request()->query->set('date_from', $far_future);
 
-    $controller = new SensorDeviceController();
+    $controller = $this->createController();
     $build = $controller->readings($this->device);
 
     $this->assertArrayNotHasKey('charts', $build);
@@ -217,7 +220,7 @@ class SensorDeviceReadingsTest extends KernelTestBase {
 
     \Drupal::request()->query->set('date_from', 'not-a-date');
 
-    $controller = new SensorDeviceController();
+    $controller = $this->createController();
     $build = $controller->readings($this->device);
 
     $this->assertArrayHasKey('metric_weight_kg', $build['charts']);
@@ -238,7 +241,7 @@ class SensorDeviceReadingsTest extends KernelTestBase {
     \Drupal::request()->query->set('date_from', $today);
     \Drupal::request()->query->set('date_to', $earlier);
 
-    $controller = new SensorDeviceController();
+    $controller = $this->createController();
     $build = $controller->readings($this->device);
 
     $this->assertArrayHasKey('metric_weight_kg', $build['charts'], 'Swapped range covers both readings.');
@@ -251,7 +254,7 @@ class SensorDeviceReadingsTest extends KernelTestBase {
    * Tests the filter form is included on the page.
    */
   public function testFilterFormIsIncluded(): void {
-    $controller = new SensorDeviceController();
+    $controller = $this->createController();
     $build = $controller->readings($this->device);
 
     $this->assertArrayHasKey('filter', $build);
@@ -271,7 +274,7 @@ class SensorDeviceReadingsTest extends KernelTestBase {
     \Drupal::request()->query->set('metric', 'weight_kg');
     \Drupal::request()->query->set('date_from', '2026-01-01');
 
-    $controller = new SensorDeviceController();
+    $controller = $this->createController();
     $build = $controller->readings($this->device);
 
     $reset_url = $build['filter']['filter_actions']['reset']['#props']['url'] ?? NULL;
@@ -287,7 +290,7 @@ class SensorDeviceReadingsTest extends KernelTestBase {
   public function testReadingsDeniedForOutsider(): void {
     $this->setCurrentUser($this->outsider);
 
-    $controller = new SensorDeviceController();
+    $controller = $this->createController();
     $this->expectException(AccessDeniedHttpException::class);
     $controller->readings($this->device);
   }
@@ -306,7 +309,7 @@ class SensorDeviceReadingsTest extends KernelTestBase {
    * Tests the title callback includes the device's own label.
    */
   public function testReadingsTitleIncludesDeviceLabel(): void {
-    $controller = new SensorDeviceController();
+    $controller = $this->createController();
     $this->assertStringContainsString('VV-01 Scale', $controller->readingsTitle($this->device));
   }
 

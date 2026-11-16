@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task, tech-debt]
-status: backlog
+status: done
 priority: low
 project: beekeeper-centred-simplification-and-gaps
 area: code-quality

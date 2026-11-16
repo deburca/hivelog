@@ -9,6 +9,7 @@ use Drupal\hivelog\Entity\Hive;
 use Drupal\nanoprobe\Controller\SensorIngestController;
 use Drupal\nanoprobe\Entity\SensorDevice;
 use Drupal\nanoprobe\Entity\SensorReading;
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
@@ -105,7 +106,8 @@ class SensorIngestControllerTest extends KernelTestBase {
     ]);
     $this->device->save();
     $this->token = $this->device->getPlainTextToken();
-
+    $time = $this->createStub(TimeInterface::class);
+    $this->controller = new SensorIngestController($time);
     $this->controller = new SensorIngestController();
   }
 

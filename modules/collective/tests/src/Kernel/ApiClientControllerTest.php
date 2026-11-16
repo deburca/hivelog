@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\collective\Kernel;
 
+use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\collective\Controller\ApiClientController;
 use Drupal\collective\Entity\ApiClient;
 use Drupal\KernelTests\KernelTestBase;
@@ -117,6 +118,14 @@ class ApiClientControllerTest extends KernelTestBase {
   }
 
   /**
+   * Creates an ApiClientController with a mock date formatter.
+   */
+  protected function createController(): ApiClientController {
+    $date_formatter = $this->createStub(DateFormatterInterface::class);
+    return new ApiClientController($date_formatter);
+  }
+
+  /**
    * Tests the page renders and includes a regenerate button for an owner.
    *
    * The button uses a `danger` variant since regenerating the token
@@ -125,7 +134,7 @@ class ApiClientControllerTest extends KernelTestBase {
   public function testViewRendersForAuthorizedUser(): void {
     $this->setCurrentUser($this->owner);
 
-    $controller = new ApiClientController();
+    $controller = $this->createController();
     $build = $controller->view($this->client);
 
     $this->assertArrayHasKey('summary', $build);
@@ -148,7 +157,7 @@ class ApiClientControllerTest extends KernelTestBase {
    */
   public function testRegenerateActionHiddenWithoutUpdateAccess(): void {
     $this->setCurrentUser($this->viewOnlyMember);
-    $controller = new ApiClientController();
+    $controller = $this->createController();
     $build = $controller->view($this->client);
 
     $this->assertArrayHasKey('summary', $build);
@@ -175,7 +184,7 @@ class ApiClientControllerTest extends KernelTestBase {
     $full_access->save();
 
     $this->setCurrentUser($full_access);
-    $controller = new ApiClientController();
+    $controller = $this->createController();
     $build = $controller->view($this->client);
 
     $this->assertEquals('hivelog:button-group', $build['actions']['#component']);
@@ -189,7 +198,7 @@ class ApiClientControllerTest extends KernelTestBase {
    */
   public function testActionsAbsentWithoutUpdateOrDeleteAccess(): void {
     $this->setCurrentUser($this->viewOnlyMember);
-    $controller = new ApiClientController();
+    $controller = $this->createController();
     $build = $controller->view($this->client);
 
     $this->assertSame([], $build['actions']);
@@ -201,7 +210,7 @@ class ApiClientControllerTest extends KernelTestBase {
   public function testViewDeniedForOutsider(): void {
     $this->setCurrentUser($this->outsider);
 
-    $controller = new ApiClientController();
+    $controller = $this->createController();
     $this->expectException(AccessDeniedHttpException::class);
     $controller->view($this->client);
   }

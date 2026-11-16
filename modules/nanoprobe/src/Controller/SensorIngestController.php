@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\nanoprobe\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Datetime\TimeInterface;
 use Drupal\nanoprobe\Entity\SensorDevice;
 use Drupal\nanoprobe\Entity\SensorReading;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -23,6 +24,10 @@ use Symfony\Component\HttpFoundation\Response;
  * `ApiaryAccessTrait`/session-CSRF model, scoped to this single route.
  */
 class SensorIngestController extends ControllerBase {
+
+  public function __construct(
+    protected TimeInterface $time,
+  ) {}
 
   /**
    * Accepts one or a batch of sensor readings from an authenticated device.
@@ -80,7 +85,7 @@ class SensorIngestController extends ControllerBase {
       $created_ids[] = $reading->id();
     }
 
-    $device->set('last_seen', \Drupal::time()->getRequestTime());
+    $device->set('last_seen', $this->time->requestTime());
     $device->save();
 
     return new JsonResponse(['created' => $created_ids], Response::HTTP_CREATED);

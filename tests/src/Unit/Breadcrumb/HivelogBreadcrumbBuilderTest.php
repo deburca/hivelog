@@ -7,6 +7,9 @@ use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Controller\TitleResolverInterface;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Drupal\hivelog\Breadcrumb\HivelogBreadcrumbBuilder;
 use Drupal\hivelog\HivelogEntityHierarchy;
 use Drupal\Tests\UnitTestCase;
@@ -53,7 +56,11 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
     $container->set('cache_contexts_manager', $cache_contexts_manager);
     \Drupal::setContainer($container);
 
-    $this->builder = new HivelogBreadcrumbBuilder($this->createEntityTypeManagerStub());
+    $this->builder = new HivelogBreadcrumbBuilder(
+      $this->createEntityTypeManagerStub(),
+      $this->createTitleResolverStub(),
+      $this->createRequestStackStub(),
+    );
     $this->builder->setStringTranslation($this->getStringTranslationStub());
   }
 
@@ -104,6 +111,26 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
       ->willReturnCallback(fn(string $type_id) => $definitions[$type_id] ?? NULL);
 
     return $entity_type_manager;
+  }
+
+  /**
+   * Creates a stub for TitleResolverInterface.
+   */
+  protected function createTitleResolverStub(): TitleResolverInterface {
+    $title_resolver = $this->createMock(TitleResolverInterface::class);
+    $title_resolver->method('getTitle')
+      ->willReturnCallback(fn(Request $request, Route $route) => $route->getDefault('_title'));
+    return $title_resolver;
+  }
+
+  /**
+   * Creates a stub for RequestStack.
+   */
+  protected function createRequestStackStub(): RequestStack {
+    $request_stack = $this->createMock(RequestStack::class);
+    $request_stack->method('getCurrentRequest')
+      ->willReturn(new Request());
+    return $request_stack;
   }
 
   // -------------------------------------------------------------------------
