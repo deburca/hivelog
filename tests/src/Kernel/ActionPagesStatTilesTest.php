@@ -6,6 +6,7 @@ namespace Drupal\Tests\hivelog\Kernel;
 
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\hivelog\Controller\ApiaryActionLogController;
+use Drupal\hivelog\HivelogWeekDates;
 use Drupal\hivelog\Controller\CalendarActionController;
 use Drupal\hivelog\Controller\HiveActionLogController;
 use Drupal\hivelog\Entity\Apiary;
@@ -97,9 +98,16 @@ class ActionPagesStatTilesTest extends KernelTestBase {
     $this->assertArrayHasKey('facts', $build);
     $this->assertArrayNotHasKey('overview', $build);
     $this->assertArrayNotHasKey('schedule', $build);
-    $window = $build['facts']['window']['#props'];
-    $this->assertSame('W14–W18', $window['value']);
-    $this->assertSame('Recurring', $window['sublabel']);
+    // This year's dates as the value, the weeks in the sub-line (task
+    // 0283).
+    $props = $build['facts']['window']['#props'];
+    $this->assertSame(HivelogWeekDates::dates((int) date('Y'), 14, 18), $props['value']);
+    $this->assertStringContainsString(' – ', $props['value']);
+    $this->assertSame('W14–W18 · every year', (string) $props['sublabel']);
+    $this->assertSame('30 Mar – 3 May (W14–W18)', HivelogWeekDates::label(2026, 14, 18));
+    $this->assertSame('6–12 Apr (W15)', HivelogWeekDates::label(2026, 15, ''));
+    $this->assertSame('29 Dec – 4 Jan (W1)', HivelogWeekDates::label(2026, 1));
+    $this->assertSame('', HivelogWeekDates::label(2026, NULL));
     $status = $build['facts']['enabled']['#props'];
     $this->assertSame('Enabled', $status['value']);
     $this->assertSame('default', $status['sublabel_variant']);
@@ -127,7 +135,8 @@ class ActionPagesStatTilesTest extends KernelTestBase {
   public function testDisabledCalendarAction(): void {
     $action = $this->action(['enabled' => FALSE, 'recurring' => FALSE, 'week_end' => 14]);
     $build = $this->controller(CalendarActionController::class)->view($action);
-    $this->assertSame('W14', $build['facts']['window']['#props']['value']);
+    // Single week: shows date range only, no sub-line (task 0283).
+    $this->assertSame(HivelogWeekDates::dates((int) date('Y'), 14), $build['facts']['window']['#props']['value']);
     $this->assertSame('', $build['facts']['window']['#props']['sublabel']);
     $this->assertSame('Disabled', $build['facts']['enabled']['#props']['value']);
     $this->assertSame('warning', $build['facts']['enabled']['#props']['sublabel_variant']);

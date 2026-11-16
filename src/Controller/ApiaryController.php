@@ -24,6 +24,7 @@ use Drupal\hivelog\HivelogEntityActionsTrait;
 use Drupal\hivelog\HivelogHarvestSectionTrait;
 use Drupal\hivelog\HivelogHarvestTotals;
 use Drupal\hivelog\HivelogStatTileBuilder;
+use Drupal\hivelog\HivelogWeekDates;
 use Drupal\hivelog\HivelogStatTileStripTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -572,7 +573,7 @@ class ApiaryController extends ControllerBase {
 
     $checklist_header = [
       $this->t('Title'),
-      $this->t('Week(s)'),
+      $this->t('When'),
       $this->t('Status'),
       $this->t('Week Completed'),
       $this->t('Notes'),
@@ -593,9 +594,8 @@ class ApiaryController extends ControllerBase {
 
       $week_start = $calendar_action->get('week_start')->value;
       $week_end = $calendar_action->get('week_end')->value;
-      $weeks = ($week_end !== NULL && $week_end !== '' && (int) $week_end !== (int) $week_start)
-        ? $this->t('@start–@end', ['@start' => $week_start, '@end' => $week_end])
-        : (string) $week_start;
+      // Dates for the year in view, with the weeks after them (task 0283).
+      $weeks = HivelogWeekDates::label($calendar_filters['year'], $week_start, $week_end);
 
       $week_completed = $log ? $log->get('week_completed')->value : NULL;
       $week_completed_display = ($week_completed !== NULL && $week_completed !== '') ? (string) $week_completed : '';
@@ -1066,7 +1066,7 @@ class ApiaryController extends ControllerBase {
     $header = [
       $this->t('Title'),
       $this->t('Scope'),
-      $this->t('Week(s)'),
+      $this->t('When'),
       $this->t('Category'),
       $this->t('Enabled'),
       $this->t('Operations'),
@@ -1087,9 +1087,8 @@ class ApiaryController extends ControllerBase {
     foreach ($calendar_actions as $calendar_action) {
       $week_start = $calendar_action->get('week_start')->value;
       $week_end = $calendar_action->get('week_end')->value;
-      $weeks = ($week_end !== NULL && $week_end !== '' && (int) $week_end !== (int) $week_start)
-        ? $this->t('@start–@end', ['@start' => $week_start, '@end' => $week_end])
-        : (string) $week_start;
+      // The full calendar has no year filter: this year's dates.
+      $weeks = HivelogWeekDates::label((int) date('Y'), $week_start, $week_end);
 
       $scope = $calendar_action->get('scope')->value;
       $scope_display = (string) ($scope_labels[$scope] ?? $scope);

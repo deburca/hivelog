@@ -59,14 +59,12 @@ class CalendarActionListBuilder extends HivelogListBuilder {
       ? ($entity->get('category')->getSetting('allowed_values')[$category] ?? $category)
       : '';
 
-    $week_start = $entity->get('week_start')->value;
-    $week_end = $entity->get('week_end')->value;
-    if ($week_end !== NULL && $week_end !== '' && (int) $week_end !== (int) $week_start) {
-      $row['weeks'] = $this->t('@start–@end', ['@start' => $week_start, '@end' => $week_end]);
-    }
-    else {
-      $row['weeks'] = (string) $week_start;
-    }
+    // This year's dates, with the weeks after them (task 0283).
+    $row['weeks'] = HivelogWeekDates::label(
+      (int) date('Y'),
+      $entity->get('week_start')->value,
+      $entity->get('week_end')->value,
+    );
 
     $row['enabled'] = $entity->get('enabled')->value ? $this->t('Yes') : $this->t('Disabled');
 

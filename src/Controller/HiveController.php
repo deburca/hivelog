@@ -22,6 +22,7 @@ use Drupal\hivelog\HivelogEntityActionsTrait;
 use Drupal\hivelog\HivelogHarvestSectionTrait;
 use Drupal\hivelog\HivelogHarvestTotals;
 use Drupal\hivelog\HivelogStatTileBuilder;
+use Drupal\hivelog\HivelogWeekDates;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -343,7 +344,7 @@ class HiveController extends ControllerBase {
 
     $checklist_header = [
       $this->t('Title'),
-      $this->t('Week(s)'),
+      $this->t('When'),
       $this->t('Status'),
       $this->t('Week Completed'),
       $this->t('Notes'),
@@ -364,9 +365,8 @@ class HiveController extends ControllerBase {
 
       $week_start = $calendar_action->get('week_start')->value;
       $week_end = $calendar_action->get('week_end')->value;
-      $weeks = ($week_end !== NULL && $week_end !== '' && (int) $week_end !== (int) $week_start)
-        ? $this->t('@start–@end', ['@start' => $week_start, '@end' => $week_end])
-        : (string) $week_start;
+      // Dates for the year in view, with the weeks after them (task 0283).
+      $weeks = HivelogWeekDates::label($calendar_filters['year'], $week_start, $week_end);
 
       $week_completed = $log ? $log->get('week_completed')->value : NULL;
       $week_completed_display = ($week_completed !== NULL && $week_completed !== '') ? (string) $week_completed : '';
