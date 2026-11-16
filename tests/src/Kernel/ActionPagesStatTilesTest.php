@@ -135,7 +135,8 @@ class ActionPagesStatTilesTest extends KernelTestBase {
   public function testDisabledCalendarAction(): void {
     $action = $this->action(['enabled' => FALSE, 'recurring' => FALSE, 'week_end' => 14]);
     $build = $this->controller(CalendarActionController::class)->view($action);
-    $this->assertSame('W14', $build['facts']['window']['#props']['value']);
+    // Single week: shows date range only, no sub-line (task 0283).
+    $this->assertSame(HivelogWeekDates::dates((int) date('Y'), 14), $build['facts']['window']['#props']['value']);
     $this->assertSame('', $build['facts']['window']['#props']['sublabel']);
     $this->assertSame('Disabled', $build['facts']['enabled']['#props']['value']);
     $this->assertSame('warning', $build['facts']['enabled']['#props']['sublabel_variant']);
