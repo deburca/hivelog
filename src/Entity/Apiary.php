@@ -434,7 +434,7 @@ class Apiary extends ContentEntityBase implements EntityChangedInterface, Entity
     // §6).
     $fields['ai_insights_enabled'] = BaseFieldDefinition::create('boolean')
       ->setLabel(t('AI insights enabled'))
-      ->setDescription(t('Allow an insight agent to read this apiary\'s data and generate AI-assisted recommendations. Off by default — turning this on shares apiary/hive data (never precise location) with whatever service the provisioned insight agent uses.'))
+      ->setDescription(t("Allow an insight agent to read this apiary's data and generate AI-assisted recommendations. Off by default — turning this on shares apiary/hive data (never precise location) with whatever service the provisioned insight agent uses."))
       ->setDefaultValue(FALSE)
       ->setDisplayOptions('form', [
         'type' => 'boolean_checkbox',

@@ -176,7 +176,7 @@ class ApiClient extends ContentEntityBase implements EntityChangedInterface, Ent
 
     $fields['enabled'] = BaseFieldDefinition::create('boolean')
       ->setLabel(t('Enabled'))
-      ->setDescription(t('A disabled client\'s context-read requests are rejected outright, not silently accepted.'))
+      ->setDescription(t("A disabled client's context-read requests are rejected outright, not silently accepted."))
       ->setDefaultValue(TRUE)
       ->setDisplayOptions('form', [
         'type' => 'boolean_checkbox',

@@ -74,7 +74,7 @@ class HiveMoveForm extends FormBase {
     }
 
     $form['intro'] = [
-      '#markup' => '<p>' . $this->t('Records already written are not changed: the hive keeps its history, and the apiary it is leaving keeps what was written there. New records will belong to the new apiary. The hive\'s queens go with it.') . '</p>',
+      '#markup' => '<p>' . $this->t("Records already written are not changed: the hive keeps its history, and the apiary it is leaving keeps what was written there. New records will belong to the new apiary. The hive's queens go with it.") . '</p>',
     ];
     $form['target'] = [
       '#type' => 'select',

@@ -100,7 +100,7 @@ class SensorDeviceController extends ControllerBase {
           '#type' => 'container',
           '#attributes' => ['class' => ['hivelog-notice--warning']],
           'text' => [
-            '#markup' => '<p>' . $this->t('Downloading the configuration regenerates this device\'s token, immediately invalidating any previously downloaded configuration — the device (or its receiver/bridge) will need to be re-provisioned with the newly downloaded file.') . '</p>',
+            '#markup' => '<p>' . $this->t("Downloading the configuration regenerates this device's token, immediately invalidating any previously downloaded configuration — the device (or its receiver/bridge) will need to be re-provisioned with the newly downloaded file.") . '</p>',
           ],
         ],
         'download' => [

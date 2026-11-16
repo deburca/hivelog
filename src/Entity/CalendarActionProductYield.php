@@ -93,7 +93,7 @@ class CalendarActionProductYield extends ContentEntityBase implements EntityChan
     $product = $this->get('product')->entity;
     $calendar_action = $this->get('calendar_action')->entity;
     if ($product && $calendar_action && (int) $product->get('apiary')->target_id !== (int) $calendar_action->get('apiary')->target_id) {
-      throw new \InvalidArgumentException('A calendar action product yield\'s product must belong to the same apiary as its calendar action.');
+      throw new \InvalidArgumentException("A calendar action product yield's product must belong to the same apiary as its calendar action.");
     }
   }
 
@@ -140,7 +140,7 @@ class CalendarActionProductYield extends ContentEntityBase implements EntityChan
 
     $fields['quantity'] = BaseFieldDefinition::create('decimal')
       ->setLabel(t('Quantity'))
-      ->setDescription(t('How much of the product the action is expected to give — per hive for a hive-scoped action, per apiary for an apiary-scoped one — in the product\'s own unit. An estimate: nothing counts as harvested until the action is reported done.'))
+      ->setDescription(t("How much of the product the action is expected to give — per hive for a hive-scoped action, per apiary for an apiary-scoped one — in the product's own unit. An estimate: nothing counts as harvested until the action is reported done."))
       ->setRequired(TRUE)
       ->setSetting('precision', 10)
       ->setSetting('scale', 3)

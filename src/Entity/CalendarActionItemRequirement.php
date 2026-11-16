@@ -92,7 +92,7 @@ class CalendarActionItemRequirement extends ContentEntityBase implements EntityC
     $item = $this->get('item')->entity;
     $calendar_action = $this->get('calendar_action')->entity;
     if ($item && $calendar_action && (int) $item->get('apiary')->target_id !== (int) $calendar_action->get('apiary')->target_id) {
-      throw new \InvalidArgumentException('A calendar action item requirement\'s item must belong to the same apiary as its calendar action.');
+      throw new \InvalidArgumentException("A calendar action item requirement's item must belong to the same apiary as its calendar action.");
     }
   }
 
@@ -139,7 +139,7 @@ class CalendarActionItemRequirement extends ContentEntityBase implements EntityC
 
     $fields['quantity'] = BaseFieldDefinition::create('decimal')
       ->setLabel(t('Quantity'))
-      ->setDescription(t('How much of the item is typically needed — per hive for a hive-scoped action, per apiary for an apiary-scoped one — in the item\'s own unit.'))
+      ->setDescription(t('How much of the item is typically needed — per hive for a hive-scoped action, per apiary for an apiary-scoped one — in the item's own unit.'))
       ->setRequired(TRUE)
       ->setSetting('precision', 10)
       ->setSetting('scale', 3)
