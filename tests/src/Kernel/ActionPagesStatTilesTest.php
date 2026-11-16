@@ -100,9 +100,10 @@ class ActionPagesStatTilesTest extends KernelTestBase {
     $this->assertArrayNotHasKey('schedule', $build);
     // This year's dates as the value, the weeks in the sub-line (task
     // 0283).
-    $this->assertSame(HivelogWeekDates::dates((int) date('Y'), 14, 18), $build['window']['value']);
-    $this->assertStringContainsString(' – ', $build['window']['value']);
-    $this->assertSame('W14–W18 · every year', (string) $build['window']['sublabel']);
+    $props = $build['facts']['window']['#props'];
+    $this->assertSame(HivelogWeekDates::dates((int) date('Y'), 14, 18), $props['value']);
+    $this->assertStringContainsString(' – ', $props['value']);
+    $this->assertSame('W14–W18 · every year', (string) $props['sublabel']);
     $this->assertSame('30 Mar – 3 May (W14–W18)', HivelogWeekDates::label(2026, 14, 18));
     $this->assertSame('6–12 Apr (W15)', HivelogWeekDates::label(2026, 15, ''));
     $this->assertSame('29 Dec – 4 Jan (W1)', HivelogWeekDates::label(2026, 1));
