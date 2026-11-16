@@ -20,6 +20,7 @@ use Drupal\hivelog\Form\HivelogCalendarActionsFilterForm;
 use Drupal\hivelog\HivelogDetailPageTrait;
 use Drupal\hivelog\HivelogListPageTrait;
 use Drupal\hivelog\HivelogRangeFilter;
+use Drupal\hivelog\HivelogWeekDates;
 use Drupal\hivelog\Utility\SimpleBulletText;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -471,7 +472,9 @@ class CalendarActionController extends ControllerBase {
   protected function factTiles(CalendarAction $calendar_action): array {
     $start = $calendar_action->get('week_start')->getString();
     $end = $calendar_action->get('week_end')->getString();
-    $window = $start === '' ? '' : 'W' . $start . ($end !== '' && $end !== $start ? '–W' . $end : '');
+    // This year's dates as the value, the weeks in the sub-line (task 0283).
+    $window = $start === '' ? '' : HivelogWeekDates::dates((int) date('Y'), (int) $start, $end);
+    $weeks = $start === '' ? '' : HivelogWeekDates::weeks((int) $start, $end);
     $enabled = (bool) $calendar_action->get('enabled')->getString();
     $recurring = (bool) $calendar_action->get('recurring')->getString();
     return [
@@ -481,7 +484,7 @@ class CalendarActionController extends ControllerBase {
         'label' => $this->t('Window'),
         'value' => $window,
         'omit_empty' => TRUE,
-      ] + ($recurring ? ['sublabel' => $this->t('Recurring')] : []),
+      ] + ($recurring ? ['sublabel' => $this->t('@weeks · every year', ['@weeks' => $weeks])] : []),
       'enabled' => [
         'label' => $this->t('Status'),
         'value' => $enabled ? $this->t('Enabled') : $this->t('Disabled'),

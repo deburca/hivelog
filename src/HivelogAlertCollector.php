@@ -280,10 +280,10 @@ class HivelogAlertCollector {
           'subject' => [
             'apiary' => $apiary,
             'hive' => NULL,
-            'detail' => $this->weekWindow($action),
+            'detail' => $this->weekWindow($action, $year),
             'calendar_action' => $action,
           ],
-          'context' => $this->attentionContext($apiary, NULL, $this->weekWindow($action)),
+          'context' => $this->attentionContext($apiary, NULL, $this->weekWindow($action, $year)),
           'actions' => $this->reportButtons('hivelog.apiary_action_log.add', [
             'apiary' => $apiary->id(),
             'calendar_action' => $action->id(),
@@ -341,10 +341,10 @@ class HivelogAlertCollector {
               'subject' => [
                 'apiary' => $apiaries[$hive_apiary_id],
                 'hive' => $hive,
-                'detail' => $this->weekWindow($action),
+                'detail' => $this->weekWindow($action, $year),
                 'calendar_action' => $action,
               ],
-              'context' => $this->attentionContext($apiaries[$hive_apiary_id], $hive, $this->weekWindow($action)),
+              'context' => $this->attentionContext($apiaries[$hive_apiary_id], $hive, $this->weekWindow($action, $year)),
               'actions' => $this->reportButtons('hivelog.hive_action_log.add', [
                 'hive' => $hive->id(),
                 'calendar_action' => $action->id(),
@@ -558,14 +558,12 @@ class HivelogAlertCollector {
   }
 
   /**
-   * Formats a calendar action's planned week window, e.g. "wk 33–37".
+   * A calendar action's planned window, as dates: "30 Mar – 3 May (W14–W18)".
+   *
+   * Dates for the reporting year, with the weeks after them (task 0283).
    */
-  protected function weekWindow(CalendarAction $action): string {
-    $start = (int) $action->get('week_start')->value;
-    $end = $this->effectiveWeekEnd($action);
-    return $end !== $start
-      ? (string) $this->t('wk @start–@end', ['@start' => $start, '@end' => $end])
-      : (string) $this->t('wk @start', ['@start' => $start]);
+  protected function weekWindow(CalendarAction $action, int $year): string {
+    return HivelogWeekDates::label($year, (int) $action->get('week_start')->value, $this->effectiveWeekEnd($action));
   }
 
   /**

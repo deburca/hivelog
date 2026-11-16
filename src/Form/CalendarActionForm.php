@@ -6,6 +6,7 @@ namespace Drupal\hivelog\Form;
 
 use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\hivelog\HivelogWeekDates;
 
 /**
  * Form handler for Calendar Action add/edit forms.
@@ -74,6 +75,31 @@ class CalendarActionForm extends ContentEntityForm {
         }
       }
     }
+
+    // Say what the saved weeks are as dates (task 0283). The form description
+    // is written after the entity has a value, so we describe the saved state.
+    $year = (int) date('Y');
+    $week_start = $this->entity->get('week_start')->value;
+
+    // Say what the saved weeks are as dates (task 0283). The form description
+    // is written after the entity has a value, so we describe the saved state.
+    if ($week_start) {
+      $dates = HivelogWeekDates::label(
+        $year, $week_start,
+        $this->entity->get('week_end')->value,
+      );
+      $label = $this->t(
+        'As saved, this action falls on @dates in @year. The dates shift by a few days each year.',
+        ['@dates' => $dates, '@year' => $year],
+      );
+    }
+    else {
+      $label = $this->t(
+        "After saving, this action's page shows the dates that @week falls on.",
+        ['@week' => (int) date('W')],
+      );
+    }
+    $form['calendar_action_schedule']['#description'] = $label;
 
     // Required Items and Expected Yield are separate entities keyed to an
     // existing calendar action id, so they can't live on this form (in
