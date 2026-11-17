@@ -17,12 +17,12 @@ class HiveReminderEntitySchemaInstaller {
    * Register the hive_reminder entity type in the container.
    */
   public static function registerEntityType(): void {
-    $container = \Drupal::getContainer();
-    if (!$container->hasDefinition('entity_type.manager')) {
+    try {
+      $manager = \Drupal::service('entity_type.manager');
+    }
+    catch (\Throwable) {
       return;
     }
-
-    $manager = $container->get('entity_type.manager');
     // Already registered.
     try {
       if ($manager->getDefinition('hive_reminder') !== NULL) {
