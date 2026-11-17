@@ -13,6 +13,7 @@ use Drupal\Core\Controller\TitleResolverInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\hivelog\HivelogEntityHierarchy;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Drupal\hivelog\HivelogPaths;
 
 /**
