@@ -467,7 +467,7 @@ class HivelogAlertCollector {
     // During kernel-test bootstrap the active definition cache may not have
     // been rebuilt yet, so getStorage() can throw for entity types whose
     // annotations haven't been materialised. Return no reminder alerts in
-    // that case — on a live site or after the rebuild these are populated.
+    // that case - on a live site or after the rebuild these are populated.
     try {
       $storage = $this->entityTypeManager->getStorage('hive_reminder');
     }
