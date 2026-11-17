@@ -1492,12 +1492,12 @@ function hivelog_update_10041() {
  * cache at container build time. This ensures it's registered when
  * hivelog is first enabled, whether via drush or kernel test setup.
  */
+
 /**
  * Helper: install the HiveReminder entity type schema if not yet installed.
  *
  * Extracted to avoid code duplication between update hook and hook_install().
  */
-
 function _hivelog_ensure_hive_reminder_entity_type(): void {
   $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
 
