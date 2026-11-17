@@ -30,4 +30,8 @@
 
   <!-- PHP version -->
   <config name="php_version" value="80300"/>
+  <!-- hivelog.install: doc comments directly above functions (Drupal update hook convention). -->
+  <rule ref="Squiz.WhiteSpace.FunctionComment">
+    <exclude-pattern>hivelog\\.install</exclude-pattern>
+  </rule>
 </ruleset>
