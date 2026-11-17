@@ -1448,12 +1448,26 @@ function hivelog_update_10041() {
  * cache at container build time. This ensures it's registered when
  * hivelog is first enabled, whether via drush or kernel test setup.
  */
-function hivelog_install() {
-  _hivelog_ensure_hive_reminder_entity_type();
-}
-
-// phpcs:disable
+/**
+ * Helper: install the HiveReminder entity type schema if not yet installed.
+ *
+ * Extracted to avoid code duplication between update hook and hook_install().
+ */
 function _hivelog_ensure_hive_reminder_entity_type(): void {
-  \Drupal\hivelog\HiveReminderEntitySchemaInstaller::registerEntityType();
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+
+  // If the entity type is not registered at all (kernel test module_enable),
+  // there is nothing to install. This case is handled by kernel tests calling
+  // installEntitySchema() directly where needed.
+  if (!$definition_update_manager->getEntityType('hive_reminder')) {
+    return;
+  }
+
+  $reminder_type = $definition_update_manager->getDefinition('hive_reminder');
+  if ($reminder_type === NULL) {
+    return;
+  }
+
+  // installEntityType() is idempotent — safe to call multiple times.
+  $definition_update_manager->installEntityType($reminder_type);
 }
-// phpcs:enable
