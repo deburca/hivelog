@@ -24,7 +24,6 @@ use Drupal\user\Entity\User;
  * underlying database tables have already been removed (e.g. after a
  * database restore or manual cleanup).
  */
-
 function hivelog_uninstall() {
   $entity_type_manager = \Drupal::entityTypeManager();
   $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
@@ -85,7 +84,6 @@ function hivelog_uninstall() {
 /**
  * Replace latitude/longitude fields with geolocation field on apiaries.
  */
-
 function hivelog_update_10001(&$sandbox) {
   $database = \Drupal::database();
   $entity_type_manager = \Drupal::entityTypeManager();
@@ -159,7 +157,6 @@ function hivelog_update_10001(&$sandbox) {
 /**
  * Migrate apiary geolocation field from geolocation module to geofield module.
  */
-
 function hivelog_update_10002(&$sandbox) {
   $database = \Drupal::database();
   $entity_type_manager = \Drupal::entityTypeManager();
@@ -224,7 +221,6 @@ function hivelog_update_10002(&$sandbox) {
 /**
  * Add external_check field to hive inspections.
  */
-
 function hivelog_update_10003(&$sandbox) {
   $entity_type_manager = \Drupal::entityTypeManager();
   $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
@@ -248,7 +244,6 @@ function hivelog_update_10003(&$sandbox) {
 /**
  * Add weight field to hive inspections.
  */
-
 function hivelog_update_10004(&$sandbox) {
   $entity_type_manager = \Drupal::entityTypeManager();
   $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
@@ -272,7 +267,6 @@ function hivelog_update_10004(&$sandbox) {
 /**
  * Add images field to hives.
  */
-
 function hivelog_update_10005(&$sandbox) {
   $entity_type_manager = \Drupal::entityTypeManager();
   $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
@@ -296,7 +290,6 @@ function hivelog_update_10005(&$sandbox) {
 /**
  * Add images field to hive inspections.
  */
-
 function hivelog_update_10006(&$sandbox) {
   $entity_type_manager = \Drupal::entityTypeManager();
   $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
@@ -325,7 +318,6 @@ function hivelog_update_10006(&$sandbox) {
  * swarming / supersedure signal, so the data model is simplified by removing
  * it. Any previously stored value is dropped along with the column.
  */
-
 function hivelog_update_10007(&$sandbox) {
   $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
 
@@ -346,7 +338,6 @@ function hivelog_update_10007(&$sandbox) {
  * in production yet, so existing queen_year / queen_colour values on hives
  * are dropped along with the column — there is no data migration.
  */
-
 function hivelog_update_10008(&$sandbox) {
   $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
   $entity_type_manager = \Drupal::entityTypeManager();
@@ -377,7 +368,6 @@ function hivelog_update_10008(&$sandbox) {
  * notes, photos) are recorded separately from hive-level inspections. The
  * module is not yet in production, so no data migration is required.
  */
-
 function hivelog_update_10009(&$sandbox) {
   $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
   $entity_type_manager = \Drupal::entityTypeManager();
@@ -399,7 +389,6 @@ function hivelog_update_10009(&$sandbox) {
  * hook_entity_base_field_info(), and this hook makes the storage available
  * on existing sites.
  */
-
 function hivelog_update_10010(&$sandbox) {
   $manager = \Drupal::entityDefinitionUpdateManager();
   if ($manager->getFieldStorageDefinition('cbr_number', 'user')) {
@@ -439,7 +428,6 @@ function hivelog_update_10010(&$sandbox) {
  * triggers the warning. The underlying geofield columns are unchanged;
  * only the recorded definition needs to be refreshed.
  */
-
 function hivelog_update_10011(&$sandbox) {
   $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
   $entity_field_manager = \Drupal::service('entity_field.manager');
@@ -467,7 +455,6 @@ function hivelog_update_10011(&$sandbox) {
  * This hook maps every old permission to its 'any' equivalent so existing
  * roles retain the same effective access they had before the change.
  */
-
 function hivelog_update_10012(&$sandbox) {
   $permission_map = [
     'view apiary' => 'view any apiary',
@@ -521,7 +508,6 @@ function hivelog_update_10012(&$sandbox) {
  * the apiary and its children. Existing apiaries default to 'private'
  * with an empty beekeepers list (owner-only access, same as before).
  */
-
 function hivelog_update_10013(&$sandbox) {
   $entity_type_manager = \Drupal::entityTypeManager();
   $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
@@ -557,7 +543,6 @@ function hivelog_update_10013(&$sandbox) {
  * etc.) belonging to a single apiary, shared by every hive in it. The
  * module is not yet in production, so no data migration is required.
  */
-
 function hivelog_update_10014(&$sandbox) {
   $entity_type_manager = \Drupal::entityTypeManager();
   $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
@@ -580,7 +565,6 @@ function hivelog_update_10014(&$sandbox) {
  * hivelog_update_10014(). The module is not yet in production, so no data
  * migration is required.
  */
-
 function hivelog_update_10015(&$sandbox) {
   $entity_type_manager = \Drupal::entityTypeManager();
   $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
@@ -603,7 +587,6 @@ function hivelog_update_10015(&$sandbox) {
  * being folded into it), since the Hive Action Log entity type was already
  * released without this field.
  */
-
 function hivelog_update_10016(&$sandbox) {
   $entity_type_manager = \Drupal::entityTypeManager();
   $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
@@ -638,7 +621,6 @@ function hivelog_update_10016(&$sandbox) {
  * no data migration beyond that default is required since the module is
  * not yet in production.
  */
-
 function hivelog_update_10017(&$sandbox) {
   $entity_type_manager = \Drupal::entityTypeManager();
   $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
@@ -672,7 +654,6 @@ function hivelog_update_10017(&$sandbox) {
  * apiary-scoped CalendarAction, for a given year. The module is not yet in
  * production, so no data migration is required.
  */
-
 function hivelog_update_10018(&$sandbox) {
   $entity_type_manager = \Drupal::entityTypeManager();
   $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
@@ -696,7 +677,6 @@ function hivelog_update_10018(&$sandbox) {
  * production, so no data migration is required (same rationale as
  * hivelog_update_10008, which split queen tracking off the hive).
  */
-
 function hivelog_update_10019(&$sandbox) {
   $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
 
@@ -719,7 +699,6 @@ function hivelog_update_10019(&$sandbox) {
  * durable-item depreciation are both computed from. The module is not yet
  * in production, so no data migration is required.
  */
-
 function hivelog_update_10020(&$sandbox) {
   $entity_type_manager = \Drupal::entityTypeManager();
   $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
@@ -746,7 +725,6 @@ function hivelog_update_10020(&$sandbox) {
  * requires. The module is not yet in production, so no data migration is
  * required.
  */
-
 function hivelog_update_10021(&$sandbox) {
   $entity_type_manager = \Drupal::entityTypeManager();
   $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
@@ -769,7 +747,6 @@ function hivelog_update_10021(&$sandbox) {
  * CalendarActionItemRequirement's recipe estimate. The module is not yet
  * in production, so no data migration is required.
  */
-
 function hivelog_update_10022(&$sandbox) {
   $entity_type_manager = \Drupal::entityTypeManager();
   $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
@@ -790,7 +767,6 @@ function hivelog_update_10022(&$sandbox) {
  * propolis. The module is not yet in production, so no data migration is
  * required.
  */
-
 function hivelog_update_10023(&$sandbox) {
   $entity_type_manager = \Drupal::entityTypeManager();
   $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
@@ -812,7 +788,6 @@ function hivelog_update_10023(&$sandbox) {
  * inputs). The module is not yet in production, so no data migration is
  * required.
  */
-
 function hivelog_update_10024(&$sandbox) {
   $entity_type_manager = \Drupal::entityTypeManager();
   $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
@@ -834,7 +809,6 @@ function hivelog_update_10024(&$sandbox) {
  * inputs). The module is not yet in production, so no data migration is
  * required.
  */
-
 function hivelog_update_10025(&$sandbox) {
   $entity_type_manager = \Drupal::entityTypeManager();
   $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
@@ -854,7 +828,6 @@ function hivelog_update_10025(&$sandbox) {
  * 0042-low-stock-warning.md. The module is not yet in production, so no
  * data migration is required.
  */
-
 function hivelog_update_10026(&$sandbox) {
   $entity_type_manager = \Drupal::entityTypeManager();
   $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
@@ -881,7 +854,6 @@ function hivelog_update_10026(&$sandbox) {
  * 0049-asset-disposal-and-write-off-tracking.md. The module is not yet
  * in production, so no data migration is required.
  */
-
 function hivelog_update_10027(&$sandbox) {
   $entity_type_manager = \Drupal::entityTypeManager();
   $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
@@ -911,7 +883,6 @@ function hivelog_update_10027(&$sandbox) {
  * consumed by the optional `collective` submodule (task 0089). The
  * module is not yet in production, so no data migration is required.
  */
-
 function hivelog_update_10028(&$sandbox) {
   $entity_type_manager = \Drupal::entityTypeManager();
   $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
@@ -947,7 +918,6 @@ function hivelog_update_10028(&$sandbox) {
  * orphaned. This re-keys any that exist onto the new ID instead of
  * losing them.
  */
-
 function hivelog_update_10029(&$sandbox) {
   $overrides = \Drupal::service('menu_link.static.overrides');
 
@@ -991,7 +961,6 @@ function hivelog_update_10029(&$sandbox) {
  * Hive Components feature to compute a hive's empty weight. The module
  * is not yet in production, so no data migration is required.
  */
-
 function hivelog_update_10030(&$sandbox) {
   $entity_type_manager = \Drupal::entityTypeManager();
   $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
@@ -1019,7 +988,6 @@ function hivelog_update_10030(&$sandbox) {
  * installation shape (hivelog_update_10021). The module is not yet in
  * production, so no data migration is required.
  */
-
 function hivelog_update_10031(&$sandbox) {
   $entity_type_manager = \Drupal::entityTypeManager();
   $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
@@ -1041,7 +1009,6 @@ function hivelog_update_10031(&$sandbox) {
  * whoever performed the update hook run — the system user (uid 1)
  * unless a beekeeper clicked "Update available information".
  */
-
 function hivelog_update_10032(&$sandbox) {
   $entity_type_manager = \Drupal::entityTypeManager();
   $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
@@ -1071,7 +1038,6 @@ function hivelog_update_10032(&$sandbox) {
  * and the columns of a single-value entity reference in a base table are named
  * after the field, `apiary` and `account`.
  */
-
 function _hivelog_add_membership_unique_key(): void {
   $schema = \Drupal::database()->schema();
   $table = 'hivelog_apiary_membership';
@@ -1100,7 +1066,6 @@ function _hivelog_add_membership_unique_key(): void {
  * @return int
  *   How many memberships were created.
  */
-
 function _hivelog_migrate_beekeepers_to_memberships(): int {
   $update_manager = \Drupal::entityDefinitionUpdateManager();
   $database = \Drupal::database();
@@ -1153,7 +1118,6 @@ function _hivelog_migrate_beekeepers_to_memberships(): int {
  * hivelog_update_10032() have its storage installed; others have nothing to
  * remove.
  */
-
 function hivelog_update_10034(&$sandbox) {
   $manager = \Drupal::entityDefinitionUpdateManager();
   $definition = $manager->getFieldStorageDefinition('apiary_memberships', 'apiary');
@@ -1173,7 +1137,6 @@ function hivelog_update_10034(&$sandbox) {
  *   every apiary's current owner gets an `owner` membership (an existing row
  *   of theirs is promoted). Safe to run twice.
  */
-
 function hivelog_update_10035(&$sandbox) {
   $database = \Drupal::database();
   $renamed = 0;
@@ -1238,7 +1201,6 @@ function hivelog_update_10035(&$sandbox) {
  * When the column DOES exist we still try the clean uninstall path first so
  * that Drupal can drop the column itself.
  */
-
 function _hivelog_cleanup_cbr_field($entity_definition_update_manager) {
   $schema = \Drupal::database()->schema();
   $column_exists = $schema->fieldExists('users_field_data', 'cbr_number');
@@ -1293,7 +1255,6 @@ function _hivelog_cleanup_cbr_field($entity_definition_update_manager) {
  * existing rows from the hive's current apiary (a queen observation: its queen's
  * hive's). Safe to run twice: only rows with no stamp are filled.
  */
-
 function hivelog_update_10036(&$sandbox) {
   $entity_type_manager = \Drupal::entityTypeManager();
   $update_manager = \Drupal::entityDefinitionUpdateManager();
@@ -1346,7 +1307,6 @@ function hivelog_update_10036(&$sandbox) {
  * the target apiary and a negative one in the source, flagged so they cannot be
  * edited or removed afterwards.
  */
-
 function hivelog_update_10037(&$sandbox) {
   $update_manager = \Drupal::entityDefinitionUpdateManager();
   if ($update_manager->getFieldStorageDefinition('transfer', 'inventory_purchase')) {
@@ -1366,7 +1326,6 @@ function hivelog_update_10037(&$sandbox) {
  * memberships and fills it in for current owners from their membership's
  * creation time. Safe to run twice.
  */
-
 function hivelog_update_10038(&$sandbox) {
   $update_manager = \Drupal::entityDefinitionUpdateManager();
   if (!$update_manager->getFieldStorageDefinition('owner_since', 'apiary_membership')) {
@@ -1391,7 +1350,6 @@ function hivelog_update_10038(&$sandbox) {
  * yields. Existing yields were all reported with an action log and keep these
  * empty. Safe to run twice.
  */
-
 function hivelog_update_10039(&$sandbox) {
   $update_manager = \Drupal::entityDefinitionUpdateManager();
   $definition = \Drupal::entityTypeManager()->getDefinition('harvest_yield');
@@ -1420,7 +1378,6 @@ function hivelog_update_10039(&$sandbox) {
  * `changed` is not touched. Safe to run twice: only rows with no apiary or no
  * date are written.
  */
-
 function hivelog_update_10040(&$sandbox) {
   $database = \Drupal::database();
   if (!$database->schema()->fieldExists('hivelog_harvest_yield', 'harvest_date')) {
@@ -1474,7 +1431,6 @@ function hivelog_update_10040(&$sandbox) {
 /**
  * Installs the HiveReminder entity type and schema (task 0274).
  */
-
 function hivelog_update_10041() {
   $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
 
