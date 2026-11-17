@@ -126,7 +126,9 @@ class ApiClientApiControllerTest extends KernelTestBase {
 
     // The controller requires HiveContextBuilder and TimeInterface.
     $context_builder = $this->createStub(HiveContextBuilder::class);
-    $time_interface = $this->createStub(TimeInterface::class);
+    $time_interface = $this->getMockBuilder(TimeInterface::class)
+      ->disableOriginalConstructor()
+      ->getMock();
     $this->controller = new ApiClientApiController(
       $context_builder,
       $time_interface

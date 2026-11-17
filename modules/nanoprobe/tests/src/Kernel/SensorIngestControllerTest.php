@@ -106,7 +106,9 @@ class SensorIngestControllerTest extends KernelTestBase {
     ]);
     $this->device->save();
     $this->token = $this->device->getPlainTextToken();
-    $time = $this->createStub(TimeInterface::class);
+    $time = $this->getMockBuilder(TimeInterface::class)
+      ->disableOriginalConstructor()
+      ->getMock();
     $this->controller = new SensorIngestController($time);
     $this->controller = new SensorIngestController();
   }

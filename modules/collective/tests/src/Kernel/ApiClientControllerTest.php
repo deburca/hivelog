@@ -121,7 +121,9 @@ class ApiClientControllerTest extends KernelTestBase {
    * Creates an ApiClientController with a mock date formatter.
    */
   protected function createController(): ApiClientController {
-    $date_formatter = $this->createStub(DateFormatterInterface::class);
+    $date_formatter = $this->getMockBuilder(DateFormatterInterface::class)
+      ->disableOriginalConstructor()
+      ->getMock();
     return new ApiClientController($date_formatter);
   }
 

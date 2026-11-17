@@ -214,7 +214,9 @@ class SensorDeviceConfigDownloadFormTest extends KernelTestBase {
     $form = $form_object->buildForm([], $form_state, $this->device);
     $form_object->submitForm($form, $form_state);
 
-    $time = $this->createStub(TimeInterface::class);
+    $time = $this->getMockBuilder(TimeInterface::class)
+      ->disableOriginalConstructor()
+      ->getMock();
     $ingest = new SensorIngestController($time);
     $request = Request::create('/hivelog/api/sensor-readings', 'POST', [], [], [], [], json_encode([
       'metric' => 'weight_kg',
@@ -241,7 +243,9 @@ class SensorDeviceConfigDownloadFormTest extends KernelTestBase {
     $descriptor = json_decode($form_state->getResponse()->getContent(), TRUE);
     $new_token = $descriptor['auth']['token'];
 
-    $time = $this->createStub(TimeInterface::class);
+    $time = $this->getMockBuilder(TimeInterface::class)
+      ->disableOriginalConstructor()
+      ->getMock();
     $ingest = new SensorIngestController($time);
     $request = Request::create('/hivelog/api/sensor-readings', 'POST', [], [], [], [], json_encode([
       'metric' => 'weight_kg',

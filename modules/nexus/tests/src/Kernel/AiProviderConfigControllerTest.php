@@ -75,7 +75,9 @@ class AiProviderConfigControllerTest extends KernelTestBase {
    */
   protected function createController(): AiProviderConfigController {
     $provider_manager = $this->createStub(AiProviderPluginManager::class);
-    $date_formatter = $this->createStub(DateFormatterInterface::class);
+    $date_formatter = $this->getMockBuilder(DateFormatterInterface::class)
+      ->disableOriginalConstructor()
+      ->getMock();
 
     return new AiProviderConfigController($provider_manager, $date_formatter);
   }

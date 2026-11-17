@@ -124,9 +124,13 @@
    * Creates a SensorDeviceController with mock dependencies.
    */
   protected function createController(): SensorDeviceController {
-    $time = $this->createStub(TimeInterface::class);
+    $time = $this->getMockBuilder(TimeInterface::class)
+      ->disableOriginalConstructor()
+      ->getMock();
     $request_stack = new RequestStack();
-    $date_formatter = $this->createStub(DateFormatterInterface::class);
+    $date_formatter = $this->getMockBuilder(DateFormatterInterface::class)
+      ->disableOriginalConstructor()
+      ->getMock();
 
     return new SensorDeviceController(
       $time,
