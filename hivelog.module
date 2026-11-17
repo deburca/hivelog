@@ -189,3 +189,4 @@ function hivelog_install(): void {
     $definition_update_manager->installEntityType($reminder_type);
   }
 }
+
