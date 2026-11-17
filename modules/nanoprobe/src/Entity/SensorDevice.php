@@ -391,7 +391,7 @@ class SensorDevice extends ContentEntityBase implements EntityChangedInterface, 
 
     $fields['enabled'] = BaseFieldDefinition::create('boolean')
       ->setLabel(t('Enabled'))
-      ->setDescription(t("A disabled device's readings are rejected outright, not silently accepted — an explicit deauthorisation, not a soft mute."))
+      ->setDescription(t('A disabled device\'s readings are rejected outright, not silently accepted — an explicit deauthorisation, not a soft mute.'))
       ->setDefaultValue(TRUE)
       ->setDisplayOptions('form', [
         'type' => 'boolean_checkbox',

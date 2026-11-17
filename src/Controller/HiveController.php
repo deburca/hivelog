@@ -896,7 +896,7 @@ class HiveController extends ControllerBase {
     // Collect cache tags.
     $cache_tags = ['hive_reminder_list'];
     foreach ($reminders as $reminder) {
-      $tags = $this->entityTypeManager->getDefinition('hive_reminder')->getListCacheTags();
+      $tags = \Drupal::entityTypeManager()->getDefinition('hive_reminder')->getListCacheTags();
       if (isset($tags[0])) {
         $cache_tags[] = $tags[0];
       }

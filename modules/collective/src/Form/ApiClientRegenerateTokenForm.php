@@ -45,7 +45,7 @@ class ApiClientRegenerateTokenForm extends FormBase {
 
     $form['warning'] = [
       '#type' => 'container',
-      '#markup' => '<p>' . $this->t("Regenerating this client's token <strong>immediately invalidates</strong> the previous one — any process still using it will start getting 401 responses from the API endpoint. The new token is shown once, here, after you confirm; it cannot be recovered afterward.") . '</p>',
+      '#markup' => '<p>' . $this->t('Regenerating this client\'s token <strong>immediately invalidates</strong> the previous one — any process still using it will start getting 401 responses from the API endpoint. The new token is shown once, here, after you confirm; it cannot be recovered afterward.') . '</p>',
     ];
 
     $form['actions'] = ['#type' => 'actions'];

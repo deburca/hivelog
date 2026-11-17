@@ -9,11 +9,9 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Link;
-use Drupal\Core\Controller\TitleResolverInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\hivelog\HivelogEntityHierarchy;
-use Symfony\Component\HttpFoundation\RequestStack;
 use Drupal\hivelog\HivelogPaths;
 
 /**
@@ -63,8 +61,6 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
 
   public function __construct(
     protected EntityTypeManagerInterface $entityTypeManager,
-    protected TitleResolverInterface $titleResolver,
-    protected RequestStack $requestStack,
   ) {}
 
   /**
@@ -398,10 +394,8 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
     }
     if ($route->getDefault('_title_callback')) {
       /** @var \Drupal\Core\Controller\TitleResolverInterface $title_resolver */
-      $title = $this->titleResolver->getTitle(
-        $this->requestStack->getCurrentRequest(),
-        $route,
-      );
+      $title_resolver = \Drupal::service('title_resolver');
+      $title = $title_resolver->getTitle(\Drupal::request(), $route);
       return $title === NULL ? NULL : (string) $title;
     }
     return NULL;

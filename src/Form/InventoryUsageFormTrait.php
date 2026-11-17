@@ -71,7 +71,7 @@ trait InventoryUsageFormTrait {
     $form['inventory_usage_fieldset'] = [
       '#type' => 'details',
       '#title' => $this->t('Inventory Used'),
-      '#description' => $this->t("Pre-filled from the calendar action's recipe — adjust to what was actually used. Leave a field at 0 to record none used."),
+      '#description' => $this->t('Pre-filled from the calendar action\'s recipe — adjust to what was actually used. Leave a field at 0 to record none used.'),
       '#group' => $vertical_tabs_group,
       '#weight' => 2,
       '#open' => FALSE,

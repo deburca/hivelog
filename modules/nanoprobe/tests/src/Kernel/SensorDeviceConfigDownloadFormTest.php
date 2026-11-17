@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\nanoprobe\Kernel;
 
-use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Form\FormState;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\Hive;
@@ -214,10 +213,7 @@ class SensorDeviceConfigDownloadFormTest extends KernelTestBase {
     $form = $form_object->buildForm([], $form_state, $this->device);
     $form_object->submitForm($form, $form_state);
 
-    $time = $this->getMockBuilder(TimeInterface::class)
-      ->disableOriginalConstructor()
-      ->getMock();
-    $ingest = new SensorIngestController($time);
+    $ingest = new SensorIngestController();
     $request = Request::create('/hivelog/api/sensor-readings', 'POST', [], [], [], [], json_encode([
       'metric' => 'weight_kg',
       'value' => 1,
@@ -243,10 +239,7 @@ class SensorDeviceConfigDownloadFormTest extends KernelTestBase {
     $descriptor = json_decode($form_state->getResponse()->getContent(), TRUE);
     $new_token = $descriptor['auth']['token'];
 
-    $time = $this->getMockBuilder(TimeInterface::class)
-      ->disableOriginalConstructor()
-      ->getMock();
-    $ingest = new SensorIngestController($time);
+    $ingest = new SensorIngestController();
     $request = Request::create('/hivelog/api/sensor-readings', 'POST', [], [], [], [], json_encode([
       'metric' => 'weight_kg',
       'value' => 1,

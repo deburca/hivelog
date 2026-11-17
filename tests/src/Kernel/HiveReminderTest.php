@@ -30,7 +30,6 @@ class HiveReminderTest extends KernelTestBase {
     'datetime',
     'options',
     'hivelog',
-    'hive_reminder',
   ];
 
   /**

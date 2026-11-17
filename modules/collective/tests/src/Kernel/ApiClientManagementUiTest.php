@@ -6,11 +6,9 @@ namespace Drupal\Tests\collective\Kernel;
 
 use Drupal\Core\Form\FormState;
 use Drupal\collective\Controller\ApiClientApiController;
-use Drupal\collective\HiveContextBuilder;
 use Drupal\collective\Entity\ApiClient;
 use Drupal\collective\Form\ApiClientRegenerateTokenForm;
 use Drupal\hivelog\Entity\Apiary;
-use Drupal\Component\Datetime\TimeInterface;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\user\Traits\UserCreationTrait;
 use Drupal\user\Entity\User;
@@ -109,16 +107,8 @@ class ApiClientManagementUiTest extends KernelTestBase {
     $warning_text = implode(' ', array_map('strval', $messages['warning'] ?? []));
     $this->assertStringContainsString('will not be shown again', $warning_text);
 
-    // ApiClientApiController requires HiveContextBuilder and TimeInterface.
-    // Cannot use class_resolver in kernel tests (DI container has no such services).
-    $context_builder = $this->createStub(HiveContextBuilder::class);
-    $time_interface = $this->getMockBuilder(TimeInterface::class)
-      ->disableOriginalConstructor()
-      ->getMock();
-    $api_controller = new ApiClientApiController(
-      $context_builder,
-      $time_interface
-    );
+    $api_controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(ApiClientApiController::class);
     $request = Request::create('/hivelog/api/collective/context', 'GET');
     $request->headers->set('Authorization', 'Bearer ' . $stale_token);
 

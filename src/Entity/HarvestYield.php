@@ -194,7 +194,7 @@ class HarvestYield extends ContentEntityBase implements EntityChangedInterface, 
           $this->set('apiary', $hive->get('apiary')->target_id);
         }
         if ($hive && (int) $hive->get('apiary')->target_id !== (int) $this->get('apiary')->target_id) {
-          throw new \InvalidArgumentException("A harvest's hive must belong to the apiary the harvest is recorded in.");
+          throw new \InvalidArgumentException('A harvest\'s hive must belong to the apiary the harvest is recorded in.');
         }
       }
       if ($this->get('harvest_date')->isEmpty()) {
@@ -204,7 +204,7 @@ class HarvestYield extends ContentEntityBase implements EntityChangedInterface, 
     elseif (($original = $this->originalHarvest())
       && !$original->get('apiary')->isEmpty()
       && (int) $original->get('apiary')->target_id !== (int) $this->get('apiary')->target_id) {
-      throw new \InvalidArgumentException("A harvest's apiary cannot be changed.");
+      throw new \InvalidArgumentException('A harvest\'s apiary cannot be changed.');
     }
 
     if ($this->get('apiary')->isEmpty()) {
@@ -217,7 +217,7 @@ class HarvestYield extends ContentEntityBase implements EntityChangedInterface, 
     }
     $product = $this->get('product')->entity;
     if ($product instanceof Product && (int) $product->get('apiary')->target_id !== (int) $this->get('apiary')->target_id) {
-      throw new \InvalidArgumentException("A harvest's product must belong to the apiary the harvest is recorded in.");
+      throw new \InvalidArgumentException('A harvest\'s product must belong to the apiary the harvest is recorded in.');
     }
   }
 
@@ -281,7 +281,7 @@ class HarvestYield extends ContentEntityBase implements EntityChangedInterface, 
 
     $fields['quantity'] = BaseFieldDefinition::create('decimal')
       ->setLabel(t('Quantity'))
-      ->setDescription(t("How much of the product was actually produced, in the product's own unit."))
+      ->setDescription(t('How much of the product was actually produced, in the product\'s own unit.'))
       ->setRequired(TRUE)
       ->setSetting('precision', 10)
       ->setSetting('scale', 3)
@@ -345,7 +345,7 @@ class HarvestYield extends ContentEntityBase implements EntityChangedInterface, 
 
     $fields['unit_price_snapshot'] = BaseFieldDefinition::create('decimal')
       ->setLabel(t('Unit Price Snapshot'))
-      ->setDescription(t("The product's expected unit price at the time this yield was recorded. Never recalculated after creation."))
+      ->setDescription(t('The product\'s expected unit price at the time this yield was recorded. Never recalculated after creation.'))
       ->setSetting('precision', 12)
       ->setSetting('scale', 4)
       ->setDisplayOptions('view', ['label' => 'inline', 'type' => 'number_decimal', 'weight' => 4])

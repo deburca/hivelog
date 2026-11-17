@@ -1130,7 +1130,7 @@ hivelog.hive_reminder.add:
 entity.hive_reminder.collection:
   path: '/hivelog/hive-reminders'
   defaults:
-    _entity_list: 'hive_reminder'
+    _controller: '\Drupal\hivelog\HiveReminderListBuilder::handleList'
     _title: 'Hive reminders'
   requirements:
     _permission: 'view any hive reminder+administer hivelog'

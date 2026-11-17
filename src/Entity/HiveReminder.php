@@ -16,6 +16,7 @@ use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\hivelog\Form\HivelogEntityDeleteForm;
 use Drupal\hivelog\Form\HiveReminderForm;
+use Drupal\hivelog\HiveReminderAccessControlHandler;
 
 /**
  * A one-off, date-specific reminder for a single hive.
@@ -29,6 +30,7 @@ use Drupal\hivelog\Form\HiveReminderForm;
   id: 'hive_reminder',
   label: new TranslatableMarkup('Hive reminder'),
   label_collection: new TranslatableMarkup('Hive reminders'),
+  handler_base_path: 'src/Entity',
   module: 'hivelog',
   admin_permission: 'administer hivelog',
   entity_keys: [

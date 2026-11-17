@@ -505,7 +505,7 @@ class HivelogAlertCollector {
     // Collect cache tags.
     $cache_tags = ['hive_reminder_list'];
     foreach ($hives as $hive) {
-      $tags = $this->entityTypeManager->getDefinition('hive')->getListCacheTags();
+      $tags = \Drupal::entityTypeManager()->getDefinition('hive')->getListCacheTags();
       $cache_tags[] = reset($tags);
     }
     $cache->addCacheTags(array_unique($cache_tags));

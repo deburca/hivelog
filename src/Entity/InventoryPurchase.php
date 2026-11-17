@@ -103,7 +103,7 @@ class InventoryPurchase extends ContentEntityBase implements EntityChangedInterf
     $item = $this->get('item')->entity;
     $apiary_id = $this->get('apiary')->target_id;
     if ($item && $apiary_id && (int) $item->get('apiary')->target_id !== (int) $apiary_id) {
-      throw new \InvalidArgumentException("An inventory purchase's item must belong to the same apiary as the purchase.");
+      throw new \InvalidArgumentException('An inventory purchase\'s item must belong to the same apiary as the purchase.');
     }
 
     // Defensive invariants for the disposal event (task 0049): only
@@ -119,7 +119,7 @@ class InventoryPurchase extends ContentEntityBase implements EntityChangedInterf
       }
       $purchase_date = $this->get('purchase_date')->value;
       if ($purchase_date && $disposal_date < $purchase_date) {
-        throw new \InvalidArgumentException("A purchase's disposal date cannot be before its purchase date.");
+        throw new \InvalidArgumentException('A purchase\'s disposal date cannot be before its purchase date.');
       }
     }
   }
@@ -177,7 +177,7 @@ class InventoryPurchase extends ContentEntityBase implements EntityChangedInterf
 
     $fields['quantity'] = BaseFieldDefinition::create('decimal')
       ->setLabel(t('Quantity'))
-      ->setDescription(t("How much was bought, in the item's unit."))
+      ->setDescription(t('How much was bought, in the item\'s unit.'))
       ->setRequired(TRUE)
       ->setSetting('precision', 10)
       ->setSetting('scale', 3)

@@ -5,7 +5,7 @@ services:
 
   hivelog.breadcrumb:
     class: Drupal\hivelog\Breadcrumb\HivelogBreadcrumbBuilder
-    arguments: ['@entity_type.manager', '@title_resolver', '@request_stack']
+    arguments: ['@entity_type.manager']
     tags:
       - { name: breadcrumb_builder, priority: 1004 }
 

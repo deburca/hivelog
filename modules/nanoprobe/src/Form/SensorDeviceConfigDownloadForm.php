@@ -58,7 +58,7 @@ class SensorDeviceConfigDownloadForm extends FormBase {
 
     $form['warning'] = [
       '#type' => 'container',
-      '#markup' => '<p>' . $this->t("Downloading a new configuration regenerates this device's token, which <strong>immediately invalidates</strong> any token currently in use — including one already flashed onto a physical device. The device (or its receiver/bridge) will need to be re-provisioned with the file downloaded here.") . '</p>',
+      '#markup' => '<p>' . $this->t('Downloading a new configuration regenerates this device\'s token, which <strong>immediately invalidates</strong> any token currently in use — including one already flashed onto a physical device. The device (or its receiver/bridge) will need to be re-provisioned with the file downloaded here.') . '</p>',
     ];
 
     $form['metrics'] = [

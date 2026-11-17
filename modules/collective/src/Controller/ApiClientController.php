@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Drupal\collective\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
-use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Url;
 use Drupal\collective\Entity\ApiClient;
 use Drupal\hivelog\HivelogEntityActionsTrait;
@@ -27,19 +26,6 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 class ApiClientController extends ControllerBase {
 
   use HivelogEntityActionsTrait;
-
-  /**
-   * Date formatter.
-   *
-   * @var \Drupal\Core\Datetime\DateFormatterInterface
-   */
-  protected DateFormatterInterface $dateFormatter;
-
-  public function __construct(
-    DateFormatterInterface $date_formatter,
-  ) {
-    $this->dateFormatter = $date_formatter;
-  }
 
   /**
    * Builds the API Client canonical page.
@@ -140,8 +126,8 @@ class ApiClientController extends ControllerBase {
    * @return \Drupal\Core\Datetime\DateFormatterInterface
    *   The date formatter.
    */
-  protected function dateFormatter(): DateFormatterInterface {
-    return $this->dateFormatter;
+  protected function dateFormatter() {
+    return \Drupal::service('date.formatter');
   }
 
 }

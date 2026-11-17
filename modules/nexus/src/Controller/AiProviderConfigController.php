@@ -30,29 +30,6 @@ class AiProviderConfigController extends ControllerBase {
   use HivelogEntityActionsTrait;
 
   /**
-   * AI provider plugin manager.
-   *
-   * @var \Drupal\ai\AiProviderPluginManager
-   */
-  protected AiProviderPluginManager $providerManager;
-
-  /**
-   * Date formatter.
-   *
-   * @var \Drupal\Core\Datetime\DateFormatterInterface
-   */
-  protected DateFormatterInterface $dateFormatter;
-
-  public function __construct(
-    AiProviderPluginManager $provider_manager,
-    DateFormatterInterface $date_formatter,
-  ) {
-    parent::__construct();
-    $this->providerManager = $provider_manager;
-    $this->dateFormatter = $date_formatter;
-  }
-
-  /**
    * Builds the AI Provider Config canonical page.
    *
    * @param \Drupal\nexus\Entity\AiProviderConfig $ai_provider_config
@@ -131,8 +108,8 @@ class AiProviderConfigController extends ControllerBase {
       ];
     }
 
-    /** @var \Drupal\ai\AiProviderPluginManager */
-    $provider_manager = $this->providerManager;
+    /** @var \Drupal\ai\AiProviderPluginManager $provider_manager */
+    $provider_manager = \Drupal::service('ai.provider');
     $provider_info = $provider_manager->getDefaultProviderForOperationType('chat');
 
     if (!$provider_info) {
@@ -174,8 +151,8 @@ class AiProviderConfigController extends ControllerBase {
    * @return \Drupal\Core\Datetime\DateFormatterInterface
    *   The date formatter.
    */
-  protected function dateFormatter(): DateFormatterInterface {
-    return $this->dateFormatter;
+  protected function dateFormatter() {
+    return \Drupal::service('date.formatter');
   }
 
 }

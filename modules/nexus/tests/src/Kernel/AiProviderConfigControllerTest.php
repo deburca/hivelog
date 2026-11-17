@@ -4,12 +4,10 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\nexus\Kernel;
 
-use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\user\Traits\UserCreationTrait;
 use Drupal\nexus\Controller\AiProviderConfigController;
 use Drupal\nexus\Entity\AiProviderConfig;
-use Drupal\ai\AiProviderPluginManager;
 use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
 use PHPUnit\Framework\Attributes\Group;
@@ -71,18 +69,6 @@ class AiProviderConfigControllerTest extends KernelTestBase {
   }
 
   /**
-   * Creates an AiProviderConfigController with mock dependencies.
-   */
-  protected function createController(): AiProviderConfigController {
-    $provider_manager = $this->createStub(AiProviderPluginManager::class);
-    $date_formatter = $this->getMockBuilder(DateFormatterInterface::class)
-      ->disableOriginalConstructor()
-      ->getMock();
-
-    return new AiProviderConfigController($provider_manager, $date_formatter);
-  }
-
-  /**
    * Tests the summary table carries the generic detail-table class.
    *
    * Task 0131: the generic class is kept alongside the per-entity class.
@@ -94,7 +80,7 @@ class AiProviderConfigControllerTest extends KernelTestBase {
     User::create(['name' => 'root', 'mail' => 'root@example.com'])->save();
     \Drupal::currentUser()->setAccount(User::load(1));
 
-    $controller = $this->createController();
+    $controller = new AiProviderConfigController();
     $build = $controller->view($this->config);
 
     $this->assertContains('hivelog-detail-table', $build['summary']['#attributes']['class']);
@@ -118,7 +104,7 @@ class AiProviderConfigControllerTest extends KernelTestBase {
     $full_access->save();
 
     $this->setCurrentUser($full_access);
-    $controller = $this->createController();
+    $controller = new AiProviderConfigController();
     $build = $controller->view($this->config);
 
     $this->assertEquals('hivelog:button-group', $build['actions']['#component']);
@@ -145,7 +131,7 @@ class AiProviderConfigControllerTest extends KernelTestBase {
     $viewer->save();
 
     $this->setCurrentUser($viewer);
-    $controller = $this->createController();
+    $controller = new AiProviderConfigController();
     $build = $controller->view($this->config);
 
     $this->assertSame([], $build['actions']);

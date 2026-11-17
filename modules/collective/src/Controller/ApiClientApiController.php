@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Drupal\collective\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
-use Drupal\Core\Datetime\TimeInterface;
 use Drupal\collective\Entity\ApiClient;
 use Drupal\collective\HiveContextBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -32,7 +31,6 @@ class ApiClientApiController extends ControllerBase {
 
   public function __construct(
     protected HiveContextBuilder $contextBuilder,
-    protected TimeInterface $time,
   ) {}
 
   /**
@@ -72,7 +70,7 @@ class ApiClientApiController extends ControllerBase {
       $contexts[] = $this->contextBuilder->buildContext($hive);
     }
 
-    $client->set('last_run', $this->time->requestTime());
+    $client->set('last_run', \Drupal::time()->getRequestTime());
     $client->save();
 
     return new JsonResponse($contexts, Response::HTTP_OK);

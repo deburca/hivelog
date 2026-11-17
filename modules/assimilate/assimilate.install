@@ -74,7 +74,7 @@ function assimilate_requirements($phase) {
     'value' => $real_apiary_count > 0
       ? t('@count real apiary/apiaries have AI insights enabled — assimilate_cron() will not run until this is resolved.', ['@count' => $real_apiary_count])
       : t('No real apiary currently has AI insights enabled.'),
-    'description' => t("Assimilate fabricates mock sensor data for demonstration purposes. It must never be enabled on a beekeeper's production site."),
+    'description' => t('Assimilate fabricates mock sensor data for demonstration purposes. It must never be enabled on a beekeeper\'s production site.'),
     'severity' => _assimilate_requirement_severity($real_apiary_count > 0 ? 'Error' : 'Warning'),
   ];
 

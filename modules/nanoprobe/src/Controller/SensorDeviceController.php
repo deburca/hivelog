@@ -32,47 +32,6 @@ class SensorDeviceController extends ControllerBase {
   use HivelogEntityActionsTrait;
 
   /**
-   * The time service.
-   *
-   * @var \Drupal\Core\Datetime\TimeInterface
-   */
-  protected TimeInterface $time;
-
-  /**
-   * HTTP request stack.
-   *
-   * @var \Symfony\Component\HttpFoundation\RequestStack
-   */
-  protected RequestStack $requestStack;
-
-  /**
-   * Sensor trend chart builder.
-   *
-   * @var \Drupal\nanoprobe\SensorTrendChartBuilder
-   */
-  protected SensorTrendChartBuilder $trendChartBuilder;
-
-  /**
-   * Date formatter.
-   *
-   * @var \Drupal\Core\Datetime\DateFormatterInterface
-   */
-  protected CoreDateFormatterInterface $dateFormatter;
-
-  public function __construct(
-    TimeInterface $time,
-    RequestStack $request_stack,
-    SensorTrendChartBuilder $trend_chart_builder,
-    CoreDateFormatterInterface $date_formatter,
-  ) {
-    parent::__construct();
-    $this->time = $time;
-    $this->requestStack = $request_stack;
-    $this->trendChartBuilder = $trend_chart_builder;
-    $this->dateFormatter = $date_formatter;
-  }
-
-  /**
    * Builds the Sensor Device canonical page.
    *
    * The route's own `_permission` requirement is a flat own/any/admin
@@ -141,7 +100,7 @@ class SensorDeviceController extends ControllerBase {
           '#type' => 'container',
           '#attributes' => ['class' => ['hivelog-notice--warning']],
           'text' => [
-            '#markup' => '<p>' . $this->t("Downloading the configuration regenerates this device's token, immediately invalidating any previously downloaded configuration — the device (or its receiver/bridge) will need to be re-provisioned with the newly downloaded file.") . '</p>',
+            '#markup' => '<p>' . $this->t('Downloading the configuration regenerates this device\'s token, immediately invalidating any previously downloaded configuration — the device (or its receiver/bridge) will need to be re-provisioned with the newly downloaded file.') . '</p>',
           ],
         ],
         'download' => [
@@ -281,17 +240,17 @@ class SensorDeviceController extends ControllerBase {
    *   The current request.
    */
   protected function getRequest() {
-    return $this->requestStack->getCurrentRequest();
+    return \Drupal::request();
   }
 
   /**
-   * The sensor trend chart builder.
+   * The sensor trend chart builder service.
    *
    * @return \Drupal\nanoprobe\SensorTrendChartBuilder
    *   The trend chart builder.
    */
   protected function trendChartBuilder() {
-    return $this->trendChartBuilder;
+    return \Drupal::service('nanoprobe.sensor_trend_chart_builder');
   }
 
   /**
@@ -301,7 +260,7 @@ class SensorDeviceController extends ControllerBase {
    *   The time service.
    */
   protected function time() {
-    return $this->time;
+    return \Drupal::time();
   }
 
   /**
@@ -362,8 +321,8 @@ class SensorDeviceController extends ControllerBase {
    * @return \Drupal\Core\Datetime\DateFormatterInterface
    *   The date formatter.
    */
-  protected function dateFormatter(): DateFormatterInterface {
-    return $this->dateFormatter;
+  protected function dateFormatter() {
+    return \Drupal::service('date.formatter');
   }
 
 }

@@ -95,7 +95,7 @@ class ApiaryForm extends ContentEntityForm {
       $form['calendar_source'] = [
         '#type' => 'select',
         '#title' => $this->t('Seasonal calendar'),
-        '#description' => $this->t("Start from the built-in calendar, or copy the calendar of one of your other apiaries. Either way you can edit this apiary's calendar afterwards without affecting any other."),
+        '#description' => $this->t('Start from the built-in calendar, or copy the calendar of one of your other apiaries. Either way you can edit this apiary\'s calendar afterwards without affecting any other.'),
         '#options' => $sources,
         '#default_value' => HivelogCalendarCopier::SOURCE_DEFAULT,
         '#group' => 'hivelog_details',
