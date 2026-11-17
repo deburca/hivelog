@@ -1,12 +1,12 @@
 {
     "name": "hivelog/hivelog",
-    "description": "Drupal 11 module \u2013 beekeeping activity logger for managing apiaries, hives, inspections, queens, and queen observations.",
+    "description": "Drupal 11 module – beekeeping activity logger for managing apiaries, hives, inspections, queens, and queen observations.",
     "type": "drupal-module",
     "license": "GPL-2.0-or-later",
     "homepage": "https://github.com/deburca/hivelog",
     "authors": [
         {
-            "name": "Paddy de B\u00farca",
+            "name": "Paddy de Búrca",
             "role": "Maintainer"
         }
     ],
@@ -17,8 +17,8 @@
         "drupal/leaflet": "^10"
     },
     "suggest": {
-        "drupal/key": "^1.18 \u2014 required only if you enable the optional nexus submodule (AI provider credentials); run `composer require drupal/key` first, then `drush en nexus -y`.",
-        "drupal/simple_oauth": "^6.1 \u2014 required only if you enable the optional hivelog_api submodule (OAuth for the field app); run `composer require drupal/simple_oauth` first, then `drush en hivelog_api -y`."
+        "drupal/key": "^1.18 — required only if you enable the optional nexus submodule (AI provider credentials); run `composer require drupal/key` first, then `drush en nexus -y`.",
+        "drupal/simple_oauth": "^6.1 — required only if you enable the optional hivelog_api submodule (OAuth for the field app); run `composer require drupal/simple_oauth` first, then `drush en hivelog_api -y`."
     },
     "extra": {
         "branch-alias": {
@@ -44,5 +44,10 @@
         "stan": "phpstan analyse --configuration=phpstan.neon"
     },
     "minimum-stability": "dev",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "autoload": {
+        "psr-4": {
+            "Drupal\\hivelog\\": "src/"
+        }
+    }
 }
