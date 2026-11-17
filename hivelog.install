@@ -1452,8 +1452,8 @@ function hivelog_install() {
   _hivelog_ensure_hive_reminder_entity_type();
 }
 
-// phpcs:disable DrupalPractice.Namespaces.UseImportRequired
+// phpcs:disable
 function _hivelog_ensure_hive_reminder_entity_type(): void {
   \Drupal\hivelog\HiveReminderEntitySchemaInstaller::registerEntityType();
 }
-// phpcs:enable DrupalPractice.Namespaces.UseImportRequired
+// phpcs:enable
