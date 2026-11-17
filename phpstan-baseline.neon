@@ -983,3 +983,9 @@ parameters:
 			identifier: method.notFound
 			count: 52
 			path: tests/src/Unit/Breadcrumb/HivelogBreadcrumbBuilderTest.php
+
+		-
+			message: '#^Method Drupal\\hivelog\\HiveReminderListBuilder::handleList\(\\) does not exist\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/HiveReminderListBuilder.php
