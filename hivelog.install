@@ -1,9 +1,6 @@
 <?php
 
-/**
- * @file
- * Install, update and uninstall functions for the HiveLog module.
- */
+/** @file Install, update and uninstall functions for the HiveLog module. */
 
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\CalendarAction;
@@ -1459,4 +1456,5 @@ function hivelog_install() {
  */
 function _hivelog_ensure_hive_reminder_entity_type(): void {
   \Drupal\hivelog\HiveReminderEntitySchemaInstaller::registerEntityType();
+ // phpcs:ignore DrupalPractice.Namespaces.UseImportRequired
 }

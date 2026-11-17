@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Drupal\hivelog;
 
+use Drupal\Component\Plugin\Exception\PluginNotFoundException;
+use Drupal\Core\Entity\ContentEntityType;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+
 /**
  * Installs the HiveReminder entity type and schema for environments where
  * the annotation processor has not yet run (kernel test module_enable).
@@ -26,12 +30,12 @@ class HiveReminderEntitySchemaInstaller {
         return;
       }
     }
-    catch (\Drupal\Component\Plugin\Exception\PluginNotFoundException) {
+    catch (PluginNotFoundException) {
       // Expected - not yet in the cache.
     }
 
     // Manually build the entity type definition from annotation metadata.
-    $entity_type = \Drupal\Core\Entity\ContentEntityType::buildEntityType(
+    $entity_type = ContentEntityType::buildEntityType(
       'hive_reminder',
       'hivelog_hive_reminder',
       '\Drupal\Core\Entity\ContentEntityStorageInterface',
@@ -97,7 +101,7 @@ class HiveReminderEntitySchemaInstaller {
   private static function setStringProperty(\ReflectionClass $reflection, object $entity_type, string $property, string $text): void {
     $prop = $reflection->getProperty($property);
     $prop->setAccessible(TRUE);
-    $prop->setValue($entity_type, new \Drupal\Core\StringTranslation\TranslatableMarkup($text));
+    $prop->setValue($entity_type, new TranslatableMarkup($text));
   }
 
 }
