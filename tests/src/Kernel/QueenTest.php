@@ -34,7 +34,6 @@ class QueenTest extends KernelTestBase {
     'image',
     'geofield',
     'hivelog',
-    'hive_reminder',
   ];
 
   /**

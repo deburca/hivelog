@@ -33,7 +33,6 @@ class ApiaryFormLayoutTest extends KernelTestBase {
     'image',
     'geofield',
     'hivelog',
-    'hive_reminder',
   ];
 
   /**

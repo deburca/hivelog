@@ -38,7 +38,6 @@ class HivelogApiHiveInsightsTest extends HivelogApiKernelTestBase {
     'simple_oauth',
     'key',
     'hivelog',
-    'hive_reminder',
     'collective',
     'nexus',
     'hivelog_api',

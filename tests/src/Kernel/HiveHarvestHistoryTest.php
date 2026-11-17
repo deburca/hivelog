@@ -39,7 +39,6 @@ class HiveHarvestHistoryTest extends KernelTestBase {
     'image',
     'geofield',
     'hivelog',
-    'hive_reminder',
   ];
 
   /**

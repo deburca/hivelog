@@ -43,7 +43,6 @@ class ApiaryCalendarChecklistTest extends KernelTestBase {
     'image',
     'geofield',
     'hivelog',
-    'hive_reminder',
   ];
 
   /**

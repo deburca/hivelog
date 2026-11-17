@@ -42,7 +42,6 @@ class ApiaryQueenFilterTest extends KernelTestBase {
     'image',
     'geofield',
     'hivelog',
-    'hive_reminder',
   ];
 
   /**

@@ -34,7 +34,6 @@ class ApiaryMembershipTest extends KernelTestBase {
     'image',
     'geofield',
     'hivelog',
-    'hive_reminder',
   ];
 
   /**
@@ -256,7 +255,6 @@ class ApiaryMembershipTest extends KernelTestBase {
    */
   public function testUpdateHookRenamesRolesAndCreatesOwners(): void {
     \Drupal::moduleHandler()->loadInclude('hivelog',
-    'hive_reminder', 'install');
     $viewer = $this->createUser();
     $editor = $this->createUser();
     $this->addMember($viewer->id(), 'novice');

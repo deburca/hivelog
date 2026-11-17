@@ -38,7 +38,6 @@ class HivelogStatTileBuilderTest extends KernelTestBase {
     'image',
     'geofield',
     'hivelog',
-    'hive_reminder',
   ];
 
   /**

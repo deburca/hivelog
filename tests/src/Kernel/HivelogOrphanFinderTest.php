@@ -52,7 +52,6 @@ class HivelogOrphanFinderTest extends KernelTestBase {
     'image',
     'geofield',
     'hivelog',
-    'hive_reminder',
   ];
 
   /**

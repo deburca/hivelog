@@ -35,7 +35,6 @@ class InventoryUsageTest extends KernelTestBase {
     'image',
     'geofield',
     'hivelog',
-    'hive_reminder',
   ];
 
   /**

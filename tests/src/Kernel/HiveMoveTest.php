@@ -45,7 +45,6 @@ class HiveMoveTest extends KernelTestBase {
     'image',
     'geofield',
     'hivelog',
-    'hive_reminder',
   ];
 
   /**
@@ -410,7 +409,6 @@ class HiveMoveTest extends KernelTestBase {
    */
   public function testUpdateHookBackfillsTheStamp(): void {
     \Drupal::moduleHandler()->loadInclude('hivelog',
-    'hive_reminder', 'install');
     $inspection = HiveInspection::create(['hive' => $this->hive->id(), 'inspection_date' => '2026-06-01']);
     $inspection->save();
     \Drupal::database()->update('hivelog_hive_inspection')->fields(['apiary' => NULL])->execute();

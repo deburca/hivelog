@@ -39,7 +39,6 @@ class HivelogApiRequirementsTest extends KernelTestBase {
     'consumers',
     'simple_oauth',
     'hivelog',
-    'hive_reminder',
   ];
 
   /**

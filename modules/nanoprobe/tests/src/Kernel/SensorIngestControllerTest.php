@@ -44,7 +44,6 @@ class SensorIngestControllerTest extends KernelTestBase {
     'image',
     'geofield',
     'hivelog',
-    'hive_reminder',
     'nanoprobe',
   ];
 

@@ -46,7 +46,6 @@ class HivelogListBuilderPaginationTest extends KernelTestBase {
     'image',
     'geofield',
     'hivelog',
-    'hive_reminder',
   ];
 
   /**

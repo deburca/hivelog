@@ -34,7 +34,6 @@ class CalendarActionSeedingTest extends KernelTestBase {
     'image',
     'geofield',
     'hivelog',
-    'hive_reminder',
   ];
 
   /**

@@ -35,7 +35,6 @@ class CbrFieldTest extends KernelTestBase {
     'image',
     'geofield',
     'hivelog',
-    'hive_reminder',
   ];
 
   /**
@@ -68,7 +67,6 @@ class CbrFieldTest extends KernelTestBase {
     $this->assertFalse($field->isRequired());
     $this->assertSame(1, $field->getCardinality());
     $this->assertSame('hivelog',
-    'hive_reminder', $field->getProvider());
   }
 
   /**

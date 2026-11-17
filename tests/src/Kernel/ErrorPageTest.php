@@ -31,7 +31,6 @@ class ErrorPageTest extends KernelTestBase {
     'geofield',
     'sdc',
     'hivelog',
-    'hive_reminder',
   ];
 
   /**

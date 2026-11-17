@@ -33,7 +33,6 @@ class CalendarActionItemRequirementTest extends KernelTestBase {
     'image',
     'geofield',
     'hivelog',
-    'hive_reminder',
   ];
 
   /**

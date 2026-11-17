@@ -41,7 +41,6 @@ class SensorPanelBuilderTest extends KernelTestBase {
     'image',
     'geofield',
     'hivelog',
-    'hive_reminder',
     'nanoprobe',
   ];
 

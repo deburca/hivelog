@@ -34,7 +34,6 @@ class HarvestYieldTest extends KernelTestBase {
     'image',
     'geofield',
     'hivelog',
-    'hive_reminder',
   ];
 
   /**

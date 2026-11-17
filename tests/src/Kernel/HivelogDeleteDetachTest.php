@@ -39,7 +39,6 @@ class HivelogDeleteDetachTest extends KernelTestBase {
     'image',
     'geofield',
     'hivelog',
-    'hive_reminder',
   ];
 
   /**

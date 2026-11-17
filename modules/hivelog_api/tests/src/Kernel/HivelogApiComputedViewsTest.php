@@ -39,7 +39,6 @@ class HivelogApiComputedViewsTest extends HivelogApiKernelTestBase {
     'consumers',
     'simple_oauth',
     'hivelog',
-    'hive_reminder',
     'hivelog_api',
     'hivelog_api_test',
   ];

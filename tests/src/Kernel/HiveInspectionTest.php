@@ -37,7 +37,6 @@ class HiveInspectionTest extends KernelTestBase {
     'image',
     'geofield',
     'hivelog',
-    'hive_reminder',
   ];
 
   /**

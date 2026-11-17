@@ -45,7 +45,6 @@ class DirectHarvestTest extends KernelTestBase {
     'image',
     'geofield',
     'hivelog',
-    'hive_reminder',
   ];
 
   /**

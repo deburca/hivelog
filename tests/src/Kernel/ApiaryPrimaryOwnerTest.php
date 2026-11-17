@@ -35,7 +35,6 @@ class ApiaryPrimaryOwnerTest extends KernelTestBase {
     'image',
     'geofield',
     'hivelog',
-    'hive_reminder',
   ];
 
   /**
@@ -240,7 +239,6 @@ class ApiaryPrimaryOwnerTest extends KernelTestBase {
    */
   public function testUpdateHookFillsOwnerSince(): void {
     \Drupal::moduleHandler()->loadInclude('hivelog',
-    'hive_reminder', 'install');
     \Drupal::database()->update('hivelog_apiary_membership')->fields(['owner_since' => NULL])->execute();
     \Drupal::entityTypeManager()->getStorage('apiary_membership')->resetCache();
 

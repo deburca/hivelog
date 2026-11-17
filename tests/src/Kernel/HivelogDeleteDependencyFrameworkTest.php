@@ -51,7 +51,6 @@ class HivelogDeleteDependencyFrameworkTest extends KernelTestBase {
     'image',
     'geofield',
     'hivelog',
-    'hive_reminder',
     'hivelog_delete_dependency_test',
   ];
 
