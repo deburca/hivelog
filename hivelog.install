@@ -1433,9 +1433,14 @@ function hivelog_update_10040(&$sandbox) {
  */
 function hivelog_update_10041() {
   $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  $entity_type_manager = \Drupal::entityTypeManager();
 
-  _hivelog_ensure_hive_reminder_entity_type();
-  $definition_update_manager->installEntitySchema('hive_reminder');
+  // Install the HiveReminder entity type if not yet registered.
+  if (!$definition_update_manager->getEntityType('hive_reminder')) {
+    _hivelog_ensure_hive_reminder_entity_type();
+    $reminder_type = \Drupal::entityTypeManager()->getDefinition('hive_reminder');
+    $definition_update_manager->installEntityType($reminder_type);
+  }
 
   return t('Created the HiveReminder entity type and schema.');
 }
@@ -1458,30 +1463,22 @@ function hivelog_update_10041() {
  */
 function hivelog_install(): void {
   // During module_enable (kernel tests) the definition cache has not been
-  // rebuilt yet — getEntityType() won't see hive_reminder even though its
-  // annotation exists. _hivelog_ensure_hive_reminder_entity_type()
-  // registers the type from annotations into the active cache.
-  _hivelog_ensure_hive_reminder_entity_type();
+  // rebuilt yet, so getDefinition() may fail. We catch and move on:
+  // update hooks handle actual schema install on drush enable.
+  $entity_type_manager = \Drupal::entityTypeManager();
 
-  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
-
-  // Both calls are idempotent — safe to call even if nothing changed.
-  // installEntityType handles missing definitions gracefully.
   try {
-    $reminder_type = \Drupal::entityTypeManager()->getDefinition('hive_reminder');
-    if ($reminder_type !== NULL) {
-      $definition_update_manager->installEntityType($reminder_type);
-    }
+    $reminder_type = $entity_type_manager->getDefinition('hive_reminder');
   }
   catch (\Exception $e) {
-    // Annotation not scanned yet — nothing we can do here.
+    return;
   }
 
-  // installEntityType also installs the storage table when given a definition.
-  // If we got one above, it already ran; if not, try again — idempotent.
   if ($reminder_type === NULL) {
-    $definition_update_manager->installEntityStorage('hive_reminder', []);
+    return;
   }
+
+  \Drupal::entityDefinitionUpdateManager()->installEntityType($reminder_type);
 }
 
 /**
@@ -1490,20 +1487,5 @@ function hivelog_install(): void {
  * Extracted to avoid code duplication between update hook and hook_install().
  */
 function _hivelog_ensure_hive_reminder_entity_type(): void {
-  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
-
-  // If the entity type is not registered at all (kernel test module_enable),
-  // there is nothing to install. This case is handled by kernel tests calling
-  // installEntitySchema() directly where needed.
-  if (!$definition_update_manager->getEntityType('hive_reminder')) {
-    return;
-  }
-
-  $reminder_type = $definition_update_manager->getDefinition('hive_reminder');
-  if ($reminder_type === NULL) {
-    return;
-  }
-
-  // installEntityType() is idempotent — safe to call multiple times.
-  $definition_update_manager->installEntityType($reminder_type);
+  // Do nothing — hivelog_install() handles this directly now.
 }
