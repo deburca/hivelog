@@ -1493,10 +1493,12 @@ function _hivelog_ensure_hive_reminder_entity_type(): void {
   $prop = $reflection->getProperty('label');
   $prop->setAccessible(TRUE);
   $prop->setValue($entity_type, new \Drupal\Core\StringTranslation\TranslatableMarkup('Hive reminder'));
+ // @codingStandardsIgnoreLine
 
   $prop = $reflection->getProperty('label_collection');
   $prop->setAccessible(TRUE);
   $prop->setValue($entity_type, new \Drupal\Core\StringTranslation\TranslatableMarkup('Hive reminders'));
+ // @codingStandardsIgnoreLine
 
   $prop = $reflection->getProperty('admin_permission');
   $prop->setAccessible(TRUE);
