@@ -5,13 +5,8 @@ declare(strict_types=1);
 namespace Drupal\hivelog;
 
 /**
- * Installs the HiveReminder entity type and schema.
- *
- * Kernel tests enable modules via $modules but don't run update hooks, so the
- * hive_reminder entity type (registered by hivelog_update_10041) is missing
- * from the definition cache when kernel test setup tries to install its schema.
- * This class provides a programmatic way to register the entity type and
- * install its schema before modules are enabled.
+ * Installs the HiveReminder entity type and schema for environments where
+ * the annotation processor has not yet run (kernel test module_enable).
  */
 class HiveReminderEntitySchemaInstaller {
 
@@ -20,21 +15,22 @@ class HiveReminderEntitySchemaInstaller {
    */
   public static function registerEntityType(): void {
     $container = \Drupal::getContainer();
-    if ($container->hasDefinition('entity_type.manager')) {
-      $manager = $container->get('entity_type.manager');
-      // Already registered (e.g., via annotation processor).
-      try {
-        if ($manager->getDefinition('hive_reminder') !== NULL) {
-          return;
-        }
-      }
-      catch (\Drupal\Component\Plugin\Exception\PluginNotFoundException $e) {
-        // Expected - not yet in the cache.
-      }
+    if (!$container->hasDefinition('entity_type.manager')) {
+      return;
     }
 
-    // Manually build the entity type definition from the annotation metadata.
-    // This mirrors src/Entity/HiveReminder.php #[ContentEntityType(...)] attributes.
+    $manager = $container->get('entity_type.manager');
+    // Already registered.
+    try {
+      if ($manager->getDefinition('hive_reminder') !== NULL) {
+        return;
+      }
+    }
+    catch (\Drupal\Component\Plugin\Exception\PluginNotFoundException) {
+      // Expected - not yet in the cache.
+    }
+
+    // Manually build the entity type definition from annotation metadata.
     $entity_type = \Drupal\Core\Entity\ContentEntityType::buildEntityType(
       'hive_reminder',
       'hivelog_hive_reminder',
@@ -48,22 +44,12 @@ class HiveReminderEntitySchemaInstaller {
     // Set properties that buildEntityType doesn't populate.
     $reflection = new \ReflectionClass($entity_type);
 
-    $prop = $reflection->getProperty('label');
-    $prop->setAccessible(TRUE);
-    $prop->setValue($entity_type, new \Drupal\Core\StringTranslation\TranslatableMarkup('Hive reminder'));
+    self::setStringProperty($reflection, $entity_type, 'label', 'Hive reminder');
+    self::setStringProperty($reflection, $entity_type, 'label_collection', 'Hive reminders');
+    self::setStringProperty($reflection, $entity_type, 'admin_permission', 'administer hivelog');
+    self::setStringProperty($reflection, $entity_type, 'module', 'hivelog');
 
-    $prop = $reflection->getProperty('label_collection');
-    $prop->setAccessible(TRUE);
-    $prop->setValue($entity_type, new \Drupal\Core\StringTranslation\TranslatableMarkup('Hive reminders'));
-
-    $prop = $reflection->getProperty('admin_permission');
-    $prop->setAccessible(TRUE);
-    $prop->setValue($entity_type, 'administer hivelog');
-
-    $prop = $reflection->getProperty('module');
-    $prop->setAccessible(TRUE);
-    $prop->setValue($entity_type, 'hivelog');
-
+    // Set entity_keys.
     $prop = $reflection->getProperty('entity_keys');
     $prop->setAccessible(TRUE);
     $prop->setValue($entity_type, [
@@ -73,6 +59,7 @@ class HiveReminderEntitySchemaInstaller {
       'owner' => 'uid',
     ]);
 
+    // Set links.
     $prop = $reflection->getProperty('links');
     $prop->setAccessible(TRUE);
     $prop->setValue($entity_type, [
@@ -82,6 +69,7 @@ class HiveReminderEntitySchemaInstaller {
       'collection' => '/hivelog/hive-reminders',
     ]);
 
+    // Set handlers.
     $prop = $reflection->getProperty('handlers');
     $prop->setAccessible(TRUE);
     $prop->setValue($entity_type, [
@@ -95,13 +83,21 @@ class HiveReminderEntitySchemaInstaller {
       'access' => '\Drupal\hivelog\HiveReminderAccessControlHandler',
     ]);
 
+    // Set list_builder_class.
     $prop = $reflection->getProperty('list_builder_class');
     $prop->setAccessible(TRUE);
     $prop->setValue($entity_type, '\Drupal\hivelog\HiveReminderListBuilder');
 
-    if ($container->hasDefinition('entity_type.manager')) {
-      $container->get('entity_type.manager')->addDefinition($entity_type);
-    }
+    $manager->addDefinition($entity_type);
+  }
+
+  /**
+   * Helper: set a TranslatableMarkup property on the entity type.
+   */
+  private static function setStringProperty(\ReflectionClass $reflection, object $entity_type, string $property, string $text): void {
+    $prop = $reflection->getProperty($property);
+    $prop->setAccessible(TRUE);
+    $prop->setValue($entity_type, new \Drupal\Core\StringTranslation\TranslatableMarkup($text));
   }
 
 }
