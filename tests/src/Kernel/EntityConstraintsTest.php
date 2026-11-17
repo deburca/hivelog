@@ -53,6 +53,7 @@ class EntityConstraintsTest extends KernelTestBase {
     'image',
     'geofield',
     'hivelog',
+    'hive_reminder',
   ];
 
   /**

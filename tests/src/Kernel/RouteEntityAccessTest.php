@@ -66,6 +66,7 @@ class RouteEntityAccessTest extends KernelTestBase {
     'image',
     'geofield',
     'hivelog',
+    'hive_reminder',
   ];
 
   /**

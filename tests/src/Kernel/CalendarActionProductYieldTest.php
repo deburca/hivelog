@@ -33,6 +33,7 @@ class CalendarActionProductYieldTest extends KernelTestBase {
     'image',
     'geofield',
     'hivelog',
+    'hive_reminder',
   ];
 
   /**

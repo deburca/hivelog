@@ -41,6 +41,7 @@ class HarvestStampTest extends KernelTestBase {
     'image',
     'geofield',
     'hivelog',
+    'hive_reminder',
   ];
 
   /**
@@ -246,7 +247,8 @@ class HarvestStampTest extends KernelTestBase {
     // Without their own fields the report no longer sees them.
     $this->assertEqualsWithDelta(20.0, $this->income($this->apiary, $year), 0.001);
 
-    \Drupal::moduleHandler()->loadInclude('hivelog', 'install');
+    \Drupal::moduleHandler()->loadInclude('hivelog',
+    'hive_reminder', 'install');
     $sandbox = [];
     $message = (string) hivelog_update_10040($sandbox);
     $this->assertStringContainsString('2 calendar harvest', $message);
@@ -291,7 +293,8 @@ class HarvestStampTest extends KernelTestBase {
     \Drupal::entityTypeManager()->getStorage('harvest_yield')->resetCache();
     \Drupal::entityTypeManager()->getStorage('hive')->resetCache();
 
-    \Drupal::moduleHandler()->loadInclude('hivelog', 'install');
+    \Drupal::moduleHandler()->loadInclude('hivelog',
+    'hive_reminder', 'install');
     $sandbox = [];
     hivelog_update_10040($sandbox);
 

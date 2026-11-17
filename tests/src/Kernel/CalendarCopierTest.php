@@ -35,6 +35,7 @@ class CalendarCopierTest extends KernelTestBase {
     'image',
     'geofield',
     'hivelog',
+    'hive_reminder',
   ];
 
   /**

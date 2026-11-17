@@ -52,6 +52,7 @@ class ListFilterPaginationTest extends KernelTestBase {
     'image',
     'geofield',
     'hivelog',
+    'hive_reminder',
   ];
 
   /**

@@ -61,6 +61,7 @@ class ListBuilderAccessFilterTest extends KernelTestBase {
     'image',
     'geofield',
     'hivelog',
+    'hive_reminder',
   ];
 
   /**

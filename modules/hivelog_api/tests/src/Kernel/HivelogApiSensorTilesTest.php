@@ -41,6 +41,7 @@ class HivelogApiSensorTilesTest extends HivelogApiKernelTestBase {
     'consumers',
     'simple_oauth',
     'hivelog',
+    'hive_reminder',
     'nanoprobe',
     'hivelog_api',
     'hivelog_api_test',

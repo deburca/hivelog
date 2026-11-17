@@ -44,6 +44,7 @@ abstract class HivelogApiKernelTestBase extends KernelTestBase {
     'consumers',
     'simple_oauth',
     'hivelog',
+    'hive_reminder',
     'hivelog_api',
   ];
 

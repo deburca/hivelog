@@ -40,6 +40,7 @@ class ListCrossLinksTest extends KernelTestBase {
     'image',
     'geofield',
     'hivelog',
+    'hive_reminder',
   ];
 
   /**

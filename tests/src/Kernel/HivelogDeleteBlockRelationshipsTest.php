@@ -63,6 +63,7 @@ class HivelogDeleteBlockRelationshipsTest extends KernelTestBase {
     'image',
     'geofield',
     'hivelog',
+    'hive_reminder',
   ];
 
   /**

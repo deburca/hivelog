@@ -34,6 +34,7 @@ class ApiaryMembershipTest extends KernelTestBase {
     'image',
     'geofield',
     'hivelog',
+    'hive_reminder',
   ];
 
   /**
@@ -254,7 +255,8 @@ class ApiaryMembershipTest extends KernelTestBase {
    * Tests the update hook that renames roles and creates owner memberships.
    */
   public function testUpdateHookRenamesRolesAndCreatesOwners(): void {
-    \Drupal::moduleHandler()->loadInclude('hivelog', 'install');
+    \Drupal::moduleHandler()->loadInclude('hivelog',
+    'hive_reminder', 'install');
     $viewer = $this->createUser();
     $editor = $this->createUser();
     $this->addMember($viewer->id(), 'novice');

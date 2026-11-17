@@ -22,6 +22,7 @@ class HivelogProseBlockTest extends KernelTestBase {
    */
   protected static $modules = [
     'system', 'user', 'field', 'datetime', 'options', 'file', 'image', 'geofield', 'hivelog',
+    'hive_reminder',
   ];
 
   /**

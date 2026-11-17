@@ -50,6 +50,7 @@ class ReportsAfterHiveMoveTest extends KernelTestBase {
     'image',
     'geofield',
     'hivelog',
+    'hive_reminder',
   ];
 
   /**

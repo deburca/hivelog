@@ -31,6 +31,7 @@ class SensorHiveMoveTest extends KernelTestBase {
     'image',
     'geofield',
     'hivelog',
+    'hive_reminder',
     'nanoprobe',
   ];
 

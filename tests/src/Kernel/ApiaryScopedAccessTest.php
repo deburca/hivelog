@@ -44,6 +44,7 @@ class ApiaryScopedAccessTest extends KernelTestBase {
     'image',
     'geofield',
     'hivelog',
+    'hive_reminder',
   ];
 
   /**

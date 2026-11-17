@@ -54,6 +54,7 @@ class HivelogEntityDeleteFormTest extends KernelTestBase {
     'image',
     'geofield',
     'hivelog',
+    'hive_reminder',
   ];
 
   /**

@@ -41,6 +41,7 @@ class HivelogApiNonExposedTypesTest extends HivelogApiKernelTestBase {
     'simple_oauth',
     'key',
     'hivelog',
+    'hive_reminder',
     'collective',
     'nanoprobe',
     'nexus',

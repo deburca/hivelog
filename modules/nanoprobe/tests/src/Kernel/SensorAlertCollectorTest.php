@@ -36,6 +36,7 @@ class SensorAlertCollectorTest extends KernelTestBase {
     'image',
     'geofield',
     'hivelog',
+    'hive_reminder',
     'nanoprobe',
   ];
 

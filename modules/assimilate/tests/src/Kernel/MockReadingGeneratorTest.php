@@ -50,6 +50,7 @@ class MockReadingGeneratorTest extends KernelTestBase {
     'image',
     'geofield',
     'hivelog',
+    'hive_reminder',
     'nanoprobe',
     'assimilate',
   ];

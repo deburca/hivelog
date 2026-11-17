@@ -42,6 +42,7 @@ class CalendarActionCollectionTest extends KernelTestBase {
     'image',
     'geofield',
     'hivelog',
+    'hive_reminder',
   ];
 
   /**

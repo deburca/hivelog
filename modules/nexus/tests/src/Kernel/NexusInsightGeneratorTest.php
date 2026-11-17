@@ -43,6 +43,7 @@ class NexusInsightGeneratorTest extends KernelTestBase {
     'geofield',
     'key',
     'hivelog',
+    'hive_reminder',
     'collective',
     'nexus',
   ];

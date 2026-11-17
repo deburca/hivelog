@@ -46,6 +46,7 @@ class CombinedFinancialReportTest extends KernelTestBase {
     'image',
     'geofield',
     'hivelog',
+    'hive_reminder',
   ];
 
   /**

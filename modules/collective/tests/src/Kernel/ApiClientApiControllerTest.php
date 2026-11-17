@@ -42,6 +42,7 @@ class ApiClientApiControllerTest extends KernelTestBase {
     'image',
     'geofield',
     'hivelog',
+    'hive_reminder',
     'collective',
   ];
 

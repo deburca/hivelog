@@ -33,6 +33,7 @@ class FilterPanelTest extends KernelTestBase {
     'image',
     'geofield',
     'hivelog',
+    'hive_reminder',
   ];
 
   /**

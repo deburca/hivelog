@@ -43,6 +43,7 @@ class HiveCalendarChecklistTest extends KernelTestBase {
     'image',
     'geofield',
     'hivelog',
+    'hive_reminder',
   ];
 
   /**

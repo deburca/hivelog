@@ -38,6 +38,7 @@ class LegacyBeekeepersMigrationTest extends KernelTestBase {
     'image',
     'geofield',
     'hivelog',
+    'hive_reminder',
   ];
 
   /**
@@ -149,7 +150,8 @@ class LegacyBeekeepersMigrationTest extends KernelTestBase {
    * where it is run from, so they are not named statically.
    */
   protected function installFunction(string $name): mixed {
-    \Drupal::moduleHandler()->loadInclude('hivelog', 'install');
+    \Drupal::moduleHandler()->loadInclude('hivelog',
+    'hive_reminder', 'install');
     $function = '_hivelog_' . $name;
     return $function();
   }
