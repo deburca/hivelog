@@ -54,6 +54,7 @@ class HiveReminderTest extends KernelTestBase {
     $this->installEntitySchema('apiary');
     $this->installEntitySchema('hive');
     $this->installEntitySchema('hive_reminder');
+    $this->installEntityType('hive_reminder');
 
     // Create an apiary.
     $this->apiary = Apiary::create([
