@@ -68,8 +68,10 @@ abstract class HivelogApiKernelTestBase extends KernelTestBase {
    * {@inheritdoc}
    */
   protected function setUp(): void {
-    parent::setUp();
+    // Install hive_reminder schema before enableModules so routes that
+    // reference entity:hive_reminder can resolve during container build.
     $this->installEntitySchema('hive_reminder');
+    parent::setUp();
     $this->installSchema('file', ['file_usage']);
     $this->installConfig(['system', 'user', 'jsonapi']);
     foreach ([

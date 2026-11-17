@@ -50,8 +50,8 @@ class HivelogApiSensorTilesTest extends HivelogApiKernelTestBase {
    * {@inheritdoc}
    */
   protected function setUp(): void {
-    // The role is synced inside the parent's setUp(), when the sensor
-    // permissions already exist because nanoprobe is enabled.
+    // hive_reminder schema must be installed before enableModules.
+    $this->installEntitySchema('hive_reminder');
     parent::setUp();
     foreach (['sensor_device', 'sensor_reading', 'sensor_reading_daily'] as $type) {
       $this->installEntitySchema($type);

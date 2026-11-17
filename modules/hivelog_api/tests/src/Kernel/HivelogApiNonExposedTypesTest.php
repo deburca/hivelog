@@ -60,6 +60,8 @@ class HivelogApiNonExposedTypesTest extends HivelogApiKernelTestBase {
    * {@inheritdoc}
    */
   protected function setUp(): void {
+    // hive_reminder schema must be installed before enableModules.
+    $this->installEntitySchema('hive_reminder');
     parent::setUp();
     $schemas = [
       'harvest_yield', 'inventory_usage', 'sensor_device', 'sensor_reading', 'sensor_reading_daily',
