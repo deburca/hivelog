@@ -32,6 +32,16 @@ class HivelogPathPrefixTest extends KernelTestBase {
   ];
 
   /**
+   * {@inheritdoc}
+   */
+  protected function setUp(): void {
+    parent::setUp();
+    // hive_reminder is not in the $modules array but its routes are loaded
+    // by hivelog — its schema must be installed explicitly.
+    $this->installEntitySchema('hive_reminder');
+  }
+
+  /**
    * The route's path as the router holds it.
    */
   private function pathOf(string $route_name): string {
