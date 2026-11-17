@@ -9,8 +9,7 @@ use Drupal\Core\Entity\ContentEntityType;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
- * Installs the HiveReminder entity type and schema for environments where
- * the annotation processor has not yet run (kernel test module_enable).
+ * Installs the HiveReminder entity type and schema for kernel test environments.
  */
 class HiveReminderEntitySchemaInstaller {
 
