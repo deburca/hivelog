@@ -74,6 +74,7 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
       'hive_inspection' => 'Inspections',
       'queen' => 'Queens',
       'queen_observation' => 'Queen Observations',
+      'hive_reminder' => 'Hive Reminders',
       'calendar_action' => 'Calendar Actions',
       'hive_action_log' => 'Hive Action Logs',
       'apiary_action_log' => 'Apiary Action Logs',
