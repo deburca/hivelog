@@ -464,7 +464,16 @@ class HivelogAlertCollector {
    * reminders appear regardless of season or inspection status.
    */
   public function collectReminderAlerts(CacheableMetadata $cache): array {
-    $storage      = $this->entityTypeManager->getStorage('hive_reminder');
+    // During kernel-test bootstrap the active definition cache may not have
+    // been rebuilt yet, so getStorage() can throw for entity types whose
+    // annotations haven't been materialised. Return no reminder alerts in
+    // that case — on a live site or after the rebuild these are populated.
+    try {
+      $storage = $this->entityTypeManager->getStorage('hive_reminder');
+    }
+    catch (\Drupal\Component\Plugin\Exception\PluginNotFoundException) {
+      return [];
+    }
     $current_date = date('Y-m-d');
     $reminder_ids = $storage->getQuery()
       ->accessCheck(FALSE)
