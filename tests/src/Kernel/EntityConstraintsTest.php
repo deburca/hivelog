@@ -75,7 +75,6 @@ class EntityConstraintsTest extends KernelTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
-    $this->installEntityType('hive_reminder');
     foreach ([
       'user', 'file', 'apiary', 'apiary_membership', 'hive', 'hive_inspection', 'queen', 'queen_observation', 'calendar_action',
       'hive_action_log', 'apiary_action_log', 'inventory_item', 'inventory_purchase', 'product',

@@ -62,7 +62,6 @@ class EndedHiveWorkloadTest extends KernelTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
-    $this->installEntityType('hive_reminder');
     $this->installConfig(['system']);
     $this->installEntitySchema('user');
     $this->installEntitySchema('file');
