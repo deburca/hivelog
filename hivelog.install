@@ -1450,6 +1450,31 @@ function hivelog_update_10041() {
  */
 
 /**
+ * Install the HiveReminder entity type and schema on module install.
+ *
+ * Kernel tests enable modules via $modules but don't run update hooks,
+ * so we must install both the definition cache entry and the schema here —
+ * not just in hivelog_update_10041().
+ */
+function hivelog_install(): void {
+  _hivelog_ensure_hive_reminder_entity_type();
+
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+
+  if (!$definition_update_manager->getEntityType('hive_reminder')) {
+    return;
+  }
+
+  $reminder_type = $definition_update_manager->getDefinition('hive_reminder');
+  if ($reminder_type === NULL) {
+    return;
+  }
+
+  // installEntitySchema is idempotent — safe to call on existing sites.
+  $definition_update_manager->installEntitySchema('hive_reminder');
+}
+
+/**
  * Helper: install the HiveReminder entity type schema if not yet installed.
  *
  * Extracted to avoid code duplication between update hook and hook_install().
