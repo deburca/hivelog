@@ -60,6 +60,7 @@ class ApiaryMembershipTest extends KernelTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
+    $this->installEntitySchema('hive_reminder');
 
     $this->installEntitySchema('user');
     $this->installEntitySchema('file');
@@ -254,7 +255,7 @@ class ApiaryMembershipTest extends KernelTestBase {
    * Tests the update hook that renames roles and creates owner memberships.
    */
   public function testUpdateHookRenamesRolesAndCreatesOwners(): void {
-    \Drupal::moduleHandler()->loadInclude('hivelog',
+    \Drupal::moduleHandler()->loadInclude('hivelog', 'install');
     $viewer = $this->createUser();
     $editor = $this->createUser();
     $this->addMember($viewer->id(), 'novice');

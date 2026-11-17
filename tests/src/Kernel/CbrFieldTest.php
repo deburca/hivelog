@@ -42,6 +42,7 @@ class CbrFieldTest extends KernelTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
+    $this->installEntitySchema('hive_reminder');
     $this->installEntitySchema('user');
     $this->installEntitySchema('file');
     $this->installEntitySchema('apiary');
@@ -66,7 +67,7 @@ class CbrFieldTest extends KernelTestBase {
     $this->assertSame(64, $field->getSetting('max_length'));
     $this->assertFalse($field->isRequired());
     $this->assertSame(1, $field->getCardinality());
-    $this->assertSame('hivelog',
+    $this->assertSame('hivelog', $field->getProvider());
   }
 
   /**

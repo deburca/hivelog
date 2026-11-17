@@ -35,6 +35,7 @@ class DashboardTest extends BrowserTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
+    $this->installEntitySchema('hive_reminder');
     $this->drupalPlaceBlock('system_breadcrumb_block');
 
     Apiary::create(['name' => 'Ravnholt Home'])->save();

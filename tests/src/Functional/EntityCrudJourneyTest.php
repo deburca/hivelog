@@ -33,6 +33,7 @@ class EntityCrudJourneyTest extends BrowserTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
+    $this->installEntitySchema('hive_reminder');
     $admin = $this->drupalCreateUser(['administer hivelog']);
     $this->drupalLogin($admin);
   }

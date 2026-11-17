@@ -63,6 +63,7 @@ class ApiaryPrimaryOwnerTest extends KernelTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
+    $this->installEntitySchema('hive_reminder');
     foreach ([
       'user', 'file', 'apiary', 'apiary_membership', 'hive', 'harvest_yield', 'hive_inspection', 'queen',
       'queen_observation', 'calendar_action', 'hive_action_log', 'apiary_action_log',
@@ -238,7 +239,7 @@ class ApiaryPrimaryOwnerTest extends KernelTestBase {
    * Tests the update hook fills owner_since for current owners.
    */
   public function testUpdateHookFillsOwnerSince(): void {
-    \Drupal::moduleHandler()->loadInclude('hivelog',
+    \Drupal::moduleHandler()->loadInclude('hivelog', 'install');
     \Drupal::database()->update('hivelog_apiary_membership')->fields(['owner_since' => NULL])->execute();
     \Drupal::entityTypeManager()->getStorage('apiary_membership')->resetCache();
 

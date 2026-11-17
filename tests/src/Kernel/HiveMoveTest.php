@@ -94,6 +94,7 @@ class HiveMoveTest extends KernelTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
+    $this->installEntitySchema('hive_reminder');
     foreach ([
       'user', 'file', 'apiary', 'apiary_membership', 'hive', 'hive_inspection', 'queen',
       'queen_observation', 'calendar_action', 'hive_action_log', 'apiary_action_log',
@@ -408,7 +409,7 @@ class HiveMoveTest extends KernelTestBase {
    * Tests the update hook stamps existing records and is safe to run twice.
    */
   public function testUpdateHookBackfillsTheStamp(): void {
-    \Drupal::moduleHandler()->loadInclude('hivelog',
+    \Drupal::moduleHandler()->loadInclude('hivelog', 'install');
     $inspection = HiveInspection::create(['hive' => $this->hive->id(), 'inspection_date' => '2026-06-01']);
     $inspection->save();
     \Drupal::database()->update('hivelog_hive_inspection')->fields(['apiary' => NULL])->execute();

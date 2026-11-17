@@ -73,6 +73,7 @@ class LegacyBeekeepersMigrationTest extends KernelTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
+    $this->installEntitySchema('hive_reminder');
     foreach (['user', 'file', 'apiary', 'apiary_membership'] as $type) {
       $this->installEntitySchema($type);
     }
@@ -149,7 +150,7 @@ class LegacyBeekeepersMigrationTest extends KernelTestBase {
    * where it is run from, so they are not named statically.
    */
   protected function installFunction(string $name): mixed {
-    \Drupal::moduleHandler()->loadInclude('hivelog',
+    \Drupal::moduleHandler()->loadInclude('hivelog', 'install');
     $function = '_hivelog_' . $name;
     return $function();
   }

@@ -52,6 +52,7 @@ class PermissionMatrixTest extends BrowserTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
+    $this->installEntitySchema('hive_reminder');
 
     $this->apiary = Apiary::create(['name' => 'Matrix Apiary']);
     $this->apiary->save();
