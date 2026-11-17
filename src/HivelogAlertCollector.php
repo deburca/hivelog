@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\hivelog;
 
+use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -471,7 +472,7 @@ class HivelogAlertCollector {
     try {
       $storage = $this->entityTypeManager->getStorage('hive_reminder');
     }
-    catch (\Drupal\Component\Plugin\Exception\PluginNotFoundException) {
+    catch (PluginNotFoundException) {
       return [];
     }
     $current_date = date('Y-m-d');
