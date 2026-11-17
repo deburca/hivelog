@@ -94,7 +94,6 @@ class HiveMoveTest extends KernelTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
-    $this->installEntitySchema('hive_reminder');
     $this->installEntityType('hive_reminder');
     foreach ([
       'user', 'file', 'apiary', 'apiary_membership', 'hive', 'hive_inspection', 'queen',

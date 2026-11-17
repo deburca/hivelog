@@ -54,7 +54,6 @@ class HivelogApiSensorTilesTest extends HivelogApiKernelTestBase {
     // hive_reminder must be installed after enableModules because its entity
     // type definition only becomes available once hivelog's annotations are
     // scanned during module_enable.
-    $this->installEntitySchema('hive_reminder');
 
     foreach (['sensor_device', 'sensor_reading', 'sensor_reading_daily'] as $type) {
       $this->installEntitySchema($type);

@@ -61,7 +61,6 @@ class HivelogApiNonExposedTypesTest extends HivelogApiKernelTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
-    $this->installEntitySchema('hive_reminder');
     $schemas = [
       'harvest_yield', 'inventory_usage', 'sensor_device', 'sensor_reading', 'sensor_reading_daily',
       'api_client', 'ai_provider_config', 'hive_insight',

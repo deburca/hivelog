@@ -44,7 +44,6 @@ class CollectionLinkTemplateTest extends KernelTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
-    $this->installEntitySchema('hive_reminder');
     $this->installEntityType('hive_reminder');
     \Drupal::service('router.builder')->rebuild();
   }

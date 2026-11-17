@@ -49,7 +49,6 @@ class HivelogApiHiveInsightsTest extends HivelogApiKernelTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
-    $this->installEntitySchema('hive_reminder');
     $this->installEntitySchema('hive_insight');
   }
 

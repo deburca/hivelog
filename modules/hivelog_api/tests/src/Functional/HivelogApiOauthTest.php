@@ -45,7 +45,6 @@ class HivelogApiOauthTest extends BrowserTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
-    $this->installEntitySchema('hive_reminder');
   }
 
   /**

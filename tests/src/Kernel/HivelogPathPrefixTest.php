@@ -38,7 +38,6 @@ class HivelogPathPrefixTest extends KernelTestBase {
     parent::setUp();
     // hive_reminder is not in the $modules array but its routes are loaded
     // by hivelog — its schema must be installed explicitly.
-    $this->installEntitySchema('hive_reminder');
   }
 
   /**

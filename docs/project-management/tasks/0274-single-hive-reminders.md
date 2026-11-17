@@ -97,7 +97,6 @@ view any hive reminder+administer hivelog:
 ```
 
 ### Update hook
-- `hivelog_update_10041()`: `installEntitySchema('hive_reminder')`.
 
 ### Tests
 - `tests/src/Kernel/HiveReminderTest.php`: create/save, status update, allowed values.

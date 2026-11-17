@@ -47,7 +47,6 @@ class ActionPagesStatTilesTest extends KernelTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
-    $this->installEntitySchema('hive_reminder');
     $this->installEntityType('hive_reminder');
     $this->installConfig(['system']);
     foreach ([

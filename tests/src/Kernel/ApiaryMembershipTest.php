@@ -60,7 +60,6 @@ class ApiaryMembershipTest extends KernelTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
-    $this->installEntitySchema('hive_reminder');
     $this->installEntityType('hive_reminder');
 
     $this->installEntitySchema('user');

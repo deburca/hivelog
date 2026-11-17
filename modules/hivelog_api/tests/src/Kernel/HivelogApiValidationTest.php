@@ -35,7 +35,6 @@ class HivelogApiValidationTest extends HivelogApiKernelTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
-    $this->installEntitySchema('hive_reminder');
     $role = Role::create(['id' => 'validation_admin', 'label' => 'Validation admin']);
     $role->grantPermission('administer hivelog');
     $role->save();
