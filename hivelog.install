@@ -1463,10 +1463,16 @@ function hivelog_install(): void {
   // schema; both calls are idempotent.
   _hivelog_ensure_hive_reminder_entity_type();
 
-  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
-  $reminder_type = $definition_update_manager->getDefinition('hive_reminder');
+  try {
+    $reminder_type = \Drupal::entityTypeManager()->getDefinition('hive_reminder');
+  }
+  catch (\Exception $e) {
+    // The annotation hasn't been scanned yet — nothing we can do.
+    return;
+  }
 
   if ($reminder_type !== NULL) {
+    $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
     $definition_update_manager->installEntityType($reminder_type);
     $definition_update_manager->installEntitySchema('hive_reminder');
   }
