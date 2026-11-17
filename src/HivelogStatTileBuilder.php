@@ -260,6 +260,56 @@ class HivelogStatTileBuilder {
   }
 
   /**
+   * The "Last inspected" tile with a warning sub-line when overdue.
+   */
+  protected function lastInspectedTile(Hive $hive): array {
+    if ($hive->isNew()) {
+      return [];
+    }
+
+    $id_list = $this->entityTypeManager
+      ->getStorage('hive_inspection')
+      ->getQuery()
+      ->accessCheck(TRUE)
+      ->condition('hive', $hive->id())
+      ->sort('inspection_date', 'DESC')
+      ->range(0, 1)
+      ->execute();
+
+    if (!$id_list) {
+      return [];
+    }
+
+    /** @var string $first_id */
+    $first_id = reset($id_list);
+    /** @var \Drupal\hivelog\Entity\HiveInspection|null $latest */
+    $latest   = $this->entityTypeManager->getStorage('hive_inspection')->load($first_id);
+    if (!$latest) {
+      return [];
+    }
+
+    /** @var int|float|string|null $raw_date */
+    $raw_date  = $latest->get('inspection_date')->value;
+    $date_str  = (string) $raw_date;
+    $last_dt   = new \Drupal\Core\Datetime\DrupalDateTime($date_str);
+    $diff_days = (int) \Drupal\Core\Datetime\DrupalDateTime::createFromTimestamp(time())
+      ->diff($last_dt)->format('%a');
+
+    // Threshold (task 0273).
+    $threshold_days = 14;
+
+    $tile = ['value' => $last_dt->format('Y-m-d')];
+
+    if ($diff_days > $threshold_days) {
+      $chip   = sprintf('%d day%s overdue', $diff_days, $diff_days === 1 ? '' : 's');
+      $tile['sublabel']   = (string) $this->t($chip);
+      $tile['sublabel_variant'] = 'warning';
+    }
+
+    return $tile;
+  }
+
+  /**
    * Gets a hive's tile descriptors as data, sorted by weight.
    *
    * The same descriptors buildForHive() lays out, for a caller that is not a

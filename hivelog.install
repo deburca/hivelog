@@ -1452,11 +1452,8 @@ function hivelog_install() {
   _hivelog_ensure_hive_reminder_entity_type();
 }
 
-/**
- * Helper: install the HiveReminder entity type if not yet registered.
- *
- * Extracted to avoid code duplication between update hook and hook_install().
- */
+// phpcs:disable DrupalPractice.Namespaces.UseImportRequired
 function _hivelog_ensure_hive_reminder_entity_type(): void {
-  \Drupal\hivelog\HiveReminderEntitySchemaInstaller::registerEntityType(); // @codingStandardsIgnoreLine
+  \Drupal\hivelog\HiveReminderEntitySchemaInstaller::registerEntityType();
 }
+// phpcs:enable DrupalPractice.Namespaces.UseImportRequired
