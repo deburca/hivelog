@@ -171,3 +171,21 @@ function hivelog_form_alter(array &$form, FormStateInterface $form_state, string
 function hivelog_entity_predelete(EntityInterface $entity): void {
   \Drupal::service('hivelog.delete_dependency_executor')->execute($entity);
 }
+
+/**
+ * Install the HiveReminder entity type on module install.
+ *
+ * Kernel tests enable modules via $modules but don't run update hooks,
+ * so the hive_reminder entity type (defined in an update hook) would be
+ * missing from the definition cache. This ensures it's registered when
+ * hivelog is first enabled, whether via drush or kernel test setup.
+ */
+function hivelog_install(): void {
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+
+  if (!$definition_update_manager->getEntityType('hive_reminder')) {
+    $reminder_type = $entity_type_manager->getDefinition('hive_reminder');
+    $definition_update_manager->installEntityType($reminder_type);
+  }
+}
