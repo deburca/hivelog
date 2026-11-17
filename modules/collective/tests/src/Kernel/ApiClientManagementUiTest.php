@@ -112,7 +112,9 @@ class ApiClientManagementUiTest extends KernelTestBase {
     // ApiClientApiController requires HiveContextBuilder and TimeInterface.
     // Cannot use class_resolver in kernel tests (DI container has no such services).
     $context_builder = $this->createStub(HiveContextBuilder::class);
-    $time_interface = $this->createStub(TimeInterface::class);
+    $time_interface = $this->getMockBuilder(TimeInterface::class)
+      ->disableOriginalConstructor()
+      ->getMock();
     $api_controller = new ApiClientApiController(
       $context_builder,
       $time_interface
