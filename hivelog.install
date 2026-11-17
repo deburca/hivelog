@@ -1466,8 +1466,7 @@ function hivelog_install(): void {
   $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
 
   // Both calls are idempotent — safe to call even if nothing changed.
-  // installEntitySchema will do nothing if the schema is already installed,
-  // and installEntityType handles missing definitions gracefully.
+  // installEntityType handles missing definitions gracefully.
   try {
     $reminder_type = \Drupal::entityTypeManager()->getDefinition('hive_reminder');
     if ($reminder_type !== NULL) {
@@ -1475,12 +1474,14 @@ function hivelog_install(): void {
     }
   }
   catch (\Exception $e) {
-    // Annotation not scanned yet — the schema install below still works
-    // because installEntitySchema does not require the definition to exist.
+    // Annotation not scanned yet — nothing we can do here.
   }
 
-  // Install the schema regardless of whether installEntityType succeeded.
-  $definition_update_manager->installEntitySchema('hive_reminder');
+  // installEntityType also installs the storage table when given a definition.
+  // If we got one above, it already ran; if not, try again — idempotent.
+  if ($reminder_type === NULL) {
+    $definition_update_manager->installEntityStorage('hive_reminder', []);
+  }
 }
 
 /**
