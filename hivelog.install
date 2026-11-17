@@ -1458,6 +1458,5 @@ function hivelog_install() {
  * Extracted to avoid code duplication between update hook and hook_install().
  */
 function _hivelog_ensure_hive_reminder_entity_type(): void {
-  \Drupal\hivelog\HiveReminderEntitySchemaInstaller::registerEntityType();
- // phpcs:ignore DrupalPractice.Namespaces.UseImportRequired
+  \Drupal\hivelog\HiveReminderEntitySchemaInstaller::registerEntityType(); // phpcs:ignore DrupalPractice.Namespaces.UseImportRequired
 }
