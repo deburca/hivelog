@@ -12,5 +12,6 @@ dependencies:
   - drupal:image
   - drupal:options
   - drupal:user
+  - hive_reminder
   - geofield:geofield
   - leaflet:leaflet
