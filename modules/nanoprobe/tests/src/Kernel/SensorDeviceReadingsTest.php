@@ -17,6 +17,7 @@ use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 /**
@@ -66,6 +67,13 @@ class SensorDeviceReadingsTest extends KernelTestBase {
    * A user with no relationship to the apiary (no access to `$device`).
    */
   protected User $outsider;
+
+  /**
+   * A mock trend chart builder (returns empty charts).
+   *
+   * @var \Drupal\nanoprobe\SensorTrendChartBuilder
+   */
+  protected $mockChartBuilder;
 
   /**
    * {@inheritdoc}
@@ -123,6 +131,29 @@ class SensorDeviceReadingsTest extends KernelTestBase {
     $this->device->save();
 
     $this->setCurrentUser($this->owner);
+
+    // The `readings()` page calls $this->time() (getRequestTime),
+    // $this->dateFormatter()->format(), and $this->trendChartBuilder()
+    // -> buildChart().
+    $this->mockChartBuilder = $this->createStub(
+      SensorTrendChartBuilder::class
+    );
+  }
+
+  /**
+   * Creates a SensorDeviceController with mock dependencies.
+   */
+  protected function createController(): SensorDeviceController {
+    $time = $this->createStub(TimeInterface::class);
+    $request_stack = new RequestStack();
+    $date_formatter = $this->createStub(DateFormatterInterface::class);
+
+    return new SensorDeviceController(
+      $time,
+      $request_stack,
+      $this->mockChartBuilder,
+      $date_formatter,
+    );
   }
 
   /**
