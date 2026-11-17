@@ -69,6 +69,7 @@ abstract class HivelogApiKernelTestBase extends KernelTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
+    $this->installEntitySchema('hive_reminder');
     $this->installSchema('file', ['file_usage']);
     $this->installConfig(['system', 'user', 'jsonapi']);
     foreach ([
