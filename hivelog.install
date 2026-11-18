@@ -12,6 +12,7 @@ use Drupal\hivelog\Entity\Hive;
 use Drupal\hivelog\Entity\HiveActionLog;
 use Drupal\hivelog\Entity\HiveInspection;
 use Drupal\hivelog\Entity\InventoryItem;
+use Drupal\hivelog\Entity\HiveReminder;
 use Drupal\hivelog\Entity\InventoryPurchase;
 use Drupal\user\Entity\User;
 
@@ -1490,5 +1491,5 @@ function hivelog_install(): void {
  */
 function _hivelog_ensure_hive_reminder_entity_type(): void {
   // Trigger autoloading of the entity class so its annotation is available.
-  class_exists(\Drupal\hivelog\HiveReminder::class);
+  class_exists(HiveReminder::class);
 }
