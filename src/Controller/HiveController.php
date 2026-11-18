@@ -2,6 +2,7 @@
 
 namespace Drupal\hivelog\Controller;
 
+use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Controller\ControllerBase;
@@ -881,7 +882,7 @@ class HiveController extends ControllerBase {
         ->sort('due_date', 'ASC')
         ->execute();
     }
-    catch (\Drupal\Component\Plugin\Exception\PluginNotFoundException) {
+    catch (PluginNotFoundException) {
       return [[
         '#type' => 'container',
         '#attributes' => ['class' => ['hivelog-detail-section', 'hivelog-reminders'], 'id' => 'reminders'],
