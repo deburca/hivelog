@@ -203,7 +203,7 @@ jobs:
         working-directory: drupal-project
         run: |
           composer config repositories.hivelog \
-            '{"type":"path","url":"../hivelog-module","options":{"symlink":false}}'
+            '{"type":"path","url":"../hivelog-module","options":{"symlink":true}}'
 
       - name: Verify geofield patch paths
         # The module's composer.json records patch paths at the Packagist
