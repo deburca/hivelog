@@ -16,6 +16,7 @@ use Drupal\hivelog\Entity\Hive;
 use Drupal\hivelog\Entity\HiveActionLog;
 use Drupal\hivelog\Entity\HiveComponent;
 use Drupal\hivelog\Entity\HiveInspection;
+use Drupal\hivelog\Entity\HiveReminder;
 use Drupal\hivelog\Entity\InventoryItem;
 use Drupal\hivelog\Entity\InventoryPurchase;
 use Drupal\hivelog\Entity\Product;
@@ -103,6 +104,7 @@ class RouteEntityAccessTest extends KernelTestBase {
     'entity.inventory_purchase.add_form' => 'site-wide add, no parent context to check',
     'entity.product.collection' => 'collection page; row filtering is task 0124',
     'entity.product.add_form' => 'site-wide add, no parent context to check',
+    'entity.hive_reminder.collection' => 'collection page; row filtering is task 0124',
   ];
 
   /**
@@ -344,6 +346,16 @@ class RouteEntityAccessTest extends KernelTestBase {
     ]);
     $harvest->save();
     $this->fixtures['harvest_yield'] = $harvest;
+
+    // A reminder scoped to this hive (task 0274).
+    $reminder = HiveReminder::create([
+      'hive' => $hive->id(),
+      'title' => 'Test reminder',
+      'due_date' => '2026-12-01',
+      'uid' => $this->owner->id(),
+    ]);
+    $reminder->save();
+    $this->fixtures['hive_reminder'] = $reminder;
   }
 
   /**
