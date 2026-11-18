@@ -203,7 +203,7 @@ jobs:
         working-directory: drupal-project
         run: |
           composer config repositories.hivelog \
-            '{"type":"path","url":"../hivelog-module","options":{"symlink":true}}'
+            '{"type":"path","url":"../hivelog-module","options":{"symlink":false}}'
 
       - name: Verify geofield patch paths
         # The module's composer.json records patch paths at the Packagist
@@ -238,6 +238,21 @@ jobs:
           # dependency) available, and phpstan needs its classes to resolve.
           composer require --dev drupal/key drupal/simple_oauth \
             --no-interaction --no-progress --prefer-dist
+
+      - name: Remove Composer mirror to prevent autoload conflict
+        working-directory: drupal-project
+        run: |
+          # composer.json no longer has a PSR-4 autoload for hivelog. Drupal
+          # module class loader discovers classes from web/modules/contrib/hivelog/.
+          # The path repo mirrors source files into vendor/hivelog/hivelog which
+          # Composer would otherwise register as an additional autoload path if it
+          # had any namespace mappings. Since composer.json has no autoload block,
+          # these files are not autoloaded — but the drupal/core-autoloader plugin
+          # adds a classmap for web/modules/contrib/*, and Composer's own autoloader
+          # may still map vendor/hivelog/ via its fallback convention.
+          # Removing the mirror ensures only one physical copy exists.
+          rm -rf vendor/hivelog
+        if: always()
 
       - name: Install Drupal site
         working-directory: drupal-project
