@@ -184,7 +184,6 @@ jobs:
         with:
           path: drupal-project/vendor
           key: test-${{ matrix.php-version }}-composer-${{ hashFiles('hivelog-module/composer.json') }}
-          restore-keys: test-${{ matrix.php-version }}-composer-
 
       - name: Create Drupal project scaffold
         run: |
