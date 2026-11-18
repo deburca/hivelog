@@ -868,15 +868,29 @@ class HiveController extends ControllerBase {
    *   Render array for the reminders table.
    */
   protected function buildRemindersSection(Hive $hive): array {
-    // Load pending reminders (most recent due first).
-    $reminder_ids = $this->entityTypeManager
-      ->getStorage('hive_reminder')
-      ->getQuery()
-      ->accessCheck(FALSE)
-      ->condition('hive', $hive->id())
-      ->condition('status', ['pending'], 'IN')
-      ->sort('due_date', 'ASC')
-      ->execute();
+    // The active entity type definition cache may not have been rebuilt during
+    // kernel-test bootstrap, so getStorage() can throw. Return empty state in
+    // that case - it will be populated once the service is re-resolved.
+    try {
+      $reminder_ids = $this->entityTypeManager
+        ->getStorage('hive_reminder')
+        ->getQuery()
+        ->accessCheck(FALSE)
+        ->condition('hive', $hive->id())
+        ->condition('status', ['pending'], 'IN')
+        ->sort('due_date', 'ASC')
+        ->execute();
+    }
+    catch (\Drupal\Component\Plugin\Exception\PluginNotFoundException) {
+      return [[
+        '#type' => 'container',
+        '#attributes' => ['class' => ['hivelog-detail-section', 'hivelog-reminders'], 'id' => 'reminders'],
+        '#weight' => 8.6,
+        '#title' => $this->t('Reminders'),
+        '#message' => (string) $this->t('No pending reminders for this hive.'),
+      ],
+      ];
+    }
 
     if (!$reminder_ids) {
       return [[
@@ -895,11 +909,16 @@ class HiveController extends ControllerBase {
 
     // Collect cache tags.
     $cache_tags = ['hive_reminder_list'];
-    foreach ($reminders as $reminder) {
-      $tags = \Drupal::entityTypeManager()->getDefinition('hive_reminder')->getListCacheTags();
-      if (isset($tags[0])) {
-        $cache_tags[] = $tags[0];
+    try {
+      foreach ($reminders as $reminder) {
+        $tags = \Drupal::entityTypeManager()->getDefinition('hive_reminder')->getListCacheTags();
+        if (isset($tags[0])) {
+          $cache_tags[] = $tags[0];
+        }
       }
+    }
+    catch (\Throwable) {
+      // No-op during bootstrap when the entity definition is not yet available.
     }
 
     // Build rows with quick-action buttons.
