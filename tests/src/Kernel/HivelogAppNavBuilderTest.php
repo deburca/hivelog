@@ -232,7 +232,7 @@ class HivelogAppNavBuilderTest extends KernelTestBase {
 
     $submenu_keys = array_keys(array_filter($build['apiaries']['submenu'], fn($k) => is_string($k) && !str_starts_with((string) $k, '#'), ARRAY_FILTER_USE_KEY));
     $expected_submenu_keys = [
-      'hives', 'inspections', 'queens', 'queen_observations', 'calendar_actions',
+      'hives', 'inspections', 'reminders', 'queens', 'queen_observations', 'calendar_actions',
       'hivelog_app_nav_separator_0',
       'inventory_items', 'inventory_purchases', 'products',
     ];
