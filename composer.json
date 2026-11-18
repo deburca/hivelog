@@ -44,10 +44,5 @@
         "stan": "phpstan analyse --configuration=phpstan.neon"
     },
     "minimum-stability": "dev",
-    "prefer-stable": true,
-    "autoload": {
-        "psr-4": {
-            "Drupal\\hivelog\\": "src/"
-        }
-    }
+    "prefer-stable": true
 }
