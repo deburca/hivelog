@@ -7,7 +7,7 @@ project: "[[hive-log-frontend-polish]]"
 area: theme
 created: 2026-10-30
 branch: feat/sensor-charts-improved
-release: 4.2.0
+release:
 depends-on: ["[[0250-beeswax-theme-warm-palette]]"]
 blocked-by: []
 ---
@@ -112,3 +112,6 @@ anomalies at a glance.
 - Project:: [[hive-log-frontend-polish]]
 - Decisions:: [[0074-sensor-data-ingestion-architecture]], [[0106-hive-component-weight-tracking]]
 - Follows:: [[0250-beeswax-theme-warm-palette]]
+
+## Review 2026-11-22
+**Verdict: still wanted, task text is stale.** The task describes the histogram as a CSS bar chart in the default blue; it is an inline SVG from `HiveController` with a fixed amber fill (`#f2a42e`) and already has date and weight labels and tick marks. The sensor trend chart already draws a min/max band (`SensorTrendChartBuilder`), so the "baseline band" criterion is largely done. Still open: severity-encoded bars, an empty-weight reference line, axis titles, hover/focus tooltips, an emphasised net-weight chart, dual-axis temperature/humidity, and 6-hour binning. Rewrite the context and criteria from the current code before starting; severity thresholds need a decision first (no season/weight norm exists today).

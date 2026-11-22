@@ -7,7 +7,7 @@ project: "[[hive-log-frontend-polish]]"
 area: theme
 created: 2026-10-30
 branch: feat/beeswax-warm-palette
-release: 4.2.0
+release:
 depends-on: ["[[0061-beeswax-hivelog-skin]]"]
 blocked-by: []
 ---
@@ -103,3 +103,6 @@ and contrast checks against the proposed values all clear 4.5:1.
 - Project:: [[hive-log-frontend-polish]]
 - Decisions:: [[0060-visual-identity-in-site-theme]], [[0062-module-themeability-tokens]]
 - Follows:: [[0061-beeswax-hivelog-skin]]
+
+## Review 2026-11-22
+**Verdict: still wanted, smaller than written.** Not started. Module side still open: `css/hivelog.images.css:24` (`#f3f3f3`) and `css/hivelog.filter-form.css:45` (`#1a1a1a`) are still hard-coded. The histogram colours the task says live in `css/hivelog.weight-histogram.css` are actually inline `fill=`/`stroke=` attributes in the SVG template in `HiveController` (`#f2a42e`, `#333`, `#666`), so `--hivelog-chart-*` tokens also need that template changed (do it together with 0252). The warm palette itself is beeswax-side (cms2), a separate repo and release. The release target 4.2.0 is long past: retarget.
