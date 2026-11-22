@@ -7,7 +7,7 @@ project: "[[hive-log-frontend-polish]]"
 area: list-pages
 created: 2026-10-30
 branch: feat/inspection-list-grouping
-release: 4.2.0
+release:
 depends-on: ["[[0250-beeswax-theme-warm-palette]]"]
 blocked-by: []
 ---

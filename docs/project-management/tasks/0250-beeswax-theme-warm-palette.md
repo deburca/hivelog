@@ -7,7 +7,7 @@ project: "[[hive-log-frontend-polish]]"
 area: theme
 created: 2026-10-30
 branch: feat/beeswax-warm-palette
-release: 4.2.0
+release:
 depends-on: ["[[0061-beeswax-hivelog-skin]]"]
 blocked-by: []
 ---

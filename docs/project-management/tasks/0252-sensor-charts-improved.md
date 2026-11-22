@@ -7,7 +7,7 @@ project: "[[hive-log-frontend-polish]]"
 area: theme
 created: 2026-10-30
 branch: feat/sensor-charts-improved
-release: 4.2.0
+release:
 depends-on: ["[[0250-beeswax-theme-warm-palette]]"]
 blocked-by: []
 ---

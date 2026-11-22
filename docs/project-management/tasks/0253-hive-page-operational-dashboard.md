@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: backlog
+status: dropped
 priority: medium
 project: "[[hive-log-frontend-polish]]"
 area: theme

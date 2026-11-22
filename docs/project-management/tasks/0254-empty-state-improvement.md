@@ -7,8 +7,8 @@ project: "[[hive-log-frontend-polish]]"
 area: theme
 created: 2026-10-30
 branch: feat/empty-state-improvement
-release: 4.2.0
-depends-on: ["[[0252-sensor-charts-improved]]"]
+release:
+depends-on: []
 blocked-by: []
 ---
 # Task: Empty states — guide, not just inform
