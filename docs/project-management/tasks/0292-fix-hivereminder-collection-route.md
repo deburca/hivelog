@@ -1,3 +1,16 @@
+---
+type: task
+tags: [hivelog/task, bug]
+status: done
+priority: medium
+project:
+area: code-quality
+created: 2026-11-17
+branch:
+release: "4.4.1"
+depends-on:
+blocked-by:
+---
 # Task 0292: Fix HiveReminder collection route — missing handleList()
 
 ## Summary

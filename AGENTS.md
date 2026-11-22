@@ -11,7 +11,7 @@ here. When the module is installed into a Drupal site it lands at
 module-relative (e.g. `src/`, `css/`, `components/`, `tests/`).
 
 The module provides a beekeeping activity logger. Core (this repo's own
-`src/`) defines 17 content entity types; three of the five optional
+`src/`) defines 18 content entity types; three of the five optional
 submodules under `modules/` add 6 more between them (the other two,
 `assimilate` and `hivelog_api`, add none) — see "Content entities" and "Submodules" below. Apiaries, hives and inspections form a strict
 parent–child hierarchy; queens are tracked separately and linked to the hive
@@ -404,6 +404,35 @@ entities mirror each other one level removed (inputs vs. outputs):
   again on save). It is offered when the action has an expected harvest, the
   log already has a harvest, or the action's category starts with `harvest`.
   No JavaScript: one unplanned product a save.
+
+**Hive reminders** (task 0274) — `HiveReminder` is a one-off note about one hive on one date
+(the "check the queen is laying in five days" a beekeeper keeps in a notebook), separate from
+`CalendarAction`, which is apiary-wide and week-scheduled. Fields: `hive`, `title`, `notes`,
+`due_date` (a `datetime` date), `status` (`pending` | `done` | `dismissed`), and the owner/created
+fields. Edit and delete only: no canonical route (`entity.hive_reminder.collection` at
+`/hivelog/hive-reminders`, `.edit_form`, `.delete_form`, and the scoped add route
+`hivelog.hive_reminder.add`). It lives in `src/Entity/HiveReminder.php` like every other entity: the
+class name has to match its namespace and path, or the autoloader cannot find it (an earlier
+attempt declared it elsewhere and broke every test and CI). Access follows the hive's apiary
+(`HiveReminderAccessControlHandler`, through `ApiaryAccessTrait::resolveApiary()`, which resolves a
+reminder through its hive like a component); there are seven permissions (view, edit and delete
+each `own` and `any`, plus `add hive reminder`), and a route lists all of its alternatives with
+`administer hivelog`. The primary parent reference carries `HivelogParentAccess`. Registry row
+`0274-1` cascades a hive's reminders with the hive. `hivelog_update_10041` installs the entity type
+on an existing site from its own definition (a fresh install gets it from core). Three places
+surface it: the hive page's **Reminders** section (`HiveController::buildRemindersSection()`:
+heading, an Add Reminder button only where the user may add one, an entity-table; Done and Dismiss
+link to the edit form with `?status=`, which `HiveReminderForm` only *prefills*, so nothing changes
+until it is saved), the dashboard's Needs attention
+(`HivelogAlertCollector::collectReminderAlerts()`, apiary-scoped and access-checked: overdue or
+due within three days critical, within seven days a warning, later none; so the app's
+`computed/alerts` carries them too), and the **Next visit** section of the *new* inspection form
+(`HiveInspectionForm`: a date and an optional note, shown only to someone who may create a
+reminder, creating one on save; editing an inspection never creates one, and a date before today
+is refused). The inspection's reminder is validated like any write, so a hive the user may not
+update gives a warning and no reminder, never an exception. The reminder title is escaped where it
+is printed into the entity-table, which prints cells as raw HTML. Reminders are web-only; they are
+not in the field app's allow-list.
 
 **Hive composition and weight** (ADR-0106) — what physical components a
 hive is built from, so its empty weight can be netted out of a raw scale
@@ -1159,7 +1188,7 @@ count it used to state already had. Core's own:
   the delete form's dependency sections and (task 0141) the BLOCK access
   check. See `src/Delete/` and
   `docs/project-management/decisions/0103-delete-policy-for-records-with-children.md`
-  (ADR-0106 added two rows of its own, `0106-1` and `0106-2`). A BLOCK row may carry `cascade_unused` (task 0270, ADR-0103's amendment), naming the record type and field that mean a child is in use: only children in use block, the rest are deleted with the parent and counted as a cascade (`HivelogDeleteDependencyRegistry::splitByUse()`, used by the counter and the executor). Row 6 has it: a product nothing was harvested as goes with its apiary, so the starter Honey and Beeswax never make a new apiary undeletable.
+  (ADR-0106 added two rows of its own, `0106-1` and `0106-2`, and task 0274 one, `0274-1`). A BLOCK row may carry `cascade_unused` (task 0270, ADR-0103's amendment), naming the record type and field that mean a child is in use: only children in use block, the rest are deleted with the parent and counted as a cascade (`HivelogDeleteDependencyRegistry::splitByUse()`, used by the counter and the executor). Row 6 has it: a product nothing was harvested as goes with its apiary, so the starter Honey and Beeswax never make a new apiary undeletable.
 
 `hivelog.breadcrumb` is a `BreadcrumbBuilder` with priority **1004** that produces
 the Apiary → Hive → … trail on any hivelog route. Since task 0067 `applies()`

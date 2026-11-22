@@ -1,3 +1,16 @@
+---
+type: task
+tags: [hivelog/task, tech-debt]
+status: done
+priority: medium
+project:
+area: code-quality
+created: 2026-11-17
+branch:
+release: "4.4.1"
+depends-on:
+blocked-by:
+---
 # Task 0293: Fix controller instantiation in kernel/unit tests after \Drupal:: → DI refactor (task 0291)
 
 ## Summary

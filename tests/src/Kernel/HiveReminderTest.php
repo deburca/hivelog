@@ -212,4 +212,21 @@ class HiveReminderTest extends KernelTestBase {
     return $user;
   }
 
+  /**
+   * Row 0274-1: deleting a hive cascades its reminders.
+   */
+  public function testDeletingHiveCascadesReminders(): void {
+    $reminder = HiveReminder::create([
+      'hive' => $this->hive->id(),
+      'title' => 'Check the feeder',
+      'due_date' => date('Y-m-d', strtotime('+3 days')),
+    ]);
+    $reminder->save();
+    $reminder_id = $reminder->id();
+
+    $this->hive->delete();
+
+    $this->assertNull(HiveReminder::load($reminder_id));
+  }
+
 }

@@ -1,13 +1,13 @@
 ---
 type: task
 tags: [hivelog/task]
-status: in-progress
+status: done
 priority: medium
 project: "[[beekeeper-centred-simplification-and-gaps]]"
 area: entity
 created: 2026-11-14
 branch: feature/0274-single-hive-reminders
-release:
+release: "4.4.1"
 depends-on:
 blocked-by:
 ---
@@ -22,19 +22,13 @@ the queen is released in five days, look for eggs in three weeks, remove the str
 Today they can only go in an inspection's notes, which nothing reads back.
 
 ## Acceptance criteria
-- [ ] A reminder has a hive, a due date, a short text and done / dismissed
-- [ ] It can be added from the hive page and at the end of the inspection form ("Next visit")
-- [ ] Due and overdue reminders appear in Needs attention and on the hive page
-- [ ] Decide whether this is a new small entity or a non-recurring, single-hive `CalendarAction`; record it in the task or an ADR
-- [ ] Access, hierarchy, delete-registry rows and kernel tests if an entity is added
-- [ ] `AGENTS.md` updated if entity types, routes, services, hooks or conventions changed
 - [x] A reminder has a hive, a due date, a short text and done / dismissed
 - [x] It can be added from the hive page and at the end of the inspection form ("Next visit")
 - [x] Due and overdue reminders appear in Needs attention and on the hive page
 - [x] Decided: new `HiveReminder` entity (separate from `CalendarAction`)
 - [x] Access, hierarchy, delete-registry rows and kernel tests implemented
-- [ ] AGENTS.md updated if entity types, routes, services, hooks or conventions changed
-- [ ] phpcs clean; phpstan clean; kernel tests pass (`--group hivelog`)
+- [x] AGENTS.md updated if entity types, routes, services, hooks or conventions changed
+- [x] phpcs clean; phpstan clean; kernel tests pass (`--group hivelog`)
 
 ## Implementation (done)
 ### New entity: `HiveReminder`
@@ -73,7 +67,13 @@ Today they can only go in an inspection's notes, which nothing reads back.
 - Each alert has `kind: reminder`, `subject: hive`, action link to the edit form with status query param.
 
 ### Delete dependency registry
-- Row `0274-1`: parent=hive, child=hive_reminder, field=hive, treatment=WARN, manage=parent-canonical#reminders
+- Row `0274-1`: parent=hive, child=hive_reminder, field=hive, treatment=CASCADE, manage=parent-canonical#reminders
+  (added after the first release; until then deleting a hive left its reminders orphaned).
+
+### Next visit on the inspection form
+- A new inspection's form has a **Next visit** section (date, optional note) for anyone who may create a
+  reminder; saving creates a pending reminder on the hive. Not on edit, so editing never duplicates one.
+  A date before today is refused. The first release ticked this box without it existing.
 
 ### Nav strip
 - Added "Reminders" nav item under Apiaries (records group, weight 3, section hive_reminder).
