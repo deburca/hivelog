@@ -109,6 +109,8 @@ class HiveReminderPageTest extends KernelTestBase {
   public function testPageRendersWithDueAndOverdueReminders(): void {
     $html = (string) \Drupal::service('renderer')->renderInIsolation($this->page());
     $this->assertStringContainsString('id="reminders"', $html);
+    $this->assertStringContainsString('No pending reminders for this hive.', $html);
+    $this->assertStringContainsString('Add Reminder', $html);
 
     $this->reminder('Overdue one', -3);
     $this->reminder('Due today', 0);
@@ -116,13 +118,17 @@ class HiveReminderPageTest extends KernelTestBase {
     $build = $this->page();
 
     $this->assertArrayHasKey('reminders', $build);
-    $rows = $build['reminders'][0]['#rows'] ?? $build['reminders']['#rows'] ?? [];
+    $rows = $build['reminders']['table']['#props']['rows'] ?? [];
     $this->assertCount(3, $rows);
     // Due and overdue ones carry the chip, the one a week away does not.
     $this->assertStringContainsString('hivelog-stat-tile--critical', $rows[0]['cells'][1]);
     $this->assertStringContainsString('hivelog-stat-tile--critical', $rows[1]['cells'][1]);
     $this->assertStringNotContainsString('hivelog-stat-tile--critical', $rows[2]['cells'][1]);
-    (string) \Drupal::service('renderer')->renderInIsolation($build);
+    $html = (string) \Drupal::service('renderer')->renderInIsolation($build);
+    // The section shows its heading and the reminders, not just a container.
+    $this->assertStringContainsString('Reminders', $html);
+    $this->assertStringContainsString('Overdue one', $html);
+    $this->assertStringContainsString('Next week', $html);
   }
 
   /**
@@ -130,7 +136,7 @@ class HiveReminderPageTest extends KernelTestBase {
    */
   public function testTitleIsEscaped(): void {
     $this->reminder('<script>alert(1)</script>', 1);
-    $rows = $this->page()['reminders'][0]['#rows'] ?? $this->page()['reminders']['#rows'] ?? [];
+    $rows = $this->page()['reminders']['table']['#props']['rows'] ?? [];
 
     $this->assertNotEmpty($rows);
     $this->assertStringNotContainsString('<script>', $rows[0]['cells'][0]);

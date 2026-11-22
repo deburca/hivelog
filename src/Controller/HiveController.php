@@ -877,16 +877,7 @@ class HiveController extends ControllerBase {
       ->sort('due_date', 'ASC')
       ->execute();
 
-    if (!$reminder_ids) {
-      return [[
-        '#type' => 'container',
-        '#attributes' => ['class' => ['hivelog-detail-section', 'hivelog-reminders'], 'id' => 'reminders'],
-        '#weight' => 8.6,
-        '#title' => $this->t('Reminders'),
-        '#message' => (string) $this->t('No pending reminders for this hive.'),
-      ],
-      ];
-    }
+    $reminder_ids = $reminder_ids ?: [];
 
     // Only reminders the viewer may see: the hive page is open to anyone who
     // may view the hive, but a reminder has its own permission.
@@ -951,14 +942,44 @@ class HiveController extends ControllerBase {
       ];
     }
 
+    $heading = [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['hivelog-list-heading']],
+      'title' => [
+        '#type' => 'html_tag',
+        '#tag' => 'h2',
+        '#value' => $this->t('Reminders'),
+        '#attributes' => ['class' => ['hivelog-list-heading__title']],
+      ],
+    ];
+    $add_url = Url::fromRoute('hivelog.hive_reminder.add', ['hive' => $hive->id()]);
+    if ($add_url->access()) {
+      $heading['add'] = [
+        '#type' => 'component',
+        '#component' => 'hivelog:button',
+        '#props' => [
+          'label' => (string) $this->t('Add Reminder'),
+          'url' => $add_url->toString(),
+          'variant' => 'primary',
+          'extra_classes' => 'hivelog-list-heading__action',
+        ],
+      ];
+    }
+
     return [[
       '#type' => 'container',
       '#attributes' => ['class' => ['hivelog-detail-section', 'hivelog-reminders'], 'id' => 'reminders'],
-      '#weight' => 8.6,
-      '#title' => $this->t('Reminders'),
-      '#message' => (string) $this->t('No pending reminders for this hive.'),
-      '#cache' => ['tags' => array_unique($cache_tags)],
-      '#rows' => $rows,
+      '#cache' => ['tags' => array_unique($cache_tags), 'contexts' => ['user.permissions']],
+      'heading' => $heading,
+      'table' => [
+        '#type' => 'component',
+        '#component' => 'hivelog:entity-table',
+        '#props' => [
+          'headers' => [(string) $this->t('Reminder'), (string) $this->t('Due'), (string) $this->t('Actions')],
+          'rows' => $rows,
+          'empty_message' => (string) $this->t('No pending reminders for this hive.'),
+        ],
+      ],
     ],
     ];
   }

@@ -19,6 +19,12 @@ class HiveReminderForm extends ContentEntityForm {
    * {@inheritdoc}
    */
   public function form(array $form, FormStateInterface $form_state) {
+    // The hive page's Done and Dismiss links carry ?status=. Prefill it on
+    // the edit form only; nothing changes until the user saves.
+    $wanted = $this->getRequest()->query->get('status');
+    if (!$this->entity->isNew() && in_array($wanted, ['done', 'dismissed'], TRUE)) {
+      $this->entity->set('status', $wanted);
+    }
     $form = parent::form($form, $form_state);
 
     $form['#prefix'] = '<div class="hivelog-entity-form">';
