@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: backlog
+status: review
 priority: medium
 project: "[[beekeeper-centred-simplification-and-gaps]]"
 area: entity
@@ -36,5 +36,5 @@ decide which record it belongs in, or write both. Temperament alone is stored in
 
 ## Related
 - Project:: [[beekeeper-centred-simplification-and-gaps]]
-- Decisions:: 
+- Decisions:: [[0111-one-place-to-record-the-queen]] (proposed)
 - Commits:: 
