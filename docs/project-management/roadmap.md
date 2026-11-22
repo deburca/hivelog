@@ -2,150 +2,125 @@
 type: roadmap
 tags: [hivelog/roadmap]
 status: living
-updated: 2026-10-04
+updated: 2026-11-22
 ---
 # 🐝 Hivelog Roadmap
 A living roadmap derived from the projects, tasks, decisions, and releases in
 this vault. Sequencing is driven by dependencies and completed work rather than
-fixed dates. Last refreshed **2026-10-04**.
+fixed dates. Last refreshed **2026-11-22**.
 ## Where things stand
-183 tasks: **142 done**, 2 in-progress, 1 review, 36 backlog, 2 dropped —
-none in `todo`. 24 projects: **11 done**, 4 active, **8 planning**, 1
-dropped. 46 decisions: 45 accepted, 1 proposed.
-The latest release is **2.4.0** (2026-10-02). The 8 planning projects and
-their 24 backlog tasks (0174–0197) came out of the
-[[2026-10-04-beekeeping-software-market-survey]]. See "Planned projects"
-below.
+276 tasks: **208 done**, 2 in-progress, 1 review, 1 todo, 50 backlog, 10
+deferred, 4 dropped. 28 projects: **11 done**, 4 active, **11 planning**, 1
+backlog, 1 dropped. 50 decisions: 48 accepted, 2 proposed
+([[0083-ai-assisted-apiary-insights]], [[0109-entitlement-interface-commerce-gating]]).
+The latest release is **4.4.1** (2026-11-22), applied on the hvg site. HiveLog
+is hosted and tested on hvg (`hivelog.eu`); see AGENTS.md.
+Since the last refresh (2.4.0, 2026-10-04) the module went through three major
+versions. The market-survey work and the November audit
+([[2026-11-14-beekeeper-domain-audit]]) fed the planned projects below.
 ## Release timeline
-### ✅ Released
-26 versions, 1.1.0 through **2.4.0** (the latest tag). Each has its own
-note in `releases/`.
-- **Since 2.0.0:** [[2.1.0]] (2026-09-28) two-tier in-app navigation
-  (ADR-0104); [[2.2.0]] (2026-09-29) hive component weight tracking
-  (ADR-0106), with the [[2.2.1]] form fix; [[2.2.2]] (2026-10-02) nav
-  submenu on touch devices; [[2.3.0]] (2026-10-02) action log list
-  filters, with the [[2.3.1]] date-range and [[2.3.2]] queen-button fixes;
-  [[2.4.0]] (2026-10-02) sortable columns on collection lists.
-- **[[1.8.9]]** (2026-09-24) — the two security fixes:
-  [[0133-route-level-entity-access]] (closed an IDOR — no hivelog route
-  except one checked per-entity access, so "own"-only permissions passed for
-  another user's apiary or hive on view, edit, delete and Insights) and
-  [[0124-list-page-row-access-filter]] (stopped collection pages listing
-  other users' rows), plus [[0114-apiary-page-remove-ai-insights-indicator-add-sensor]].
-- **[[2.0.0]]** (2026-09-26, major bump — see below) — everything from the
-  2026-09-23 navigation and page-structure reviews, plus the delete-policy
-  work: [[0103-delete-policy-for-records-with-children]]
-  ([[0134-delete-dependency-framework]] and its four treatment tasks
-  [[0141-delete-block-relationships]], [[0142-delete-cascade-owned-records]],
-  [[0143-delete-detach-optional-references]],
-  [[0144-delete-warn-historical-references]], plus
-  [[0145-orphan-report-and-cleanup-command]]'s `drush hivelog:orphans`);
-  shared page-kind implementations
-  ([[0125-shared-detail-page-builder]], [[0126-unified-list-page-base]],
-  [[0127-shared-delete-form-base]], [[0128-page-heading-hierarchy]],
-  [[0129-cancel-link-on-add-edit-forms]],
-  [[0131-single-detail-table-css-class]],
-  [[0132-filters-on-hive-inspection-observation-lists]]); navigation
-  consistency ([[0116-breadcrumb-builder-parent-map-refactor]],
-  [[0117-breadcrumb-terminal-crumb-on-form-pages]],
-  [[0118-page-owned-edit-delete-then-retire-local-tasks]],
-  [[0119-single-source-navigation-registry]],
-  [[0120-app-nav-active-state-and-grouping]],
-  [[0121-reachability-of-orphaned-collection-pages]],
-  [[0122-top-level-entity-breadcrumb-threading]]); and housekeeping
-  ([[0135-submodule-create-permissions]],
-  [[0136-missing-collection-link-templates]],
-  [[0137-align-lint-static-analysis-and-test-gates]],
-  [[0138-refresh-agents-md]], [[0139-submodule-packaging-hygiene]],
-  [[0123-refresh-navigation-reference-docs]],
-  [[0140-controller-and-form-test-gaps]],
-  [[0130-shared-calendar-checklist-helpers]]).
-  [[0135-submodule-create-permissions]] removes the dead `edit own`/
-  `delete own` permissions on `api_client`/`ai_provider_config`, which is
-  why 2.0.0 is a major rather than minor bump per
-  [[0010-semantic-versioning-and-releases]].
-
-**beeswax paired release: 1.0.3** (github.com/deburca/beeswax, no PM
-vault of its own to link to), shipped 2026-09-26.
-Checked against all three tasks that flagged a beeswax follow-up in their
-own notes: [[0131-single-detail-table-css-class]] needed **no change** —
-correcting an earlier assumption here, it does not rename any class; the
-13 per-entity classes are kept alongside the new generic
-`hivelog-detail-table`/`hivelog-detail-section` per that task's own
-acceptance criteria, and beeswax's existing `[class^="hivelog-"]
-[class$="-table"]` wildcard selectors already matched the new class
-automatically. [[0128-page-heading-hierarchy]]'s h3→h2 change on the
-Financial Report headings did leave one beeswax selector dead, but with
-no visual regression (a generic `h2` rule already produced identical
-styling) — removed for cleanliness.
-[[0118-page-owned-edit-delete-then-retire-local-tasks]]'s deleted
-`hivelog.links.task.yml` / `hivelog.links.action.yml` left one more dead
-selector (`.action-links`, never reachable once no page renders local
-actions) — also removed.
+### ✅ Released since 2.4.0
+Each has its own note in `releases/`.
+- **2.5.0–2.8.1** (2026-10-04): calendar actions, action logs and the financial
+  report made discoverable ([[2.5.0]]); validation moved onto the entities
+  ([[2.6.0]]); the new optional **`hivelog_api`** submodule, a per-user OAuth
+  JSON:API for field apps ([[2.7.0]], ADR-0107), with computed views
+  ([[2.8.0]]).
+- **2.9.0–2.13.0** (2026-10-05 to 10-15): the API for the **Vinculum** iOS app:
+  sign-out ([[2.9.0]]), filtering and the schema endpoint ([[2.10.0]]), writes
+  through a host firewall ([[2.11.0]]), insights and hive tints ([[2.12.0]]),
+  editing and deleting ([[2.13.0]]).
+- **[[3.0.0]]** (2026-10-26, major): **apiary roles**. Every member has a role
+  (novice, beekeeper, owner) and access comes from that membership alone
+  (ADR-0108). Followed by UI polish ([[3.1.0]]), friendly 404 and 403 pages
+  ([[3.2.0]]), collapsing filters on a phone ([[3.3.0]]), the hive autocomplete
+  naming its apiary ([[3.4.0]]), a simpler nav strip ([[3.5.0]]) and linked
+  finance pages ([[3.6.0]]).
+- **[[4.0.0]]** (2026-10-30, major): the field-app API moves to the versioned
+  `/api/v1` prefix; a site can choose the prefix its pages use. [[4.1.0]]
+  adds discovery details for the app.
+- **[[4.2.0]]** (2026-11-11): choose or copy an apiary's seasonal calendar.
+  **[[4.3.0]]** (2026-11-13): apiary page tweaks. **[[4.4.0]]** (2026-11-16):
+  harvest consolidation ([[0110-one-harvest-record-plan-and-fact]]) and
+  calendar weeks shown as dates.
+- **[[4.4.1]]** (2026-11-22): one-off **hive reminders** (task 0274: entity,
+  hive page section, Needs attention alerts, a Next visit field on the
+  inspection form, cascade delete with the hive) and the repair of the build
+  the first attempt broke. Beekeeper roles on hvg have been granted the
+  reminder permissions.
 ## Active projects
-- **[[sensor-data-collection]]** — 13 tasks done. The software chain ships;
-  what's left is physical. [[0079-pilot-weight-sensor-hardware-build]] is
-  `in-progress` and is the only substantive non-release task ready to pick up
-  — its stale `blocked-by` (naming the already-`done`
-  [[0078-sensor-device-configuration-descriptor]]) has been cleared. Backlog:
-  [[0096-off-grid-gateway-power-design]],
+- **[[sensor-data-collection]]** — the software chain ships; what is left is
+  physical. [[0079-pilot-weight-sensor-hardware-build]] is `in-progress`.
+  Backlog: [[0096-off-grid-gateway-power-design]],
   [[0115-varroa-camera-sensor-hardware-build]].
-- **[[seasonal-calendar-and-hive-action-tracking]]** — all 11 build tasks done,
-  including [[0027-apiary-vs-hive-scoped-calendar-items]] (the `ApiaryActionLog`
-  work an earlier roadmap listed as "designed but not started"). Only the
-  umbrella [[0026-post-testing-refinements]] is open; its single recorded item
-  is done, so it is idle until more hands-on feedback arrives — worth either
-  adding items or closing.
-- **[[inventory-and-yield-improvements]]** — 8 done, 7 in backlog
+- **[[seasonal-calendar-and-hive-action-tracking]]** — all build tasks done.
+  Only the umbrella [[0026-post-testing-refinements]] is open and idle:
+  add items or close it.
+- **[[inventory-and-yield-improvements]]** — 7 backlog tasks, all `low`
   ([[0046-real-sales-ledger]], [[0047-cross-apiary-aggregate-views]],
   [[0048-unit-conversion]], [[0050-fifo-lot-costing]],
   [[0051-expected-unit-price-audit-trail]],
   [[0052-merge-usage-and-yield-form-traits]],
-  [[0053-product-category-field]]). All `low` priority; the sales ledger is the
-  one that would unlock true profitability rather than potential income.
-- **[[ai-apiary-insights]]** — 14 done across `collective`, `nexus` and the
+  [[0053-product-category-field]]). The sales ledger is the one that would
+  unlock true profitability.
+- **[[ai-apiary-insights]]** — shipped across `collective`, `nexus` and the
   dashboard. [[0094-ai-insights-prelaunch-validation]] remains in backlog and
   is the gate before pointing this at real beekeepers.
-## Planned projects (from the 2026-10-04 market survey)
-All 8 are `planning`; every task is `backlog`. Any task that adds an entity
-or changes access starts with an ADR task, and the tasks after it depend on
-that ADR.
-- **[[qr-hive-labels]]** (B, high) — [[0177-hive-quick-access-page]] →
-  [[0178-printable-qr-label-sheet]]. Smallest win; the QR helper is reused by
-  G.
-- **[[data-export-and-printable-records]]** (A, high) —
+## Planning projects
+Any task that adds an entity or changes access starts with an ADR task, and
+the tasks after it depend on that ADR.
+- **[[beekeeper-centred-simplification-and-gaps]]** (from the 2026-11-14
+  audit; the largest source of near-term work). Tasks 0269–0274 and 0283–0288
+  are done (ended hives, harvest without a calendar action, starter products,
+  inspection-lapse alerts, reminders, dates for weeks, the one harvest
+  record). Open: [[0275-plain-language-vocabulary]],
+  [[0276-navigation-by-beekeeper-job]],
+  [[0277-queen-observation-and-inspection-overlap-adr]] (the suggested first
+  step: an ADR, and 0278 and 0279 lean on it),
+  [[0278-supers-one-source-of-truth]],
+  [[0279-quick-inspection-and-colony-strength]],
+  [[0280-queen-and-colony-acquisition-cost-in-reports]],
+  [[0281-queen-end-reason-and-marking]], [[0282-hive-type-and-material-lists]]
+  and [[0289-fix-pre-existing-phpcs-warnings-and-errors]].
+- **[[ios-field-app]]** — the app lives in its own repository (Vinculum); the
+  tasks here that moved there are `deferred`. Open here: the demo-site kit
+  [[0215-demo-site-kit]] (`review`) and
+  [[0235-keep-the-nested-demo-site-out-of-module-discovery]] (`todo`).
+- **[[qr-hive-labels]]** (high) — [[0177-hive-quick-access-page]] →
+  [[0178-printable-qr-label-sheet]]. The app's scanning is done in Vinculum;
+  the web page and label sheet are not built.
+- **[[data-export-and-printable-records]]** (high) —
   [[0174-collection-csv-export]], [[0175-printable-hive-record]],
-  [[0176-apiary-export-bundle]]. 0174 feeds D's register report.
-- **[[treatment-register]]** (D, high) — [[0182-treatment-register-adr]] →
+  [[0176-apiary-export-bundle]].
+- **[[treatment-register]]** (high) — [[0182-treatment-register-adr]] →
   [[0183-treatment-entity-and-ui]] → [[0185-treatment-register-report]];
   [[0184-varroa-trend-and-threshold-alert]] can start straight away.
-- **[[sensor-event-detection]]** (H, medium, nanoprobe) —
-  [[0195-weight-step-change-detection]] →
-  [[0196-sensor-event-alerts-and-confirmation]];
-  [[0197-hive-opened-detection]]. Tune against real data from
-  [[0079-pilot-weight-sensor-hardware-build]].
-- **[[weather-aware-inspection-planning]]** (C, medium) —
-  [[0179-weather-forecast-adr-and-client]] →
-  [[0180-inspection-window-panel]], [[0181-inspection-weather-snapshot]].
-  Sends apiary coordinates to a third party, so it's opt-in.
-- **[[colony-lifecycle-events]]** (E, medium) — [[0186-colony-lifecycle-adr]]
-  → [[0187-colony-event-entity-and-timeline]],
-  [[0188-hive-lineage-and-moves]].
-- **[[honey-sales-and-batch-provenance]]** (G, low) —
-  [[0192-sales-and-batch-adr]] (resolves the ADR prerequisite on
-  [[0046-real-sales-ledger]]) → [[0193-honey-batch-entity]] →
+- **[[sensor-event-detection]]** (medium) — [[0195-weight-step-change-detection]]
+  → [[0196-sensor-event-alerts-and-confirmation]]; [[0197-hive-opened-detection]].
+  Tune against real data from [[0079-pilot-weight-sensor-hardware-build]].
+- **[[weather-aware-inspection-planning]]** (medium) —
+  [[0179-weather-forecast-adr-and-client]] → [[0180-inspection-window-panel]],
+  [[0181-inspection-weather-snapshot]]. Sends apiary coordinates to a third
+  party, so it is opt-in.
+- **[[colony-lifecycle-events]]** (medium) — [[0186-colony-lifecycle-adr]] →
+  [[0187-colony-event-entity-and-timeline]], [[0188-hive-lineage-and-moves]].
+- **[[honey-sales-and-batch-provenance]]** (low) —
+  [[0192-sales-and-batch-adr]] → [[0193-honey-batch-entity]] →
   [[0194-public-batch-provenance-page]].
-- **[[shared-apiaries-and-team-roles]]** (F, medium, largest — Layer 2: membership roles) —
-   [[0189-apiary-membership-access-adr]] →
-   [[0223-apiary-membership-entity-and-ui]] →
-   [[0224-permission-granularity-by-role]] →
-   [[0191-membership-aware-access-handlers]]. Touches every access check;
-   may need a major version bump.
-
-- **[[hivelog-commerce-submodule]]** (F-1, medium — Layer 1: commerce entitlement) —
-   [[0225-hivelog-entitlement-interface]] →
-   [[0226-hivecount-quota-enforcement]]. Separate repository; no core dependency on commerce.
-   Enables SaaS / hosted deployment where subscribers auto-get apiaries.
+- **[[shared-apiaries-and-team-roles]]** — Layer 2 (roles) shipped in 3.0.0;
+  its project note still reads `planning`. Left: [[0230-inspection-records-items-used]]
+  and the entitlement tasks [[0225-hivelog-entitlement-interface]],
+  [[0226-hivecount-quota-enforcement]].
+- **[[hivelog-commerce-submodule]]** — [[0227-hivelog-commerce-submodule-repo]]
+  (a separate repository; no core dependency on commerce), after
+  [[0109-entitlement-interface-commerce-gating]] is accepted.
+## Backlog project
+**[[hive-log-frontend-polish]]** — reviewed 2026-11-22 against the code.
+[[0253-hive-page-operational-dashboard]] was dropped (superseded by the
+stat-tile work, tasks 0256–0259). Still wanted, trimmed:
+[[0250-beeswax-theme-warm-palette]], [[0251-inspection-list-grouping]],
+[[0252-sensor-charts-improved]], [[0254-empty-state-improvement]] (the empty
+states of 0251 fold into 0254).
 ## Completed projects
 [[mobile-ux-improvements]], [[action-button-consistency]],
 [[breadcrumb-consistency]], [[page-structure-consistency]],
@@ -156,48 +131,45 @@ that ADR.
 [[collection-page-filter-coverage]] are all `done`.
 ## Dropped projects
 **[[queen-observation-enhancements]]**, 2026-09-26. Its only undelivered goal
-(CSV export, [[0001-queen-observation-csv-export]]) was judged unnecessary on
-review and dropped; its other task
-([[0002-breadcrumb-queen-canonical]]) was already satisfied by existing code.
+(CSV export) was judged unnecessary and dropped.
 ## Decision gate
-**45 accepted · 1 proposed.** Nothing blocks execution.
-[[0083-ai-assisted-apiary-insights]], deliberately under-specified as a
-future-phase umbrella, has since been overtaken in practice: [[0100-nexus-in-process-ai-synthesis]]
-records it as *partially* superseded, and the insights feature shipped via
-[[0087-ai-insights-hosting-and-privacy-model]] /
-[[0088-ai-insights-implementation]] / ADR-0100. Worth deciding whether it
-should now read `superseded`.
+**48 accepted · 2 proposed.** Nothing blocks execution.
+[[0083-ai-assisted-apiary-insights]], an under-specified umbrella, has been
+overtaken in practice ([[0100-nexus-in-process-ai-synthesis]] records it as
+partially superseded): worth deciding whether it should read `superseded`.
+[[0109-entitlement-interface-commerce-gating]] is the gate for the commerce
+tasks.
 ## Unassigned tasks
 Two backlog tasks belong to no project: [[0003-apiary-map-marker-clustering]]
-(a future map-UX initiative) and
-[[0055-embed-required-items-and-expected-yield-in-calendar-action-edit-form]].
+and [[0055-embed-required-items-and-expected-yield-in-calendar-action-edit-form]].
 ## Recommended sequence
-1. Finish [[0079-pilot-weight-sensor-hardware-build]] — unblocked now that its
-   stale `blocked-by` is cleared — the last step in
-   [[sensor-data-collection]]'s original chain.
-2. Decide the fate of the idling [[0026-post-testing-refinements]] umbrella
-   task — add another item or close it.
-3. Re-status [[0083-ai-assisted-apiary-insights]], then run
-   [[0094-ai-insights-prelaunch-validation]] before any real-world AI rollout.
-4. Pick up [[inventory-and-yield-improvements]]' backlog only when a real need
-   surfaces — every item there is `low` and speculative.
-5. Close out [[0172-decide-nav-reachability-of-calendar-logs-and-report]]
-   (in `review`).
-6. Start the planned projects in the survey's recommended order:
-   [[qr-hive-labels]] → [[data-export-and-printable-records]] →
-   [[treatment-register]] → [[sensor-event-detection]], then
-   [[weather-aware-inspection-planning]], [[colony-lifecycle-events]],
-   [[honey-sales-and-batch-provenance]],
-   [[shared-apiaries-and-team-roles]] and
+1. Write [[0277-queen-observation-and-inspection-overlap-adr]], which
+   unblocks 0278 and 0279, then the two other medium tasks of the audit
+   project ([[0275-plain-language-vocabulary]],
+   [[0276-navigation-by-beekeeper-job]]).
+2. Build one shared empty-state helper ([[0254-empty-state-improvement]],
+   with the empty states of 0251).
+3. Start [[qr-hive-labels]] (web page and label sheet), the smallest of the
+   high-priority survey projects, then [[data-export-and-printable-records]]
+   and [[treatment-register]].
+4. Housekeeping: close or extend [[0026-post-testing-refinements]]; decide
+   [[0083-ai-assisted-apiary-insights]]; update the project notes for
+   [[shared-apiaries-and-team-roles]] and [[ios-field-app]] to say what
+   shipped; run [[0094-ai-insights-prelaunch-validation]] before any
+   real-world AI rollout.
+5. Pick up [[inventory-and-yield-improvements]] only when a real need surfaces;
+   every item there is `low` and speculative.
+6. Later: [[sensor-event-detection]], [[weather-aware-inspection-planning]],
+   [[colony-lifecycle-events]], [[honey-sales-and-batch-provenance]] and
    [[hivelog-commerce-submodule]].
 ## Current state
 ```mermaid
 flowchart LR
-  Rel(["2.4.0 released<br/>2026-10-02"])
-  Survey(["market survey<br/>2026-10-04"]) --> Plan["9 planning projects<br/>tasks 0174–0226"]
-  Plan --> B["B QR labels"] --> A["A export"] --> D["D treatments"] --> H["H sensor events"]
-  S["F Shared apiaries"] --> M["M1 Commerce submodule"]
-  T79["0079 pilot hardware<br/>in-progress, unblocked"] --> Sensors(["sensor-data-collection<br/>chain complete"])
+  Rel(["4.4.1 released<br/>2026-11-22"])
+  Audit(["beekeeper audit<br/>2026-11-14"]) --> A277["0277 ADR<br/>overlap"] --> A278["0278 supers<br/>0279 quick inspection"]
+  Audit --> A275["0275 vocabulary<br/>0276 navigation"]
+  Rel --> Q["qr-hive-labels"] --> E["data export"] --> T["treatment register"]
+  T79["0079 pilot hardware<br/>in-progress"] --> Sensors(["sensor-data-collection"])
   T26["0026 refinements<br/>idle"] --> Decide{{"add items<br/>or close"}}
 ```
 ## Live snapshot — open tasks by project
