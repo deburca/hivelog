@@ -1,7 +1,7 @@
 ---
 type: decision
 tags: [hivelog/decision]
-status: proposed
+status: accepted
 date: 2026-11-22
 supersedes:
 ---
@@ -9,9 +9,9 @@ supersedes:
 # ADR-0111: One place to record what was seen of the queen, and which temperament is true
 
 ## Status
-proposed, 2026-11-22. Written for task [[0277-queen-observation-and-inspection-overlap-adr]]
-(from the [[2026-11-14-beekeeper-domain-audit]]). Waiting on the maintainer's answers to
-the three questions at the end.
+accepted, 2026-11-22, by the maintainer, as proposed, with the three questions below
+answered as recommended. Written for task [[0277-queen-observation-and-inspection-overlap-adr]]
+(from the [[2026-11-14-beekeeper-domain-audit]]).
 
 ## Context
 What a beekeeper sees of the queen can be written in two entities, and one of its facts
@@ -96,17 +96,16 @@ booleans.
   a hive whose temperament was hand-edited will take the next inspection's value, which a
   beekeeper may not expect (the form description says so); an observation made from an
   inspection is not linked to it.
-- Follow-up tasks: to create once accepted. (1) Queen observation section on the
-  inspection form. (2) Temperament cache on inspection and observation save, with the
-  form descriptions. (3) A documentation pass (AGENTS.md, the field help texts). Each is
-  small and none needs an update hook, because no field is added.
+- Follow-up tasks: [[0294-inspection-form-queen-observation-section]],
+  [[0295-temperament-cache-on-inspection-and-observation-save]],
+  [[0296-document-when-inspection-and-queen-observation-apply]]. None needs an update
+  hook, because no field is added.
 
-## Questions for the maintainer
-1. Is a cache of the latest record the right meaning for Hive and Queen temperament, or
-   should those two fields be removed from the forms entirely (they would stay in the
-   API)?
-2. Should an observation made from an inspection be linked to it (an optional
-   `inspection` field, an additive API change and an update hook), so the two can be
-   edited and deleted together?
-3. Is health the only observation field worth offering on the inspection form, or
-   should it stay a separate form for everything but laying?
+## Questions, and the answers
+1. *Is a cache of the latest record the right meaning for Hive and Queen temperament, or
+   should the fields leave the forms?* A cache. The fields stay on the forms as a starting
+   value.
+2. *Should an observation made from an inspection link back to it?* No. It stays an
+   independent queen record; no `inspection` field.
+3. *Which fields does the inspection form's section offer?* Health and Actively laying
+   (pre-filled from Eggs seen). Notes and photos stay on the separate observation form.
