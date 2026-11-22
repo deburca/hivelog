@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: backlog
+status: done
 priority: medium
 project: "[[beekeeper-centred-simplification-and-gaps]]"
 area: entity
@@ -23,12 +23,12 @@ decide which record it belongs in, or write both. Temperament alone is stored in
 `Hive`, `Queen`, `HiveInspection` and `QueenObservation`, with nothing keeping them in step.
 
 ## Acceptance criteria
-- [ ] An ADR decides between: (a) the inspection form writes an optional queen observation in the same save, (b) observations become a section of the inspection and the separate entity is retired, (c) keep both and document when each applies
-- [ ] It decides which temperament is the truth; proposal: recorded per inspection, with the hive's and queen's shown as derived from recent records, not hand-edited
-- [ ] It states the effect on the v1 API contract (queen observation is an exposed resource) and on the Vinculum app
-- [ ] Follow-up implementation tasks are created from the accepted ADR
-- [ ] `AGENTS.md` updated if entity types, routes, services, hooks or conventions changed
-- [ ] phpcs clean; phpstan clean; kernel tests pass (`--group hivelog`)
+- [x] An ADR decides between: (a) the inspection form writes an optional queen observation in the same save, (b) observations become a section of the inspection and the separate entity is retired, (c) keep both and document when each applies
+- [x] It decides which temperament is the truth; proposal: recorded per inspection, with the hive's and queen's shown as derived from recent records, not hand-edited
+- [x] It states the effect on the v1 API contract (queen observation is an exposed resource) and on the Vinculum app
+- [x] Follow-up implementation tasks are created from the accepted ADR
+- [x] `AGENTS.md` updated if entity types, routes, services, hooks or conventions changed
+- [x] phpcs clean; phpstan clean; kernel tests pass (`--group hivelog`) (docs only, nothing to run)
 
 ## Implementation notes
 - Key files: `src/Entity/HiveInspection.php`, `src/Entity/QueenObservation.php`, `src/Entity/Hive.php`, `src/Entity/Queen.php`, `modules/hivelog_api/tests/fixtures/api-v1-contract.json`
@@ -36,5 +36,5 @@ decide which record it belongs in, or write both. Temperament alone is stored in
 
 ## Related
 - Project:: [[beekeeper-centred-simplification-and-gaps]]
-- Decisions:: 
+- Decisions:: [[0111-one-place-to-record-the-queen]] (accepted)
 - Commits:: 
