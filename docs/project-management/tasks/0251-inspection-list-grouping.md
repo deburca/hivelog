@@ -138,3 +138,6 @@ lower priority than the empty states and date grouping above.
 - Project:: [[hive-log-frontend-polish]]
 - Depends on:: [[0250-beeswax-theme-warm-palette]] (palette shift)
 - Follows:: Task 0240 (filter form collapsible panel), Task 0239 (collection page sorting)
+
+## Review 2026-11-22
+**Verdict: still wanted, split in two.** Not started: no date grouping in `HiveController` and the empty states are still plain text with no button ("No inspections have been recorded for this hive yet.", the observation equivalents). Fold the empty-state half into 0254 (same work, same pattern). Date grouping on its own is low value: same-day double inspections are rare and the stat-tile work (0256-0259) already improved scanning. The calendar messages the task quotes no longer match `HivelogCalendarChecklistBuilder` (it now has per-scope and per-status messages), so redo that part from the current code. Optional filter-feedback pill: still unbuilt, lowest priority.

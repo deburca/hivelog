@@ -173,3 +173,6 @@ Inventory purchases, product yields, and hive component costs appear here as you
 - Project:: [[hive-log-frontend-polish]]
 - Follows:: [[0252-sensor-charts-improved]]
 - See also:: [[0251-inspection-list-grouping]] (empty states for filtered vs. genuinely empty)
+
+## Review 2026-11-22
+**Verdict: still wanted, partly started.** Already in place: the dashboard welcome card with "Add your first apiary"; a new apiary starts with a seeded calendar, so the Calendar Actions empty case is rare. Still plain text with no action: apiary with no hives ("No hives have been added to this apiary yet."), hive with no queen ("No active queen is recorded for this hive."), no sensors ("No sensors are registered here yet."), inspections and observations (see 0251). Financial-report empty state not checked. Best shape: one shared empty-state helper (message plus one button, shown only when the user may add) used by all of these. Depends on 0252 in its header, but they do not actually depend on each other: drop that.

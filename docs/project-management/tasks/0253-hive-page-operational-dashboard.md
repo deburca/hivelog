@@ -125,3 +125,6 @@ The hive entity fields (`$build['hive']`) are rendered by core's default view bu
 ## Related
 - Project:: [[hive-log-frontend-polish]]
 - Follows:: [[0251-inspection-list-grouping]], [[0250-beeswax-theme-warm-palette]]
+
+## Review 2026-11-22
+**Verdict: superseded.** Its core aims shipped through tasks 0256-0259: the hive page now opens with a stat-tile strip (status, type, queen, empty weight, harvest this year), the inspection, queen and apiary pages follow the same pattern, and Needs attention carries the alerts. Page order is now different from what this task describes (reminders, harvest history and harvests sections exist), so its structure no longer applies. Two ideas were not built: a severity banner at the top of the hive page, and moving the Queen section into Hive Activity. If either is wanted, raise a new small task from the current page. Dropped.
