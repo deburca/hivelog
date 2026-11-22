@@ -349,6 +349,16 @@ final class HivelogDeleteDependencyRegistry {
       // management target.
       'manage' => NULL,
     ],
+    // Task 0274: a reminder is a note about one hive, so it goes with the hive,
+    // as the hive's components do.
+    [
+      'adr_row' => '0274-1',
+      'parent' => 'hive',
+      'child' => 'hive_reminder',
+      'field' => 'hive',
+      'treatment' => self::CASCADE,
+      'manage' => 'parent-canonical#reminders',
+    ],
   ];
 
   /**

@@ -4,6 +4,7 @@ namespace Drupal\hivelog\Form;
 
 use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\hivelog\Entity\HiveReminder;
 
 /**
  * Form handler for Hive Inspection add/edit forms.
@@ -107,6 +108,30 @@ class HiveInspectionForm extends ContentEntityForm {
       }
     }
 
+    // Next visit (task 0274): a reminder written with the inspection, offered
+    // on a new inspection only, so editing one never creates a second.
+    if ($this->canAddNextVisit()) {
+      $form['next_visit_section'] = [
+        '#type' => 'details',
+        '#title' => $this->t('Next visit'),
+        '#group' => 'inspection_sections',
+        '#weight' => 9,
+        '#open' => FALSE,
+      ];
+      $form['next_visit_section']['next_visit_date'] = [
+        '#type' => 'date',
+        '#title' => $this->t('Remind me on'),
+        '#description' => $this->t('Optional. Creates a reminder on this hive for that day, shown on the hive page and in Needs attention.'),
+      ];
+      $form['next_visit_section']['next_visit_note'] = [
+        '#type' => 'textfield',
+        '#title' => $this->t('Reminder'),
+        '#maxlength' => 255,
+        '#placeholder' => $this->t('Next visit'),
+        '#description' => $this->t('What to do or look for. Left empty, the reminder reads "Next visit".'),
+      ];
+    }
+
     // Hide dependent fields when their controlling boolean is unchecked so
     // users are not asked for information that is not applicable. With JS
     // disabled these fields stay visible (non-JS safe) and the server
@@ -154,6 +179,29 @@ class HiveInspectionForm extends ContentEntityForm {
     // The "required when" rules (feed type when fed, varroa count when a
     // check was done) are entity constraints now, run by the parent.
     parent::validateForm($form, $form_state);
+
+    $this->validateNextVisit($form_state);
+  }
+
+  /**
+   * Refuses a next-visit date before today.
+   */
+  public function validateNextVisit(FormStateInterface $form_state): void {
+    $next_visit = (string) $form_state->getValue('next_visit_date');
+    if ($next_visit !== '' && $next_visit < date('Y-m-d')) {
+      $form_state->setErrorByName('next_visit_date', $this->t('The next visit cannot be before today.'));
+    }
+  }
+
+  /**
+   * Whether this form offers a next-visit reminder.
+   *
+   * Only a new inspection offers one, and only to someone who may create a
+   * reminder.
+   */
+  protected function canAddNextVisit(): bool {
+    return $this->entity->isNew()
+      && $this->entityTypeManager->getAccessControlHandler('hive_reminder')->createAccess();
   }
 
   /**
@@ -206,6 +254,8 @@ class HiveInspectionForm extends ContentEntityForm {
    */
   public function save(array $form, FormStateInterface $form_state) {
     $entity = $this->entity;
+    // Read before saving: the inspection is no longer new afterwards.
+    $offer_next_visit = $this->canAddNextVisit();
     $status = $entity->save();
 
     if ($status === SAVED_NEW) {
@@ -215,14 +265,44 @@ class HiveInspectionForm extends ContentEntityForm {
       $this->messenger()->addStatus($this->t('Inspection has been updated.'));
     }
 
-    // Redirect to the parent hive view.
     $hive_id = $entity->get('hive')->target_id;
+    if ($offer_next_visit && $hive_id) {
+      $this->createNextVisitReminder((int) $hive_id, $form_state);
+    }
+
+    // Redirect to the parent hive view.
     if ($hive_id) {
       $form_state->setRedirect('entity.hive.canonical', ['hive' => $hive_id]);
     }
     else {
       $form_state->setRedirect('entity.apiary.collection');
     }
+  }
+
+  /**
+   * Creates the "Next visit" reminder, if one was asked for.
+   *
+   * The reminder is validated like any other write, so a hive the user may not
+   * update gets a message and no reminder rather than an exception; the
+   * inspection itself is already saved.
+   */
+  protected function createNextVisitReminder(int $hive_id, FormStateInterface $form_state): void {
+    $due = (string) $form_state->getValue('next_visit_date');
+    if ($due === '') {
+      return;
+    }
+    $title = trim((string) $form_state->getValue('next_visit_note'));
+    $reminder = HiveReminder::create([
+      'hive' => $hive_id,
+      'title' => $title !== '' ? $title : (string) $this->t('Next visit'),
+      'due_date' => $due,
+    ]);
+    if ($reminder->validate()->count() > 0) {
+      $this->messenger()->addWarning($this->t('The inspection was saved, but the reminder could not be created.'));
+      return;
+    }
+    $reminder->save();
+    $this->messenger()->addStatus($this->t('Reminder set for @date.', ['@date' => $due]));
   }
 
 }
