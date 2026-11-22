@@ -277,6 +277,8 @@ view any hive reminder:
   title: 'View any hive reminder'
 add hive reminder:
   title: 'Add a hive reminder'
+edit own hive reminder:
+  title: 'Edit own hive reminders'
 edit any hive reminder:
   title: 'Edit any hive reminder'
 delete own hive reminder:

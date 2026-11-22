@@ -56,6 +56,7 @@ class DashboardTest extends KernelTestBase {
     $this->installEntitySchema('apiary');
     $this->installEntitySchema('apiary_membership');
     $this->installEntitySchema('hive');
+    $this->installEntitySchema('hive_reminder');
     $this->installEntitySchema('hive_inspection');
     $this->installEntitySchema('queen');
     $this->installEntitySchema('queen_observation');

@@ -528,7 +528,7 @@ class ListSortTest extends KernelTestBase {
     $build = $this->calendarActionsPage(['sort' => 'title', 'order' => 'asc', 'week_from' => '10', 'page' => '2']);
     $sorts = $build['table']['#props']['column_sorts'];
     $this->assertSame(
-      ['Title', 'Apiary', 'Scope', 'Category', 'Week(s)', 'Enabled'],
+      ['Title', 'Apiary', 'Scope', 'Category', 'When', 'Enabled'],
       array_keys($sorts),
       'Operations is not sortable.'
     );

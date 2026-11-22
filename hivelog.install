@@ -12,7 +12,6 @@ use Drupal\hivelog\Entity\Hive;
 use Drupal\hivelog\Entity\HiveActionLog;
 use Drupal\hivelog\Entity\HiveInspection;
 use Drupal\hivelog\Entity\InventoryItem;
-use Drupal\hivelog\Entity\HiveReminder;
 use Drupal\hivelog\Entity\InventoryPurchase;
 use Drupal\user\Entity\User;
 
@@ -1430,66 +1429,18 @@ function hivelog_update_10040(&$sandbox) {
 }
 
 /**
- * Installs the HiveReminder entity type and schema (task 0274).
+ * Installs the HiveReminder entity type (task 0274).
+ *
+ * For a site that already has the module: a fresh install gets the table from
+ * core, which installs a module's own entity types before it runs
+ * hook_install(), so the module needs no hook_install() for this. Safe to run
+ * twice.
  */
 function hivelog_update_10041() {
-  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
-  $entity_type_manager = \Drupal::entityTypeManager();
-
-  // Install the HiveReminder entity type if not yet registered.
-  if (!$definition_update_manager->getEntityType('hive_reminder')) {
-    _hivelog_ensure_hive_reminder_entity_type();
-    $reminder_type = \Drupal::entityTypeManager()->getDefinition('hive_reminder');
-    $definition_update_manager->installEntityType($reminder_type);
+  $update_manager = \Drupal::entityDefinitionUpdateManager();
+  if ($update_manager->getEntityType('hive_reminder')) {
+    return t('The hive reminder entity type already exists.');
   }
-
-  return t('Created the HiveReminder entity type and schema.');
-}
-
-/**
- * Install the HiveReminder entity type on module install.
- *
- * Kernel tests enable modules via $modules but don't run update hooks,
- * so the hive_reminder entity type would be missing from the definition
- * cache at container build time. This ensures it's registered when
- * hivelog is first enabled, whether via drush or kernel test setup.
- */
-
-/**
- * Install the HiveReminder entity type and schema on module install.
- *
- * Kernel tests enable modules via $modules but don't run update hooks,
- * so we must install both the definition cache entry and the schema here —
- * not just in hivelog_update_10041().
- */
-function hivelog_install(): void {
-  // During module_enable (kernel tests) the definition cache has not been
-  // rebuilt yet, so getDefinition() may fail. We catch and move on — update
-  // hooks handle actual schema install on drush enable.
-  $entity_type_manager = \Drupal::entityTypeManager();
-
-  try {
-    $reminder_type = $entity_type_manager->getDefinition('hive_reminder');
-  }
-  catch (\Throwable $e) {
-    return;
-  }
-
-  if ($reminder_type === NULL) {
-    return;
-  }
-
-  \Drupal::entityDefinitionUpdateManager()->installEntityType($reminder_type);
-}
-
-/**
- * Helper: ensure the HiveReminder entity type definition is registered.
- *
- * During drush module enable, the annotation scanner runs before update hooks,
- * which may already have autoloaded HiveReminder.php. Calling this ensures the
- * class exists so getDefinition() doesn't throw during schema install.
- */
-function _hivelog_ensure_hive_reminder_entity_type(): void {
-  // Trigger autoloading of the entity class so its annotation is available.
-  class_exists(HiveReminder::class);
+  $update_manager->installEntityType(\Drupal::entityTypeManager()->getDefinition('hive_reminder'));
+  return t('Created the hive reminder entity type and its table.');
 }

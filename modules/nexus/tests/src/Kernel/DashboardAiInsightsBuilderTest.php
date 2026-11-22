@@ -54,6 +54,7 @@ class DashboardAiInsightsBuilderTest extends KernelTestBase {
     $this->installEntitySchema('apiary');
     $this->installEntitySchema('apiary_membership');
     $this->installEntitySchema('hive');
+    $this->installEntitySchema('hive_reminder');
     $this->installEntitySchema('calendar_action');
     $this->installEntitySchema('hive_action_log');
     $this->installEntitySchema('apiary_action_log');

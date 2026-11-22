@@ -71,6 +71,7 @@ class HiveHarvestHistoryTest extends KernelTestBase {
     $this->installEntitySchema('apiary');
     $this->installEntitySchema('apiary_membership');
     $this->installEntitySchema('hive');
+    $this->installEntitySchema('hive_reminder');
     $this->installEntitySchema('product');
     $this->installEntitySchema('harvest_yield');
     $this->installEntitySchema('queen');

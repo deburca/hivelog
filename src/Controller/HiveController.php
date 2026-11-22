@@ -2,7 +2,6 @@
 
 namespace Drupal\hivelog\Controller;
 
-use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Controller\ControllerBase;
@@ -14,6 +13,7 @@ use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Url;
 use Drupal\hivelog\Entity\Apiary;
 use Drupal\hivelog\Entity\Hive;
+use Drupal\hivelog\Entity\HiveReminder;
 use Drupal\hivelog\Entity\Queen;
 use Drupal\hivelog\Form\HivelogCalendarFilterForm;
 use Drupal\hivelog\Form\HivelogInspectionFilterForm;
@@ -869,29 +869,13 @@ class HiveController extends ControllerBase {
    *   Render array for the reminders table.
    */
   protected function buildRemindersSection(Hive $hive): array {
-    // The active entity type definition cache may not have been rebuilt during
-    // kernel-test bootstrap, so getStorage() can throw. Return empty state in
-    // that case - it will be populated once the service is re-resolved.
-    try {
-      $reminder_ids = $this->entityTypeManager
-        ->getStorage('hive_reminder')
-        ->getQuery()
-        ->accessCheck(FALSE)
-        ->condition('hive', $hive->id())
-        ->condition('status', ['pending'], 'IN')
-        ->sort('due_date', 'ASC')
-        ->execute();
-    }
-    catch (PluginNotFoundException) {
-      return [[
-        '#type' => 'container',
-        '#attributes' => ['class' => ['hivelog-detail-section', 'hivelog-reminders'], 'id' => 'reminders'],
-        '#weight' => 8.6,
-        '#title' => $this->t('Reminders'),
-        '#message' => (string) $this->t('No pending reminders for this hive.'),
-      ],
-      ];
-    }
+    $storage = $this->entityTypeManager->getStorage('hive_reminder');
+    $reminder_ids = $storage->getQuery()
+      ->accessCheck(FALSE)
+      ->condition('hive', $hive->id())
+      ->condition('status', ['pending'], 'IN')
+      ->sort('due_date', 'ASC')
+      ->execute();
 
     if (!$reminder_ids) {
       return [[
@@ -904,29 +888,23 @@ class HiveController extends ControllerBase {
       ];
     }
 
-    $reminders = $this->entityTypeManager
-      ->getStorage('hive_reminder')
-      ->loadMultiple($reminder_ids);
-
-    // Collect cache tags.
-    $cache_tags = ['hive_reminder_list'];
-    try {
-      foreach ($reminders as $reminder) {
-        $tags = \Drupal::entityTypeManager()->getDefinition('hive_reminder')->getListCacheTags();
-        if (isset($tags[0])) {
-          $cache_tags[] = $tags[0];
-        }
+    // Only reminders the viewer may see: the hive page is open to anyone who
+    // may view the hive, but a reminder has its own permission.
+    $reminders = [];
+    foreach ($storage->loadMultiple($reminder_ids) as $reminder) {
+      if ($reminder instanceof HiveReminder && $reminder->access('view')) {
+        $reminders[] = $reminder;
       }
     }
-    catch (\Throwable) {
-      // No-op during bootstrap when the entity definition is not yet available.
-    }
+
+    $cache_tags = $this->entityTypeManager->getDefinition('hive_reminder')->getListCacheTags();
 
     // Build rows with quick-action buttons.
     $rows = [];
     foreach ($reminders as $reminder) {
-      $due     = $reminder->get('due_date')->value ?? '';
-      $title   = (string) $reminder->get('title')->value;
+      $due = $reminder->get('due_date')->value ?? '';
+      // The table component prints a cell as raw HTML, so the title is escaped.
+      $title = Html::escape((string) $reminder->get('title')->value);
       $buttons = [];
 
       // "Mark done" — set status to 'done' via query param.
@@ -955,15 +933,13 @@ class HiveController extends ControllerBase {
         '#props' => ['buttons' => $buttons],
       ];
 
-      // Show a "Due now" chip if due today or overdue.
-      $chip = $due ? date('d M Y', strtotime($due)) : '';
-      $now  = date('Y-m-d');
-      if ($due && strtotime($due) <= strtotime($now)) {
-        $chip .= ' ' . $this->renderer->renderPlain([
-          '#type' => 'inline_template',
-          '#template' => '<span class="hivelog-stat-tile--critical">Overdue</span>',
-          '#allowed_tags' => ['span'],
-        ]);
+      // Show an "Overdue" chip if due today or earlier. Built as escaped
+      // markup: the renderer's methods take their argument by reference, so
+      // an array literal cannot be passed to them, and that threw for every
+      // due or overdue reminder.
+      $chip = $due ? Html::escape(date('d M Y', strtotime($due))) : '';
+      if ($due && $due <= date('Y-m-d')) {
+        $chip .= ' <span class="hivelog-stat-tile--critical">' . Html::escape((string) $this->t('Overdue')) . '</span>';
       }
 
       $rows[] = [

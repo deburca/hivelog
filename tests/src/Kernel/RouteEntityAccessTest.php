@@ -152,6 +152,7 @@ class RouteEntityAccessTest extends KernelTestBase {
     $this->installEntitySchema('calendar_action_product_yield');
     $this->installEntitySchema('hive_component');
     $this->installEntitySchema('harvest_yield');
+    $this->installEntitySchema('hive_reminder');
     $this->installSchema('file', ['file_usage']);
     \Drupal::service('router.builder')->rebuild();
 
@@ -165,7 +166,7 @@ class RouteEntityAccessTest extends KernelTestBase {
       'calendar action', 'hive action log', 'apiary action log',
       'inventory item', 'inventory purchase', 'product',
       'calendar action item requirement', 'calendar action product yield',
-      'hive component', 'harvest yield',
+      'hive component', 'harvest yield', 'hive reminder',
     ] as $phrase) {
       $permissions[] = 'view own ' . $phrase;
       $permissions[] = 'edit own ' . $phrase;

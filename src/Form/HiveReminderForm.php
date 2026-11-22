@@ -8,6 +8,7 @@ use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Drupal\hivelog\Entity\HiveReminder;
 
 /**
  * Form handler for HiveReminder add/edit forms.
@@ -37,7 +38,7 @@ class HiveReminderForm extends ContentEntityForm {
       Url::fromRoute('entity.hive_reminder.collection')
     );
 
-    if ($status === self::SAVED_NEW) {
+    if ($status === SAVED_NEW) {
       $this->messenger()->addStatus($this->t('The hive reminder has been created.'));
     }
     else {

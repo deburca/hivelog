@@ -51,9 +51,6 @@ class HivelogApiFreshInstallTest extends KernelTestBase {
     $this->installSchema('user', ['users_data']);
     $this->installConfig(['system', 'user']);
 
-    // hive_reminder is not in the $modules array but its routes and config
-    // are loaded by hivelog — its schema must be installed explicitly.
-
     \Drupal::service('module_installer')->install(['hivelog_api']);
 
     $consumers = \Drupal::entityTypeManager()->getStorage('consumer')

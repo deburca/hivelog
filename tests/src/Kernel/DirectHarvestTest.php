@@ -69,7 +69,7 @@ class DirectHarvestTest extends KernelTestBase {
     parent::setUp();
     $this->installConfig(['system']);
     foreach ([
-      'user', 'file', 'apiary', 'apiary_membership', 'hive', 'hive_inspection', 'hive_component',
+      'user', 'file', 'apiary', 'apiary_membership', 'hive', 'hive_reminder', 'hive_inspection', 'hive_component',
       'queen', 'queen_observation', 'calendar_action', 'calendar_action_item_requirement',
       'calendar_action_product_yield', 'hive_action_log', 'apiary_action_log', 'inventory_item',
       'inventory_purchase', 'inventory_usage', 'product', 'harvest_yield',
