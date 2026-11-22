@@ -167,7 +167,7 @@ class CalendarActionController extends ControllerBase {
       'apiary' => $this->t('Apiary'),
       'scope' => $this->t('Scope'),
       'category' => $this->t('Category'),
-      'weeks' => $this->t('Week(s)'),
+      'weeks' => $this->t('When'),
       'enabled' => $this->t('Enabled'),
       'operations' => $this->t('Operations'),
     ];
@@ -178,9 +178,9 @@ class CalendarActionController extends ControllerBase {
 
       $week_start = $calendar_action->get('week_start')->value;
       $week_end = $calendar_action->get('week_end')->value;
-      $weeks = ($week_end !== NULL && $week_end !== '' && (int) $week_end !== (int) $week_start)
-        ? $this->t('@start–@end', ['@start' => $week_start, '@end' => $week_end])
-        : (string) $week_start;
+      // This year's dates, with the weeks after them (task 0283), as on the
+      // apiary and hive checklists.
+      $weeks = HivelogWeekDates::label((int) date('Y'), $week_start, $week_end);
 
       $scope = $calendar_action->get('scope')->value;
       $scope_display = (string) ($scope_labels[$scope] ?? $scope);

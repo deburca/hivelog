@@ -35,7 +35,7 @@ class CalendarActionListBuilder extends HivelogListBuilder {
     $header['apiary'] = $this->t('Apiary');
     $header['scope'] = $this->t('Scope');
     $header['category'] = $this->t('Category');
-    $header['weeks'] = $this->t('Week(s)');
+    $header['weeks'] = $this->t('When');
     $header['enabled'] = $this->t('Enabled');
     return $header;
   }

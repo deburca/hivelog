@@ -240,7 +240,22 @@ row with `status: pending`) until a beekeeper reports it `done` or `ignored`:
 - `CalendarAction` — references an `Apiary`. One recurring seasonal duty
   (varroa treatment, harvest, winter prep), week-number scheduled, shared by
   every hive in the apiary. Can be disabled without losing history the two
-  log types below may still reference.
+  log types below may still reference. **Weeks are stored and sorted as ISO
+  week numbers but shown as dates** (task 0283): `HivelogWeekDates::label($year,
+  $start, $end)` gives "30 Mar – 3 May (W14–W18)" (Monday of the first week to
+  Sunday of the last; "6–12 Apr (W15)" for one week), with `dates()` and
+  `weeks()` for the parts. Week 1 or the last week can reach into the
+  neighbouring year, so the dates are not clamped to it. Every place that
+  shows a window calls it, under the column header "When": the hive and apiary
+  checklists (the year in view), the full calendar and the Calendar Actions
+  collection page (this year), the calendar action page's Window tile (the
+  dates, with "W14–W18 · every year" as the sub-line only when the action
+  recurs), the seasonal alert rows (the reporting year) and a description on
+  the action form's Schedule tab (the saved weeks as dates; no JavaScript, so
+  it describes the saved values, not what is being typed). Month names reuse
+  core's abbreviated-month strings, so a translated site gets them. A new
+  place that shows a window must call the helper, not format
+  `week_start` / `week_end` itself.
 - `HiveActionLog` — references a `Hive` and the `CalendarAction` it reports
   on. Per-hive execution record.
 - `ApiaryActionLog` — references an `Apiary` and the `CalendarAction` it
@@ -1015,7 +1030,7 @@ trailing zeros trimmed) for those tiles. `buildTileStrip()` also takes a NULL en
 only. The cost and yield reports (task 0261) open with a totals strip from `InventoryReportController::totalsStrip()`:
 Consumable cost, Active depreciation, Total cost, Potential income and Net (critical "Loss" when negative, ok
 "Surplus" when positive, plain at zero), the same two-decimal figures the tables use; the combined report adds the strip
-above its per-apiary table, which keeps its own rows and "All apiaries" total row. The calendar action page (task 0262) shows Category, Scope, Window ("W14–W18", sub-line "Recurring") and Status (a disabled action is a warning), and the hive and apiary action log pages Status (done ok, pending warning, ignored plain), Year · Week, Action and, hive logs only, Inspection; a log's notes and reporter stay in a Details table, the description is a note block (bullets kept, left out when empty, task 0266), and the requirements and yields stay as they were.
+above its per-apiary table, which keeps its own rows and "All apiaries" total row. The calendar action page (task 0262) shows Category, Scope, Window (this year's dates, sub-line the weeks and "every year" when it recurs, task 0283) and Status (a disabled action is a warning), and the hive and apiary action log pages Status (done ok, pending warning, ignored plain), Year · Week, Action and, hive logs only, Inspection; a log's notes and reporter stay in a Details table, the description is a note block (bullets kept, left out when empty, task 0266), and the requirements and yields stay as they were.
 
 #### Heading hierarchy (task 0128)
 
