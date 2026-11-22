@@ -2,20 +2,22 @@
 
 declare(strict_types=1);
 
-namespace Drupal\hivelog;
+namespace Drupal\hivelog\Entity;
 
 use Drupal\Core\Entity\Attribute\ContentEntityType;
-use Drupal\Core\Entity\ContentEntityStorageInterface;
 use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityChangedInterface;
 use Drupal\Core\Entity\EntityChangedTrait;
-use Drupal\user\EntityOwnerInterface;
-use Drupal\user\EntityOwnerTrait;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\hivelog\Form\HivelogEntityDeleteForm;
 use Drupal\hivelog\Form\HiveReminderForm;
+use Drupal\hivelog\HiveReminderAccessControlHandler;
+use Drupal\hivelog\HiveReminderListBuilder;
+use Drupal\hivelog\HivelogEntityStorage;
+use Drupal\user\EntityOwnerInterface;
+use Drupal\user\EntityOwnerTrait;
 
 /**
  * A one-off, date-specific reminder for a single hive.
@@ -24,13 +26,18 @@ use Drupal\hivelog\Form\HiveReminderForm;
  * reminder is about one hive and one date, non-repeating until dismissed or
  * completed. It can be created from the hive page or at the end of an
  * inspection form ("Next visit").
+ *
+ * It has edit and delete routes and a collection, and no canonical page: the
+ * breadcrumb builder and the delete form read a `canonical` link template as
+ * a promise that an `entity.<type>.canonical` route exists, so none is
+ * declared.
  */
 #[ContentEntityType(
   id: 'hive_reminder',
   label: new TranslatableMarkup('Hive reminder'),
   label_collection: new TranslatableMarkup('Hive reminders'),
-  handler_base_path: 'src/Entity',
-  module: 'hivelog',
+  label_singular: new TranslatableMarkup('hive reminder'),
+  label_plural: new TranslatableMarkup('hive reminders'),
   admin_permission: 'administer hivelog',
   entity_keys: [
     'id' => 'id',
@@ -39,14 +46,13 @@ use Drupal\hivelog\Form\HiveReminderForm;
     'owner' => 'uid',
   ],
   links: [
-    'canonical' => '/hivelog/hive-reminder/{hive_reminder}',
     'edit-form' => '/hivelog/hive-reminder/{hive_reminder}/edit',
     'delete-form' => '/hivelog/hive-reminder/{hive_reminder}/delete',
     'collection' => '/hivelog/hive-reminders',
   ],
-  list_builder_class: '\Drupal\hivelog\HiveReminderListBuilder',
   handlers: [
-    'storage' => ContentEntityStorageInterface::class,
+    'storage' => HivelogEntityStorage::class,
+    'list_builder' => HiveReminderListBuilder::class,
     'form' => [
       'default' => HiveReminderForm::class,
       'add' => HiveReminderForm::class,
@@ -112,19 +118,19 @@ class HiveReminder extends ContentEntityBase implements EntityChangedInterface, 
       ])
       ->setDisplayOptions('view', [
         'label' => 'above',
-        'type' => 'string',
+        'type' => 'basic_string',
         'weight' => 2,
       ])
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
-    $fields['due_date'] = BaseFieldDefinition::create('date')
+    $fields['due_date'] = BaseFieldDefinition::create('datetime')
       ->setLabel(t('Due date'))
       ->setDescription(t('The date this reminder is due.'))
       ->setRequired(TRUE)
       ->setSetting('datetime_type', 'date')
       ->setDisplayOptions('form', [
-        'type' => 'date',
+        'type' => 'datetime_default',
         'weight' => 3,
       ])
       ->setDisplayOptions('view', [
@@ -157,15 +163,17 @@ class HiveReminder extends ContentEntityBase implements EntityChangedInterface, 
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
-    $fields['uid']
-      ->setLabel(t('Author'))
-      ->setDescription(t('The author of this reminder.'))
-      ->setDisplayOptions('form', [
-        'type' => 'entity_reference_autocomplete',
-        'weight' => 5,
-      ])
-      ->setDisplayConfigurable('form', TRUE)
-      ->setDisplayConfigurable('view', TRUE);
+    $owner = $fields['uid'];
+    if ($owner instanceof BaseFieldDefinition) {
+      $owner->setLabel(t('Author'))
+        ->setDescription(t('The author of this reminder.'))
+        ->setDisplayOptions('form', [
+          'type' => 'entity_reference_autocomplete',
+          'weight' => 5,
+        ])
+        ->setDisplayConfigurable('form', TRUE)
+        ->setDisplayConfigurable('view', TRUE);
+    }
 
     $fields['created'] = BaseFieldDefinition::create('created')
       ->setLabel(t('Created'))

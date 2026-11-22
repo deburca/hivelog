@@ -33,6 +33,8 @@ trait ApiaryAccessTrait {
    * - CalendarActionItemRequirement: calendar_action_item_requirement →
    *   calendar_action → apiary.
    * - HiveComponent: hive_component → hive → apiary.
+   * - HiveReminder: hive_reminder → hive → apiary (task 0274), the hive's
+   *   apiary now: a reminder is a to-do about the hive as it is, not history.
    * - InventoryUsage: inventory_usage → item → apiary (the item's apiary,
    *   which a hive move leaves alone),
    *   or → apiary_action_log → apiary directly (exactly one is set).
@@ -186,8 +188,8 @@ trait ApiaryAccessTrait {
       return $calendar_action ? $calendar_action->get('apiary')->entity : NULL;
     }
 
-    // HiveComponent → hive → apiary.
-    if ($entity_type === 'hive_component') {
+    // HiveComponent and HiveReminder → hive → apiary.
+    if ($entity_type === 'hive_component' || $entity_type === 'hive_reminder') {
       // @phpstan-ignore-next-line
       $hive = $entity->get('hive')->entity;
       // @phpstan-ignore-next-line

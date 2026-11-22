@@ -68,6 +68,7 @@ class EndedHiveWorkloadTest extends KernelTestBase {
     $this->installEntitySchema('apiary');
     $this->installEntitySchema('apiary_membership');
     $this->installEntitySchema('hive');
+    $this->installEntitySchema('hive_reminder');
     $this->installEntitySchema('hive_inspection');
     // Task 0163: HiveController::view() now unconditionally queries
     // hive_component for every hive page render.

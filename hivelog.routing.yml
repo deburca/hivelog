@@ -1133,7 +1133,7 @@ entity.hive_reminder.collection:
     _entity_list: 'hive_reminder'
     _title: 'Hive reminders'
   requirements:
-    _permission: 'view any hive reminder+administer hivelog'
+    _permission: 'view own hive reminder+view any hive reminder+administer hivelog'
   options:
     _navigation_route: TRUE
 
@@ -1143,7 +1143,7 @@ entity.hive_reminder.edit_form:
     _entity_form: 'hive_reminder.edit'
     _title_callback: '\Drupal\hivelog\Form\HiveReminderForm::editTitle'
   requirements:
-    _permission: 'edit any hive reminder+administer hivelog'
+    _permission: 'edit own hive reminder+edit any hive reminder+administer hivelog'
     _entity_access: 'hive_reminder.update'
   options:
     parameters:
@@ -1156,7 +1156,7 @@ entity.hive_reminder.delete_form:
     _entity_form: 'hive_reminder.delete'
     _title_callback: '\Drupal\hivelog\Form\HiveReminderForm::deleteTitle'
   requirements:
-    _permission: 'delete any hive reminder+administer hivelog'
+    _permission: 'delete own hive reminder+delete any hive reminder+administer hivelog'
     _entity_access: 'hive_reminder.delete'
   options:
     parameters:
