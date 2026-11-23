@@ -50,16 +50,16 @@ Three independent parts, each its own commit, in this order so the riskiest come
    link the other way. Defaults from the hive's last inspection, only where safe: honey and
    pollen stores, population, supers. Never queen seen, eggs seen, varroa, disease, fed or
    notes, because a stale "yes" there is a false record. Quick mode only hides fields, so a
-   quick inspection saves the same entity and the API is untouched. Which mode opens first is a
-   product choice (see the question below); the hive page gets a button for each.
-3. **Several disease signs.** The compatibility decision. `disease_signs` is a single-valued
-   `list_string` and the v1 contract (and the iOS app) read it as one string. Making it
-   multi-valued turns the attribute into an array, which breaks a v1 client. Recommended:
-   keep `disease_signs` as the **most serious** sign and add a new optional multi-valued
-   `disease_signs_also` for the others, so v1 is extended and not broken; the form shows both as
-   "Main sign" and "Also seen"; the inspection page lists all; severity still reads the main one,
-   plus any AFB or EFB in the second. Existing data needs no migration. Alternative: a new API
-   version, which is a much larger change for the app too.
+   quick inspection saves the same entity and the API is untouched. The full form stays the
+   default (decided 2026-11-23); the hive page gets a Quick inspection button beside Add inspection.
+3. **Several disease signs (decided 2026-11-23: make `disease_signs` itself multi-valued).**
+   The compatibility cost is accepted: the v1 attribute changes from a string to an array, which
+   the contract test and the iOS app (Vinculum) read as one string. So this part starts with a
+   short ADR (0112) that records the decision and how it ships (a new `API_VERSION` and prefix,
+   or an alias that keeps serving v1 a single string), and it is **not released before Vinculum
+   is ready for it**. Existing data: one row per old value (`hivelog_update_10044`, `none` kept
+   only when it is the sole value; the form refuses `none` together with another sign). Severity
+   reads every value (AFB or EFB anywhere is critical).
 
 Tests: a kernel test per part (field validation and the update hook; quick-mode form builds
 the right elements and the defaults skip the unsafe fields; the second disease field and
