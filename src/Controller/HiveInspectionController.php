@@ -206,9 +206,10 @@ class HiveInspectionController extends ControllerBase {
    *   `sublabel` and `variant` for the tile, or an empty array.
    */
   protected function severity(HiveInspection $inspection, string $field): array {
+    if ($field === 'disease_signs') {
+      return $this->diseaseSeverity($inspection);
+    }
     $value = $inspection->get($field)->getString();
-    $disease = [$this->t('Disease sign'), 'warning'];
-    $serious = [$this->t('Serious disease'), 'critical'];
     $map = [
       'brood_pattern' => ['poor' => [$this->t('Poor brood'), 'warning']],
       'honey_stores' => [
@@ -216,21 +217,32 @@ class HiveInspectionController extends ControllerBase {
         'none' => [$this->t('No stores'), 'critical'],
       ],
       'population' => ['weak' => [$this->t('Weak colony'), 'warning']],
-      'disease_signs' => [
-        'none' => [$this->t('Clear'), 'ok'],
-        'afb' => $serious,
-        'efb' => $serious,
-        'nosema' => $disease,
-        'chalkbrood' => $disease,
-        'sacbrood' => $disease,
-        'other' => $disease,
-      ],
     ];
     if (!isset($map[$field][$value])) {
       return [];
     }
     [$text, $variant] = $map[$field][$value];
     return ['sublabel' => $text, 'variant' => $variant];
+  }
+
+  /**
+   * The sub-line for the disease tile, read across every sign recorded.
+   *
+   * American or European foulbrood anywhere in the list is critical, any other
+   * sign a warning, and only "none" is clear. Nothing recorded gives nothing.
+   */
+  protected function diseaseSeverity(HiveInspection $inspection): array {
+    $values = array_column($inspection->get('disease_signs')->getValue(), 'value');
+    if (!$values) {
+      return [];
+    }
+    if (array_intersect($values, ['afb', 'efb'])) {
+      return ['sublabel' => $this->t('Serious disease'), 'variant' => 'critical'];
+    }
+    if (array_diff($values, ['none'])) {
+      return ['sublabel' => $this->t('Disease sign'), 'variant' => 'warning'];
+    }
+    return ['sublabel' => $this->t('Clear'), 'variant' => 'ok'];
   }
 
   /**
@@ -277,11 +289,18 @@ class HiveInspectionController extends ControllerBase {
       case 'pollen_stores':
       case 'temperament':
       case 'population':
-      case 'disease_signs':
         $allowed_values = $field->getSetting('allowed_values');
         return [
           '#plain_text' => (string) ($allowed_values[$field->value] ?? $field->value),
         ];
+
+      case 'disease_signs':
+        $allowed_values = $field->getSetting('allowed_values');
+        $labels = array_map(
+          fn($value) => (string) ($allowed_values[$value] ?? $value),
+          array_column($field->getValue(), 'value')
+        );
+        return ['#plain_text' => implode(', ', $labels)];
 
       case 'external_check':
       case 'action_taken':

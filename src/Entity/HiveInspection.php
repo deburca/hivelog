@@ -396,7 +396,8 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
 
     $fields['disease_signs'] = BaseFieldDefinition::create('list_string')
       ->setLabel(t('Disease Signs'))
-      ->setDescription(t('Any signs of disease observed.'))
+      ->setDescription(t('Any signs of disease observed. Tick every one you saw; None cannot be combined with another.'))
+      ->setCardinality(FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED)
       ->setSetting('allowed_values', [
         'none' => 'None',
         'nosema' => 'Nosema',
@@ -407,7 +408,7 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
         'other' => 'Other',
       ])
       ->setDisplayOptions('form', [
-        'type' => 'options_select',
+        'type' => 'options_buttons',
         'weight' => 14,
       ])
       ->setDisplayOptions('view', [
@@ -589,6 +590,10 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
       'when' => 'fed',
       'is' => TRUE,
       'message' => 'Feed type is required when the colony was fed.',
+    ]);
+    $fields['disease_signs']->addConstraint('HivelogExclusiveValue', [
+      'value' => 'none',
+      'message' => 'None cannot be combined with another disease sign.',
     ]);
     $fields['varroa_count']->addConstraint('HivelogConditionalField', [
       'when' => 'varroa_check',

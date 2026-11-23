@@ -491,6 +491,42 @@ class HiveInspectionTest extends KernelTestBase {
   }
 
   /**
+   * Tests several disease signs: stored, listed, read for severity, "none" alone.
+   */
+  public function testSeveralDiseaseSigns(): void {
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(HiveInspectionController::class);
+    $props = fn(array $build, string $section, string $tile): array => $build[$section]['facts'][$tile]['#props'];
+
+    $inspection = HiveInspection::create([
+      'hive' => $this->hive->id(),
+      'inspection_date' => '2024-06-15',
+      'disease_signs' => ['chalkbrood', 'nosema'],
+    ]);
+    $this->assertCount(0, $inspection->validate()->getByField('disease_signs'));
+    $inspection->save();
+    $loaded = HiveInspection::load($inspection->id());
+    $this->assertSame(['chalkbrood', 'nosema'], array_column($loaded->get('disease_signs')->getValue(), 'value'));
+
+    $build = $controller->view($loaded);
+    $tile = $props($build, 'health', 'disease_signs');
+    $this->assertSame('Chalkbrood, Nosema', (string) $tile['value']);
+    $this->assertSame('warning', $tile['sublabel_variant']);
+
+    // A serious sign anywhere in the list is critical.
+    $loaded->set('disease_signs', ['nosema', 'afb']);
+    $loaded->save();
+    $build = $controller->view($loaded);
+    $this->assertSame('critical', $props($build, 'health', 'disease_signs')['sublabel_variant']);
+
+    // None stands alone.
+    $loaded->set('disease_signs', ['none', 'nosema']);
+    $this->assertGreaterThan(0, $loaded->validate()->getByField('disease_signs')->count());
+    $loaded->set('disease_signs', ['none']);
+    $this->assertCount(0, $loaded->validate()->getByField('disease_signs'));
+  }
+
+  /**
    * Tests severity sub-lines, and that unrecorded facts and sections vanish.
    */
   public function testInspectionViewSeverityAndOmittedFacts(): void {

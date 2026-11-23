@@ -214,7 +214,9 @@ class HiveContextBuilder {
         'queen_cells' => (bool) $inspection->get('queen_cells')->value,
         'varroa_check' => (bool) $inspection->get('varroa_check')->value,
         'varroa_count' => $inspection->get('varroa_count')->isEmpty() ? NULL : (int) $inspection->get('varroa_count')->value,
-        'disease_signs' => $this->emptyToNull($inspection, 'disease_signs'),
+        'disease_signs' => $inspection->get('disease_signs')->isEmpty()
+          ? NULL
+          : array_column($inspection->get('disease_signs')->getValue(), 'value'),
         'supers' => $inspection->get('supers')->isEmpty() ? NULL : (int) $inspection->get('supers')->value,
         'weight_kg' => $inspection->get('weight')->isEmpty() ? NULL : (float) $inspection->get('weight')->value,
       ];

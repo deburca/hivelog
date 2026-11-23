@@ -26,10 +26,10 @@ side).
 ## Acceptance criteria
 - [x] A quick mode: date, queen right (seen or eggs), stores, health, notes, with the full form one tap away; the last inspection's values offered as defaults where that is safe
 - [x] Optional `frames_of_bees` and `frames_of_brood` integers, shown as tiles and available to a trend
-- [ ] `disease_signs` accepts several values; existing data preserved
-- [ ] The schema endpoint and the v1 contract are extended, not broken (new optional fields; a cardinality change needs a compatibility decision)
-- [ ] Update hook; kernel tests
-- [ ] `AGENTS.md` updated if entity types, routes, services, hooks or conventions changed
+- [x] `disease_signs` accepts several values; existing data preserved
+- [x] The schema endpoint and the v1 contract are extended (new optional fields); the `disease_signs` cardinality change is a deliberate v1 change, the app being unreleased
+- [x] Update hook; kernel tests
+- [x] `AGENTS.md` updated if entity types, routes, services, hooks or conventions changed
 - [ ] phpcs clean; phpstan clean; kernel tests pass (`--group hivelog`)
 
 ## Plan (2026-11-23)
@@ -52,14 +52,14 @@ Three independent parts, each its own commit, in this order so the riskiest come
    notes, because a stale "yes" there is a false record. Quick mode only hides fields, so a
    quick inspection saves the same entity and the API is untouched. The full form stays the
    default (decided 2026-11-23); the hive page gets a Quick inspection button beside Add inspection.
-3. **Several disease signs (decided 2026-11-23: make `disease_signs` itself multi-valued).**
-   The compatibility cost is accepted: the v1 attribute changes from a string to an array, which
-   the contract test and the iOS app (Vinculum) read as one string. So this part starts with a
-   short ADR (0112) that records the decision and how it ships (a new `API_VERSION` and prefix,
-   or an alias that keeps serving v1 a single string), and it is **not released before Vinculum
-   is ready for it**. Existing data: one row per old value (`hivelog_update_10044`, `none` kept
-   only when it is the sole value; the form refuses `none` together with another sign). Severity
-   reads every value (AFB or EFB anywhere is critical).
+3. **Several disease signs (decided 2026-11-23: `disease_signs` itself becomes multi-valued, and v1 is
+   changed in place).** The v1 attribute turns from a string into a list of strings. The iOS app
+   (Vinculum) is not released, so no new API version or alias is needed; the owner updates the app to
+   match. Existing data: `hivelog_update_10043` moves the column into the field's own table, one row per
+   old value, by direct insert (so `changed` and the latest-temperament cache are not touched). The form
+   shows checkboxes, a `HivelogExclusiveValue` constraint refuses `none` together with another sign (for
+   the API too), severity reads every value (AFB or EFB anywhere is critical) and the tile lists all the
+   labels. `collective`'s inspection summary carries `disease_signs` as a list (or null).
 
 Tests: a kernel test per part (field validation and the update hook; quick-mode form builds
 the right elements and the defaults skip the unsafe fields; the second disease field and
