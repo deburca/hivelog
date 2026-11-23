@@ -1068,24 +1068,28 @@ class HiveController extends ControllerBase {
           '#value' => $this->t('Inspections'),
           '#attributes' => ['class' => ['hivelog-list-heading__title']],
         ],
-        'add' => [
-          '#type' => 'component',
-          '#component' => 'hivelog:button',
-          '#props' => [
-            'label' => (string) $this->t('Add Inspection'),
-            'url' => Url::fromRoute('hivelog.inspection.add', ['hive' => $hive->id()])->toString(),
-            'variant' => 'primary',
-            'extra_classes' => 'hivelog-list-heading__action',
+        // One flex child for both buttons (`.hivelog-list-heading` lays out its
+        // title and one action container), so they sit together on the right.
+        'actions' => [
+          '#type' => 'container',
+          '#attributes' => ['class' => ['hivelog-list-heading__action']],
+          'add' => [
+            '#type' => 'component',
+            '#component' => 'hivelog:button',
+            '#props' => [
+              'label' => (string) $this->t('Add Inspection'),
+              'url' => Url::fromRoute('hivelog.inspection.add', ['hive' => $hive->id()])->toString(),
+              'variant' => 'primary',
+            ],
           ],
-        ],
-        'add_quick' => [
-          '#type' => 'component',
-          '#component' => 'hivelog:button',
-          '#props' => [
-            'label' => (string) $this->t('Quick Inspection'),
-            'url' => Url::fromRoute('hivelog.inspection.add', ['hive' => $hive->id()], ['query' => ['mode' => 'quick']])->toString(),
-            'variant' => 'default',
-            'extra_classes' => 'hivelog-list-heading__action',
+          'add_quick' => [
+            '#type' => 'component',
+            '#component' => 'hivelog:button',
+            '#props' => [
+              'label' => (string) $this->t('Quick Inspection'),
+              'url' => Url::fromRoute('hivelog.inspection.add', ['hive' => $hive->id()], ['query' => ['mode' => 'quick']])->toString(),
+              'variant' => 'default',
+            ],
           ],
         ],
       ],
