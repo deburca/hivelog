@@ -70,15 +70,14 @@ class HiveInspectionForm extends ContentEntityForm {
     if ($this->entity->isNew()) {
       $form['mode_switch'] = $this->buildModeSwitch($quick);
     }
-    // A section's group: the tabs in the full form, none in quick mode.
-    $group = $quick ? NULL : 'inspection_sections';
-    if (!$quick) {
-      $form['inspection_sections'] = [
-        '#type' => 'vertical_tabs',
-        '#title' => $this->t('Inspection sections'),
-        '#weight' => 2,
-      ];
-    }
+    // Both modes group their fields in vertical tabs, so neither is a long
+    // page to scroll; quick mode just has fewer tabs.
+    $group = 'inspection_sections';
+    $form['inspection_sections'] = [
+      '#type' => 'vertical_tabs',
+      '#title' => $this->t('Inspection sections'),
+      '#weight' => 2,
+    ];
 
     $sections = [
       'overview' => [
@@ -138,13 +137,13 @@ class HiveInspectionForm extends ContentEntityForm {
     ];
 
     if ($quick) {
-      // One flat form: hide the rest, and the sections that go with it.
+      // Hide every field outside the quick set, and swap in the quick tabs.
       foreach (array_keys($this->entity->getFieldDefinitions()) as $field_name) {
         if (isset($form[$field_name]) && !in_array($field_name, self::QUICK_FIELDS, TRUE)) {
           $form[$field_name]['#access'] = FALSE;
         }
       }
-      $sections = [];
+      $sections = $this->quickSections();
     }
 
     foreach ($sections as $section_key => $section) {
@@ -234,6 +233,41 @@ class HiveInspectionForm extends ContentEntityForm {
     }
 
     return $form;
+  }
+
+  /**
+   * The tabs of the quick form, over the QUICK_FIELDS only.
+   *
+   * @return array
+   *   Sections keyed like the full form's: title, weight, open and fields.
+   */
+  protected function quickSections(): array {
+    return [
+      'overview' => [
+        'title' => $this->t('Overview'),
+        'weight' => 0,
+        'open' => TRUE,
+        'fields' => ['hive', 'inspection_date'],
+      ],
+      'queen_status' => [
+        'title' => $this->t('Queen status'),
+        'weight' => 2,
+        'open' => FALSE,
+        'fields' => ['queen_seen', 'eggs_seen'],
+      ],
+      'colony_condition' => [
+        'title' => $this->t('Stores and colony'),
+        'weight' => 3,
+        'open' => FALSE,
+        'fields' => ['honey_stores', 'population', 'temperament'],
+      ],
+      'notes_section' => [
+        'title' => $this->t('Notes'),
+        'weight' => 7,
+        'open' => FALSE,
+        'fields' => ['notes'],
+      ],
+    ];
   }
 
   /**

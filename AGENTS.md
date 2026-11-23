@@ -225,8 +225,9 @@ submodule's own entity types are in "Submodules".
   `frames_of_bees` and `frames_of_brood` (0 to 40) sit beside `population` (the quick judgement) on the
   Colony condition tab and as tiles, with no severity (what is many depends on the season and the hive).
   A new inspection can be opened as a **quick inspection**, `hivelog.inspection.add` with `?mode=quick`
-  (`HiveInspectionForm::isQuickMode()`, new inspections only): the same form and entity with the tabs
-  gone and every field outside `QUICK_FIELDS` hidden by `#access`, so a save changes nothing about the
+  (`HiveInspectionForm::isQuickMode()`, new inspections only): the same form and entity with its own
+  short set of vertical tabs (`quickSections()`: Overview, Queen status, Stores and colony, Notes, then the Queen
+  observation and Next visit sections) and every field outside `QUICK_FIELDS` hidden by `#access`, so a save changes nothing about the
   API or the access rules. Honey stores and population start from the hive's latest inspection
   (`QUICK_DEFAULT_FIELDS`); queen seen, eggs seen, varroa, disease and the rest are never carried over,
   because a stale "yes" is a false record. The full form stays the default; the hive page has a Quick
@@ -1166,6 +1167,13 @@ the module stays palette-free). The supported surface:
   theme's `global` library, not via `libraries-extend` — `libraries-extend`
   only fires for a library a controller attaches directly, so it reaches
   the dashboard but not the `EntityListBuilder` collections.
+- **Form-item focus colours.** The vertical tabs element on the inspection,
+  hive and queen forms is itself a form item (`div.form-item.form-type-vertical-tabs`)
+  with a bare "Inspection sections" label. A theme that recolours a form
+  item's label while focus is inside it (`.form-item:focus-within > label`)
+  must leave that wrapper out, or the label takes the accent colour, almost
+  invisible on a dark surface, whenever a tab or a field in a panel has
+  focus. The module does not patch this: colour is the theme's call.
 
 The reference implementation is the **beeswax** theme — Packagist package
 **`deburca/beeswax`** (repo `github.com/deburca/beeswax`), kbg's default
