@@ -166,7 +166,7 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
     // Queen status fields.
     $fields['queen_seen'] = BaseFieldDefinition::create('boolean')
       ->setLabel(t('Queen Seen'))
-      ->setDescription(t('Was the queen spotted during this inspection? You don\'t need to spot her every visit — evidence of her is enough. Look for eggs (single, upright in cell bottoms — confirms a laying queen within the last 3 days), young larvae, and a good brood pattern (solid, not patchy).'))
+      ->setDescription(t('Was the queen spotted during this inspection? To keep a note about her alone (health, laying), use the Queen observation section of this form, or add an observation on her page later. You don\'t need to spot her every visit — evidence of her is enough. Look for eggs (single, upright in cell bottoms — confirms a laying queen within the last 3 days), young larvae, and a good brood pattern (solid, not patchy).'))
       ->setDefaultValue(FALSE)
       ->setDisplayOptions('form', [
         'type' => 'boolean_checkbox',
@@ -204,7 +204,7 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
 
     $fields['eggs_seen'] = BaseFieldDefinition::create('boolean')
       ->setLabel(t('Eggs Seen'))
-      ->setDescription(t('Were eggs visible (indicates queen is laying)?'))
+      ->setDescription(t('Were eggs visible (indicates queen is laying)? Ticking this also counts her as laying in the queen observation this form can add.'))
       ->setDefaultValue(FALSE)
       ->setDisplayOptions('form', [
         'type' => 'boolean_checkbox',
