@@ -673,6 +673,34 @@ class HiveTest extends KernelTestBase {
   }
 
   /**
+   * Tests the Inspections heading holds its two buttons in one action group.
+   *
+   * Regression test: Quick Inspection was added as a third flex child of the
+   * heading, so Add Inspection floated to the middle of the row.
+   * `.hivelog-list-heading` lays out a title and one action container.
+   */
+  public function testInspectionButtonsAreOneGroupInTheHeading(): void {
+    $this->installConfig(['system']);
+    $user = User::create(['name' => 'button-tester', 'mail' => 'button-tester@example.com']);
+    $user->save();
+    \Drupal::currentUser()->setAccount($user);
+    $hive = Hive::create(['name' => 'Button Hive', 'apiary' => $this->apiary->id(), 'status' => 'active']);
+    $hive->save();
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(HiveController::class);
+    $build = $controller->view($hive);
+
+    $heading = $build['hive_activity']['inspections']['heading'];
+    $children = array_values(array_filter(array_keys($heading), fn($key) => !str_starts_with((string) $key, '#')));
+    $this->assertSame(['title', 'actions'], $children);
+    $this->assertContains('hivelog-list-heading__action', $heading['actions']['#attributes']['class']);
+    $this->assertSame(
+      ['Add Inspection', 'Quick Inspection'],
+      [$heading['actions']['add']['#props']['label'], $heading['actions']['add_quick']['#props']['label']]
+    );
+  }
+
+  /**
    * Tests that the hive view inspection table includes weight before queen.
    */
   public function testHiveViewInspectionTableWeightColumn(): void {
