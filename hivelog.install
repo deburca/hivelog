@@ -1444,3 +1444,25 @@ function hivelog_update_10041() {
   $update_manager->installEntityType(\Drupal::entityTypeManager()->getDefinition('hive_reminder'));
   return t('Created the hive reminder entity type and its table.');
 }
+
+/**
+ * Adds frames of bees and frames of brood to hive inspections.
+ *
+ * Task 0279. Two optional integer counts, so a colony's strength can be
+ * compared between visits (Population stays as the quick judgement).
+ */
+function hivelog_update_10042() {
+  $update_manager = \Drupal::entityDefinitionUpdateManager();
+  $definition = \Drupal::entityTypeManager()->getDefinition('hive_inspection');
+  $fields = $definition->getClass()::baseFieldDefinitions($definition);
+  $installed = [];
+  foreach (['frames_of_bees', 'frames_of_brood'] as $field) {
+    if (!$update_manager->getFieldStorageDefinition($field, 'hive_inspection')) {
+      $update_manager->installFieldStorageDefinition($field, 'hive_inspection', 'hivelog', $fields[$field]);
+      $installed[] = $field;
+    }
+  }
+  return $installed
+    ? t('Added @fields to hive inspections.', ['@fields' => implode(', ', $installed)])
+    : t('Hive inspections already have the frame count fields.');
+}

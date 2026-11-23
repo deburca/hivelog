@@ -79,6 +79,8 @@
         "external_check": "attribute",
         "fed": "attribute",
         "feed_type": "attribute",
+        "frames_of_bees": "attribute",
+        "frames_of_brood": "attribute",
         "hive": "relationship",
         "honey_stores": "attribute",
         "images": "relationship",

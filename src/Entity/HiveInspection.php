@@ -325,6 +325,40 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
+    $fields['frames_of_bees'] = BaseFieldDefinition::create('integer')
+      ->setLabel(t('Frames of bees'))
+      ->setDescription(t('How many frames are covered with bees. A count you can compare between visits; Population is the quick judgement.'))
+      ->setSetting('min', 0)
+      ->setSetting('max', 40)
+      ->setDisplayOptions('form', [
+        'type' => 'number',
+        'weight' => 11,
+      ])
+      ->setDisplayOptions('view', [
+        'label' => 'inline',
+        'type' => 'number_integer',
+        'weight' => 11,
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
+
+    $fields['frames_of_brood'] = BaseFieldDefinition::create('integer')
+      ->setLabel(t('Frames of brood'))
+      ->setDescription(t('How many frames hold brood (eggs, larvae or capped), counting both sides as one frame.'))
+      ->setSetting('min', 0)
+      ->setSetting('max', 40)
+      ->setDisplayOptions('form', [
+        'type' => 'number',
+        'weight' => 11,
+      ])
+      ->setDisplayOptions('view', [
+        'label' => 'inline',
+        'type' => 'number_integer',
+        'weight' => 11,
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
+
     $fields['varroa_check'] = BaseFieldDefinition::create('boolean')
       ->setLabel(t('Varroa Check'))
       ->setDescription(t('Was a varroa mite check performed?'))

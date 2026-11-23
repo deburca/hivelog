@@ -452,6 +452,45 @@ class HiveInspectionTest extends KernelTestBase {
   }
 
   /**
+   * Tests the optional frame counts: stored, shown as tiles and range-checked.
+   */
+  public function testFrameCounts(): void {
+    $controller = \Drupal::service('class_resolver')
+      ->getInstanceFromDefinition(HiveInspectionController::class);
+
+    $inspection = HiveInspection::create([
+      'hive' => $this->hive->id(),
+      'inspection_date' => '2024-06-15',
+      'frames_of_bees' => 9,
+      'frames_of_brood' => 5,
+    ]);
+    $this->assertCount(0, $inspection->validate()->getByFields(['frames_of_bees', 'frames_of_brood']));
+    $inspection->save();
+    $loaded = HiveInspection::load($inspection->id());
+    $this->assertSame(9, (int) $loaded->get('frames_of_bees')->value);
+    $this->assertSame(5, (int) $loaded->get('frames_of_brood')->value);
+
+    $build = $controller->view($loaded);
+    $this->assertArrayHasKey('frames_of_bees', $build['colony_condition']['facts']);
+    $this->assertArrayHasKey('frames_of_brood', $build['colony_condition']['facts']);
+
+    // Both are optional: an inspection without them has no such tiles.
+    $plain = HiveInspection::create([
+      'hive' => $this->hive->id(),
+      'inspection_date' => '2024-06-16',
+      'population' => 'strong',
+    ]);
+    $plain->save();
+    $build = $controller->view($plain);
+    $this->assertArrayNotHasKey('frames_of_bees', $build['colony_condition']['facts']);
+
+    foreach ([-1, 41] as $bad) {
+      $inspection->set('frames_of_bees', $bad);
+      $this->assertGreaterThan(0, $inspection->validate()->getByField('frames_of_bees')->count(), "$bad frames is refused.");
+    }
+  }
+
+  /**
    * Tests severity sub-lines, and that unrecorded facts and sections vanish.
    */
   public function testInspectionViewSeverityAndOmittedFacts(): void {

@@ -67,7 +67,7 @@ class HiveInspectionForm extends ContentEntityForm {
         'title' => $this->t('Colony condition'),
         'weight' => 4,
         'open' => FALSE,
-        'fields' => ['temperament', 'population'],
+        'fields' => ['temperament', 'population', 'frames_of_bees', 'frames_of_brood'],
       ],
       'health' => [
         'title' => $this->t('Varroa and disease'),

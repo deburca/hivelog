@@ -138,6 +138,8 @@ class HiveInspectionController extends ControllerBase {
         'tiles' => [
           'temperament' => ['omit_empty' => TRUE],
           'population' => ['omit_empty' => TRUE] + $this->severity($inspection, 'population'),
+          'frames_of_bees' => ['omit_empty' => TRUE],
+          'frames_of_brood' => ['omit_empty' => TRUE],
         ],
       ],
       'health' => [
