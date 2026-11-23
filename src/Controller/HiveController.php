@@ -1207,6 +1207,12 @@ class HiveController extends ControllerBase {
       '#type' => 'container',
       '#attributes' => ['class' => ['hivelog-activity-column']],
       'heading' => $heading,
+      'hint' => [
+        '#type' => 'html_tag',
+        '#tag' => 'p',
+        '#value' => $this->t('A note about the queen alone, for when you looked at her outside an inspection. During an inspection, record her in the inspection form.'),
+        '#attributes' => ['class' => ['hivelog-hint']],
+      ],
       'filter' => $this->formBuilder->getForm(HivelogQueenObservationFilterForm::class, $hive),
       'table' => [
         '#type' => 'component',

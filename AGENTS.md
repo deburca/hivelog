@@ -238,7 +238,7 @@ submodule's own entity types are in "Submodules".
   (boolean — observed actively laying / moving), `notes`, `images`.
   Surfaced from the hive page via an **Add Observation** button next to
   **Edit Queen**, and listed at the end of the queen canonical page.
-  **One place per fact (ADR-0111, tasks 0294/0295).** An inspection is a visit to
+  **One place per fact (ADR-0111, tasks 0294/0295/0296).** An inspection is a visit to
   a hive; an observation is a note about one queen. A new inspection of a hive
   with an active queen offers a **Queen observation** section (Health, Actively
   laying) on its form: filled in, it saves a `QueenObservation` for her in the
@@ -255,6 +255,9 @@ submodule's own entity types are in "Submodules".
   parent's fields stay (the hive tile, both filters and the v1 contract read
   them) and remain editable as a starting value; saving the parent updates its
   `changed` time.
+  The rule is also said where a beekeeper meets it (task 0296): the help texts of `queen_seen`, `eggs_seen` and the
+  observation's `active`, and a one-line `hivelog-hint` paragraph under the Queen Observations heading of the hive page
+  and the Observations heading of the queen page.
 
 **Seasonal calendar / action logs** (ADR-0025) — a `CalendarAction` is the
 recurring "plan", scoped to one `Apiary`; the two log types are its "did it
