@@ -118,9 +118,9 @@ Currently:
   written, 2 existing test files extended, 178 kernel + 70 unit tests
   passing with zero errors/notices — up from a 124/54 baseline; found and
   fixed one genuine new bug of its own along the way)
-- [[0026-post-testing-refinements]] — in-progress (umbrella task for
+- [[0026-post-testing-refinements]] — done, closed 2026-11-23 (umbrella task for
   small usability refinements surfaced by the user's own hands-on
-  testing; item 1, current-week/timing visibility, done)
+  testing; its one item, current-week/timing visibility, shipped)
 - [[0027-apiary-vs-hive-scoped-calendar-items]] — backlog, **fully
   designed but not started** (session ran out of budget partway through
   planning it — see the task file for the complete, confirmed

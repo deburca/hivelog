@@ -184,6 +184,14 @@ trait HivelogStatTileStripTrait {
     }
 
     $allowed = $definition->getSetting('allowed_values');
+    if (is_array($allowed) && $type === 'list_string' && $definition->getFieldStorageDefinition()->isMultiple()) {
+      // Every value of a multi-valued list, by label.
+      $labels = array_map(
+        fn($item) => (string) ($allowed[$item['value']] ?? $item['value']),
+        $field->getValue()
+      );
+      return implode(', ', $labels);
+    }
     if (is_array($allowed) && isset($allowed[$raw])) {
       return (string) $allowed[$raw];
     }

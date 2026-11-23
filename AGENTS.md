@@ -221,6 +221,20 @@ submodule's own entity types are in "Submodules".
   empty table says "no active hives" when other hives exist.
 - `HiveInspection` — references a `Hive` and carries the full inspection
   payload (external check, queen, brood, stores, health, management, notes).
+  **Colony strength and quick mode (task 0279).** Optional integer
+  `frames_of_bees` and `frames_of_brood` (0 to 40) sit beside `population` (the quick judgement) on the
+  Colony condition tab and as tiles, with no severity (what is many depends on the season and the hive).
+  A new inspection can be opened as a **quick inspection**, `hivelog.inspection.add` with `?mode=quick`
+  (`HiveInspectionForm::isQuickMode()`, new inspections only): the same form and entity with the tabs
+  gone and every field outside `QUICK_FIELDS` hidden by `#access`, so a save changes nothing about the
+  API or the access rules. Honey stores and population start from the hive's latest inspection
+  (`QUICK_DEFAULT_FIELDS`); queen seen, eggs seen, varroa, disease and the rest are never carried over,
+  because a stale "yes" is a false record. The full form stays the default; the hive page has a Quick
+  Inspection button beside Add Inspection, and each form links to the other. The Queen observation and
+  Next visit sections stay in quick mode. **`disease_signs` is multi-valued** (checkboxes; an exclusive
+  `none` via the `HivelogExclusiveValue` constraint; `hivelog_update_10043` migrated it). Its v1 API attribute is
+  therefore a list of strings, changed in place because the Vinculum app was unreleased; severity reads every
+  value, and `collective`'s inspection summary carries a list.
 - `Queen` — references a `Hive` via `hive` entity_reference (optional).
   Stores identity/provenance (`name`, `origin`, `queen_year`, `queen_colour`,
   `breed`, `temperament`, `purchase_cost`, `purchase_date`,

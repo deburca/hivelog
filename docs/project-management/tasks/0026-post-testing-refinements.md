@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: in-progress
+status: done
 priority: medium
 project: "[[seasonal-calendar-and-hive-action-tracking]]"
 area: theme
@@ -99,3 +99,8 @@ working out today's ISO week and comparing it by hand.
 - Project:: [[seasonal-calendar-and-hive-action-tracking]]
 - Decisions:: [[0025-seasonal-calendar-and-hive-action-tracking]], [[0009-render-cacheability-discipline]]
 - Commits::
+
+## Outcome
+Closed 2026-11-23. Item 1 was the only item raised, and it shipped. The calendar has since
+been reworked by later tasks (dates for weeks, starter calendars, copy a calendar), so new
+usability findings get their own task instead of reopening this umbrella.

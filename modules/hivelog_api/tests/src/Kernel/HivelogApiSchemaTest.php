@@ -99,7 +99,8 @@ class HivelogApiSchemaTest extends HivelogApiKernelTestBase {
     $this->assertSame(255, $fields['feed_type']['max_length']);
     $this->assertSame('images', $fields['images']['kind']);
     $this->assertTrue($fields['images']['multiple']);
-    $this->assertFalse($fields['disease_signs']['multiple'], 'A single choice says so');
+    $this->assertTrue($fields['disease_signs']['multiple'], 'Several signs can be recorded');
+    $this->assertFalse($fields['population']['multiple'], 'A single choice says so');
   }
 
   /**

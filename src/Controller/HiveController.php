@@ -1078,6 +1078,16 @@ class HiveController extends ControllerBase {
             'extra_classes' => 'hivelog-list-heading__action',
           ],
         ],
+        'add_quick' => [
+          '#type' => 'component',
+          '#component' => 'hivelog:button',
+          '#props' => [
+            'label' => (string) $this->t('Quick Inspection'),
+            'url' => Url::fromRoute('hivelog.inspection.add', ['hive' => $hive->id()], ['query' => ['mode' => 'quick']])->toString(),
+            'variant' => 'default',
+            'extra_classes' => 'hivelog-list-heading__action',
+          ],
+        ],
       ],
       'filter' => $this->formBuilder->getForm(HivelogInspectionFilterForm::class, $hive),
       'table' => [

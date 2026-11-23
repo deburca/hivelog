@@ -1444,3 +1444,82 @@ function hivelog_update_10041() {
   $update_manager->installEntityType(\Drupal::entityTypeManager()->getDefinition('hive_reminder'));
   return t('Created the hive reminder entity type and its table.');
 }
+
+/**
+ * Adds frames of bees and frames of brood to hive inspections.
+ *
+ * Task 0279. Two optional integer counts, so a colony's strength can be
+ * compared between visits (Population stays as the quick judgement).
+ */
+function hivelog_update_10042() {
+  $update_manager = \Drupal::entityDefinitionUpdateManager();
+  $definition = \Drupal::entityTypeManager()->getDefinition('hive_inspection');
+  $fields = $definition->getClass()::baseFieldDefinitions($definition);
+  $installed = [];
+  foreach (['frames_of_bees', 'frames_of_brood'] as $field) {
+    if (!$update_manager->getFieldStorageDefinition($field, 'hive_inspection')) {
+      $update_manager->installFieldStorageDefinition($field, 'hive_inspection', 'hivelog', $fields[$field]);
+      $installed[] = $field;
+    }
+  }
+  return $installed
+    ? t('Added @fields to hive inspections.', ['@fields' => implode(', ', $installed)])
+    : t('Hive inspections already have the frame count fields.');
+}
+
+/**
+ * Lets a hive inspection record several disease signs.
+ *
+ * Task 0279. `disease_signs` was a single-valued list; it is now unlimited,
+ * which moves it from the inspection table to a table of its own, so Drupal
+ * cannot alter it in place. The values are read first, the storage replaced,
+ * and each row written back with a direct insert (an entity save would touch
+ * `changed` and re-run the latest-temperament cache on old records). The
+ * field-app API attribute changes from a string to a list with it (the app
+ * was not yet released).
+ */
+function hivelog_update_10043() {
+  $update_manager = \Drupal::entityDefinitionUpdateManager();
+  $database = \Drupal::database();
+  $current = $update_manager->getFieldStorageDefinition('disease_signs', 'hive_inspection');
+  if (!$current || $current->isMultiple()) {
+    return t('Disease signs already allow several values.');
+  }
+
+  // Read the old values from the shared table before dropping the column.
+  $old = [];
+  $table = \Drupal::entityTypeManager()->getStorage('hive_inspection')->getEntityType()->getBaseTable();
+  if ($database->schema()->fieldExists($table, 'disease_signs')) {
+    $old = $database->select($table, 't')
+      ->fields('t', ['id', 'disease_signs'])
+      ->isNotNull('disease_signs')
+      ->execute()
+      ->fetchAllKeyed();
+  }
+
+  $update_manager->uninstallFieldStorageDefinition($current);
+  $definition = \Drupal::entityTypeManager()->getDefinition('hive_inspection');
+  $fields = $definition->getClass()::baseFieldDefinitions($definition);
+  $update_manager->installFieldStorageDefinition('disease_signs', 'hive_inspection', 'hivelog', $fields['disease_signs']);
+
+  $storage = \Drupal::entityTypeManager()->getStorage('hive_inspection');
+  $data_table = $storage->getTableMapping()->getDedicatedDataTableName($update_manager->getFieldStorageDefinition('disease_signs', 'hive_inspection'));
+  foreach ($old as $id => $value) {
+    if ($value === '' || $value === NULL) {
+      continue;
+    }
+    $database->insert($data_table)
+      ->fields([
+        'bundle' => 'hive_inspection',
+        'deleted' => 0,
+        'entity_id' => $id,
+        'revision_id' => $id,
+        'langcode' => 'und',
+        'delta' => 0,
+        'disease_signs_value' => $value,
+      ])
+      ->execute();
+  }
+  \Drupal::entityTypeManager()->clearCachedDefinitions();
+  return t('Disease signs now allow several values; @count existing values kept.', ['@count' => count($old)]);
+}

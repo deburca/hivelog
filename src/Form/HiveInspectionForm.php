@@ -4,6 +4,8 @@ namespace Drupal\hivelog\Form;
 
 use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Link;
+use Drupal\Core\Url;
 use Drupal\hivelog\Entity\Hive;
 use Drupal\hivelog\Entity\HiveReminder;
 use Drupal\hivelog\Entity\Queen;
@@ -15,6 +17,37 @@ use Drupal\hivelog\Entity\QueenObservation;
 class HiveInspectionForm extends ContentEntityForm {
 
   use HivelogEntityFormTrait;
+
+  /**
+   * The fields a quick inspection shows (task 0279).
+   *
+   * Quick mode only hides fields: it saves the same entity as the full form.
+   */
+  public const QUICK_FIELDS = [
+    'hive',
+    'inspection_date',
+    'queen_seen',
+    'eggs_seen',
+    'honey_stores',
+    'population',
+    'temperament',
+    'notes',
+  ];
+
+  /**
+   * The quick fields offered the last inspection's value, where that is safe.
+   *
+   * A stale "queen seen" or "eggs seen" would be a false record, so those and
+   * everything about disease and varroa are never carried over.
+   */
+  public const QUICK_DEFAULT_FIELDS = ['honey_stores', 'population'];
+
+  /**
+   * Whether this is a quick inspection: a new one asked for with ?mode=quick.
+   */
+  protected function isQuickMode(): bool {
+    return $this->entity->isNew() && $this->getRequest()->query->get('mode') === 'quick';
+  }
 
   /**
    * {@inheritdoc}
@@ -32,11 +65,20 @@ class HiveInspectionForm extends ContentEntityForm {
     $form['#suffix'] = '</div>';
     $form['#attached']['library'][] = 'hivelog/forms';
 
-    $form['inspection_sections'] = [
-      '#type' => 'vertical_tabs',
-      '#title' => $this->t('Inspection sections'),
-      '#weight' => 2,
-    ];
+    $quick = $this->isQuickMode();
+    $form['#cache']['contexts'][] = 'url.query_args:mode';
+    if ($this->entity->isNew()) {
+      $form['mode_switch'] = $this->buildModeSwitch($quick);
+    }
+    // A section's group: the tabs in the full form, none in quick mode.
+    $group = $quick ? NULL : 'inspection_sections';
+    if (!$quick) {
+      $form['inspection_sections'] = [
+        '#type' => 'vertical_tabs',
+        '#title' => $this->t('Inspection sections'),
+        '#weight' => 2,
+      ];
+    }
 
     $sections = [
       'overview' => [
@@ -67,7 +109,7 @@ class HiveInspectionForm extends ContentEntityForm {
         'title' => $this->t('Colony condition'),
         'weight' => 4,
         'open' => FALSE,
-        'fields' => ['temperament', 'population'],
+        'fields' => ['temperament', 'population', 'frames_of_bees', 'frames_of_brood'],
       ],
       'health' => [
         'title' => $this->t('Varroa and disease'),
@@ -95,6 +137,16 @@ class HiveInspectionForm extends ContentEntityForm {
       ],
     ];
 
+    if ($quick) {
+      // One flat form: hide the rest, and the sections that go with it.
+      foreach (array_keys($this->entity->getFieldDefinitions()) as $field_name) {
+        if (isset($form[$field_name]) && !in_array($field_name, self::QUICK_FIELDS, TRUE)) {
+          $form[$field_name]['#access'] = FALSE;
+        }
+      }
+      $sections = [];
+    }
+
     foreach ($sections as $section_key => $section) {
       $form[$section_key] = [
         '#type' => 'details',
@@ -117,7 +169,7 @@ class HiveInspectionForm extends ContentEntityForm {
       $form['next_visit_section'] = [
         '#type' => 'details',
         '#title' => $this->t('Next visit'),
-        '#group' => 'inspection_sections',
+        '#group' => $group,
         '#weight' => 9,
         '#open' => FALSE,
       ];
@@ -143,7 +195,7 @@ class HiveInspectionForm extends ContentEntityForm {
       $form['queen_observation_section'] = [
         '#type' => 'details',
         '#title' => $this->t('Queen observation'),
-        '#group' => 'inspection_sections',
+        '#group' => $group,
         '#weight' => 8.5,
         '#open' => FALSE,
         '#description' => $this->t('Optional. Saves a note about the active queen, @queen, with this inspection. Use the hive page when you look at her outside an inspection.', [
@@ -185,6 +237,27 @@ class HiveInspectionForm extends ContentEntityForm {
   }
 
   /**
+   * A link between the quick and the full inspection form.
+   */
+  protected function buildModeSwitch(bool $quick): array {
+    $hive_id = $this->entity->get('hive')->target_id;
+    if (!$hive_id) {
+      return [];
+    }
+    $url = Url::fromRoute('hivelog.inspection.add', ['hive' => $hive_id], $quick ? [] : ['query' => ['mode' => 'quick']]);
+    return [
+      '#type' => 'html_tag',
+      '#tag' => 'p',
+      '#weight' => -10,
+      '#attributes' => ['class' => ['hivelog-hint']],
+      'link' => Link::fromTextAndUrl(
+        $quick ? $this->t('Need more fields? Use the full form') : $this->t('In a hurry? Use the quick inspection'),
+        $url
+      )->toRenderable(),
+    ];
+  }
+
+  /**
    * Applies sensible defaults on a fresh inspection entity.
    */
   protected function applyNewEntityDefaults(): void {
@@ -194,6 +267,37 @@ class HiveInspectionForm extends ContentEntityForm {
     }
     if ($entity->get('disease_signs')->isEmpty()) {
       $entity->set('disease_signs', 'none');
+    }
+    if ($this->isQuickMode()) {
+      $this->applyLastInspectionDefaults();
+    }
+  }
+
+  /**
+   * Offers the hive's last inspection values for the safe quick fields.
+   */
+  protected function applyLastInspectionDefaults(): void {
+    $hive_id = $this->entity->get('hive')->target_id;
+    if (!$hive_id) {
+      return;
+    }
+    $storage = $this->entityTypeManager->getStorage('hive_inspection');
+    $ids = $storage->getQuery()
+      ->accessCheck(TRUE)
+      ->condition('hive', $hive_id)
+      ->sort('inspection_date', 'DESC')
+      ->sort('id', 'DESC')
+      ->range(0, 1)
+      ->execute();
+    /** @var \Drupal\hivelog\Entity\HiveInspection|null $last */
+    $last = $ids ? $storage->load(reset($ids)) : NULL;
+    if (!$last) {
+      return;
+    }
+    foreach (self::QUICK_DEFAULT_FIELDS as $field) {
+      if ($this->entity->get($field)->isEmpty() && !$last->get($field)->isEmpty()) {
+        $this->entity->set($field, $last->get($field)->value);
+      }
     }
   }
 
