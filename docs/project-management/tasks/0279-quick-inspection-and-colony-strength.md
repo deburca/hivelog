@@ -7,7 +7,7 @@ project: "[[beekeeper-centred-simplification-and-gaps]]"
 area: entity
 created: 2026-11-14
 branch: feature/0279-quick-inspection-and-colony-strength
-release:
+release: "4.5.0"
 depends-on:
 blocked-by:
 ---
@@ -66,7 +66,7 @@ the right elements and the defaults skip the unsafe fields; the second disease f
 severity). AGENTS.md: the form, the field names and the contract note.
 
 ## Outcome
-Merged in PR #238 (2026-11-23), unreleased at the time of writing. Frames of bees and brood,
+Merged in PR #238 (2026-11-23), released in [[4.5.0]]. Frames of bees and brood,
 a quick inspection (`?mode=quick`) and several disease signs. Update hooks `10042` and `10043`.
 The v1 `disease_signs` attribute is now a list, changed in place because the Vinculum app is
 unreleased, so the app has to send an array and refuse "None" with another sign. Not done: the
