@@ -4,7 +4,10 @@ namespace Drupal\hivelog\Form;
 
 use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\hivelog\Entity\Hive;
 use Drupal\hivelog\Entity\HiveReminder;
+use Drupal\hivelog\Entity\Queen;
+use Drupal\hivelog\Entity\QueenObservation;
 
 /**
  * Form handler for Hive Inspection add/edit forms.
@@ -132,6 +135,33 @@ class HiveInspectionForm extends ContentEntityForm {
       ];
     }
 
+    // Queen observation (task 0294, ADR-0111): what was seen of the queen, written
+    // as a queen observation in the same save. New inspections only, and only
+    // for a hive with an active queen, so editing one never adds a second.
+    $observed_queen = $this->canAddQueenObservation() ? $this->activeQueen() : NULL;
+    if ($observed_queen) {
+      $form['queen_observation_section'] = [
+        '#type' => 'details',
+        '#title' => $this->t('Queen observation'),
+        '#group' => 'inspection_sections',
+        '#weight' => 8.5,
+        '#open' => FALSE,
+        '#description' => $this->t('Optional. Saves a note about the active queen, @queen, with this inspection. Use the hive page when you look at her outside an inspection.', [
+          '@queen' => $observed_queen->label(),
+        ]),
+      ];
+      $form['queen_observation_section']['queen_observation_health'] = [
+        '#type' => 'select',
+        '#title' => $this->t('Queen health'),
+        '#options' => ['' => $this->t('- Not recorded -')] + QueenObservation::create()->get('health')->getSetting('allowed_values'),
+      ];
+      $form['queen_observation_section']['queen_observation_active'] = [
+        '#type' => 'checkbox',
+        '#title' => $this->t('Actively laying'),
+        '#description' => $this->t('Also counts as laying when Eggs seen is ticked.'),
+      ];
+    }
+
     // Hide dependent fields when their controlling boolean is unchecked so
     // users are not asked for information that is not applicable. With JS
     // disabled these fields stay visible (non-JS safe) and the server
@@ -205,6 +235,28 @@ class HiveInspectionForm extends ContentEntityForm {
   }
 
   /**
+   * The active queen of the inspection's hive, if it has one.
+   */
+  protected function activeQueen(): ?Queen {
+    $hive = $this->entity->get('hive')->entity;
+    return $hive instanceof Hive ? $hive->getActiveQueen() : NULL;
+  }
+
+  /**
+   * Whether this form offers a queen observation.
+   *
+   * Only a new inspection of a hive that has an active queen offers one, and
+   * only to someone who may create a queen observation.
+   */
+  protected function canAddQueenObservation(): bool {
+    if (!$this->entity->isNew()) {
+      return FALSE;
+    }
+    return $this->activeQueen() !== NULL
+      && $this->entityTypeManager->getAccessControlHandler('queen_observation')->createAccess();
+  }
+
+  /**
    * Clears dependent field values when their controlling field is unchecked.
    */
   protected function normaliseDependentFields(FormStateInterface $form_state): void {
@@ -256,6 +308,7 @@ class HiveInspectionForm extends ContentEntityForm {
     $entity = $this->entity;
     // Read before saving: the inspection is no longer new afterwards.
     $offer_next_visit = $this->canAddNextVisit();
+    $offer_observation = $this->canAddQueenObservation();
     $status = $entity->save();
 
     if ($status === SAVED_NEW) {
@@ -268,6 +321,10 @@ class HiveInspectionForm extends ContentEntityForm {
     $hive_id = $entity->get('hive')->target_id;
     if ($offer_next_visit && $hive_id) {
       $this->createNextVisitReminder((int) $hive_id, $form_state);
+    }
+
+    if ($offer_observation && $hive_id) {
+      $this->createQueenObservation($form_state);
     }
 
     // Redirect to the parent hive view.
@@ -303,6 +360,41 @@ class HiveInspectionForm extends ContentEntityForm {
     }
     $reminder->save();
     $this->messenger()->addStatus($this->t('Reminder set for @date.', ['@date' => $due]));
+  }
+
+  /**
+   * Creates the queen observation, if health or laying was filled in.
+   *
+   * It is a separate, independent record of the hive's active queen, dated the
+   * inspection date and carrying the inspection's temperament; nothing links it
+   * back to the inspection (ADR-0111). It is validated like any other write, so
+   * a refusal gives a message and no observation; the inspection is already
+   * saved.
+   */
+  protected function createQueenObservation(FormStateInterface $form_state): void {
+    $health = (string) $form_state->getValue('queen_observation_health');
+    $ticked = (bool) $form_state->getValue('queen_observation_active');
+    if ($health === '' && !$ticked) {
+      return;
+    }
+    $inspection = $this->entity;
+    $queen = $this->activeQueen();
+    if (!$queen) {
+      return;
+    }
+    $observation = QueenObservation::create([
+      'queen' => $queen->id(),
+      'observation_date' => $inspection->get('inspection_date')->value,
+      'health' => $health !== '' ? $health : NULL,
+      'temperament' => $inspection->get('temperament')->value ?: NULL,
+      'active' => $ticked || (bool) $inspection->get('eggs_seen')->value,
+    ]);
+    if ($observation->validate()->count() > 0) {
+      $this->messenger()->addWarning($this->t('The inspection was saved, but the queen observation could not be created.'));
+      return;
+    }
+    $observation->save();
+    $this->messenger()->addStatus($this->t('Queen observation recorded for @queen.', ['@queen' => $queen->label()]));
   }
 
 }

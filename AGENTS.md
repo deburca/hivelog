@@ -231,6 +231,23 @@ submodule's own entity types are in "Submodules".
   (boolean — observed actively laying / moving), `notes`, `images`.
   Surfaced from the hive page via an **Add Observation** button next to
   **Edit Queen**, and listed at the end of the queen canonical page.
+  **One place per fact (ADR-0111, tasks 0294/0295).** An inspection is a visit to
+  a hive; an observation is a note about one queen. A new inspection of a hive
+  with an active queen offers a **Queen observation** section (Health, Actively
+  laying) on its form: filled in, it saves a `QueenObservation` for her in the
+  same save, dated the inspection date, with the inspection's temperament and
+  `active` true when laying is ticked or Eggs seen is (`HiveInspectionForm`,
+  like the Next visit reminder: new inspections only, the user must be allowed
+  to add an observation, validated like any write, no link back, so editing an
+  inspection never changes it). **Temperament is recorded per visit**, and
+  `Hive::temperament` and `Queen::temperament` are a cache of the latest record
+  (`LatestTemperamentTrait`, on `HiveInspection` and `QueenObservation`
+  `postSave()`): a record that is the parent's latest by date (then id) and has a
+  temperament copies it to the parent; a back-dated record or an empty value
+  changes nothing. It runs on entity save, so the API behaves the same. The
+  parent's fields stay (the hive tile, both filters and the v1 contract read
+  them) and remain editable as a starting value; saving the parent updates its
+  `changed` time.
 
 **Seasonal calendar / action logs** (ADR-0025) — a `CalendarAction` is the
 recurring "plan", scoped to one `Apiary`; the two log types are its "did it

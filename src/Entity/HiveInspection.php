@@ -60,6 +60,7 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
   use EntityChangedTrait;
   use EntityOwnerTrait;
   use ApiaryStampTrait;
+  use LatestTemperamentTrait;
 
   /**
    * {@inheritdoc}
@@ -80,6 +81,17 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
   public function preSave(EntityStorageInterface $storage) {
     parent::preSave($storage);
     $this->stampApiary($storage);
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * A record that is the hive's latest gives its temperament to the
+   * hive (ADR-0111, task 0295).
+   */
+  public function postSave(EntityStorageInterface $storage, $update = TRUE) {
+    parent::postSave($storage, $update);
+    $this->syncParentTemperament('hive', 'inspection_date');
   }
 
   /**

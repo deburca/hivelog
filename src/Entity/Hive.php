@@ -286,7 +286,7 @@ class Hive extends ContentEntityBase implements EntityChangedInterface, EntityOw
 
     $fields['temperament'] = BaseFieldDefinition::create('list_string')
       ->setLabel(t('Temperament'))
-      ->setDescription(t('The general temperament of the colony.'))
+      ->setDescription(t('The general temperament of the colony. A starting value: it is updated from the latest inspection that records a temperament.'))
       ->setSetting('allowed_values', [
         'calm' => 'Calm',
         'moderate' => 'Moderate',

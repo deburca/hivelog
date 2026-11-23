@@ -65,6 +65,7 @@ class QueenObservation extends ContentEntityBase implements EntityChangedInterfa
   use EntityChangedTrait;
   use EntityOwnerTrait;
   use ApiaryStampTrait;
+  use LatestTemperamentTrait;
 
   /**
    * {@inheritdoc}
@@ -85,6 +86,17 @@ class QueenObservation extends ContentEntityBase implements EntityChangedInterfa
   public function preSave(EntityStorageInterface $storage) {
     parent::preSave($storage);
     $this->stampApiary($storage);
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * A record that is the queen's latest gives its temperament to the
+   * queen (ADR-0111, task 0295).
+   */
+  public function postSave(EntityStorageInterface $storage, $update = TRUE) {
+    parent::postSave($storage, $update);
+    $this->syncParentTemperament('queen', 'observation_date');
   }
 
   /**
