@@ -225,8 +225,9 @@ submodule's own entity types are in "Submodules".
   `frames_of_bees` and `frames_of_brood` (0 to 40) sit beside `population` (the quick judgement) on the
   Colony condition tab and as tiles, with no severity (what is many depends on the season and the hive).
   A new inspection can be opened as a **quick inspection**, `hivelog.inspection.add` with `?mode=quick`
-  (`HiveInspectionForm::isQuickMode()`, new inspections only): the same form and entity with the tabs
-  gone and every field outside `QUICK_FIELDS` hidden by `#access`, so a save changes nothing about the
+  (`HiveInspectionForm::isQuickMode()`, new inspections only): the same form and entity with its own
+  short set of vertical tabs (`quickSections()`: Overview, Queen status, Stores and colony, Notes, then the Queen
+  observation and Next visit sections) and every field outside `QUICK_FIELDS` hidden by `#access`, so a save changes nothing about the
   API or the access rules. Honey stores and population start from the hive's latest inspection
   (`QUICK_DEFAULT_FIELDS`); queen seen, eggs seen, varroa, disease and the rest are never carried over,
   because a stale "yes" is a false record. The full form stays the default; the hive page has a Quick

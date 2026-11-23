@@ -100,7 +100,15 @@ class HiveInspectionQuickModeTest extends KernelTestBase {
     foreach (['varroa_count', 'disease_signs', 'fed', 'supers', 'frames_of_bees', 'pollen_stores', 'images'] as $field) {
       $this->assertFalse($this->isShown($form, $field), "$field is left out of the quick form.");
     }
-    $this->assertArrayNotHasKey('inspection_sections', $form);
+    // Grouped in vertical tabs like the full form, not one long page.
+    $this->assertSame('vertical_tabs', $form['inspection_sections']['#type']);
+    $this->assertSame('overview', $form['inspection_date']['#group']);
+    $this->assertSame('queen_status', $form['queen_seen']['#group']);
+    $this->assertSame('colony_condition', $form['honey_stores']['#group']);
+    $this->assertSame('notes_section', $form['notes']['#group']);
+    foreach (['external_check_section', 'brood_and_stores', 'health', 'management', 'photos_section'] as $section) {
+      $this->assertArrayNotHasKey($section, $form, "$section is not a quick tab.");
+    }
     $this->assertArrayHasKey('mode_switch', $form);
   }
 
