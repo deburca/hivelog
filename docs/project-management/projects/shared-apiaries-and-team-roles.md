@@ -1,7 +1,7 @@
 ---
 type: project
 tags: [hivelog/project]
-status: planning
+status: active
 target:
 created: 2026-10-04
 ---
@@ -9,13 +9,21 @@ created: 2026-10-04
 
 ## Goal
 Let an apiary owner invite other site users as collaborators with
-owner/editor/viewer roles, on top of today's own/any permission model.
+owner / beekeeper / novice roles, on top of today's own/any permission model.
 Apiary (Queen/Bee/Drone roles), BeeKeepPal (team plans) and BeeHero
 (team management) all offer this. This is the largest and riskiest
 proposal: it touches every access handler, route-level access check and
 list row filter.
 
 Proposal F from the [[2026-10-04-beekeeping-software-survey]].
+
+## Where it stands (2026-11-23)
+**Layer 2 (membership roles) shipped in 3.0.0** (ADR-0108): the apiary membership entity and member manager,
+three ordered roles (`novice` < `keeper`, shown as "Beekeeper" < `owner`), role-aware access handlers with parity tests,
+and hand-over between owners. The tasks below that are `done` are that work. **Layer 1 (entitlement gating) is not
+started:** [[0225-hivelog-entitlement-interface]] and [[0226-hivecount-quota-enforcement]] are backlog and wait on
+[[0109-entitlement-interface-commerce-gating]], still `proposed`. [[0230-inspection-records-items-used]] is open too.
+The "editor" and "viewer" names in the older text below became "beekeeper" and "novice" (task 0224).
 
 ## Two deployment models — how they fit together
 
@@ -29,8 +37,8 @@ Use Case 2 (SaaS host):         Commerce subscribes user → auto-creates accoun
                                     Entitlement gate              Membership roles (ADR-0108)
 ```
 
-**Layer 2 — Membership roles (shared):** ADR-0108 defines the role system (owner/editor/
-viewer). This layer is identical in both use cases. A beekeeper on a SaaS site or a self-
+**Layer 2 — Membership roles (shared):** ADR-0108 defines the role system (owner /
+beekeeper / novice). This layer is identical in both use cases. A beekeeper on a SaaS site or a self-
 hosted friend/family site both see and use the same member management UI.
 
 **Layer 1 — Entitlement gating (SaaS only):** ADR-0109 defines an entitlement interface that

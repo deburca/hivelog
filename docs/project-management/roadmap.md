@@ -2,7 +2,7 @@
 type: roadmap
 tags: [hivelog/roadmap]
 status: living
-updated: 2026-11-22
+updated: 2026-11-23
 ---
 # 🐝 Hivelog Roadmap
 A living roadmap derived from the projects, tasks, decisions, and releases in
@@ -82,10 +82,10 @@ the tasks after it depend on that ADR.
   [[0280-queen-and-colony-acquisition-cost-in-reports]],
   [[0281-queen-end-reason-and-marking]], [[0282-hive-type-and-material-lists]]
   and [[0289-fix-pre-existing-phpcs-warnings-and-errors]].
-- **[[ios-field-app]]** — the app lives in its own repository (Vinculum); the
+- **[[ios-field-app]]** (now `active`) — the app lives in its own repository (Vinculum); the
   tasks here that moved there are `deferred`. Open here: the demo-site kit
-  [[0215-demo-site-kit]] (`review`) and
-  [[0235-keep-the-nested-demo-site-out-of-module-discovery]] (`todo`).
+  [[0215-demo-site-kit]] (`review`).
+  [[0235-keep-the-nested-demo-site-out-of-module-discovery]] is done: the per-site setting stays, now documented.
 - **[[qr-hive-labels]]** (high) — [[0177-hive-quick-access-page]] →
   [[0178-printable-qr-label-sheet]]. The app's scanning is done in Vinculum;
   the web page and label sheet are not built.
@@ -107,8 +107,7 @@ the tasks after it depend on that ADR.
 - **[[honey-sales-and-batch-provenance]]** (low) —
   [[0192-sales-and-batch-adr]] → [[0193-honey-batch-entity]] →
   [[0194-public-batch-provenance-page]].
-- **[[shared-apiaries-and-team-roles]]** — Layer 2 (roles) shipped in 3.0.0;
-  its project note still reads `planning`. Left: [[0230-inspection-records-items-used]]
+- **[[shared-apiaries-and-team-roles]]** (now `active`) — Layer 2 (roles) shipped in 3.0.0. Left: [[0230-inspection-records-items-used]]
   and the entitlement tasks [[0225-hivelog-entitlement-interface]],
   [[0226-hivecount-quota-enforcement]].
 - **[[hivelog-commerce-submodule]]** — [[0227-hivelog-commerce-submodule-repo]]
@@ -153,9 +152,7 @@ and [[0055-embed-required-items-and-expected-yield-in-calendar-action-edit-form]
    high-priority survey projects, then [[data-export-and-printable-records]]
    and [[treatment-register]].
 4. Housekeeping: close or extend [[0026-post-testing-refinements]]; decide
-   [[0083-ai-assisted-apiary-insights]]; update the project notes for
-   [[shared-apiaries-and-team-roles]] and [[ios-field-app]] to say what
-   shipped; run [[0094-ai-insights-prelaunch-validation]] before any
+   [[0083-ai-assisted-apiary-insights]]; run [[0094-ai-insights-prelaunch-validation]] before any
    real-world AI rollout.
 5. Pick up [[inventory-and-yield-improvements]] only when a real need surfaces;
    every item there is `low` and speculative.

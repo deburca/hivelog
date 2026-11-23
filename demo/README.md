@@ -55,6 +55,13 @@ served by a real host name. DDEV can do this on a server (untested by me on a re
 Keep it small and disposable. A reset signs everyone out (the OAuth tokens are in the database),
 so sign in again afterwards.
 
+## Module discovery on a development site
+`demo/` holds a complete, generated Drupal (`demo/web`, `demo/vendor`). On a development site that has the module
+checked out (a symlink or a copy), Drupal's extension discovery walks into it, finds a second copy of core and
+loads modules from it. Add `'demo'` to `$settings['file_scan_ignore_directories']` in that site's `settings.php`
+(hvg's already has it). A Composer install is unaffected (`demo/` is excluded from the package), and when you rsync
+the module into a test site, exclude `demo/` (and `docs/`).
+
 ## What is in here
 | Path | |
 |---|---|

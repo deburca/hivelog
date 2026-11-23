@@ -123,6 +123,10 @@ composer stan
 
 ## Common Commands
 
+**Development sites and `demo/`.** `demo/` contains a generated Drupal. A development site that carries the module
+as a symlink or copy needs `'demo'` in `$settings['file_scan_ignore_directories']` (hvg has it), or module discovery
+loads a second core from it (task 0235). When copying the module into a test site, exclude `demo/` and `docs/`.
+
 The surrounding project runs inside DDEV. All PHP/Drush commands must be
 executed inside the `web` container; paths are from the container's
 perspective (`/var/www/html/...`).
