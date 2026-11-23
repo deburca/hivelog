@@ -71,7 +71,8 @@ booleans.
    was looked at during one.
 2. **The inspection form offers a Queen observation section** (new inspections only,
    like the Next visit reminder of task 0274). It has Health, and Actively laying
-   pre-filled from Eggs seen. When filled in it creates a `QueenObservation` for the hive's
+   (counted as laying also when Eggs seen is ticked, since a form cannot pre-fill from a
+   field not yet entered). When filled in it creates a `QueenObservation` for the hive's
    active queen with the inspection's date and temperament, validated like any other
    write. The section is not offered if the hive has no active queen or the user may not
    add an observation. An observation carries no link back to its inspection, so editing
@@ -108,4 +109,4 @@ booleans.
 2. *Should an observation made from an inspection link back to it?* No. It stays an
    independent queen record; no `inspection` field.
 3. *Which fields does the inspection form's section offer?* Health and Actively laying
-   (pre-filled from Eggs seen). Notes and photos stay on the separate observation form.
+   (laying also counts when Eggs seen is ticked). Notes and photos stay on the separate observation form.

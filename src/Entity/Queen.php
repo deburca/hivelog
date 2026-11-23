@@ -190,7 +190,7 @@ class Queen extends ContentEntityBase implements EntityChangedInterface, EntityO
       ->setDisplayConfigurable('view', TRUE);
     $fields['temperament'] = BaseFieldDefinition::create('list_string')
       ->setLabel(t('Temperament'))
-      ->setDescription(t('The general temperament associated with this queen.'))
+      ->setDescription(t('The general temperament associated with this queen. A starting value: it is updated from her latest observation that records a temperament.'))
       ->setSetting('allowed_values', [
         'calm' => 'Calm',
         'moderate' => 'Moderate',
