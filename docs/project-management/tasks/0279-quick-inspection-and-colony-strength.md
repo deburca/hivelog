@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task]
-status: in-progress
+status: done
 priority: medium
 project: "[[beekeeper-centred-simplification-and-gaps]]"
 area: entity
@@ -30,7 +30,7 @@ side).
 - [x] The schema endpoint and the v1 contract are extended (new optional fields); the `disease_signs` cardinality change is a deliberate v1 change, the app being unreleased
 - [x] Update hook; kernel tests
 - [x] `AGENTS.md` updated if entity types, routes, services, hooks or conventions changed
-- [ ] phpcs clean; phpstan clean; kernel tests pass (`--group hivelog`)
+- [x] phpcs clean; phpstan clean; kernel tests pass (`--group hivelog`)
 
 ## Plan (2026-11-23)
 Three independent parts, each its own commit, in this order so the riskiest comes last.
@@ -64,6 +64,16 @@ Three independent parts, each its own commit, in this order so the riskiest come
 Tests: a kernel test per part (field validation and the update hook; quick-mode form builds
 the right elements and the defaults skip the unsafe fields; the second disease field and
 severity). AGENTS.md: the form, the field names and the contract note.
+
+## Outcome
+Merged in PR #238 (2026-11-23), unreleased at the time of writing. Frames of bees and brood,
+a quick inspection (`?mode=quick`) and several disease signs. Update hooks `10042` and `10043`.
+The v1 `disease_signs` attribute is now a list, changed in place because the Vinculum app is
+unreleased, so the app has to send an array and refuse "None" with another sign. Not done: the
+frame fields are not in `collective`'s minimised context payload, and quick mode was tested in
+kernel tests only, not in a browser. Lesson: run phpstan locally in cms2
+(`vendor/bin/phpstan analyse -c web/modules/contrib/hivelog/phpstan.neon`) before pushing, since
+the baseline is a ratchet.
 
 ## Implementation notes
 - Key files: `src/Entity/HiveInspection.php`, `src/Form/HiveInspectionForm.php`, `src/Controller/HiveInspectionController.php`, `modules/hivelog_api/`
