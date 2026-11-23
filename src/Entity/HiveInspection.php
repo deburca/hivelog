@@ -147,7 +147,7 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
     // External check (before opening).
     $fields['external_check'] = BaseFieldDefinition::create('string_long')
       ->setLabel(t('External check (before opening)'))
-      ->setDescription(t('Observe flight activity at the entrance — steady traffic with pollen coming in is a good sign. Look for dead bees, signs of robbing, or wasps. Note the hive\'s weight by lifting the back slightly (hefting).'))
+      ->setDescription(t("Observe flight activity at the entrance — steady traffic with pollen coming in is a good sign. Look for dead bees, signs of robbing, or wasps. Note the hive's weight by lifting the back slightly (hefting)."))
       ->setDisplayOptions('form', [
         'type' => 'string_textarea',
         'weight' => 2,
@@ -166,7 +166,7 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
     // Queen status fields.
     $fields['queen_seen'] = BaseFieldDefinition::create('boolean')
       ->setLabel(t('Queen Seen'))
-      ->setDescription(t('Was the queen spotted during this inspection? You don\'t need to spot her every visit — evidence of her is enough. Look for eggs (single, upright in cell bottoms — confirms a laying queen within the last 3 days), young larvae, and a good brood pattern (solid, not patchy).'))
+      ->setDescription(t("Was the queen spotted during this inspection? You don't need to spot her every visit — evidence of her is enough. Look for eggs (single, upright in cell bottoms — confirms a laying queen within the last 3 days), young larvae, and a good brood pattern (solid, not patchy)."))
       ->setDefaultValue(FALSE)
       ->setDisplayOptions('form', [
         'type' => 'boolean_checkbox',
@@ -185,7 +185,7 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
 
     $fields['queen_cells'] = BaseFieldDefinition::create('boolean')
       ->setLabel(t('Queen Cells'))
-      ->setDescription(t('Were queen cells present? Look along bottom bars and frame faces. Swarm cells (bottom of frames, multiple) mean imminent swarming — act now. Supersedure cells (middle of frames, 1–3) mean they\'re replacing the queen. Play cups are normal and empty.'))
+      ->setDescription(t("Were queen cells present? Look along bottom bars and frame faces. Swarm cells (bottom of frames, multiple) mean imminent swarming — act now. Supersedure cells (middle of frames, 1–3) mean they're replacing the queen. Play cups are normal and empty."))
       ->setDefaultValue(FALSE)
       ->setDisplayOptions('form', [
         'type' => 'boolean_checkbox',

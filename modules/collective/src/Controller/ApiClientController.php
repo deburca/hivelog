@@ -127,6 +127,7 @@ class ApiClientController extends ControllerBase {
    *   The date formatter.
    */
   protected function dateFormatter() {
+    // phpcs:ignore DrupalPractice.Objects.GlobalDrupal.GlobalDrupal -- Resolved lazily, not injected.
     return \Drupal::service('date.formatter');
   }
 

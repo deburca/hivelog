@@ -50,6 +50,7 @@ class AiModuleProviderCaller implements ProviderCallerInterface {
     }
 
     /** @var \Drupal\ai\AiProviderPluginManager $provider_manager */
+    // phpcs:ignore DrupalPractice.Objects.GlobalDrupal.GlobalDrupal -- Resolved lazily, not injected.
     $provider_manager = \Drupal::service('ai.provider');
     $provider_info = $provider_manager->getDefaultProviderForOperationType('chat');
     if (!$provider_info) {

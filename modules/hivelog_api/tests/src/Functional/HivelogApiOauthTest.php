@@ -41,13 +41,6 @@ class HivelogApiOauthTest extends BrowserTestBase {
   protected static $modules = ['hivelog', 'hivelog_api', 'file', 'image', 'node'];
 
   /**
-   * {@inheritdoc}
-   */
-  protected function setUp(): void {
-    parent::setUp();
-  }
-
-  /**
    * Base64url without padding.
    */
   protected function b64url(string $raw): string {

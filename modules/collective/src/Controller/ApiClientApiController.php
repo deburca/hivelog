@@ -70,6 +70,7 @@ class ApiClientApiController extends ControllerBase {
       $contexts[] = $this->contextBuilder->buildContext($hive);
     }
 
+    // phpcs:ignore DrupalPractice.Objects.GlobalDrupal.GlobalDrupal -- Resolved lazily, not injected.
     $client->set('last_run', \Drupal::time()->getRequestTime());
     $client->save();
 

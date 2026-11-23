@@ -51,7 +51,7 @@ function collective_form_alter(array &$form, FormStateInterface $form_state, $fo
     'text' => [
       '#type' => 'html_tag',
       '#tag' => 'p',
-      '#value' => t('Turning this on makes this apiary\'s hive ids, calendar status, recent inspection fields (population, brood pattern, honey/pollen stores, queen cells seen, varroa checks, disease signs, supers, weight), and the active queen\'s year/status readable by anything holding a provisioned API client credential — the nexus module\'s own AI processing, if installed, or any other client you\'ve authorised. Never shared: apiary/hive names, GPS location, inspection notes, harvest or inventory figures, or raw sensor readings.'),
+      '#value' => t("Turning this on makes this apiary's hive ids, calendar status, recent inspection fields (population, brood pattern, honey/pollen stores, queen cells seen, varroa checks, disease signs, supers, weight), and the active queen's year/status readable by anything holding a provisioned API client credential — the nexus module's own AI processing, if installed, or any other client you've authorised. Never shared: apiary/hive names, GPS location, inspection notes, harvest or inventory figures, or raw sensor readings."),
     ],
   ];
 }

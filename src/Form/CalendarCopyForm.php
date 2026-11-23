@@ -61,7 +61,7 @@ class CalendarCopyForm extends FormBase {
     $form['#attached']['library'][] = 'hivelog/forms';
 
     $form['intro'] = [
-      '#markup' => '<p>' . $this->t('Adds the actions of another calendar to this apiary\'s. An action this apiary already has (same title, scope and starting week) is skipped: it is not changed, but it is given a required item or expected harvest the other calendar has for it and it lacks. Nothing is removed. Items and products an action needs are matched by name and unit, and added to this apiary\'s catalogue if missing, with no stock and no price history.') . '</p>',
+      '#markup' => '<p>' . $this->t("Adds the actions of another calendar to this apiary's. An action this apiary already has (same title, scope and starting week) is skipped: it is not changed, but it is given a required item or expected harvest the other calendar has for it and it lacks. Nothing is removed. Items and products an action needs are matched by name and unit, and added to this apiary's catalogue if missing, with no stock and no price history.") . '</p>',
     ];
     $form['source'] = [
       '#type' => 'select',

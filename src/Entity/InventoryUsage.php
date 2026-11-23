@@ -124,7 +124,7 @@ class InventoryUsage extends ContentEntityBase implements EntityChangedInterface
 
     $fields['quantity'] = BaseFieldDefinition::create('decimal')
       ->setLabel(t('Quantity'))
-      ->setDescription(t('How much of the item was actually used, in the item\'s own unit.'))
+      ->setDescription(t("How much of the item was actually used, in the item's own unit."))
       ->setRequired(TRUE)
       ->setSetting('precision', 10)
       ->setSetting('scale', 3)

@@ -115,6 +115,9 @@ workflow overrides the patch block in the scaffold's `composer.json` before
 running `composer install`. If you change patch file names or locations, update
 both `composer.json` **and** the override step in `.github/workflows/ci.yml`.
 
+`composer lint` is clean (0 errors, 0 warnings, task 0289): keep it so. The line limit is 120; `t()` in entity classes and the
+blank line after a banner comment in tests are excluded in `phpcs.xml.dist`; anything else needs a fix or a `phpcs:ignore` with a reason.
+
 Run lint and static analysis locally with:
 ```
 composer lint

@@ -109,6 +109,7 @@ class AiProviderConfigController extends ControllerBase {
     }
 
     /** @var \Drupal\ai\AiProviderPluginManager $provider_manager */
+    // phpcs:ignore DrupalPractice.Objects.GlobalDrupal.GlobalDrupal -- Resolved lazily, not injected.
     $provider_manager = \Drupal::service('ai.provider');
     $provider_info = $provider_manager->getDefaultProviderForOperationType('chat');
 
@@ -152,6 +153,7 @@ class AiProviderConfigController extends ControllerBase {
    *   The date formatter.
    */
   protected function dateFormatter() {
+    // phpcs:ignore DrupalPractice.Objects.GlobalDrupal.GlobalDrupal -- Resolved lazily, not injected.
     return \Drupal::service('date.formatter');
   }
 

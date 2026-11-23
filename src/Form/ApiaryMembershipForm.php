@@ -142,7 +142,6 @@ class ApiaryMembershipForm extends ContentEntityForm {
    * {@inheritdoc}
    */
   public function save(array $form, FormStateInterface $form_state) {
-    $entity = $this->entity;
     $status = parent::save($form, $form_state);
 
     if ($status === SAVED_NEW) {

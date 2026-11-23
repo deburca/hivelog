@@ -139,7 +139,7 @@ class CalendarActionItemRequirement extends ContentEntityBase implements EntityC
 
     $fields['quantity'] = BaseFieldDefinition::create('decimal')
       ->setLabel(t('Quantity'))
-      ->setDescription(t('How much of the item is typically needed — per hive for a hive-scoped action, per apiary for an apiary-scoped one — in the item\'s own unit.'))
+      ->setDescription(t("How much of the item is typically needed — per hive for a hive-scoped action, per apiary for an apiary-scoped one — in the item's own unit."))
       ->setRequired(TRUE)
       ->setSetting('precision', 10)
       ->setSetting('scale', 3)

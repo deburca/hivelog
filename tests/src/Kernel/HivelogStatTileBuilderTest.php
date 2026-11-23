@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\hivelog\Kernel;
 
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\hivelog\Entity\Apiary;
@@ -24,6 +25,8 @@ use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 #[Group('hivelog')]
 #[RunTestsInSeparateProcesses]
 class HivelogStatTileBuilderTest extends KernelTestBase {
+
+  use StringTranslationTrait;
 
   /**
    * {@inheritdoc}
@@ -119,9 +122,9 @@ class HivelogStatTileBuilderTest extends KernelTestBase {
     $build = $method->invoke($builder, [
       'my_module_thing' => [
         'value' => '3',
-        'label' => t('My Things'),
+        'label' => $this->t('My Things'),
         'url' => Url::fromRoute('<front>'),
-        'sublabel' => t('2 need attention'),
+        'sublabel' => $this->t('2 need attention'),
         'sublabel_variant' => 'warning',
         'weight' => 0,
       ],
@@ -145,9 +148,9 @@ class HivelogStatTileBuilderTest extends KernelTestBase {
     $builder = \Drupal::service('hivelog.stat_tile_builder');
     $method = new \ReflectionMethod($builder, 'build');
     $build = $method->invoke($builder, [
-      'weight_five' => ['value' => '1', 'label' => t('Five'), 'url' => $url, 'weight' => 5],
-      'weight_neg_five' => ['value' => '2', 'label' => t('Neg five'), 'url' => $url, 'weight' => -5],
-      'weight_unset' => ['value' => '3', 'label' => t('Unset'), 'url' => $url],
+      'weight_five' => ['value' => '1', 'label' => $this->t('Five'), 'url' => $url, 'weight' => 5],
+      'weight_neg_five' => ['value' => '2', 'label' => $this->t('Neg five'), 'url' => $url, 'weight' => -5],
+      'weight_unset' => ['value' => '3', 'label' => $this->t('Unset'), 'url' => $url],
     ]);
 
     $keys = array_keys(array_filter($build, fn($k) => is_string($k) && !str_starts_with((string) $k, '#'), ARRAY_FILTER_USE_KEY));

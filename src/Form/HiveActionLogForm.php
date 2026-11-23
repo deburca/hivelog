@@ -172,7 +172,7 @@ class HiveActionLogForm extends ContentEntityForm {
    *   (defence in depth — the caller should already have checked this).
    */
   protected function createLinkedInspection(HiveActionLog $log): ?HiveInspection {
-    $access_handler = \Drupal::entityTypeManager()->getAccessControlHandler('hive_inspection');
+    $access_handler = $this->entityTypeManager->getAccessControlHandler('hive_inspection');
     if (!$access_handler->createAccess(NULL, $this->currentUser())) {
       return NULL;
     }

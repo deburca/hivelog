@@ -177,7 +177,7 @@ class InventoryPurchase extends ContentEntityBase implements EntityChangedInterf
 
     $fields['quantity'] = BaseFieldDefinition::create('decimal')
       ->setLabel(t('Quantity'))
-      ->setDescription(t('How much was bought, in the item\'s unit.'))
+      ->setDescription(t("How much was bought, in the item's unit."))
       ->setRequired(TRUE)
       ->setSetting('precision', 10)
       ->setSetting('scale', 3)

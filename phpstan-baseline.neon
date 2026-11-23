@@ -691,12 +691,6 @@ parameters:
 			path: src/Form/HiveActionLogForm.php
 
 		-
-			message: '#^\\Drupal calls should be avoided in classes, use dependency injection instead$#'
-			identifier: globalDrupalDependencyInjection.useDependencyInjection
-			count: 1
-			path: src/Form/HiveActionLogForm.php
-
-		-
 			message: '#^Call to an undefined method Drupal\\Core\\Entity\\EntityInterface\:\:get\(\)\.$#'
 			identifier: method.notFound
 			count: 1

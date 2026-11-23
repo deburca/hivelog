@@ -166,8 +166,6 @@ class ApiaryTest extends KernelTestBase {
       'location' => 'Original location',
     ]);
     $apiary->save();
-    $original_changed = $loaded = Apiary::load($apiary->id())->get('changed')->value;
-
     // Allow time difference.
     sleep(1);
 

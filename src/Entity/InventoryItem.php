@@ -465,7 +465,7 @@ class InventoryItem extends ContentEntityBase implements EntityChangedInterface,
 
     $fields['low_stock_threshold'] = BaseFieldDefinition::create('decimal')
       ->setLabel(t('Low Stock Threshold'))
-      ->setDescription(t('Optional, consumables only: get flagged as low stock once stock on hand falls to this level or below, in the item\'s own unit. Leave empty for no warning.'))
+      ->setDescription(t("Optional, consumables only: get flagged as low stock once stock on hand falls to this level or below, in the item's own unit. Leave empty for no warning."))
       ->setSetting('precision', 10)
       ->setSetting('scale', 3)
       ->setSetting('min', 0)
@@ -490,7 +490,7 @@ class InventoryItem extends ContentEntityBase implements EntityChangedInterface,
 
     $fields['weight_kg'] = BaseFieldDefinition::create('decimal')
       ->setLabel(t('Weight (kg)'))
-      ->setDescription(t('Optional: this item\'s own weight, in kilograms. Used to compute a hive\'s empty weight when this item is assigned as one of its components (see the Hive Components section on a hive\'s own page).'))
+      ->setDescription(t("Optional: this item's own weight, in kilograms. Used to compute a hive's empty weight when this item is assigned as one of its components (see the Hive Components section on a hive's own page)."))
       ->setSetting('precision', 10)
       ->setSetting('scale', 3)
       ->setSetting('min', 0)

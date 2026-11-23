@@ -80,6 +80,7 @@ class SensorIngestController extends ControllerBase {
       $created_ids[] = $reading->id();
     }
 
+    // phpcs:ignore DrupalPractice.Objects.GlobalDrupal.GlobalDrupal -- Resolved lazily, not injected.
     $device->set('last_seen', \Drupal::time()->getRequestTime());
     $device->save();
 
