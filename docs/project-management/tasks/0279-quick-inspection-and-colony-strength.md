@@ -24,8 +24,8 @@ free-text `feed_type` and no amount ([[0230-inspection-records-items-used]] cove
 side).
 
 ## Acceptance criteria
-- [ ] A quick mode: date, queen right (seen or eggs), stores, health, notes, with the full form one tap away; the last inspection's values offered as defaults where that is safe
-- [ ] Optional `frames_of_bees` and `frames_of_brood` integers, shown as tiles and available to a trend
+- [x] A quick mode: date, queen right (seen or eggs), stores, health, notes, with the full form one tap away; the last inspection's values offered as defaults where that is safe
+- [x] Optional `frames_of_bees` and `frames_of_brood` integers, shown as tiles and available to a trend
 - [ ] `disease_signs` accepts several values; existing data preserved
 - [ ] The schema endpoint and the v1 contract are extended, not broken (new optional fields; a cardinality change needs a compatibility decision)
 - [ ] Update hook; kernel tests
