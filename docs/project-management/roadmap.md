@@ -10,10 +10,10 @@ this vault. Sequencing is driven by dependencies and completed work rather than
 fixed dates. Last refreshed **2026-11-23**.
 ## Where things stand
 276 tasks: **210 done**, 1 in-progress, 1 review, 1 todo, 49 backlog, 10
-deferred, 4 dropped. 28 projects: **11 done**, 4 active, **11 planning**, 1
+deferred, 4 dropped. 28 projects: **12 done**, 3 active, **11 planning**, 1
 backlog, 1 dropped. 50 decisions: 48 accepted, 2 proposed
 ([[0083-ai-assisted-apiary-insights]], [[0109-entitlement-interface-commerce-gating]]).
-The latest release is **4.5.0** (2026-11-23, not yet applied on hvg); 4.4.1 is the one applied on the hvg site. HiveLog
+The latest release is **4.5.0** (2026-11-23), applied on the hvg site. HiveLog
 is hosted and tested on hvg (`hivelog.eu`); see AGENTS.md.
 Since the last refresh (2.4.0, 2026-10-04) the module went through three major
 versions. The market-survey work and the November audit
@@ -50,14 +50,12 @@ Each has its own note in `releases/`.
   reminder permissions.
 - **[[4.5.0]]** (2026-11-23): a **quick inspection** mode, frames of bees and brood, several disease signs (task 0279;
   the v1 `disease_signs` attribute is now a list) and the queen noted from the inspection form (tasks 0294 and 0295,
-  ADR-0111). Not yet applied on hvg.
+  ADR-0111). Applied on hvg.
 ## Active projects
 - **[[sensor-data-collection]]** — the software chain ships; what is left is
   physical. [[0079-pilot-weight-sensor-hardware-build]] is `in-progress`.
   Backlog: [[0096-off-grid-gateway-power-design]],
   [[0115-varroa-camera-sensor-hardware-build]].
-- **[[seasonal-calendar-and-hive-action-tracking]]** — all tasks done, the
-  umbrella [[0026-post-testing-refinements]] closed 2026-11-23; the project can be marked `done`.
 - **[[inventory-and-yield-improvements]]** — 7 backlog tasks, all `low`
   ([[0046-real-sales-ledger]], [[0047-cross-apiary-aggregate-views]],
   [[0048-unit-conversion]], [[0050-fifo-lot-costing]],
@@ -121,6 +119,7 @@ stat-tile work, tasks 0256–0259). Still wanted, trimmed:
 states of 0251 fold into 0254).
 ## Completed projects
 [[mobile-ux-improvements]], [[action-button-consistency]],
+[[seasonal-calendar-and-hive-action-tracking]],
 [[breadcrumb-consistency]], [[page-structure-consistency]],
 [[dashboard-landing-page]], [[hivelog-visual-identity]],
 [[inventory-tracking-and-depreciation]],

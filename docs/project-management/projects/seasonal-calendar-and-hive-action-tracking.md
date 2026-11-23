@@ -1,7 +1,7 @@
 ---
 type: project
 tags: [hivelog/project]
-status: active
+status: done
 target:
 created: 2026-07-03
 ---
@@ -139,11 +139,9 @@ creation; and an optional link from a "done" report to a full hive
 inspection record. No target release has been assigned yet — see the open
 question below and [[roadmap]] for sequencing into an upcoming version.
 
-The project has been reopened at `active` for a round of post-testing
-refinements — see [[0026-post-testing-refinements]] — after the user did
-their own extensive hands-on testing of the shipped feature and found a
-few small usability gaps not caught by the automated test suite (which
-verifies *behaviour*, not necessarily *at-a-glance usability*).
+The project was reopened at `active` for a round of post-testing refinements
+([[0026-post-testing-refinements]]), which shipped and was closed on 2026-11-23;
+the project is `done`. New usability findings get their own task.
 
 ## Open questions
 - ~~Should the "Also create a hive inspection record" checkbox default to
