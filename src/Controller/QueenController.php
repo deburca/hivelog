@@ -178,6 +178,13 @@ class QueenController extends ControllerBase {
         ],
       ],
     ];
+    $build['observations_hint'] = [
+      '#type' => 'html_tag',
+      '#tag' => 'p',
+      '#value' => $this->t('A note about this queen alone, for when you looked at her outside an inspection. During an inspection, record her in the inspection form.'),
+      '#attributes' => ['class' => ['hivelog-hint']],
+      '#weight' => 20.5,
+    ];
 
     $query = $this->entityTypeManager
       ->getStorage('queen_observation')

@@ -162,7 +162,7 @@ class QueenObservation extends ContentEntityBase implements EntityChangedInterfa
       ->setDisplayConfigurable('view', TRUE);
     $fields['active'] = BaseFieldDefinition::create('boolean')
       ->setLabel(t('Active'))
-      ->setDescription(t('Was the queen observed actively laying / moving on the comb?'))
+      ->setDescription(t('Was the queen observed actively laying / moving on the comb? Use observations for a look at the queen outside an inspection; during an inspection, record her in the inspection form instead.'))
       ->setDefaultValue(FALSE)
       ->setDisplayOptions('form', ['type' => 'boolean_checkbox', 'weight' => 4])
       ->setDisplayOptions('view', [
