@@ -61,7 +61,7 @@ class HivelogApiLeafDeleteTest extends HivelogApiKernelTestBase {
    */
   protected function usageCount(File $file): int {
     $count = 0;
-    foreach (\Drupal::service('file.usage')->listUsage($file) as $module => $types) {
+    foreach (\Drupal::service('file.usage')->listUsage($file) as $types) {
       foreach ($types as $ids) {
         $count += array_sum($ids);
       }

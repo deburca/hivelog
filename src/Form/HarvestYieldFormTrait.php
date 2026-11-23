@@ -137,7 +137,7 @@ trait HarvestYieldFormTrait {
       '#type' => 'details',
       '#title' => $this->t('Harvest'),
       '#description' => $yield_recipes
-        ? $this->t('Pre-filled from the calendar action\'s expected harvest — adjust to what was actually taken. Leave a field at 0 to record none.')
+        ? $this->t("Pre-filled from the calendar action's expected harvest — adjust to what was actually taken. Leave a field at 0 to record none.")
         : $this->t('What was taken. Leave a field empty or at 0 to record none.'),
       '#group' => $vertical_tabs_group,
       '#weight' => 3,

@@ -100,7 +100,7 @@ class SensorDeviceController extends ControllerBase {
           '#type' => 'container',
           '#attributes' => ['class' => ['hivelog-notice--warning']],
           'text' => [
-            '#markup' => '<p>' . $this->t('Downloading the configuration regenerates this device\'s token, immediately invalidating any previously downloaded configuration — the device (or its receiver/bridge) will need to be re-provisioned with the newly downloaded file.') . '</p>',
+            '#markup' => '<p>' . $this->t("Downloading the configuration regenerates this device's token, immediately invalidating any previously downloaded configuration — the device (or its receiver/bridge) will need to be re-provisioned with the newly downloaded file.") . '</p>',
           ],
         ],
         'download' => [
@@ -240,6 +240,7 @@ class SensorDeviceController extends ControllerBase {
    *   The current request.
    */
   protected function getRequest() {
+    // phpcs:ignore DrupalPractice.Objects.GlobalDrupal.GlobalDrupal -- Resolved lazily, not injected.
     return \Drupal::request();
   }
 
@@ -250,6 +251,7 @@ class SensorDeviceController extends ControllerBase {
    *   The trend chart builder.
    */
   protected function trendChartBuilder() {
+    // phpcs:ignore DrupalPractice.Objects.GlobalDrupal.GlobalDrupal -- Resolved lazily, not injected.
     return \Drupal::service('nanoprobe.sensor_trend_chart_builder');
   }
 
@@ -260,6 +262,7 @@ class SensorDeviceController extends ControllerBase {
    *   The time service.
    */
   protected function time() {
+    // phpcs:ignore DrupalPractice.Objects.GlobalDrupal.GlobalDrupal -- Resolved lazily, not injected.
     return \Drupal::time();
   }
 
@@ -322,6 +325,7 @@ class SensorDeviceController extends ControllerBase {
    *   The date formatter.
    */
   protected function dateFormatter() {
+    // phpcs:ignore DrupalPractice.Objects.GlobalDrupal.GlobalDrupal -- Resolved lazily, not injected.
     return \Drupal::service('date.formatter');
   }
 

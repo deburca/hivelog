@@ -1,7 +1,7 @@
 ---
 type: task
 tags: [hivelog/task, tech-debt]
-status: backlog
+status: done
 priority: low
 project: beekeeper-centred-simplification-and-gaps
 area: code-quality
@@ -70,9 +70,9 @@ A full `composer lint` (phpcs) run produces 0 errors and ~50+ warnings across th
 - `modules/nanoprobe/tests/src/Kernel/SensorHiveMoveTest.php`: line 63
 
 ## Acceptance criteria
-- [ ] All phpcs errors fixed (0 errors from `composer lint`)
-- [ ] All phpcs warnings fixed (0 warnings) — or explicitly excluded via a `.phpcs-exclude.xml` / standard config if justified
-- [ ] `composer lint` passes with exit code 0 on CI
+- [x] All phpcs errors fixed (0 errors from `composer lint`)
+- [x] All phpcs warnings fixed (0 warnings) — or explicitly excluded via a `.phpcs-exclude.xml` / standard config if justified
+- [x] `composer lint` passes with exit code 0 on CI
 
 ## Implementation approach
 Recommended: fix incrementally, one file at a time per PR. Priority order:
@@ -82,6 +82,17 @@ Recommended: fix incrementally, one file at a time per PR. Priority order:
 4. \Drupal:: calls → dependency injection (larger refactor, do per-file)
 5. Blank-line-after-inline-comment (mechanical, batch across files)
 6. 80-char line-length (the bulk — many are just 1–3 chars over; acceptable for now if CI tolerates warnings as non-blocking, or fix selectively)
+
+## Outcome (2026-11-23)
+`composer lint` now reports 0 errors and 0 warnings (312 warnings at the start). What was done:
+- **Line length:** the ruleset sets the limit to 120, the length the code is written to; the five lines over it were wrapped.
+- **Backslash-escaped apostrophes (25):** the `t()` strings use double quotes (same source string, so translations hold).
+- **Excluded in `phpcs.xml.dist`, with reasons:** `t()` in `*/Entity/*` (static `baseFieldDefinitions()` cannot use
+  `$this->t()`; core does the same) and the blank-line-after-comment rule in `*/tests/*` (section banners).
+- **Fixed:** unused variables (4), translated exception messages (2), a useless `setUp()` override, `t()` in a kernel test
+  (`StringTranslationTrait`), one `\Drupal::` in `HiveActionLogForm` (its phpstan baseline entry removed).
+- **Left with `phpcs:ignore` and a reason:** 12 lazily resolved services in controllers and a breadcrumb builder (a
+  constructor change each; phpstan keeps them in its baseline). Dependency injection there is a possible later cleanup.
 
 ## Related
 - Depends on: Task 0274 (which introduced one new warning — accepted as-is)

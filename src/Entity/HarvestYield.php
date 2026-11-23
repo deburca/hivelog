@@ -281,7 +281,7 @@ class HarvestYield extends ContentEntityBase implements EntityChangedInterface, 
 
     $fields['quantity'] = BaseFieldDefinition::create('decimal')
       ->setLabel(t('Quantity'))
-      ->setDescription(t('How much of the product was actually produced, in the product\'s own unit.'))
+      ->setDescription(t("How much of the product was actually produced, in the product's own unit."))
       ->setRequired(TRUE)
       ->setSetting('precision', 10)
       ->setSetting('scale', 3)
@@ -345,7 +345,7 @@ class HarvestYield extends ContentEntityBase implements EntityChangedInterface, 
 
     $fields['unit_price_snapshot'] = BaseFieldDefinition::create('decimal')
       ->setLabel(t('Unit Price Snapshot'))
-      ->setDescription(t('The product\'s expected unit price at the time this yield was recorded. Never recalculated after creation.'))
+      ->setDescription(t("The product's expected unit price at the time this yield was recorded. Never recalculated after creation."))
       ->setSetting('precision', 12)
       ->setSetting('scale', 4)
       ->setDisplayOptions('view', ['label' => 'inline', 'type' => 'number_decimal', 'weight' => 4])

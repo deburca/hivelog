@@ -394,7 +394,9 @@ class HivelogBreadcrumbBuilder implements BreadcrumbBuilderInterface {
     }
     if ($route->getDefault('_title_callback')) {
       /** @var \Drupal\Core\Controller\TitleResolverInterface $title_resolver */
+      // phpcs:ignore DrupalPractice.Objects.GlobalDrupal.GlobalDrupal -- Resolved lazily, not injected.
       $title_resolver = \Drupal::service('title_resolver');
+      // phpcs:ignore DrupalPractice.Objects.GlobalDrupal.GlobalDrupal -- Resolved lazily, not injected.
       $title = $title_resolver->getTitle(\Drupal::request(), $route);
       return $title === NULL ? NULL : (string) $title;
     }

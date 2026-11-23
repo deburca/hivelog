@@ -1336,7 +1336,7 @@ class HiveController extends ControllerBase {
       ->load('thumbnail');
 
     $items = [];
-    foreach ($hive->get('images') as $delta => $item) {
+    foreach ($hive->get('images') as $item) {
       /** @var \Drupal\file\FileInterface|null $file */
       $file = $item->entity;
       if (!$file) {

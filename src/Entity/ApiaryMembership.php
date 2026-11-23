@@ -109,7 +109,7 @@ class ApiaryMembership extends ContentEntityBase implements EntityChangedInterfa
         ->execute();
       if ($existing) {
         throw new \InvalidArgumentException(
-          (string) t('A membership for this apiary and user already exists.')
+          'A membership for this apiary and user already exists.'
         );
       }
     }
@@ -131,7 +131,7 @@ class ApiaryMembership extends ContentEntityBase implements EntityChangedInterfa
     // (the form says so first; this is the backstop for other callers).
     if (!$this->isNew() && $this->getRole() !== 'owner' && $this->isLastOwner(TRUE)) {
       throw new \InvalidArgumentException(
-        (string) t('The last owner of an apiary cannot be given another role.')
+        'The last owner of an apiary cannot be given another role.'
       );
     }
   }
@@ -300,7 +300,7 @@ class ApiaryMembership extends ContentEntityBase implements EntityChangedInterfa
 
     $fields['owner_since'] = BaseFieldDefinition::create('timestamp')
       ->setLabel(t('Owner since'))
-      ->setDescription(t('When this membership became an owner membership. The owner who has held the role longest is the apiary\'s primary owner, whose CBR number the apiary carries.'))
+      ->setDescription(t("When this membership became an owner membership. The owner who has held the role longest is the apiary's primary owner, whose CBR number the apiary carries."))
       ->setReadOnly(TRUE);
 
     $fields['created'] = BaseFieldDefinition::create('created')

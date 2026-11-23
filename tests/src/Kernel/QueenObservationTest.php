@@ -166,7 +166,9 @@ class QueenObservationTest extends KernelTestBase {
   }
 
   /**
-   * Renders the queen observation canonical view and asserts the sectioned layout, formatted values and Edit/Delete action buttons.
+   * Renders the queen observation canonical view.
+   *
+   * Asserts the sectioned layout, formatted values and Edit/Delete buttons.
    */
   public function testObservationViewRendersSectionedLayout(): void {
     $this->installConfig(['system']);

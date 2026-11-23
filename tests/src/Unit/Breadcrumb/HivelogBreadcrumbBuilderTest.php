@@ -1027,7 +1027,9 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
-   * Hive canonical: apiary is a navigable ancestor; hive label is the terminal crumb rendered as plain text by the theme.
+   * Hive canonical: apiary is a navigable ancestor.
+   *
+   * The hive label is the terminal crumb rendered as plain text by the theme.
    */
   public function testBuildHiveCanonical(): void {
     $apiary = $this->createApiaryMock(1, 'Home Apiary');
@@ -1131,7 +1133,10 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
-   * Inspection canonical: apiary and hive are navigable ancestors; inspection label is the terminal crumb rendered as plain text by the theme.
+   * Inspection canonical: apiary and hive are navigable ancestors.
+   *
+   * The inspection label is the terminal crumb rendered as plain text by the
+   * theme.
    */
   public function testBuildInspectionCanonical(): void {
     $apiary = $this->createApiaryMock(1, 'Home Apiary');
@@ -1558,7 +1563,10 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
-   * Unassigned queen canonical: no hive ancestry; trail is Home › HiveLog › Queen (queen label is the terminal crumb rendered as plain text).
+   * Unassigned queen canonical: no hive ancestry.
+   *
+   * The trail is Home › HiveLog › Queen (queen label is the terminal crumb
+   * rendered as plain text).
    */
   public function testBuildQueenCanonicalUnassigned(): void {
     $queen = $this->createUnassignedQueenMock(21, 'Q-2023-archived');
@@ -1613,7 +1621,10 @@ class HivelogBreadcrumbBuilderTest extends UnitTestCase {
   }
 
   /**
-   * Observation canonical whose queen is unassigned: queen is a navigable ancestor; observation label is the terminal crumb rendered as plain text.
+   * Observation canonical whose queen is unassigned.
+   *
+   * The queen is a navigable ancestor; the observation label is the terminal
+   * crumb rendered as plain text.
    *
    * Apiary and hive are skipped because the queen has no hive.
    */

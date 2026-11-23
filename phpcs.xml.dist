@@ -24,6 +24,28 @@
   <rule ref="Drupal"/>
   <rule ref="DrupalPractice"/>
 
+  <!-- Line length: the project wraps at 120 (not Drupal's 80); long
+       translatable strings and docblock URLs stay whole. -->
+  <rule ref="Drupal.Files.LineLength">
+    <properties>
+      <property name="lineLimit" value="120"/>
+    </properties>
+  </rule>
+
+  <!-- An entity's baseFieldDefinitions() is static, so it cannot use
+       $this->t() or injected services; core's own entity classes call t()
+       there too. -->
+  <rule ref="DrupalPractice.Objects.GlobalFunction">
+    <exclude-pattern>*/Entity/*</exclude-pattern>
+  </rule>
+
+  <!-- Tests group their methods under banner comments (a line of dashes, a title, a line of dashes)
+       followed by a blank line and the next docblock; deleting the blank line
+       would trip the function-spacing rule instead. -->
+  <rule ref="DrupalPractice.Commenting.CommentEmptyLine">
+    <exclude-pattern>*/tests/*</exclude-pattern>
+  </rule>
+
   <!-- Exclude generated / third-party paths -->
   <exclude-pattern>vendor/</exclude-pattern>
   <exclude-pattern>node_modules/</exclude-pattern>
