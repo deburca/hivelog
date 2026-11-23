@@ -1167,6 +1167,13 @@ the module stays palette-free). The supported surface:
   theme's `global` library, not via `libraries-extend` — `libraries-extend`
   only fires for a library a controller attaches directly, so it reaches
   the dashboard but not the `EntityListBuilder` collections.
+- **Form-item focus colours.** The vertical tabs element on the inspection,
+  hive and queen forms is itself a form item (`div.form-item.form-type-vertical-tabs`)
+  with a bare "Inspection sections" label. A theme that recolours a form
+  item's label while focus is inside it (`.form-item:focus-within > label`)
+  must leave that wrapper out, or the label takes the accent colour, almost
+  invisible on a dark surface, whenever a tab or a field in a panel has
+  focus. The module does not patch this: colour is the theme's call.
 
 The reference implementation is the **beeswax** theme — Packagist package
 **`deburca/beeswax`** (repo `github.com/deburca/beeswax`), kbg's default
