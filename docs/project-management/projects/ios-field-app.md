@@ -1,7 +1,7 @@
 ---
 type: project
 tags: [hivelog/project]
-status: planning
+status: active
 target:
 created: 2026-10-04
 ---
@@ -73,6 +73,11 @@ Static index (in suggested execution order):
 - [[0221-ios-app-hive-insight-tint]] — a hive's badge tinted by its insight; and the app's role could not view insights at all
 - [[0222-ios-app-one-tint-per-hive]] — the list and the hive page share one tint per hive
 
+## Where it stands (2026-11-23)
+The server side is shipped: `hivelog_api` (2.7.0 onwards, `/api/v1` since 4.0.0) with OAuth, computed views, writes
+through host firewalls, editing and deleting. The app lives in its own repository (Vinculum), so its tasks here are
+`deferred`. Left in this repo: the demo-site kit [[0215-demo-site-kit]] (`review`).
+
 ## Open questions
 - ~~Offline: outbox (A) or offline-first (B)?~~ Answered by [[0199-decide-mobile-offline-scope]]: A, with a client-side read cache. See the ADR's §4.
 - ~~Stock JSON:API or hand-written REST?~~ Answered by
@@ -84,7 +89,7 @@ Static index (in suggested execution order):
 - How is the API versioned so a `baseFieldDefinitions()` rename doesn't
   break shipped app versions? ~~Partly answered~~ Answered by
   [[0201-hivelog-api-submodule-scaffold]]: a versioned path prefix
-  (`/hivelog/api/v1`) plus a pinned contract fixture that fails CI on a rename
+  (since 4.0.0 `/api/v1`; it was `/hivelog/api/v1` before) plus a pinned contract fixture that fails CI on a rename
   or removal, until an alias or a new version is added. `jsonapi_extras` was
   not used (its settings are site-wide).
 - Push notifications: does the site send APNs directly (needs an Apple
@@ -93,8 +98,8 @@ Static index (in suggested execution order):
 - Is the app open source alongside the module, and who owns the App
   Store listing? (The bundle id is decided: `nu.verdigris.vinculum`, listed as Vinculum;
   see [[0209-ios-app-demo-server-and-app-store-release]]. Ownership and open source are not.)
-- Order relative to [[shared-apiaries-and-team-roles]]: ship the API
-  first and adapt, or wait for the access-model change?
+- ~~Order relative to [[shared-apiaries-and-team-roles]]~~ Answered: the API shipped first (2.7.0–2.13.0) and
+  adapted to the roles when they landed in 3.0.0 (`computed/apiary-roles`, task 0247).
 
 ## Related decisions
 - [[0107-mobile-client-api-and-native-ios-app]]
