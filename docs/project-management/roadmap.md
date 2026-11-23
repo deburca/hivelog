@@ -7,9 +7,9 @@ updated: 2026-11-23
 # 🐝 Hivelog Roadmap
 A living roadmap derived from the projects, tasks, decisions, and releases in
 this vault. Sequencing is driven by dependencies and completed work rather than
-fixed dates. Last refreshed **2026-11-22**.
+fixed dates. Last refreshed **2026-11-23**.
 ## Where things stand
-276 tasks: **208 done**, 2 in-progress, 1 review, 1 todo, 50 backlog, 10
+276 tasks: **210 done**, 1 in-progress, 1 review, 1 todo, 49 backlog, 10
 deferred, 4 dropped. 28 projects: **11 done**, 4 active, **11 planning**, 1
 backlog, 1 dropped. 50 decisions: 48 accepted, 2 proposed
 ([[0083-ai-assisted-apiary-insights]], [[0109-entitlement-interface-commerce-gating]]).
@@ -53,9 +53,8 @@ Each has its own note in `releases/`.
   physical. [[0079-pilot-weight-sensor-hardware-build]] is `in-progress`.
   Backlog: [[0096-off-grid-gateway-power-design]],
   [[0115-varroa-camera-sensor-hardware-build]].
-- **[[seasonal-calendar-and-hive-action-tracking]]** — all build tasks done.
-  Only the umbrella [[0026-post-testing-refinements]] is open and idle:
-  add items or close it.
+- **[[seasonal-calendar-and-hive-action-tracking]]** — all tasks done, the
+  umbrella [[0026-post-testing-refinements]] closed 2026-11-23; the project can be marked `done`.
 - **[[inventory-and-yield-improvements]]** — 7 backlog tasks, all `low`
   ([[0046-real-sales-ledger]], [[0047-cross-apiary-aggregate-views]],
   [[0048-unit-conversion]], [[0050-fifo-lot-costing]],
@@ -70,15 +69,12 @@ Each has its own note in `releases/`.
 Any task that adds an entity or changes access starts with an ADR task, and
 the tasks after it depend on that ADR.
 - **[[beekeeper-centred-simplification-and-gaps]]** (from the 2026-11-14
-  audit; the largest source of near-term work). Tasks 0269–0274 and 0283–0288
+  audit; the largest source of near-term work). Tasks 0269–0274, 0277, 0279 and 0283–0288
   are done (ended hives, harvest without a calendar action, starter products,
   inspection-lapse alerts, reminders, dates for weeks, the one harvest
   record). Open: [[0275-plain-language-vocabulary]],
   [[0276-navigation-by-beekeeper-job]],
-  [[0277-queen-observation-and-inspection-overlap-adr]] (the suggested first
-  step: an ADR, and 0278 and 0279 lean on it),
   [[0278-supers-one-source-of-truth]],
-  [[0279-quick-inspection-and-colony-strength]],
   [[0280-queen-and-colony-acquisition-cost-in-reports]],
   [[0281-queen-end-reason-and-marking]], [[0282-hive-type-and-material-lists]]
   and [[0289-fix-pre-existing-phpcs-warnings-and-errors]].
@@ -142,16 +138,16 @@ tasks.
 Two backlog tasks belong to no project: [[0003-apiary-map-marker-clustering]]
 and [[0055-embed-required-items-and-expected-yield-in-calendar-action-edit-form]].
 ## Recommended sequence
-1. Write [[0277-queen-observation-and-inspection-overlap-adr]], which
-   unblocks 0278 and 0279, then the two other medium tasks of the audit
-   project ([[0275-plain-language-vocabulary]],
-   [[0276-navigation-by-beekeeper-job]]).
+1. [[0278-supers-one-source-of-truth]] (unblocked by ADR-0111), then the two other medium
+   tasks of the audit project ([[0275-plain-language-vocabulary]],
+   [[0276-navigation-by-beekeeper-job]]). The next release carries 0279 (a breaking v1 change
+   to `disease_signs`, for the unreleased app).
 2. Build one shared empty-state helper ([[0254-empty-state-improvement]],
    with the empty states of 0251).
 3. Start [[qr-hive-labels]] (web page and label sheet), the smallest of the
    high-priority survey projects, then [[data-export-and-printable-records]]
    and [[treatment-register]].
-4. Housekeeping: close or extend [[0026-post-testing-refinements]]; decide
+4. Housekeeping: decide
    [[0083-ai-assisted-apiary-insights]]; run [[0094-ai-insights-prelaunch-validation]] before any
    real-world AI rollout.
 5. Pick up [[inventory-and-yield-improvements]] only when a real need surfaces;
@@ -163,11 +159,10 @@ and [[0055-embed-required-items-and-expected-yield-in-calendar-action-edit-form]
 ```mermaid
 flowchart LR
   Rel(["4.4.1 released<br/>2026-11-22"])
-  Audit(["beekeeper audit<br/>2026-11-14"]) --> A277["0277 ADR<br/>overlap"] --> A278["0278 supers<br/>0279 quick inspection"]
+  Audit(["beekeeper audit<br/>2026-11-14"]) --> A278["0278 supers"]
   Audit --> A275["0275 vocabulary<br/>0276 navigation"]
   Rel --> Q["qr-hive-labels"] --> E["data export"] --> T["treatment register"]
   T79["0079 pilot hardware<br/>in-progress"] --> Sensors(["sensor-data-collection"])
-  T26["0026 refinements<br/>idle"] --> Decide{{"add items<br/>or close"}}
 ```
 ## Live snapshot — open tasks by project
 ```dataview
