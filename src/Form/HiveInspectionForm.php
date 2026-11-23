@@ -289,6 +289,7 @@ class HiveInspectionForm extends ContentEntityForm {
       ->sort('id', 'DESC')
       ->range(0, 1)
       ->execute();
+    /** @var \Drupal\hivelog\Entity\HiveInspection|null $last */
     $last = $ids ? $storage->load(reset($ids)) : NULL;
     if (!$last) {
       return;

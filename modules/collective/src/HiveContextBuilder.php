@@ -214,9 +214,7 @@ class HiveContextBuilder {
         'queen_cells' => (bool) $inspection->get('queen_cells')->value,
         'varroa_check' => (bool) $inspection->get('varroa_check')->value,
         'varroa_count' => $inspection->get('varroa_count')->isEmpty() ? NULL : (int) $inspection->get('varroa_count')->value,
-        'disease_signs' => $inspection->get('disease_signs')->isEmpty()
-          ? NULL
-          : array_column($inspection->get('disease_signs')->getValue(), 'value'),
+        'disease_signs' => $this->valuesOrNull($inspection, 'disease_signs'),
         'supers' => $inspection->get('supers')->isEmpty() ? NULL : (int) $inspection->get('supers')->value,
         'weight_kg' => $inspection->get('weight')->isEmpty() ? NULL : (float) $inspection->get('weight')->value,
       ];
@@ -230,6 +228,21 @@ class HiveContextBuilder {
    */
   protected function emptyToNull($entity, string $field_name): ?string {
     return $entity->get($field_name)->isEmpty() ? NULL : $entity->get($field_name)->value;
+  }
+
+  /**
+   * A multi-valued field's values as a list, or NULL when it is empty.
+   *
+   * @param \Drupal\Core\Entity\FieldableEntityInterface $entity
+   *   The record.
+   * @param string $field_name
+   *   The field.
+   *
+   * @return string[]|null
+   *   The values, or NULL.
+   */
+  protected function valuesOrNull($entity, string $field_name): ?array {
+    return $entity->get($field_name)->isEmpty() ? NULL : array_column($entity->get($field_name)->getValue(), 'value');
   }
 
   /**
