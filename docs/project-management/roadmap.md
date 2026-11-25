@@ -13,7 +13,7 @@ fixed dates. Last refreshed **2026-11-25**.
 deferred, 4 dropped. 28 projects: **12 done**, 5 active, **9 planning**, 1
 backlog, 1 dropped. 52 decisions: 50 accepted, 2 proposed
 ([[0083-ai-assisted-apiary-insights]], [[0109-entitlement-interface-commerce-gating]]).
-The latest release is **4.5.1** (2026-11-25, not yet applied on hvg); 4.5.0 is the one applied on the hvg site. HiveLog
+The latest release is **4.5.1** (2026-11-25), applied on the hvg site and on the demo site. HiveLog
 is hosted and tested on hvg (`hivelog.eu`); see AGENTS.md.
 Since the last refresh (2.4.0, 2026-10-04) the module went through three major
 versions. The market-survey work and the November audit
@@ -53,7 +53,7 @@ Each has its own note in `releases/`.
   ADR-0111). Applied on hvg.
 - **[[4.5.1]]** (2026-11-25): **consistent field labels** (task 0297, ADR-0112: sentence case, "Photos", "Weight (kg)",
   the observation's "Laying or moving on the comb", a queen has a name), the two inspection layout fixes, and sign-out
-  without simple_oauth's deprecated `getConsumer()`. Not yet applied on hvg.
+  without simple_oauth's deprecated `getConsumer()`. Applied on hvg and the demo site.
 ## Active projects
 - **[[sensor-data-collection]]** — the software chain ships; what is left is
   physical. [[0079-pilot-weight-sensor-hardware-build]] is `in-progress`.
