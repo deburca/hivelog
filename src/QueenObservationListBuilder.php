@@ -31,7 +31,7 @@ class QueenObservationListBuilder extends HivelogListBuilder {
     $header['queen'] = $this->t('Queen');
     $header['health'] = $this->t('Health');
     $header['temperament'] = $this->t('Temperament');
-    $header['active'] = $this->t('Active');
+    $header['active'] = $this->t('Laying or moving on the comb');
     return $header;
   }
 

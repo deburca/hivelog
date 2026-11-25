@@ -1,12 +1,12 @@
 ---
 type: task
 tags: [hivelog/task]
-status: backlog
+status: done
 priority: low
 project: "[[ios-field-app]]"
 area: entity
 created: 2026-11-25
-branch:
+branch: feature/0297-consistent-field-labels
 release:
 depends-on: []
 blocked-by:
@@ -25,14 +25,14 @@ The app builds its forms from `/api/v1/schema` and shows each field's label exac
 - **"Weight" has no unit** in its label, though its description says kilograms, so the form shows a bare number.
 
 ## Acceptance criteria
-- [ ] Field labels on `hive`, `hive_inspection`, `queen`, `queen_observation`, `calendar_action`, `hive_action_log` and `apiary_action_log` are in sentence case ("Hive name", "Inspection date", "Queen seen", …), with proper nouns kept ("Varroa", "European Foulbrood (EFB)")
-- [ ] `queen_observation.active` is labelled for what it records, e.g. "Laying or moving on the comb", so that "Active" means in service only
-- [ ] A decision, recorded in this vault, on whether `queen.name` is a name or an identifier. If it is a name: label "Name" and the description's example a name. If it is an identifier: keep "Queen ID", and tell the app so its fallback words for an unnamed queen can be checked
-- [ ] `images` fields are labelled "Photos"
-- [ ] A field with a unit shows it in its label: "Weight (kg)"
-- [ ] `translations/hivelog.da.po` is updated for the changed source strings (e.g. "Queen ID" → "Dronning-id", "Pictures" → "Billeder" are there now)
-- [ ] `/api/v1/schema` returns the new labels. Its shape, `api_version` and field keys are unchanged
-- [ ] phpcs clean; phpstan clean; kernel tests pass (`--group hivelog`)
+- [x] Field labels on `hive`, `hive_inspection`, `queen`, `queen_observation`, `calendar_action`, `hive_action_log` and `apiary_action_log` are in sentence case ("Hive name", "Inspection date", "Queen seen", …), with proper nouns kept ("Varroa", "European Foulbrood (EFB)")
+- [x] `queen_observation.active` is labelled for what it records, e.g. "Laying or moving on the comb", so that "Active" means in service only
+- [x] A decision, recorded in this vault, on whether `queen.name` is a name or an identifier. If it is a name: label "Name" and the description's example a name. If it is an identifier: keep "Queen ID", and tell the app so its fallback words for an unnamed queen can be checked
+- [x] `images` fields are labelled "Photos"
+- [x] A field with a unit shows it in its label: "Weight (kg)"
+- [x] `translations/hivelog.da.po` is updated for the changed source strings (e.g. "Queen ID" → "Dronning-id", "Pictures" → "Billeder" are there now)
+- [x] `/api/v1/schema` returns the new labels. Its shape, `api_version` and field keys are unchanged
+- [x] phpcs clean; phpstan clean; kernel tests pass (`--group hivelog`)
 
 ## Implementation notes
 - Key files: `src/Entity/Hive.php`, `src/Entity/HiveInspection.php`, `src/Entity/Queen.php`, `src/Entity/QueenObservation.php`, the calendar and action-log entities, `src/Controller/HiveController.php` (a "Pictures" heading of its own, line 1387), `translations/hivelog.da.po`.
@@ -40,7 +40,15 @@ The app builds its forms from `/api/v1/schema` and shows each field's label exac
 - The API's field keys must not change. The app matches on keys, never on labels.
 - Once this ships, the Vinculum app re-captures `api-schema-*.json`. No app code change is expected beyond tests that quote a label.
 
+## Outcome
+- Sentence case on every field label of the seven types; list headers and filters that name one of these fields use its label too (`Week completed`, `Calendar action`, `Queen seen`).
+- `queen_observation.active` is "Laying or moving on the comb", also in the observation tables on the hive and queen pages, the observation list and its filter.
+- `queen.name` is a name (ADR-0112): label "Name", description "A name for this queen, e.g. Maud."
+- `images` fields are "Photos" (and the hive page's photo heading); `hive_inspection.weight` is "Weight (kg)".
+- No configurable fields among them, so no update hook. Keys, shape and `api_version` unchanged; `HivelogApiSchemaTest::testLabelsAreConsistent()` checks the new labels.
+- Left alone, out of scope: `inventory_purchase.purchase_date` ("Purchase Date") and the `Calendar Action` labels on the item-requirement and product-yield entities.
+
 ## Related
 - Project:: [[ios-field-app]]
-- Decisions::
+- Decisions:: [[0112-a-queen-has-a-name-not-an-identifier]]
 - Commits::

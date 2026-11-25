@@ -119,7 +119,7 @@ class HivelogQueenObservationFilterForm extends FormBase {
 
     $form['filters']['obs_active'] = [
       '#type' => 'select',
-      '#title' => $this->t('Active'),
+      '#title' => $this->t('Laying or moving on the comb'),
       '#options' => [
         '' => $this->t('- Any -'),
         '1' => $this->t('Yes'),
