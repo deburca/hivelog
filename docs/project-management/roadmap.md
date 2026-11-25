@@ -7,13 +7,13 @@ updated: 2026-11-23
 # 🐝 Hivelog Roadmap
 A living roadmap derived from the projects, tasks, decisions, and releases in
 this vault. Sequencing is driven by dependencies and completed work rather than
-fixed dates. Last refreshed **2026-11-23**.
+fixed dates. Last refreshed **2026-11-25**.
 ## Where things stand
-276 tasks: **210 done**, 1 in-progress, 1 review, 1 todo, 49 backlog, 10
-deferred, 4 dropped. 28 projects: **12 done**, 3 active, **11 planning**, 1
-backlog, 1 dropped. 50 decisions: 48 accepted, 2 proposed
+280 tasks: **217 done**, 1 in-progress, 1 review, 47 backlog, 10
+deferred, 4 dropped. 28 projects: **12 done**, 5 active, **9 planning**, 1
+backlog, 1 dropped. 52 decisions: 50 accepted, 2 proposed
 ([[0083-ai-assisted-apiary-insights]], [[0109-entitlement-interface-commerce-gating]]).
-The latest release is **4.5.0** (2026-11-23), applied on the hvg site. HiveLog
+The latest release is **4.5.1** (2026-11-25, not yet applied on hvg); 4.5.0 is the one applied on the hvg site. HiveLog
 is hosted and tested on hvg (`hivelog.eu`); see AGENTS.md.
 Since the last refresh (2.4.0, 2026-10-04) the module went through three major
 versions. The market-survey work and the November audit
@@ -51,6 +51,9 @@ Each has its own note in `releases/`.
 - **[[4.5.0]]** (2026-11-23): a **quick inspection** mode, frames of bees and brood, several disease signs (task 0279;
   the v1 `disease_signs` attribute is now a list) and the queen noted from the inspection form (tasks 0294 and 0295,
   ADR-0111). Applied on hvg.
+- **[[4.5.1]]** (2026-11-25): **consistent field labels** (task 0297, ADR-0112: sentence case, "Photos", "Weight (kg)",
+  the observation's "Laying or moving on the comb", a queen has a name), the two inspection layout fixes, and sign-out
+  without simple_oauth's deprecated `getConsumer()`. Not yet applied on hvg.
 ## Active projects
 - **[[sensor-data-collection]]** — the software chain ships; what is left is
   physical. [[0079-pilot-weight-sensor-hardware-build]] is `in-progress`.
@@ -160,7 +163,7 @@ and [[0055-embed-required-items-and-expected-yield-in-calendar-action-edit-form]
 ## Current state
 ```mermaid
 flowchart LR
-  Rel(["4.5.0 released<br/>2026-11-23"])
+  Rel(["4.5.1 released<br/>2026-11-25"])
   Audit(["beekeeper audit<br/>2026-11-14"]) --> A278["0278 supers"]
   Audit --> A275["0275 vocabulary<br/>0276 navigation"]
   Rel --> Q["qr-hive-labels"] --> E["data export"] --> T["treatment register"]
