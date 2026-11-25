@@ -69,7 +69,7 @@ class HivelogApiSchemaTest extends HivelogApiKernelTestBase {
   public function testChoicesAreTheEntitysOwnAllowedValues(): void {
     $field = $this->schema()['hive_inspection']['fields']['brood_pattern'];
     $this->assertSame('choice', $field['kind']);
-    $this->assertSame('Brood Pattern', $field['label']);
+    $this->assertSame('Brood pattern', $field['label']);
 
     $definition = \Drupal::service('entity_field.manager')->getFieldDefinitions('hive_inspection', 'hive_inspection')['brood_pattern'];
     $expected = [];
@@ -78,6 +78,23 @@ class HivelogApiSchemaTest extends HivelogApiKernelTestBase {
     }
     $this->assertSame($expected, $field['options']);
     $this->assertNotEmpty($expected);
+  }
+
+  /**
+   * Tests the labels a form shows: sentence case, one meaning, units (0297).
+   *
+   * The keys are the contract and stay as they were; only the words change.
+   */
+  public function testLabelsAreConsistent(): void {
+    $schema = $this->schema();
+    $this->assertSame('Inspection date', $schema['hive_inspection']['fields']['inspection_date']['label']);
+    $this->assertSame('Queen seen', $schema['hive_inspection']['fields']['queen_seen']['label']);
+    $this->assertSame('Weight (kg)', $schema['hive_inspection']['fields']['weight']['label']);
+    $this->assertSame('Name', $schema['queen']['fields']['name']['label']);
+    $this->assertSame('Laying or moving on the comb', $schema['queen_observation']['fields']['active']['label']);
+    foreach (['hive', 'hive_inspection', 'queen_observation'] as $type) {
+      $this->assertSame('Photos', $schema[$type]['fields']['images']['label'], $type);
+    }
   }
 
   /**

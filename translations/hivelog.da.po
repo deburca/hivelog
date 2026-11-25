@@ -810,6 +810,8 @@ msgstr "Bigård"
 #: modules/contrib/hivelog/src/Entity/HiveActionLog.php:121
 msgid "Calendar Action"
 msgstr "Kalenderhandling"
+msgid "Calendar action"
+msgstr "Kalenderhandling"
 #: modules/contrib/hivelog/src/ApiaryActionLogListBuilder.php:21
 #: modules/contrib/hivelog/src/HiveActionLogListBuilder.php:21
 #: modules/contrib/hivelog/src/Controller/HiveController.php:449
@@ -843,7 +845,7 @@ msgstr "Status"
 #: modules/contrib/hivelog/src/Controller/HiveController.php:225
 #: modules/contrib/hivelog/src/Entity/ApiaryActionLog.php:183
 #: modules/contrib/hivelog/src/Entity/HiveActionLog.php:178
-msgid "Week Completed"
+msgid "Week completed"
 msgstr "Uge gennemført"
 #: modules/contrib/hivelog/src/ApiaryActionLogListBuilder.php:42
 #: modules/contrib/hivelog/src/HiveActionLogListBuilder.php:42
@@ -981,10 +983,8 @@ msgstr "Dato"
 #: modules/contrib/hivelog/src/Entity/HiveInspection.php:356
 msgid "Weight"
 msgstr "Vægt"
-#: modules/contrib/hivelog/src/HiveInspectionListBuilder.php:20
-#: modules/contrib/hivelog/src/Entity/HiveInspection.php:136
-msgid "Queen Seen"
-msgstr "Dronning set"
+msgid "Weight (kg)"
+msgstr "Vægt (kg)"
 #: modules/contrib/hivelog/src/HiveInspectionListBuilder.php:21
 #: modules/contrib/hivelog/src/Controller/HiveController.php:574
 msgid "Honey"
@@ -1123,6 +1123,8 @@ msgstr "Temperament"
 #: modules/contrib/hivelog/src/Form/HivelogQueenObservationFilterForm.php:100
 msgid "Active"
 msgstr "Aktiv"
+msgid "Laying or moving on the comb"
+msgstr "Lægger æg eller bevæger sig på tavlen"
 #: modules/contrib/hivelog/src/Breadcrumb/HivelogBreadcrumbBuilder.php:79
 msgid "Home"
 msgstr "Forside"
@@ -1351,10 +1353,6 @@ msgstr "Se eftersyn"
 #: modules/contrib/hivelog/src/Controller/HiveController.php:433;438;449;450;515;522
 msgid "Not set"
 msgstr "Ikke angivet"
-#: modules/contrib/hivelog/src/Controller/HiveController.php:446;536
-#: modules/contrib/hivelog/src/Entity/Queen.php:124
-msgid "Queen ID"
-msgstr "Dronning-id"
 #: modules/contrib/hivelog/src/Controller/HiveController.php:468
 msgid "No active queen is recorded for this hive."
 msgstr "Der er ingen aktiv dronning registreret for dette bistade."
@@ -1396,12 +1394,6 @@ msgstr "Ingen handlinger er rapporteret som udført for dette bistade."
 #: modules/contrib/hivelog/src/Controller/HiveController.php:1032
 msgid "No actions have been reported as ignored for this hive."
 msgstr "Ingen handlinger er rapporteret som ignoreret for dette bistade."
-#: modules/contrib/hivelog/src/Controller/HiveController.php:1221
-#: modules/contrib/hivelog/src/Entity/Hive.php:215
-#: modules/contrib/hivelog/src/Entity/HiveInspection.php:447
-#: modules/contrib/hivelog/src/Entity/QueenObservation.php:155
-msgid "Pictures"
-msgstr "Billeder"
 #: modules/contrib/hivelog/src/Controller/HiveController.php:1367;1374
 msgid "Inspection weights for @year"
 msgstr "Eftersynsvægte for @year"
@@ -1658,13 +1650,13 @@ msgstr "Den fulde beskrivelse af aktiviteten. Linjer, der begynder med \"- \", v
 msgid "An optional classification for this action."
 msgstr "En valgfri klassificering af denne handling."
 #: modules/contrib/hivelog/src/Entity/CalendarAction.php:523
-msgid "Week Start"
+msgid "Week start"
 msgstr "Startuge"
 #: modules/contrib/hivelog/src/Entity/CalendarAction.php:524
 msgid "The ISO-8601 week number (1-53) this action is due."
 msgstr "ISO-8601-ugenummeret (1-53), hvor denne handling forfalder."
 #: modules/contrib/hivelog/src/Entity/CalendarAction.php:541
-msgid "Week End"
+msgid "Week end"
 msgstr "Slutuge"
 #: modules/contrib/hivelog/src/Entity/CalendarAction.php:542
 msgid "Optional end of the ISO-8601 week window (1-53), if this action spans multiple weeks. Leave empty to treat it as a single week."
@@ -1813,7 +1805,7 @@ msgstr "høstudbyttepost"
 msgid "harvest yield records"
 msgstr "høstudbytteposter"
 #: modules/contrib/hivelog/src/Entity/Hive.php:126
-msgid "Hive Name"
+msgid "Hive name"
 msgstr "Stadenavn"
 #: modules/contrib/hivelog/src/Entity/Hive.php:127
 msgid "A name or identifier for the hive."
@@ -1822,13 +1814,13 @@ msgstr "Et navn eller en identifikator for bistadet."
 msgid "The apiary this hive belongs to."
 msgstr "Bigården, som dette bistade hører til."
 #: modules/contrib/hivelog/src/Entity/Hive.php:150
-msgid "Hive Type"
+msgid "Hive type"
 msgstr "Stadetype"
 #: modules/contrib/hivelog/src/Entity/Hive.php:151
 msgid "The type of hive."
 msgstr "Bistadets type."
 #: modules/contrib/hivelog/src/Entity/Hive.php:167
-msgid "Hive Material"
+msgid "Hive material"
 msgstr "Stademateriale"
 #: modules/contrib/hivelog/src/Entity/Hive.php:168
 msgid "The material the hive is made from."
@@ -1840,8 +1832,8 @@ msgstr "Bifamiliens generelle temperament."
 msgid "The current status of the hive."
 msgstr "Bistadets aktuelle status."
 #: modules/contrib/hivelog/src/Entity/Hive.php:216
-msgid "One or more pictures of the hive. The first picture is shown as a letterbox hero on the hive view page."
-msgstr "Et eller flere billeder af bistadet. Det første billede vises som et bredformatbillede øverst på bistadets visningsside."
+msgid "One or more photos of the hive. The first photo is shown as a letterbox hero on the hive view page."
+msgstr "Et eller flere fotos af bistadet. Det første foto vises som et bredformatbillede øverst på bistadets visningsside."
 #: modules/contrib/hivelog/src/Entity/Hive.php:234
 msgid "General notes about the hive."
 msgstr "Generelle noter om bistadet."
@@ -1873,7 +1865,7 @@ msgstr "Bistadet, som denne handling blev rapporteret for."
 msgid "Free text: product used, dose, why an item was ignored, observations."
 msgstr "Fritekst: anvendt produkt, dosis, hvorfor noget blev ignoreret, observationer."
 #: modules/contrib/hivelog/src/Entity/HiveActionLog.php:213
-msgid "Linked Inspection"
+msgid "Linked inspection"
 msgstr "Tilknyttet eftersyn"
 #: modules/contrib/hivelog/src/Entity/HiveActionLog.php:214
 msgid "Set automatically when a \"done\" report also creates a hive inspection record. Never edited directly on this form."
@@ -1899,7 +1891,7 @@ msgstr "ukendt dato"
 msgid "The hive being inspected."
 msgstr "Bistadet, der efterses."
 #: modules/contrib/hivelog/src/Entity/HiveInspection.php:99
-msgid "Inspection Date"
+msgid "Inspection date"
 msgstr "Eftersynsdato"
 #: modules/contrib/hivelog/src/Entity/HiveInspection.php:100
 msgid "The date of the inspection."
@@ -1914,31 +1906,28 @@ msgstr "Iagttag flyveaktiviteten ved flyvehullet — jævn trafik med pollen, de
 msgid "Was the queen spotted during this inspection? You don't need to spot her every visit — evidence of her is enough. Look for eggs (single, upright in cell bottoms — confirms a laying queen within the last 3 days), young larvae, and a good brood pattern (solid, not patchy)."
 msgstr "Blev dronningen set under dette eftersyn? Du behøver ikke at se hende ved hvert besøg — tegn på hende er nok. Kig efter æg (enkeltvis, stående i bunden af cellerne — bekræfter en æglæggende dronning inden for de sidste 3 dage), unge larver og et godt yngelmønster (sammenhængende, ikke spredt)."
 #: modules/contrib/hivelog/src/Entity/HiveInspection.php:155
-msgid "Queen Cells"
+msgid "Queen cells"
 msgstr "Dronningceller"
 #: modules/contrib/hivelog/src/Entity/HiveInspection.php:156
 msgid "Were queen cells present? Look along bottom bars and frame faces. Swarm cells (bottom of frames, multiple) mean imminent swarming — act now. Supersedure cells (middle of frames, 1–3) mean they're replacing the queen. Play cups are normal and empty."
 msgstr "Var der dronningceller? Kig langs bundlisterne og tavlefladerne. Sværmceller (i bunden af tavlerne, flere) betyder forestående sværmning — grib ind nu. Omdronningsceller (midt på tavlerne, 1–3) betyder, at de er ved at skifte dronning. Spilkopper er normale og tomme."
 #: modules/contrib/hivelog/src/Entity/HiveInspection.php:174
-msgid "Eggs Seen"
+msgid "Eggs seen"
 msgstr "Æg set"
 #: modules/contrib/hivelog/src/Entity/HiveInspection.php:175
 msgid "Were eggs visible (indicates queen is laying)?"
 msgstr "Var der synlige æg (tegn på, at dronningen lægger)?"
-#: modules/contrib/hivelog/src/Entity/HiveInspection.php:194
-msgid "Brood Pattern"
-msgstr "Yngelmønster"
 #: modules/contrib/hivelog/src/Entity/HiveInspection.php:195
 msgid "Quality of the brood pattern."
 msgstr "Yngelmønstrets kvalitet."
 #: modules/contrib/hivelog/src/Entity/HiveInspection.php:215
-msgid "Honey Stores"
+msgid "Honey stores"
 msgstr "Honninglager"
 #: modules/contrib/hivelog/src/Entity/HiveInspection.php:216
 msgid "Level of honey stores."
 msgstr "Niveau af honninglager."
 #: modules/contrib/hivelog/src/Entity/HiveInspection.php:236
-msgid "Pollen Stores"
+msgid "Pollen stores"
 msgstr "Pollenlager"
 #: modules/contrib/hivelog/src/Entity/HiveInspection.php:237
 msgid "Level of pollen stores."
@@ -1950,19 +1939,19 @@ msgstr "Temperament observeret under dette eftersyn."
 msgid "Strength of the colony population."
 msgstr "Bifamiliens styrke."
 #: modules/contrib/hivelog/src/Entity/HiveInspection.php:297
-msgid "Varroa Check"
+msgid "Varroa check"
 msgstr "Varroakontrol"
 #: modules/contrib/hivelog/src/Entity/HiveInspection.php:298
 msgid "Was a varroa mite check performed?"
 msgstr "Blev der udført en varroakontrol?"
 #: modules/contrib/hivelog/src/Entity/HiveInspection.php:316
-msgid "Varroa Count"
+msgid "Varroa count"
 msgstr "Varroaoptælling"
 #: modules/contrib/hivelog/src/Entity/HiveInspection.php:317
 msgid "Number of varroa mites found (if check was performed)."
 msgstr "Antal fundne varroamider (hvis kontrollen blev udført)."
 #: modules/contrib/hivelog/src/Entity/HiveInspection.php:332
-msgid "Disease Signs"
+msgid "Disease signs"
 msgstr "Sygdomstegn"
 #: modules/contrib/hivelog/src/Entity/HiveInspection.php:333
 msgid "Any signs of disease observed."
@@ -1977,7 +1966,7 @@ msgstr "Fodret"
 msgid "Was the colony fed during this inspection?"
 msgstr "Blev bifamilien fodret under dette eftersyn?"
 #: modules/contrib/hivelog/src/Entity/HiveInspection.php:397
-msgid "Feed Type"
+msgid "Feed type"
 msgstr "Fodertype"
 #: modules/contrib/hivelog/src/Entity/HiveInspection.php:398
 msgid "Type of feed given (e.g. sugar syrup, fondant)."
@@ -1989,7 +1978,7 @@ msgstr "Honningmagasiner"
 msgid "Number of supers on the hive."
 msgstr "Antal honningmagasiner på bistadet."
 #: modules/contrib/hivelog/src/Entity/HiveInspection.php:429
-msgid "Action Taken"
+msgid "Action taken"
 msgstr "Foretaget handling"
 #: modules/contrib/hivelog/src/Entity/HiveInspection.php:430
 msgid "Actions performed during the inspection."
@@ -2081,6 +2070,8 @@ msgstr "Lagervaren, der blev købt."
 #: modules/contrib/hivelog/src/Entity/InventoryPurchase.php:169
 #: modules/contrib/hivelog/src/Entity/Queen.php:200
 msgid "Purchase Date"
+msgstr "Indkøbsdato"
+msgid "Purchase date"
 msgstr "Indkøbsdato"
 #: modules/contrib/hivelog/src/Entity/InventoryPurchase.php:170
 msgid "The date this purchase was made."
@@ -2200,8 +2191,8 @@ msgstr "produkt"
 msgid "products"
 msgstr "produkter"
 #: modules/contrib/hivelog/src/Entity/Queen.php:125
-msgid "A human readable identifier for this queen, e.g. Q-2026-001."
-msgstr "En læsbar identifikator for denne dronning, f.eks. Q-2026-001."
+msgid "A name for this queen, e.g. Maud."
+msgstr "Et navn til denne dronning, f.eks. Maud."
 #: modules/contrib/hivelog/src/Entity/Queen.php:133
 msgid "Origin"
 msgstr "Oprindelse"
@@ -2209,13 +2200,13 @@ msgstr "Oprindelse"
 msgid "Where this queen came from (breeder, swarm, supplier, ...)."
 msgstr "Hvor denne dronning kom fra (opdrætter, sværm, leverandør, ...)."
 #: modules/contrib/hivelog/src/Entity/Queen.php:141
-msgid "Queen Year"
+msgid "Queen year"
 msgstr "Dronningår"
 #: modules/contrib/hivelog/src/Entity/Queen.php:142
 msgid "The year the queen hatched."
 msgstr "Året, dronningen klækkede."
 #: modules/contrib/hivelog/src/Entity/Queen.php:149
-msgid "Queen Colour"
+msgid "Queen colour"
 msgstr "Dronningfarve"
 #: modules/contrib/hivelog/src/Entity/Queen.php:150
 msgid "International queen marking colour."
@@ -2227,7 +2218,7 @@ msgstr "Denne dronnings race."
 msgid "The general temperament associated with this queen."
 msgstr "Det generelle temperament, der er forbundet med denne dronning."
 #: modules/contrib/hivelog/src/Entity/Queen.php:190
-msgid "Purchase Cost"
+msgid "Purchase cost"
 msgstr "Indkøbspris"
 #: modules/contrib/hivelog/src/Entity/Queen.php:191
 msgid "What this queen cost, if purchased."
@@ -2239,7 +2230,7 @@ msgstr "Datoen, hvor denne dronning blev købt, hvis relevant."
 msgid "The hive this queen is currently installed in, if any."
 msgstr "Bistadet, hvor denne dronning aktuelt er indsat, hvis nogen."
 #: modules/contrib/hivelog/src/Entity/Queen.php:216
-msgid "Introduction Date"
+msgid "Introduction date"
 msgstr "Indsætningsdato"
 #: modules/contrib/hivelog/src/Entity/Queen.php:217
 msgid "The date this queen was introduced to the hive."
@@ -2272,7 +2263,7 @@ msgstr "Observation af @queen den @date"
 msgid "The queen being observed."
 msgstr "Dronningen, der observeres."
 #: modules/contrib/hivelog/src/Entity/QueenObservation.php:97
-msgid "Observation Date"
+msgid "Observation date"
 msgstr "Observationsdato"
 #: modules/contrib/hivelog/src/Entity/QueenObservation.php:98
 msgid "The date of the observation."

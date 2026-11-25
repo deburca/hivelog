@@ -138,7 +138,7 @@ class HiveActionLog extends ContentEntityBase implements EntityChangedInterface,
       ->setDisplayConfigurable('view', TRUE);
 
     $fields['calendar_action'] = BaseFieldDefinition::create('entity_reference')
-      ->setLabel(t('Calendar Action'))
+      ->setLabel(t('Calendar action'))
       ->setDescription(t('Which seasonal calendar action this log reports on.'))
       ->setRequired(TRUE)
       ->setSetting('target_type', 'calendar_action')
@@ -195,7 +195,7 @@ class HiveActionLog extends ContentEntityBase implements EntityChangedInterface,
       ->setDisplayConfigurable('view', TRUE);
 
     $fields['week_completed'] = BaseFieldDefinition::create('integer')
-      ->setLabel(t('Week Completed'))
+      ->setLabel(t('Week completed'))
       ->setDescription(t('Optional: the ISO-8601 week (1-53) this action was actually carried out. Typically left empty for "ignored".'))
       ->setSetting('min', 1)
       ->setSetting('max', 53)
@@ -230,7 +230,7 @@ class HiveActionLog extends ContentEntityBase implements EntityChangedInterface,
       ->setDisplayConfigurable('view', TRUE);
 
     $fields['inspection'] = BaseFieldDefinition::create('entity_reference')
-      ->setLabel(t('Linked Inspection'))
+      ->setLabel(t('Linked inspection'))
       ->setDescription(t('Set automatically when a "done" report also creates a hive inspection record. Never edited directly on this form.'))
       ->setSetting('target_type', 'hive_inspection')
       ->setDisplayOptions('form', [

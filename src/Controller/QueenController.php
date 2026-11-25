@@ -203,7 +203,7 @@ class QueenController extends ControllerBase {
       $this->t('Date'),
       $this->t('Health'),
       $this->t('Temperament'),
-      $this->t('Active'),
+      $this->t('Laying or moving on the comb'),
       $this->t('Operations'),
     ];
 

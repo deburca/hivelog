@@ -8,6 +8,7 @@ use Defuse\Crypto\Crypto;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\Site\Settings;
+use Drupal\consumers\Entity\Consumer;
 use Drupal\simple_oauth\Authentication\TokenAuthUserInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -66,13 +67,19 @@ class SignOutController extends ControllerBase {
     $token = $account->getToken();
     $this->accessTokens->revokeAccessToken($token->get('value')->value);
 
+    // The token's own client, read the way simple_oauth reads it: getConsumer()
+    // is deprecated from 6.1.5 and its replacement, getClient(), is not in 6.1.4.
+    $consumer = $token->get('client')->entity;
+    $client_id = $consumer instanceof Consumer ? $consumer->get('client_id')->value : NULL;
+
     $body = json_decode($request->getContent() ?: '[]', TRUE);
     $refresh = is_array($body) ? ($body['refresh_token'] ?? NULL) : NULL;
     if (is_string($refresh) && $refresh !== '') {
       $payload = $this->decryptRefreshToken($refresh);
       if ($payload
+        && $client_id !== NULL
         && (string) ($payload['user_id'] ?? '') === (string) $account->getSubject()->id()
-        && ($payload['client_id'] ?? NULL) === $account->getConsumer()->get('client_id')->value) {
+        && ($payload['client_id'] ?? NULL) === $client_id) {
         $this->refreshTokens->revokeRefreshToken($payload['refresh_token_id']);
         $this->accessTokens->revokeAccessToken($payload['access_token_id']);
       }

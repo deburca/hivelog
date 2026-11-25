@@ -23,10 +23,10 @@ class HiveActionLogListBuilder extends HivelogListBuilder {
    */
   public function buildHeader() {
     $header['hive'] = $this->t('Hive');
-    $header['calendar_action'] = $this->t('Calendar Action');
+    $header['calendar_action'] = $this->t('Calendar action');
     $header['year'] = $this->t('Year');
     $header['status'] = $this->t('Status');
-    $header['week_completed'] = $this->t('Week Completed');
+    $header['week_completed'] = $this->t('Week completed');
     return $header;
   }
 

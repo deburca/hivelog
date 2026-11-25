@@ -575,7 +575,7 @@ class ApiaryController extends ControllerBase {
       $this->t('Title'),
       $this->t('When'),
       $this->t('Status'),
-      $this->t('Week Completed'),
+      $this->t('Week completed'),
       $this->t('Notes'),
       $this->t('Operations'),
     ];
