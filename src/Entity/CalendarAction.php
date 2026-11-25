@@ -537,7 +537,7 @@ class CalendarAction extends ContentEntityBase implements EntityChangedInterface
       ->setDisplayConfigurable('view', TRUE);
 
     $fields['week_start'] = BaseFieldDefinition::create('integer')
-      ->setLabel(t('Week Start'))
+      ->setLabel(t('Week start'))
       ->setDescription(t('The ISO-8601 week number (1-53) this action is due.'))
       ->setRequired(TRUE)
       ->setSetting('min', 1)
@@ -555,7 +555,7 @@ class CalendarAction extends ContentEntityBase implements EntityChangedInterface
       ->setDisplayConfigurable('view', TRUE);
 
     $fields['week_end'] = BaseFieldDefinition::create('integer')
-      ->setLabel(t('Week End'))
+      ->setLabel(t('Week end'))
       ->setDescription(t('Optional end of the ISO-8601 week window (1-53), if this action spans multiple weeks. Leave empty to treat it as a single week.'))
       ->setSetting('min', 1)
       ->setSetting('max', 53)

@@ -127,7 +127,7 @@ class QueenObservation extends ContentEntityBase implements EntityChangedInterfa
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
     $fields['observation_date'] = BaseFieldDefinition::create('datetime')
-      ->setLabel(t('Observation Date'))
+      ->setLabel(t('Observation date'))
       ->setDescription(t('The date of the observation.'))
       ->setRequired(TRUE)
       ->setSetting('datetime_type', 'date')
@@ -161,7 +161,7 @@ class QueenObservation extends ContentEntityBase implements EntityChangedInterfa
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
     $fields['active'] = BaseFieldDefinition::create('boolean')
-      ->setLabel(t('Active'))
+      ->setLabel(t('Laying or moving on the comb'))
       ->setDescription(t('Was the queen observed actively laying / moving on the comb? Use observations for a look at the queen outside an inspection; during an inspection, record her in the inspection form instead.'))
       ->setDefaultValue(FALSE)
       ->setDisplayOptions('form', ['type' => 'boolean_checkbox', 'weight' => 4])
@@ -185,7 +185,7 @@ class QueenObservation extends ContentEntityBase implements EntityChangedInterfa
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
     $fields['images'] = BaseFieldDefinition::create('image')
-      ->setLabel(t('Pictures'))
+      ->setLabel(t('Photos'))
       ->setDescription(t('Photos taken during this queen observation.'))
       ->setCardinality(FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED)
       ->setSetting('file_directory', 'hivelog/queen-observation')

@@ -230,7 +230,7 @@ class Hive extends ContentEntityBase implements EntityChangedInterface, EntityOw
     $fields += static::ownerBaseFieldDefinitions($entity_type);
 
     $fields['name'] = BaseFieldDefinition::create('string')
-      ->setLabel(t('Hive Name'))
+      ->setLabel(t('Hive name'))
       ->setDescription(t('A name or identifier for the hive.'))
       ->setRequired(TRUE)
       ->setSetting('max_length', 255)
@@ -254,7 +254,7 @@ class Hive extends ContentEntityBase implements EntityChangedInterface, EntityOw
       ->setDisplayConfigurable('view', TRUE);
 
     $fields['hive_type'] = BaseFieldDefinition::create('list_string')
-      ->setLabel(t('Hive Type'))
+      ->setLabel(t('Hive type'))
       ->setDescription(t('The type of hive.'))
       ->setSetting('allowed_values', [
         '10x12' => '10x12',
@@ -271,7 +271,7 @@ class Hive extends ContentEntityBase implements EntityChangedInterface, EntityOw
       ->setDisplayConfigurable('view', TRUE);
 
     $fields['hive_material'] = BaseFieldDefinition::create('list_string')
-      ->setLabel(t('Hive Material'))
+      ->setLabel(t('Hive material'))
       ->setDescription(t('The material the hive is made from.'))
       ->setSetting('allowed_values', [
         'wood' => 'Wood',
@@ -319,8 +319,8 @@ class Hive extends ContentEntityBase implements EntityChangedInterface, EntityOw
       ->setDisplayConfigurable('view', TRUE);
 
     $fields['images'] = BaseFieldDefinition::create('image')
-      ->setLabel(t('Pictures'))
-      ->setDescription(t('One or more pictures of the hive. The first picture is shown as a letterbox hero on the hive view page.'))
+      ->setLabel(t('Photos'))
+      ->setDescription(t('One or more photos of the hive. The first photo is shown as a letterbox hero on the hive view page.'))
       ->setCardinality(FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED)
       ->setSetting('file_directory', 'hivelog/hive')
       ->setSetting('file_extensions', 'png gif jpg jpeg webp')
