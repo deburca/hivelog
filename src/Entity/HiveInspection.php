@@ -128,7 +128,7 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
       ->setDisplayConfigurable('view', TRUE);
 
     $fields['inspection_date'] = BaseFieldDefinition::create('datetime')
-      ->setLabel(t('Inspection Date'))
+      ->setLabel(t('Inspection date'))
       ->setDescription(t('The date of the inspection.'))
       ->setRequired(TRUE)
       ->setSetting('datetime_type', 'date')
@@ -165,7 +165,7 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
 
     // Queen status fields.
     $fields['queen_seen'] = BaseFieldDefinition::create('boolean')
-      ->setLabel(t('Queen Seen'))
+      ->setLabel(t('Queen seen'))
       ->setDescription(t("Was the queen spotted during this inspection? To keep a note about her alone (health, laying), use the Queen observation section of this form, or add an observation on her page later. You don't need to spot her every visit — evidence of her is enough. Look for eggs (single, upright in cell bottoms — confirms a laying queen within the last 3 days), young larvae, and a good brood pattern (solid, not patchy)."))
       ->setDefaultValue(FALSE)
       ->setDisplayOptions('form', [
@@ -184,7 +184,7 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
       ->setDisplayConfigurable('view', TRUE);
 
     $fields['queen_cells'] = BaseFieldDefinition::create('boolean')
-      ->setLabel(t('Queen Cells'))
+      ->setLabel(t('Queen cells'))
       ->setDescription(t("Were queen cells present? Look along bottom bars and frame faces. Swarm cells (bottom of frames, multiple) mean imminent swarming — act now. Supersedure cells (middle of frames, 1–3) mean they're replacing the queen. Play cups are normal and empty."))
       ->setDefaultValue(FALSE)
       ->setDisplayOptions('form', [
@@ -203,7 +203,7 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
       ->setDisplayConfigurable('view', TRUE);
 
     $fields['eggs_seen'] = BaseFieldDefinition::create('boolean')
-      ->setLabel(t('Eggs Seen'))
+      ->setLabel(t('Eggs seen'))
       ->setDescription(t('Were eggs visible (indicates queen is laying)? Ticking this also counts her as laying in the queen observation this form can add.'))
       ->setDefaultValue(FALSE)
       ->setDisplayOptions('form', [
@@ -223,7 +223,7 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
 
     // Brood fields.
     $fields['brood_pattern'] = BaseFieldDefinition::create('list_string')
-      ->setLabel(t('Brood Pattern'))
+      ->setLabel(t('Brood pattern'))
       ->setDescription(t('Quality of the brood pattern.'))
       ->setSetting('allowed_values', [
         'good' => 'Good',
@@ -244,7 +244,7 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
       ->setDisplayConfigurable('view', TRUE);
 
     $fields['honey_stores'] = BaseFieldDefinition::create('list_string')
-      ->setLabel(t('Honey Stores'))
+      ->setLabel(t('Honey stores'))
       ->setDescription(t('Level of honey stores.'))
       ->setSetting('allowed_values', [
         'abundant' => 'Abundant',
@@ -265,7 +265,7 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
       ->setDisplayConfigurable('view', TRUE);
 
     $fields['pollen_stores'] = BaseFieldDefinition::create('list_string')
-      ->setLabel(t('Pollen Stores'))
+      ->setLabel(t('Pollen stores'))
       ->setDescription(t('Level of pollen stores.'))
       ->setSetting('allowed_values', [
         'abundant' => 'Abundant',
@@ -360,7 +360,7 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
       ->setDisplayConfigurable('view', TRUE);
 
     $fields['varroa_check'] = BaseFieldDefinition::create('boolean')
-      ->setLabel(t('Varroa Check'))
+      ->setLabel(t('Varroa check'))
       ->setDescription(t('Was a varroa mite check performed?'))
       ->setDefaultValue(FALSE)
       ->setDisplayOptions('form', [
@@ -379,7 +379,7 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
       ->setDisplayConfigurable('view', TRUE);
 
     $fields['varroa_count'] = BaseFieldDefinition::create('integer')
-      ->setLabel(t('Varroa Count'))
+      ->setLabel(t('Varroa count'))
       ->setDescription(t('Number of varroa mites found (if check was performed).'))
       ->setSetting('min', 0)
       ->setDisplayOptions('form', [
@@ -395,7 +395,7 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
       ->setDisplayConfigurable('view', TRUE);
 
     $fields['disease_signs'] = BaseFieldDefinition::create('list_string')
-      ->setLabel(t('Disease Signs'))
+      ->setLabel(t('Disease signs'))
       ->setDescription(t('Any signs of disease observed. Tick every one you saw; None cannot be combined with another.'))
       ->setCardinality(FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED)
       ->setSetting('allowed_values', [
@@ -420,7 +420,7 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
       ->setDisplayConfigurable('view', TRUE);
 
     $fields['weight'] = BaseFieldDefinition::create('float')
-      ->setLabel(t('Weight'))
+      ->setLabel(t('Weight (kg)'))
       ->setDescription(t('Weight of the hive in kilograms.'))
       ->setSetting('min', 0)
       ->setDisplayOptions('form', [
@@ -461,7 +461,7 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
       ->setDisplayConfigurable('view', TRUE);
 
     $fields['feed_type'] = BaseFieldDefinition::create('string')
-      ->setLabel(t('Feed Type'))
+      ->setLabel(t('Feed type'))
       ->setDescription(t('Type of feed given (e.g. sugar syrup, fondant).'))
       ->setSetting('max_length', 255)
       ->setDisplayOptions('form', [
@@ -493,7 +493,7 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
       ->setDisplayConfigurable('view', TRUE);
 
     $fields['action_taken'] = BaseFieldDefinition::create('string_long')
-      ->setLabel(t('Action Taken'))
+      ->setLabel(t('Action taken'))
       ->setDescription(t('Actions performed during the inspection.'))
       ->setDisplayOptions('form', [
         'type' => 'string_textarea',
@@ -511,7 +511,7 @@ class HiveInspection extends ContentEntityBase implements EntityChangedInterface
       ->setDisplayConfigurable('view', TRUE);
 
     $fields['images'] = BaseFieldDefinition::create('image')
-      ->setLabel(t('Pictures'))
+      ->setLabel(t('Photos'))
       ->setDescription(t('Photos taken during this inspection.'))
       ->setCardinality(FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED)
       ->setSetting('file_directory', 'hivelog/inspection')

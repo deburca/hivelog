@@ -135,8 +135,8 @@ class Queen extends ContentEntityBase implements EntityChangedInterface, EntityO
     $fields += static::ownerBaseFieldDefinitions($entity_type);
 
     $fields['name'] = BaseFieldDefinition::create('string')
-      ->setLabel(t('Queen ID'))
-      ->setDescription(t('A human readable identifier for this queen, e.g. Q-2026-001.'))
+      ->setLabel(t('Name'))
+      ->setDescription(t('A name for this queen, e.g. Maud.'))
       ->setRequired(TRUE)
       ->setSetting('max_length', 255)
       ->setDisplayOptions('form', ['type' => 'string_textfield', 'weight' => 0])
@@ -152,7 +152,7 @@ class Queen extends ContentEntityBase implements EntityChangedInterface, EntityO
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
     $fields['queen_year'] = BaseFieldDefinition::create('integer')
-      ->setLabel(t('Queen Year'))
+      ->setLabel(t('Queen year'))
       ->setDescription(t('The year the queen hatched.'))
       ->setSetting('min', 2000)
       ->setDisplayOptions('form', ['type' => 'number', 'weight' => 2])
@@ -160,7 +160,7 @@ class Queen extends ContentEntityBase implements EntityChangedInterface, EntityO
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
     $fields['queen_colour'] = BaseFieldDefinition::create('list_string')
-      ->setLabel(t('Queen Colour'))
+      ->setLabel(t('Queen colour'))
       ->setDescription(t('International queen marking colour.'))
       ->setSetting('allowed_values', [
         'white' => 'White (years ending 1, 6)',
@@ -201,7 +201,7 @@ class Queen extends ContentEntityBase implements EntityChangedInterface, EntityO
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
     $fields['purchase_cost'] = BaseFieldDefinition::create('decimal')
-      ->setLabel(t('Purchase Cost'))
+      ->setLabel(t('Purchase cost'))
       ->setDescription(t('What this queen cost, if purchased.'))
       ->setSetting('precision', 10)
       ->setSetting('scale', 2)
@@ -211,7 +211,7 @@ class Queen extends ContentEntityBase implements EntityChangedInterface, EntityO
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
     $fields['purchase_date'] = BaseFieldDefinition::create('datetime')
-      ->setLabel(t('Purchase Date'))
+      ->setLabel(t('Purchase date'))
       ->setDescription(t('The date this queen was purchased, if applicable.'))
       ->setSetting('datetime_type', 'date')
       ->setDisplayOptions('form', ['type' => 'datetime_default', 'weight' => 7])
@@ -227,7 +227,7 @@ class Queen extends ContentEntityBase implements EntityChangedInterface, EntityO
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
     $fields['introduction_date'] = BaseFieldDefinition::create('datetime')
-      ->setLabel(t('Introduction Date'))
+      ->setLabel(t('Introduction date'))
       ->setDescription(t('The date this queen was introduced to the hive.'))
       ->setSetting('datetime_type', 'date')
       ->setDisplayOptions('form', ['type' => 'datetime_default', 'weight' => 9])

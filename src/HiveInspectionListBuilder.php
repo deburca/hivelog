@@ -29,7 +29,7 @@ class HiveInspectionListBuilder extends HivelogListBuilder {
     $header['date'] = $this->t('Date');
     $header['hive'] = $this->t('Hive');
     $header['weight'] = $this->t('Weight');
-    $header['queen'] = $this->t('Queen Seen');
+    $header['queen'] = $this->t('Queen seen');
     $header['honey'] = $this->t('Honey');
     $header['inspector'] = $this->t('Inspector');
     return $header;

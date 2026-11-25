@@ -124,7 +124,7 @@ class ApiaryActionLog extends ContentEntityBase implements EntityChangedInterfac
       ->setDisplayConfigurable('view', TRUE);
 
     $fields['calendar_action'] = BaseFieldDefinition::create('entity_reference')
-      ->setLabel(t('Calendar Action'))
+      ->setLabel(t('Calendar action'))
       ->setDescription(t('Which seasonal calendar action this log reports on.'))
       ->setRequired(TRUE)
       ->setSetting('target_type', 'calendar_action')
@@ -181,7 +181,7 @@ class ApiaryActionLog extends ContentEntityBase implements EntityChangedInterfac
       ->setDisplayConfigurable('view', TRUE);
 
     $fields['week_completed'] = BaseFieldDefinition::create('integer')
-      ->setLabel(t('Week Completed'))
+      ->setLabel(t('Week completed'))
       ->setDescription(t('Optional: the ISO-8601 week (1-53) this action was actually carried out. Typically left empty for "ignored".'))
       ->setSetting('min', 1)
       ->setSetting('max', 53)

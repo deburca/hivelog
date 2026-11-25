@@ -186,7 +186,19 @@ Each entity lives in `src/Entity/` as a `ContentEntityBase` subclass declared
 with the PHP 8 `#[ContentEntityType]` attribute. Fields are defined entirely
 in code via `baseFieldDefinitions()` — there is no exported config for field
 storage, view display, or form display. Changing a field definition therefore
-requires a corresponding update hook (see "Entity schema changes" below).
+requires a corresponding update hook (see "Entity schema changes" below);
+a change to a label or description only does not.
+
+**Field labels (task 0297, ADR-0112).** Labels are in sentence case ("Hive name",
+"Queen seen"), keeping proper nouns ("Varroa"). One word means one thing: "Active"
+is in service (hive and queen `status`); the observation's `active` boolean is
+"Laying or moving on the comb". `images` fields are "Photos". A field with a unit
+names it ("Weight (kg)"). `queen.name` is the queen's name, not an identifier.
+The app shows these labels as the schema gives them, so a table header or filter
+naming a field uses the field's own label. When a label changes, update its
+`msgid` in `translations/hivelog.da.po` (keep the old one while another string
+still uses it). Field keys never change for a label.
+
 Core's entity types are grouped below by what they're for; each
 submodule's own entity types are in "Submodules".
 

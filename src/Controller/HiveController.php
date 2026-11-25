@@ -351,7 +351,7 @@ class HiveController extends ControllerBase {
       $this->t('Title'),
       $this->t('When'),
       $this->t('Status'),
-      $this->t('Week Completed'),
+      $this->t('Week completed'),
       $this->t('Notes'),
       $this->t('Operations'),
     ];
@@ -1158,7 +1158,7 @@ class HiveController extends ControllerBase {
       $this->t('Queen'),
       $this->t('Health'),
       $this->t('Temperament'),
-      $this->t('Active'),
+      $this->t('Laying or moving on the comb'),
       $this->t('Operations'),
     ];
 
@@ -1384,7 +1384,7 @@ class HiveController extends ControllerBase {
         '#type' => 'html_tag',
         // H2 (task 0128) — a top-level hive-page section.
         '#tag' => 'h2',
-        '#value' => $this->t('Pictures'),
+        '#value' => $this->t('Photos'),
       ],
       'grid' => [
         '#type' => 'inline_template',
